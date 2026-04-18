@@ -58,12 +58,13 @@ export interface Recipe {
   subcategory_id: string | null
   name: string
   description: string | null
-  serving_size_grams: number | null
+  servings: number | null
   prep_time_minutes: number | null
-  dietary_flags: string[]
-  season_tags: string[]
-  is_signature: boolean
-  status: 'active' | 'archived' | 'draft'
+  is_active: boolean
+  notes: string | null
+  total_cost_per_serving: number | null
+  selling_price: number | null
+  food_cost_percentage: number | null
   created_at: string
   updated_at: string
   // Joined relations
@@ -77,6 +78,7 @@ export interface RecipeComponent {
   recipe_id: string
   name: string
   sort_order: number
+  notes: string | null
   created_at: string
   updated_at: string
   // Joined relations
@@ -87,9 +89,10 @@ export interface RecipeComponentIngredient {
   id: string
   component_id: string
   ingredient_id: string
-  quantity_per_person: number
-  unit: 'g' | 'ml' | 'stuks' | 'el' | 'tl' | 'snuf'
-  prep_instruction: string | null
+  quantity: number
+  unit: string
+  notes: string | null
+  cost_per_unit: number | null
   created_at: string
   updated_at: string
   // Joined relations
@@ -116,12 +119,13 @@ export interface RecipeSubcategory {
 
 export interface Ingredient {
   id: string
+  kitchen_id: string | null
   name: string
   category: string | null
-  unit_of_purchase: string | null
-  default_unit_price: number | null
-  supplier_name: string | null
-  last_price_update: string | null
+  unit: string | null
+  current_price: number | null
+  supplier: string | null
+  last_updated: string | null
   created_at: string
   updated_at: string
 }
@@ -130,9 +134,7 @@ export interface IngredientPrice {
   id: string
   ingredient_id: string
   price: number
-  unit_quantity: number
-  unit: string
-  supplier: string | null
+  source: string | null
   invoice_id: string | null
   recorded_at: string
   created_at: string
@@ -165,7 +167,7 @@ export interface Event {
   departure_time: string | null
   arrival_time: string | null
   notes: string | null
-  status: 'draft' | 'confirmed' | 'completed' | 'cancelled'
+  status: 'draft' | 'confirmed' | 'in_prep' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
   // Joined relations
