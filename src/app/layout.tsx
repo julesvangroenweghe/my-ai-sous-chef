@@ -1,29 +1,22 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { TRPCProvider } from "@/providers/trpc-provider";
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "My AI Sous Chef",
-  description: "Professional kitchen management powered by AI",
-};
+  title: 'My AI Sous Chef',
+  description: 'Your intelligent kitchen companion — sold to the restaurant, built for the chef.',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-[#0a0a0a] text-white antialiased`}>
-        <TRPCProvider>
-          {children}
-          <Toaster />
-        </TRPCProvider>
-      </body>
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
     </html>
-  );
+  )
 }

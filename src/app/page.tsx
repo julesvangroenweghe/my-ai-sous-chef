@@ -1,90 +1,60 @@
-export const dynamic = "force-dynamic";
-import Link from "next/link";
-import { ChefHat, BookOpen, CalendarDays, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link'
+import { ChefHat, ArrowRight, Utensils, Calendar, Brain } from 'lucide-react'
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Header */}
-      <header className="border-b border-[#1a1a1a]">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center space-x-2">
-            <ChefHat className="h-7 w-7 text-amber-500" />
-            <span className="text-xl font-bold">AI Sous Chef</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold">
-                Get Started
-              </Button>
-            </Link>
+    <div className="min-h-screen bg-gradient-to-br from-sidebar to-slate-900 flex flex-col items-center justify-center p-6">
+      <div className="max-w-2xl mx-auto text-center space-y-8">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="p-3 bg-sidebar-accent/20 rounded-2xl">
+            <ChefHat className="h-12 w-12 text-sidebar-accent" />
           </div>
         </div>
-      </header>
 
-      {/* Hero */}
-      <section className="container mx-auto px-4 py-24 text-center">
-        <div className="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-sm text-amber-500 mb-8">
-          <Sparkles className="mr-2 h-4 w-4" />
-          AI-Powered Kitchen Management
-        </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-          Your Kitchen,{" "}
-          <span className="text-amber-500">Elevated</span>
+        <h1 className="text-5xl font-bold text-white tracking-tight">
+          My AI Sous Chef
         </h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-          Manage recipes, plan events, and create menus with the power of AI.
-          Built for professional chefs who demand excellence.
+        <p className="text-xl text-slate-300 max-w-lg mx-auto">
+          Your intelligent kitchen companion. Manage recipes, plan events, track costs — all with AI by your side.
         </p>
-        <Link href="/register">
-          <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-lg px-8 py-6">
-            Start Cooking Smarter
-          </Button>
-        </Link>
-      </section>
 
-      {/* Features */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: BookOpen,
-              title: "Recipe Management",
-              description: "Organize your entire recipe collection with smart categorization, ingredient tracking, and cost analysis.",
-            },
-            {
-              icon: CalendarDays,
-              title: "Event Planning",
-              description: "Plan and manage catering events with guest counts, budgets, and timelines all in one place.",
-            },
-            {
-              icon: Sparkles,
-              title: "AI Assistant",
-              description: "Get AI-powered suggestions for menu combinations, ingredient substitutions, and recipe scaling.",
-            },
-          ].map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl border border-[#1a1a1a] bg-[#111] p-8 hover:border-amber-500/30 transition-colors"
-            >
-              <feature.icon className="h-10 w-10 text-amber-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
+            <Utensils className="h-6 w-6 text-sidebar-accent mb-2" />
+            <h3 className="text-white font-semibold text-sm">Recipe Management</h3>
+            <p className="text-slate-400 text-xs mt-1">Components, ingredients, costing — all in one place.</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
+            <Calendar className="h-6 w-6 text-sidebar-accent mb-2" />
+            <h3 className="text-white font-semibold text-sm">Event & MEP Planning</h3>
+            <p className="text-slate-400 text-xs mt-1">Build menus, scale ingredients, generate MEP sheets.</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
+            <Brain className="h-6 w-6 text-sidebar-accent mb-2" />
+            <h3 className="text-white font-semibold text-sm">Jules AI</h3>
+            <p className="text-slate-400 text-xs mt-1">Smart suggestions that learn your cooking style.</p>
+          </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#1a1a1a] py-8">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          © 2024 My AI Sous Chef. Built for professional chefs.
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-sidebar-accent hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors"
+          >
+            Get Started <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-colors"
+          >
+            Create Account
+          </Link>
         </div>
-      </footer>
+
+        <p className="text-slate-500 text-sm">
+          Sold to the restaurant. Built for the chef.
+        </p>
+      </div>
     </div>
-  );
+  )
 }

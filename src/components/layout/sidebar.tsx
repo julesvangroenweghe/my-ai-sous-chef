@@ -1,60 +1,88 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import {
-  ChefHat,
-  LayoutDashboard,
-  BookOpen,
-  CalendarDays,
-  ClipboardList,
-  Settings,
-} from "lucide-react";
+  ChefHat, LayoutDashboard, Utensils, Calendar,
+  Receipt, Carrot, Brain, User, PanelLeftClose, PanelLeft
+} from 'lucide-react'
+import { useState } from 'react'
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/recipes", label: "Recipes", icon: BookOpen },
-  { href: "/events", label: "Events", icon: CalendarDays },
-  { href: "/menus", label: "Menus", icon: ClipboardList },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+  { href: '/recipes', label: 'Recipes', icon: Utensils },
+  { href: '/events', label: 'Events & MEP', icon: Calendar },
+  { href: '/invoices', label: 'Invoices', icon: Receipt },
+  { href: '/ingredients', label: 'Ingredients', icon: Carrot },
+  { href: '/jules', label: 'Jules AI', icon: Brain },
+]
 
-export function Sidebar() {
-  const pathname = usePathname();
+export function AppSidebar() {
+  const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
-      <div className="flex flex-col flex-grow bg-[#0a0a0a] border-r border-[#1a1a1a] pt-5 pb-4 overflow-y-auto">
-        <div className="flex items-center flex-shrink-0 px-6 mb-8">
-          <ChefHat className="h-8 w-8 text-amber-500" />
-          <span className="ml-3 text-xl font-bold text-white">
-            AI Sous Chef
-          </span>
+    <aside
+      className={cn(
+        'hidden md:flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 border-r border-white/5',
+        collapsed ? 'w-16' : 'w-64'
+      )}
+    >
+      {/* Logo */}
+      <div className="p-4 flex items-center gap-3">
+        <div className="p-1.5 bg-sidebar-accent/20 rounded-lg shrink-0">
+          <ChefHat className="h-6 w-6 text-sidebar-accent" />
         </div>
-        <nav className="flex-1 px-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
-                  isActive
-                    ? "bg-amber-500/10 text-amber-500"
-                    : "text-gray-400 hover:bg-[#1a1a1a] hover:text-white"
-                )}
-              >
-                <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {!collapsed && (
+          <span className="font-bold text-white text-sm">My AI Sous Chef</span>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-2 space-y-1">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-sidebar-accent text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="border-t border-white/10 p-3 space-y-1">
+        <Link
+          href="/profile"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+            pathname === '/profile'
+              ? 'bg-sidebar-accent text-white'
+              : 'text-slate-400 hover:bg-white/5 hover:text-white'
+          )}
+        >
+          <User className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>Profile</span>}
+        </Link>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-white/5 hover:text-white transition-colors w-full"
+        >
+          {collapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          {!collapsed && <span>Collapse</span>}
+        </button>
       </div>
     </aside>
-  );
+  )
 }

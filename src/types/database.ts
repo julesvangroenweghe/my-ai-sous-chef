@@ -1,0 +1,231 @@
+// Database types matching Supabase schema
+
+export interface ChefProfile {
+  id: string
+  user_id: string
+  display_name: string
+  bio: string | null
+  cuisine_styles: string[]
+  signature_techniques: string[]
+  preferred_ingredients: string[]
+  avoided_ingredients: string[]
+  cooking_philosophy: string | null
+  years_experience: number | null
+  current_role: string | null
+  avatar_url: string | null
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChefMemory {
+  id: string
+  chef_id: string
+  memory_type: 'preference' | 'technique' | 'style' | 'feedback' | 'note'
+  content: string
+  context: Record<string, unknown> | null
+  importance: number
+  created_at: string
+}
+
+export interface Kitchen {
+  id: string
+  name: string
+  type: 'restaurant' | 'hotel' | 'catering' | 'school' | 'group'
+  address: string | null
+  logo_url: string | null
+  subscription_tier: 'free' | 'kitchen' | 'group'
+  created_at: string
+  updated_at: string
+}
+
+export interface KitchenMember {
+  id: string
+  chef_id: string
+  kitchen_id: string
+  role: 'owner' | 'head_chef' | 'sous_chef' | 'cook' | 'manager'
+  invited_at: string | null
+  joined_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Recipe {
+  id: string
+  kitchen_id: string
+  chef_id: string | null
+  category_id: string | null
+  subcategory_id: string | null
+  name: string
+  description: string | null
+  serving_size_grams: number | null
+  prep_time_minutes: number | null
+  dietary_flags: string[]
+  season_tags: string[]
+  is_signature: boolean
+  status: 'active' | 'archived' | 'draft'
+  created_at: string
+  updated_at: string
+  // Joined relations
+  category?: RecipeCategory
+  subcategory?: RecipeSubcategory
+  components?: RecipeComponent[]
+}
+
+export interface RecipeComponent {
+  id: string
+  recipe_id: string
+  name: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+  // Joined relations
+  ingredients?: RecipeComponentIngredient[]
+}
+
+export interface RecipeComponentIngredient {
+  id: string
+  component_id: string
+  ingredient_id: string
+  quantity_per_person: number
+  unit: 'g' | 'ml' | 'stuks' | 'el' | 'tl' | 'snuf'
+  prep_instruction: string | null
+  created_at: string
+  updated_at: string
+  // Joined relations
+  ingredient?: Ingredient
+}
+
+export interface RecipeCategory {
+  id: string
+  name: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+  subcategories?: RecipeSubcategory[]
+}
+
+export interface RecipeSubcategory {
+  id: string
+  category_id: string
+  name: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Ingredient {
+  id: string
+  name: string
+  category: string | null
+  unit_of_purchase: string | null
+  default_unit_price: number | null
+  supplier_name: string | null
+  last_price_update: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IngredientPrice {
+  id: string
+  ingredient_id: string
+  price: number
+  unit_quantity: number
+  unit: string
+  supplier: string | null
+  invoice_id: string | null
+  recorded_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Invoice {
+  id: string
+  kitchen_id: string
+  supplier_name: string | null
+  invoice_date: string | null
+  total_amount: number | null
+  image_url: string | null
+  ocr_status: 'pending' | 'processing' | 'completed' | 'failed'
+  ocr_data: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Event {
+  id: string
+  kitchen_id: string
+  name: string
+  event_date: string
+  event_type: 'walking_dinner' | 'buffet' | 'sit_down' | 'cocktail' | 'brunch' | 'daily_service' | 'tasting'
+  num_persons: number | null
+  price_per_person: number | null
+  location: string | null
+  contact_person: string | null
+  departure_time: string | null
+  arrival_time: string | null
+  notes: string | null
+  status: 'draft' | 'confirmed' | 'completed' | 'cancelled'
+  created_at: string
+  updated_at: string
+  // Joined relations
+  menu_items?: EventMenuItem[]
+  dietary_flags?: EventDietaryFlag[]
+}
+
+export interface EventMenuItem {
+  id: string
+  event_id: string
+  recipe_id: string
+  course_order: number
+  created_at: string
+  updated_at: string
+  // Joined relations
+  recipe?: Recipe
+}
+
+export interface EventDietaryFlag {
+  id: string
+  event_id: string
+  flag_name: string
+  guest_name: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface MepPlan {
+  id: string
+  event_id: string
+  generated_at: string
+  pdf_url: string | null
+  status: 'generating' | 'ready' | 'outdated'
+  created_at: string
+  updated_at: string
+}
+
+export interface WeeklyMepPlan {
+  id: string
+  kitchen_id: string
+  week_number: number
+  year: number
+  event_ids: string[]
+  generated_at: string
+  pdf_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface JulesSuggestion {
+  id: string
+  chef_id: string
+  kitchen_id: string | null
+  suggestion_type: 'recipe_idea' | 'cost_alert' | 'seasonal_ingredient' | 'menu_rotation' | 'supplier_alternative' | 'prep_optimization'
+  title: string
+  body: string
+  data: Record<string, unknown>
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'pending' | 'seen' | 'accepted' | 'dismissed'
+  created_at: string
+  updated_at: string
+}
