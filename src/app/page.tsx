@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { ChefHat, BookOpen, CalendarDays, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
