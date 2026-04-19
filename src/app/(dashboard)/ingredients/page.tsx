@@ -24,10 +24,12 @@ interface Ingredient {
 interface IngredientVariant {
   id: string
   parent_ingredient_id: string
-  variant_name: string
+  name: string
   quality_grade: string | null
   origin: string | null
-  price_multiplier: number
+  breed: string | null
+  typical_price_per_kg: number | null
+  flavor_profile: string | null
   notes: string | null
 }
 
@@ -360,19 +362,20 @@ export default function IngredientsPage() {
                         <div className="grid gap-2">
                           {variantList.map(v => (
                             <div key={v.id} className="flex items-center gap-3 py-1.5 px-3 bg-stone-900/50 rounded-lg">
-                              <span className="text-sm text-stone-200 font-medium">{v.variant_name}</span>
+                              <span className="text-sm text-stone-200 font-medium">{v.name}</span>
                               {v.quality_grade && (
                                 <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded border ${qualityGradeColors[v.quality_grade] || 'bg-stone-700 text-stone-300 border-stone-600'}`}>
                                   {v.quality_grade}
                                 </span>
                               )}
                               {v.origin && <span className="text-xs text-stone-500">{v.origin}</span>}
-                              <span className="ml-auto text-xs text-stone-500 font-mono">
-                                {v.price_multiplier > 1 ? `${v.price_multiplier}x prijs` : 'standaard'}
+                              <span className="ml-auto text-xs text-stone-500">
+                                {v.breed && <span className="text-stone-600 mr-2">{v.breed}</span>}
+                                {v.flavor_profile && <span className="italic text-stone-600">{v.flavor_profile}</span>}
                               </span>
-                              {ing.current_price && v.price_multiplier > 0 && (
+                              {v.typical_price_per_kg && (
                                 <span className="text-xs font-mono text-brand-400">
-                                  €{(ing.current_price * v.price_multiplier).toFixed(2)}
+                                  €{Number(v.typical_price_per_kg).toFixed(2)}/kg
                                 </span>
                               )}
                             </div>
