@@ -7,7 +7,7 @@ import {
   Sparkles, User, Settings, LogOut, ChefHat,
   LayoutDashboard, Menu, X, ClipboardList,
   TrendingUp, Truck, Building2, Store, UtensilsCrossed,
-  ShoppingCart
+  ShoppingCart, Leaf, Beaker
 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -29,6 +29,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   daily_prep: ShoppingCart,
   outlets: Building2,
   brands: Building2,
+  preparations: Beaker,
+  seasonal: Leaf,
   profile: User,
   settings: Settings,
 }
@@ -48,6 +50,8 @@ const labelMap: Record<string, string> = {
   daily_prep: 'Dagproductie',
   outlets: 'Outlets',
   brands: 'Brands',
+  preparations: 'Halffabricaten',
+  seasonal: 'Seizoenskalender',
   profile: 'Profiel',
   settings: 'Instellingen',
 }
@@ -67,6 +71,8 @@ const hrefMap: Record<string, string> = {
   daily_prep: '/daily-prep',
   outlets: '/outlets',
   brands: '/brands',
+  preparations: '/preparations',
+  seasonal: '/seasonal',
   profile: '/profile',
   settings: '/settings',
 }
@@ -83,9 +89,9 @@ const kitchenTypeInfo: Record<string, { icon: React.ReactNode; label: string; co
 
 // Default navigation per kitchen type (fallback if no settings.features)
 const defaultNavByType: Record<string, string[]> = {
-  restaurant: ['dashboard', 'recipes', 'menu', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+  restaurant: ['dashboard', 'recipes', 'menu', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
   brasserie: ['dashboard', 'recipes', 'suggestions', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
-  catering: ['dashboard', 'recipes', 'events', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+  catering: ['dashboard', 'recipes', 'events', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
   foodtruck: ['dashboard', 'recipes', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
   hotel: ['dashboard', 'recipes', 'outlets', 'events', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
   dark_kitchen: ['dashboard', 'recipes', 'brands', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
