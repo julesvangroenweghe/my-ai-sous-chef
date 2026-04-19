@@ -28,15 +28,44 @@ export interface ChefMemory {
   created_at: string
 }
 
+export interface KitchenSettings {
+  mode: string
+  food_cost_target_min: number
+  food_cost_target_max: number
+  default_portion_style: string
+  mep_style: string
+  menu_structure: string
+  features: string[]
+  workflow: {
+    primary_planning: string
+    scaling: string
+    invoice_cycle: string
+  }
+}
+
+export type KitchenType = 'restaurant' | 'brasserie' | 'hotel' | 'catering' | 'foodtruck' | 'school' | 'group' | 'dark_kitchen' | 'popup'
+
 export interface Kitchen {
   id: string
   name: string
-  type: 'restaurant' | 'hotel' | 'catering' | 'school' | 'group'
+  type: KitchenType
+  description: string | null
   address: string | null
   logo_url: string | null
   subscription_tier: 'free' | 'kitchen' | 'group'
+  settings: KitchenSettings
   created_at: string
   updated_at: string
+}
+
+export interface KitchenModeDefault {
+  id: string
+  kitchen_type: KitchenType
+  display_name: string
+  description: string
+  icon: string
+  default_settings: KitchenSettings
+  nav_items: string[]
 }
 
 export interface KitchenMember {
