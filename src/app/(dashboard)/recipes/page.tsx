@@ -1,21 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Search, BookOpen, Clock, Euro, Filter, ArrowUpDown, ChefHat } from 'lucide-react'
-
-interface Recipe {
-  id: string
-  title: string
-  description: string | null
-  category: string | null
-  cuisine_type: string | null
-  base_servings: number
-  prep_time_minutes: number | null
-  cost_per_serving: number | null
-  created_at: string
-}
+import { useRecipes } from '@/hooks/use-recipes'
+import { formatCurrency } from '@/lib/utils'
+import type { Recipe } from '@/types/database'
 
 function RecipeSkeleton() {
   return (
@@ -60,6 +50,8 @@ function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
     'side': 'bg-sky-50 text-sky-700',
   }
 
+  const servings = (recipe as any).serving_size_grams || (recipe as any).servings
+
   return (
     <Link
       href={`/recipes/${recipe.id}`}
@@ -70,7 +62,7 @@ function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
       <div className="w-full h-1 bg-gradient-to-r from-brand-400 to-brand-600 rounded-full mb-5 opacity-60 group-hover:opacity-100 transition-opacity" />
       
       <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors mb-2 line-clamp-1">
-        {recipe.title}
+        {recipe.name}
       </h3>
       
       {recipe.description && (
@@ -81,13 +73,8 @@ function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
 
       <div className="flex items-center flex-wrap gap-2 mb-4">
         {recipe.category && (
-          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${categoryColors[recipe.category] || 'bg-stone-100 text-stone-600'}`}>
-            {recipe.category}
-          </span>
-        )}
-        {recipe.cuisine_type && (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-stone-100 text-stone-600">
-            {recipe.cuisine_type}
+          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${categoryColors[(recipe.category as any).name?.toLowerCase()] || 'bg-stone-100 text-stone-600'}`}>
+            {(recipe.category as any).name || recipe.category}
           </span>
         )}
       </div>
@@ -99,14 +86,26 @@ function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
             <span>{recipe.prep_time_minutes} min</span>
           </div>
         )}
-        <div className="flex items-center gap-1.5">
-          <ChefHat className="w-3.5 h-3.5" />
-          <span>{recipe.base_servings} servings</span>
-        </div>
-        {recipe.cost_per_serving && (
+        {servings && (
+          <div className="flex items-center gap-1.5">
+            <ChefHat className="w-3.5 h-3.5" />
+            <span>{servings} servings</span>
+          </div>
+        )}
+        {recipe.total_cost_per_serving && (
           <div className="flex items-center gap-1.5">
             <Euro className="w-3.5 h-3.5" />
-            <span className="font-mono tabular-nums">{Number(recipe.cost_per_serving).toFixed(2)}</span>
+            <span className="font-mono tabular-nums">{formatCurrency(Number(recipe.total_cost_per_serving))}</span>
+          </div>
+        )}
+        {recipe.food_cost_percentage && Number(recipe.food_cost_percentage) > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className={`font-mono tabular-nums font-medium ${
+              Number(recipe.food_cost_percentage) < 30 ? 'text-green-600' :
+              Number(recipe.food_cost_percentage) <= 35 ? 'text-yellow-600' : 'text-red-600'
+            }`}>
+              {Number(recipe.food_cost_percentage).toFixed(1)}%
+            </span>
           </div>
         )}
       </div>
@@ -115,32 +114,12 @@ function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
 }
 
 export default function RecipesPage() {
-  const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [loading, setLoading] = useState(true)
+  const { recipes, loading } = useRecipes()
   const [search, setSearch] = useState('')
-  const supabase = createClient()
 
-  useEffect(() => {
-    async function loadRecipes() {
-      try {
-        const { data } = await supabase
-          .from('recipes')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        setRecipes(data || [])
-      } catch (err) {
-        console.error('Error loading recipes:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadRecipes()
-  }, [])
-
-  const filtered = recipes.filter(r => 
-    r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.category?.toLowerCase().includes(search.toLowerCase())
+  const activeRecipes = recipes.filter(r => r.status !== 'archived')
+  const filtered = activeRecipes.filter(r => 
+    r.name.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -150,8 +129,8 @@ export default function RecipesPage() {
         <div>
           <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Recipes</h1>
           <p className="text-stone-500 mt-1">
-            {recipes.length > 0 
-              ? `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} in your kitchen`
+            {activeRecipes.length > 0 
+              ? `${activeRecipes.length} recipe${activeRecipes.length !== 1 ? 's' : ''} in your kitchen`
               : 'Manage your recipe collection'
             }
           </p>
@@ -163,7 +142,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Search & Filters */}
-      {recipes.length > 0 && (
+      {activeRecipes.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
@@ -191,7 +170,7 @@ export default function RecipesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => <RecipeSkeleton key={i} />)}
         </div>
-      ) : recipes.length === 0 ? (
+      ) : activeRecipes.length === 0 ? (
         <EmptyRecipes />
       ) : filtered.length === 0 ? (
         <div className="card p-8 text-center">

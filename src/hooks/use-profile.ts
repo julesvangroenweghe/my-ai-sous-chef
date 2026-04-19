@@ -2,7 +2,42 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { ChefProfile, ChefMemory } from '@/types/database'
+
+interface ChefProfile {
+  id: string
+  auth_user_id: string
+  name: string
+  display_name: string | null
+  bio: string | null
+  photo_url: string | null
+  avatar_url: string | null
+  style_tags: string[]
+  preferred_techniques: string[]
+  preferred_cuisines: string[]
+  preferred_ingredients: string[]
+  avoided_ingredients: string[]
+  cuisine_styles: string[]
+  signature_dishes: string[]
+  dietary_expertise: string[]
+  experience_years: number | null
+  current_role: string | null
+  cooking_philosophy: string | null
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface ChefMemory {
+  id: string
+  chef_id: string
+  memory_type: 'preference' | 'technique' | 'ingredient_affinity' | 'flavor_profile' | 'habit' | 'feedback'
+  key: string
+  value: Record<string, unknown>
+  confidence: number
+  source: string | null
+  created_at: string
+  updated_at: string
+}
 
 interface UseProfileReturn {
   profile: ChefProfile | null
@@ -14,9 +49,10 @@ interface UseProfileReturn {
   updateProfile: (updates: Partial<ChefProfile>) => Promise<{ success: boolean; error?: string }>
   addMemory: (memory: {
     memory_type: ChefMemory['memory_type']
-    content: string
-    context?: Record<string, unknown>
-    importance?: number
+    key: string
+    value: Record<string, unknown>
+    confidence?: number
+    source?: string
   }) => Promise<{ success: boolean; error?: string }>
   loadMoreMemories: () => Promise<void>
   hasMoreMemories: boolean
@@ -59,20 +95,15 @@ export function useProfile(): UseProfileReturn {
 
       if (data) {
         setProfile(data as ChefProfile)
-        // Load initial memories
         await fetchMemories(data.id, 0)
       } else {
-        // Create a default profile
+        // Profile should be auto-created by trigger, but create if missing
         const { data: newProfile, error: createError } = await supabase
           .from('chef_profiles')
           .insert({
             auth_user_id: user.id,
+            name: user.email?.split('@')[0] || 'Chef',
             display_name: user.email?.split('@')[0] || 'Chef',
-            cuisine_styles: [],
-            signature_techniques: [],
-            preferred_ingredients: [],
-            avoided_ingredients: [],
-            is_public: false,
           })
           .select()
           .single()
@@ -133,9 +164,10 @@ export function useProfile(): UseProfileReturn {
   const addMemory = useCallback(
     async (memory: {
       memory_type: ChefMemory['memory_type']
-      content: string
-      context?: Record<string, unknown>
-      importance?: number
+      key: string
+      value: Record<string, unknown>
+      confidence?: number
+      source?: string
     }) => {
       if (!profile) return { success: false, error: 'No profile loaded' }
 
@@ -144,9 +176,10 @@ export function useProfile(): UseProfileReturn {
         .insert({
           chef_id: profile.id,
           memory_type: memory.memory_type,
-          content: memory.content,
-          context: memory.context || {},
-          importance: memory.importance || 3,
+          key: memory.key,
+          value: memory.value,
+          confidence: memory.confidence || 1.0,
+          source: memory.source || null,
         })
         .select()
         .single()

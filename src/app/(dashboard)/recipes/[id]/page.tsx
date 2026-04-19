@@ -6,24 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
-import { CostBreakdown } from '@/components/recipes/cost-breakdown'
 import { RecipeForm } from '@/components/recipes/recipe-form'
 import { useRecipes } from '@/hooks/use-recipes'
-import { useToast } from '@/components/ui/toast'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
-  ArrowLeft, Edit, Calendar, Clock, Users, RefreshCw,
+  ArrowLeft, Edit, Clock, Users, RefreshCw,
   ChevronDown, Trash2, Loader2
 } from 'lucide-react'
-import type { Recipe, RecipeComponent } from '@/types/database'
-import Link from 'next/link'
+import type { Recipe } from '@/types/database'
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { getRecipe, deleteRecipe, recalculateCosts, loading: actionLoading } = useRecipes()
-  const { addToast } = useToast()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
@@ -35,7 +30,6 @@ export default function RecipeDetailPage() {
     const data = await getRecipe(id)
     if (data) {
       setRecipe(data)
-      // Expand all by default
       setExpandedComps(new Set((data.components || []).map((c) => c.id)))
     }
     setLoading(false)
@@ -49,10 +43,7 @@ export default function RecipeDetailPage() {
     setRecalculating(true)
     const result = await recalculateCosts(id)
     if (result.success) {
-      addToast({ title: 'Costs recalculated', description: `Food cost: ${result.foodCostPct?.toFixed(1)}%`, variant: 'success' })
       await loadRecipe()
-    } else {
-      addToast({ title: 'Error', description: result.error, variant: 'destructive' })
     }
     setRecalculating(false)
   }
@@ -61,7 +52,6 @@ export default function RecipeDetailPage() {
     if (!confirm('Are you sure you want to archive this recipe?')) return
     const result = await deleteRecipe(id)
     if (result.success) {
-      addToast({ title: 'Recipe archived', variant: 'success' })
       router.push('/recipes')
     }
   }
@@ -113,6 +103,10 @@ export default function RecipeDetailPage() {
   }
 
   const sortedComponents = (recipe.components || []).sort((a, b) => a.sort_order - b.sort_order)
+  const servings = (recipe as any).serving_size_grams || (recipe as any).servings || 1
+  const sellingPrice = (recipe as any).selling_price
+  const foodCostPct = (recipe as any).food_cost_percentage
+  const totalCostPerServing = (recipe as any).total_cost_per_serving
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -124,8 +118,8 @@ export default function RecipeDetailPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{recipe.name}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {recipe.category && <Badge variant="secondary">{recipe.category.name}</Badge>}
-            {recipe.subcategory && <Badge variant="outline">{recipe.subcategory.name}</Badge>}
+            {recipe.category && <Badge variant="secondary">{(recipe.category as any).name}</Badge>}
+            {recipe.subcategory && <Badge variant="outline">{(recipe.subcategory as any).name}</Badge>}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -149,9 +143,9 @@ export default function RecipeDetailPage() {
 
       {/* Meta info */}
       <div className="flex gap-4 flex-wrap">
-        {recipe.servings && (
+        {servings > 1 && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" /> {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
+            <Users className="h-4 w-4" /> {servings} servings
           </div>
         )}
         {recipe.prep_time_minutes && (
@@ -159,15 +153,25 @@ export default function RecipeDetailPage() {
             <Clock className="h-4 w-4" /> {recipe.prep_time_minutes} min
           </div>
         )}
-        {recipe.selling_price && (
+        {sellingPrice && (
           <div className="flex items-center gap-2 text-sm font-medium">
-            Selling price: {formatCurrency(recipe.selling_price)}
+            Selling price: {formatCurrency(Number(sellingPrice))}
+          </div>
+        )}
+        {totalCostPerServing && (
+          <div className="flex items-center gap-2 text-sm font-medium">
+            Cost/serving: {formatCurrency(Number(totalCostPerServing))}
+          </div>
+        )}
+        {foodCostPct && Number(foodCostPct) > 0 && (
+          <div className={cn(
+            'flex items-center gap-2 text-sm font-bold',
+            Number(foodCostPct) < 30 ? 'text-green-600' : Number(foodCostPct) <= 35 ? 'text-yellow-600' : 'text-red-600'
+          )}>
+            Food cost: {Number(foodCostPct).toFixed(1)}%
           </div>
         )}
       </div>
-
-      {/* Cost Breakdown */}
-      <CostBreakdown recipe={recipe} />
 
       {/* Components */}
       <div className="space-y-3">
@@ -175,7 +179,7 @@ export default function RecipeDetailPage() {
         {sortedComponents.map((component) => {
           const isExpanded = expandedComps.has(component.id)
           const compCost = (component.ingredients || []).reduce((sum, ci) => {
-            return sum + (ci.cost_per_unit || ci.ingredient?.current_price || 0) * ci.quantity
+            return sum + ((ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0) * ((ci as any).quantity || (ci as any).quantity_per_person || 0)
           }, 0)
 
           return (
@@ -197,8 +201,8 @@ export default function RecipeDetailPage() {
               </CardHeader>
               {isExpanded && (
                 <CardContent className="pt-3">
-                  {component.notes && (
-                    <p className="text-sm text-muted-foreground mb-3 italic">{component.notes}</p>
+                  {(component as any).notes && (
+                    <p className="text-sm text-muted-foreground mb-3 italic">{(component as any).notes}</p>
                   )}
                   <table className="w-full text-sm">
                     <thead>
@@ -208,21 +212,20 @@ export default function RecipeDetailPage() {
                         <th className="pb-2 font-medium text-right">Unit</th>
                         <th className="pb-2 font-medium text-right">Price/unit</th>
                         <th className="pb-2 font-medium text-right">Cost</th>
-                        <th className="pb-2 font-medium">Notes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {component.ingredients?.map((ci) => {
-                        const price = ci.cost_per_unit || ci.ingredient?.current_price || 0
-                        const cost = price * ci.quantity
+                        const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
+                        const qty = (ci as any).quantity || (ci as any).quantity_per_person || 0
+                        const cost = price * qty
                         return (
                           <tr key={ci.id} className="border-b last:border-0">
-                            <td className="py-2 font-medium">{ci.ingredient?.name || '—'}</td>
-                            <td className="py-2 text-right">{ci.quantity}</td>
+                            <td className="py-2 font-medium">{(ci as any).ingredient?.name || '—'}</td>
+                            <td className="py-2 text-right">{qty}</td>
                             <td className="py-2 text-right">{ci.unit}</td>
                             <td className="py-2 text-right text-muted-foreground">{formatCurrency(price)}</td>
                             <td className="py-2 text-right font-medium">{formatCurrency(cost)}</td>
-                            <td className="py-2 text-muted-foreground">{ci.notes || '—'}</td>
                           </tr>
                         )
                       })}
@@ -233,16 +236,21 @@ export default function RecipeDetailPage() {
             </Card>
           )
         })}
+        {sortedComponents.length === 0 && (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">No components added yet</p>
+          </Card>
+        )}
       </div>
 
       {/* Notes */}
-      {recipe.notes && (
+      {(recipe as any).notes && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{recipe.notes}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{(recipe as any).notes}</p>
           </CardContent>
         </Card>
       )}
