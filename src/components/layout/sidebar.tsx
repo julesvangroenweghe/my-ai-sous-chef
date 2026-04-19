@@ -1,86 +1,90 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import {
-  ChefHat, LayoutDashboard, Utensils, Calendar,
-  Receipt, Carrot, Brain, User, PanelLeftClose, PanelLeft
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  Calendar, 
+  FileText, 
+  Apple,
+  Sparkles,
+  User,
+  LogOut 
 } from 'lucide-react'
-import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-const navItems = [
-  { href: '/recipes', label: 'Recipes', icon: Utensils },
-  { href: '/events', label: 'Events & MEP', icon: Calendar },
-  { href: '/invoices', label: 'Invoices', icon: Receipt },
-  { href: '/ingredients', label: 'Ingredients', icon: Carrot },
-  { href: '/jules', label: 'Jules AI', icon: Brain },
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Recipes', href: '/dashboard/recipes', icon: BookOpen },
+  { name: 'Events & MEP', href: '/dashboard/events', icon: Calendar },
+  { name: 'Invoices', href: '/dashboard/invoices', icon: FileText },
+  { name: 'Ingredients', href: '/dashboard/ingredients', icon: Apple },
+  { name: 'Jules AI', href: '/dashboard/jules', icon: Sparkles },
+  { name: 'Profile', href: '/dashboard/profile', icon: User },
 ]
 
-export function AppSidebar() {
+export function Sidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   return (
-    <aside
-      className={cn(
-        'hidden md:flex flex-col bg-stone-900 text-stone-300 h-screen sticky top-0 transition-all duration-300 border-r border-white/5',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-    >
+    <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 bg-stone-900 text-stone-100">
       {/* Logo */}
-      <div className="p-4 flex items-center gap-3">
-        <div className="p-1.5 bg-brand-500/20 rounded-lg shrink-0">
-          <ChefHat className="h-6 w-6 text-brand-400" />
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-stone-800">
+        <Image 
+          src="/logo-192.png" 
+          alt="My AI Sous Chef" 
+          width={36} 
+          height={36}
+          className="rounded-full"
+        />
+        <div>
+          <h1 className="text-base font-semibold tracking-tight text-white">My AI Sous Chef</h1>
+          <p className="text-xs text-stone-400">Kitchen Intelligence</p>
         </div>
-        {!collapsed && (
-          <span className="font-display font-bold text-white text-sm">My AI Sous Chef</span>
-        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href)
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navigation.map((item) => {
+          const isActive = pathname === item.href || 
+            (item.href !== '/dashboard' && pathname?.startsWith(item.href))
           return (
             <Link
-              key={item.href}
+              key={item.name}
               href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-brand-600 text-white'
-                  : 'text-stone-400 hover:bg-white/5 hover:text-white'
-              )}
-              title={collapsed ? item.label : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive 
+                  ? 'bg-brand-500/15 text-brand-400' 
+                  : 'text-stone-400 hover:bg-stone-800 hover:text-stone-200'
+              }`}
             >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              <item.icon className={`w-5 h-5 flex-shrink-0 ${
+                isActive ? 'text-brand-400' : 'text-stone-500'
+              }`} />
+              {item.name}
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-white/10 p-3 space-y-1">
-        <Link
-          href="/profile"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-            pathname === '/profile'
-              ? 'bg-brand-600 text-white'
-              : 'text-stone-400 hover:bg-white/5 hover:text-white'
-          )}
-        >
-          <User className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Profile</span>}
-        </Link>
+      {/* Sign Out */}
+      <div className="px-3 py-4 border-t border-stone-800">
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-white/5 hover:text-white transition-colors w-full"
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all duration-200"
         >
-          {collapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-          {!collapsed && <span>Collapse</span>}
+          <LogOut className="w-5 h-5 text-stone-500" />
+          Sign Out
         </button>
       </div>
     </aside>
