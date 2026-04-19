@@ -3,17 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, CalendarDays, MapPin, Users, ArrowRight, ClipboardList } from 'lucide-react'
-
-interface Event {
-  id: string
-  title: string
-  event_date: string | null
-  location: string | null
-  guest_count: number
-  event_type: string | null
-  status: string
-}
+import { Plus, CalendarDays, MapPin, Users, ArrowRight } from 'lucide-react'
+import type { Event } from '@/types/database'
 
 function EmptyEvents() {
   return (
@@ -41,7 +32,7 @@ export default function EventsPage() {
   useEffect(() => {
     async function load() {
       const { data } = await supabase.from('events').select('*').order('event_date', { ascending: false })
-      setEvents(data || [])
+      setEvents((data || []) as Event[])
       setLoading(false)
     }
     load()
@@ -51,6 +42,7 @@ export default function EventsPage() {
     draft: 'bg-stone-100 text-stone-600',
     confirmed: 'bg-emerald-50 text-emerald-700',
     completed: 'bg-sky-50 text-sky-700',
+    cancelled: 'bg-red-50 text-red-600',
   }
 
   return (
@@ -105,17 +97,20 @@ export default function EventsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors truncate">
-                  {event.title}
+                  {event.name}
                 </h3>
                 <div className="flex items-center gap-4 mt-1 text-sm text-stone-400">
                   {event.location && (
                     <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{event.location}</span>
                   )}
-                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{event.guest_count} guests</span>
+                  {event.num_persons && (
+                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{event.num_persons} guests</span>
+                  )}
+                  <span className="capitalize text-xs">{event.event_type.replace(/_/g, ' ')}</span>
                 </div>
               </div>
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
-                {event.status}
+              <span className={`px-3 py-1 text-xs font-medium rounded-full capitalize ${statusColors[event.status] || statusColors.draft}`}>
+                {event.status.replace(/_/g, ' ')}
               </span>
               <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-brand-500 transition-colors shrink-0" />
             </Link>
