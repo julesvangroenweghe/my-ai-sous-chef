@@ -5,10 +5,10 @@ import { eventRouter } from "./event";
 import { menuRouter } from "./menu";
 
 export const appRouter = router({
-  recipe: recipeRouter,
-  ingredient: ingredientRouter,
-  event: eventRouter,
-  menu: menuRouter,
+ recipe: recipeRouter,
+ ingredient: ingredientRouter,
+ event: eventRouter,
+ menu: menuRouter,
 });
 
 export type AppRouter = typeof appRouter;
