@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const { data: chef } = await supabase
     .from('chef_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   const { data: membership } = await supabase

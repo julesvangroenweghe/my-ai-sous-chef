@@ -1,143 +1,67 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Ingredient, IngredientPrice } from '@/types/database'
+
+interface Ingredient {
+  id: string
+  name: string
+  category: string | null
+  unit_of_purchase: string | null
+  default_unit_price: number | null
+  supplier_name: string | null
+  last_price_update: string | null
+  created_at: string
+  updated_at: string
+}
 
 export function useIngredients() {
-  const supabase = createClient()
-  const [loading, setLoading] = useState(false)
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  const getIngredients = useCallback(async (search?: string) => {
-    setLoading(true)
-    setError(null)
+  const supabase = createClient()
+
+  const fetchIngredients = useCallback(async () => {
     try {
+      setLoading(true)
+      setError(null)
+
       let query = supabase.from('ingredients').select('*').order('name')
-      if (search) {
-        query = query.ilike('name', `%${search}%`)
+
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`)
       }
+      if (selectedCategory) {
+        query = query.eq('category', selectedCategory)
+      }
+
       const { data, error: fetchError } = await query
-      if (fetchError) throw fetchError
-      return (data || []) as Ingredient[]
+      if (fetchError) { setError(fetchError.message); return }
+      setIngredients((data || []) as Ingredient[])
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to fetch ingredients'
-      setError(msg)
-      return []
+      setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
+  }, [searchQuery, selectedCategory])
+
+  const deleteIngredient = useCallback(async (id: string) => {
+    const { error: delError } = await supabase.from('ingredients').delete().eq('id', id)
+    if (delError) return { success: false, error: delError.message }
+    setIngredients((prev) => prev.filter((i) => i.id !== id))
+    return { success: true }
   }, [])
 
-  const createIngredient = useCallback(async (ingredient: {
-    name: string
-    category?: string
-    unit?: string
-    current_price?: number
-    supplier?: string
-  }) => {
-    setLoading(true)
-    setError(null)
-    try {
-      // Get kitchen_id
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { data: chef } = await supabase
-        .from('chef_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-
-      const { data: membership } = await supabase
-        .from('kitchen_members')
-        .select('kitchen_id')
-        .eq('chef_id', chef?.id)
-        .limit(1)
-        .single()
-
-      const { data, error: insertError } = await supabase
-        .from('ingredients')
-        .insert({
-          name: ingredient.name,
-          category: ingredient.category || null,
-          unit: ingredient.unit || null,
-          current_price: ingredient.current_price || null,
-          supplier: ingredient.supplier || null,
-          kitchen_id: membership?.kitchen_id || null,
-          last_updated: new Date().toISOString(),
-        })
-        .select()
-        .single()
-
-      if (insertError) throw insertError
-
-      // Also record price history if price given
-      if (ingredient.current_price && data) {
-        await supabase.from('ingredient_prices').insert({
-          ingredient_id: data.id,
-          price: ingredient.current_price,
-          source: 'manual',
-          recorded_at: new Date().toISOString(),
-        })
-      }
-
-      return { success: true, data: data as Ingredient }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to create ingredient'
-      setError(msg)
-      return { success: false, error: msg }
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const updateIngredient = useCallback(async (id: string, updates: Partial<Ingredient>) => {
-    try {
-      const { error: updateError } = await supabase
-        .from('ingredients')
-        .update({ ...updates, last_updated: new Date().toISOString() })
-        .eq('id', id)
-      if (updateError) throw updateError
-
-      // Record price history if price changed
-      if (updates.current_price) {
-        await supabase.from('ingredient_prices').insert({
-          ingredient_id: id,
-          price: updates.current_price,
-          source: 'manual',
-          recorded_at: new Date().toISOString(),
-        })
-      }
-
-      return { success: true }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to update ingredient'
-      return { success: false, error: msg }
-    }
-  }, [])
-
-  const getPriceHistory = useCallback(async (ingredientId: string, limit = 5) => {
-    try {
-      const { data, error: fetchError } = await supabase
-        .from('ingredient_prices')
-        .select('*')
-        .eq('ingredient_id', ingredientId)
-        .order('recorded_at', { ascending: false })
-        .limit(limit)
-      if (fetchError) throw fetchError
-      return (data || []) as IngredientPrice[]
-    } catch {
-      return []
-    }
-  }, [])
+  useEffect(() => { fetchIngredients() }, [fetchIngredients])
 
   return {
-    loading,
-    error,
-    getIngredients,
-    createIngredient,
-    updateIngredient,
-    getPriceHistory,
+    ingredients, loading, error,
+    searchQuery, setSearchQuery,
+    selectedCategory, setSelectedCategory,
+    refresh: fetchIngredients,
+    deleteIngredient,
   }
 }

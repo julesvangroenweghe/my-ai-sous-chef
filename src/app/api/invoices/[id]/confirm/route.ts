@@ -106,7 +106,7 @@ export async function POST(
         const { data: chef } = await supabase
           .from('chef_profiles')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('auth_user_id', user.id)
           .single()
 
         if (chef && recipeIds.length > 0) {

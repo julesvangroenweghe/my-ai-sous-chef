@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const { data: chef } = await supabase
     .from('chef_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   if (!chef) return NextResponse.json({ error: 'Chef profile not found' }, { status: 404 })
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const { data: chef } = await supabase
     .from('chef_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   if (!chef) return NextResponse.json({ error: 'Chef profile not found' }, { status: 404 })

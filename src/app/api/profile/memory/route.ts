@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const { data: profile } = await supabase
     .from('chef_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   if (!profile) {
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   const { data: profile } = await supabase
     .from('chef_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   if (!profile) {

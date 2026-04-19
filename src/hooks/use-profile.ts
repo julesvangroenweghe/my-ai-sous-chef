@@ -49,7 +49,7 @@ export function useProfile(): UseProfileReturn {
       const { data, error: fetchError } = await supabase
         .from('chef_profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('auth_user_id', user.id)
         .single()
 
       if (fetchError && fetchError.code !== 'PGRST116') {
@@ -66,7 +66,7 @@ export function useProfile(): UseProfileReturn {
         const { data: newProfile, error: createError } = await supabase
           .from('chef_profiles')
           .insert({
-            user_id: user.id,
+            auth_user_id: user.id,
             display_name: user.email?.split('@')[0] || 'Chef',
             cuisine_styles: [],
             signature_techniques: [],

@@ -2,7 +2,7 @@
 
 export interface ChefProfile {
   id: string
-  user_id: string
+  auth_user_id: string
   display_name: string
   bio: string | null
   cuisine_styles: string[]

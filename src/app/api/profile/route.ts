@@ -14,7 +14,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('chef_profiles')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -26,7 +26,7 @@ export async function GET() {
     const { data: newProfile, error: createError } = await supabase
       .from('chef_profiles')
       .insert({
-        user_id: user.id,
+        auth_user_id: user.id,
         display_name: user.email?.split('@')[0] || 'Chef',
         cuisine_styles: [],
         signature_techniques: [],
@@ -83,7 +83,7 @@ export async function PUT(request: Request) {
   const { data, error } = await supabase
     .from('chef_profiles')
     .update(updates)
-    .eq('user_id', user.id)
+    .eq('auth_user_id', user.id)
     .select()
     .single()
 
