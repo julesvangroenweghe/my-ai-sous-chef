@@ -12,6 +12,7 @@ interface RecipeRow {
   description: string | null
   category_id: string | null
   serving_size_grams: number | null
+  number_of_servings: number | null
   prep_time_minutes: number | null
   total_cost_per_serving: number | null
   food_cost_percentage: number | null
@@ -62,7 +63,7 @@ export default function RecipesPage() {
       const { data } = await supabase
         .from('recipes')
         .select(`
-          id, name, description, category_id, serving_size_grams, 
+          id, name, description, category_id, serving_size_grams, number_of_servings, 
           prep_time_minutes, total_cost_per_serving, food_cost_percentage, 
           selling_price, status, created_at, updated_at,
           category:recipe_categories(id, name)
@@ -255,6 +256,11 @@ export default function RecipesPage() {
                 {/* Meta */}
                 <div className="mt-auto pt-3 border-t border-stone-100 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 text-xs text-stone-400">
+                    {recipe.number_of_servings && (
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" /> {recipe.number_of_servings}p
+                      </span>
+                    )}
                     {recipe.prep_time_minutes && (
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {recipe.prep_time_minutes}min

@@ -308,6 +308,7 @@ export function useRecipes() {
  .from('recipes')
  .select(`
  serving_size_grams,
+        number_of_servings,
  selling_price,
  components:recipe_components(
  ingredients:recipe_component_ingredients(
@@ -330,7 +331,7 @@ export function useRecipes() {
  }
  }
 
- const servings = recipe.serving_size_grams || 1
+ const servings = (recipe as any).number_of_servings || 4
  const costPerServing = totalCost / servings
  const sellingPrice = recipe.selling_price || 0
  const foodCostPct = sellingPrice > 0 ? (costPerServing / sellingPrice) * 100 : 0
