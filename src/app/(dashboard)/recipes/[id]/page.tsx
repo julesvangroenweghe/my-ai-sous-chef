@@ -212,7 +212,7 @@ export default function RecipeDetailPage() {
           const compCost = (component.ingredients || []).reduce((sum, ci) => {
             const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
             const qty = (ci as any).quantity_per_person || (ci as any).quantity || 0
-            return sum + price * qty * numberOfServings
+            return sum + (price / 1000) * qty * numberOfServings
           }, 0)
 
           return (
@@ -256,7 +256,7 @@ export default function RecipeDetailPage() {
                         const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
                         const qtyPP = (ci as any).quantity_per_person || (ci as any).quantity || 0
                         const qtyTotal = qtyPP * numberOfServings
-                        const cost = price * qtyTotal
+                        const cost = (price / 1000) * qtyTotal
                         return (
                           <tr key={ci.id} className="border-b last:border-0 hover:bg-stone-50/50 transition-colors">
                             <td className="py-2.5 font-medium text-stone-900">

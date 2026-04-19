@@ -327,7 +327,7 @@ export function useRecipes() {
  for (const comp of (recipe.components || [])) {
  for (const ing of (comp.ingredients || [])) {
  const price = ing.cost_per_unit || ing.ingredient?.current_price || ing.ingredient?.default_unit_price || 0
- totalCost += price * (ing.quantity || 0)
+ totalCost += (price / 1000) * (ing.quantity || 0)
  }
  }
 

@@ -101,7 +101,7 @@ export default function DashboardPage() {
  .order('event_date')
  .limit(5),
  supabase.from('recipes')
- .select('id, name, category, updated_at')
+ .select('id, name, category:recipe_categories(id, name), updated_at').eq('status', 'active')
  .order('updated_at', { ascending: false })
  .limit(4),
  ])
