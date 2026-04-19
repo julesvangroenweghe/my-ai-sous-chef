@@ -105,7 +105,7 @@ export default function IngredientsPage() {
       .from('ingredient_variants')
       .select('*')
       .eq('parent_ingredient_id', ingredientId)
-      .order('variant_name')
+      .order('name')
     setVariants(prev => ({ ...prev, [ingredientId]: data || [] }))
   }, [variants])
 
