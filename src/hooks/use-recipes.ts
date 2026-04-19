@@ -332,7 +332,8 @@ export function useRecipes() {
  }
 
  const servings = (recipe as any).number_of_servings || 4
- const costPerServing = totalCost / servings
+ // quantity is per-person, so totalCost is already cost per serving
+    const costPerServing = totalCost
  const sellingPrice = recipe.selling_price || 0
  const foodCostPct = sellingPrice > 0 ? (costPerServing / sellingPrice) * 100 : 0
 
