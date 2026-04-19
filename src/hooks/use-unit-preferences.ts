@@ -20,7 +20,7 @@ export function useUnitPreferences() {
     // Convenience methods
     format: (value: number, unit: string) => formatQuantity(value, unit, ctx.preferences),
     convert: (value: number, unit: string) => convertToPreferred(value, unit, ctx.preferences),
-    calcCost: (quantity: number, unit: string, pricePerKg: number) => 
-      calculateIngredientCost(quantity, unit, pricePerKg),
+    calcCost: (quantity: number, recipeUnit: string, price: number, ingredientUnit?: string, weightPerPieceG?: number | null) => 
+      calculateIngredientCost(quantity, recipeUnit, price, ingredientUnit, weightPerPieceG),
   }
 }

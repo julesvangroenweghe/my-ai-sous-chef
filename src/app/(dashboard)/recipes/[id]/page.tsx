@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RecipeForm } from '@/components/recipes/recipe-form'
 import { useRecipes } from '@/hooks/use-recipes'
 import { useUnitPreferences } from '@/hooks/use-unit-preferences'
-import { formatQuantity } from '@/lib/units'
+import { formatQuantity, calculateIngredientCost } from '@/lib/units'
 import { UnitToggle } from '@/components/UnitToggle'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
@@ -215,9 +215,11 @@ export default function RecipeDetailPage() {
           const compCost = (component.ingredients || []).reduce((sum, ci) => {
             const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
             const qty = (ci as any).quantity_per_person || (ci as any).quantity || 0
-            const unit = (ci as any).unit || 'kg'
-            const ingredientCost = (unit === 'g' || unit === 'ml') ? (price / 1000) * qty * numberOfServings : price * qty * numberOfServings
-            return sum + ingredientCost
+            const recipeUnit = (ci as any).unit || 'g'
+            const ingredientUnit = (ci as any).ingredient?.unit || undefined
+            const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
+            const costPerPerson = calculateIngredientCost(qty, recipeUnit, price, ingredientUnit, weightPerPiece)
+            return sum + (costPerPerson * numberOfServings)
           }, 0)
 
           return (
@@ -260,9 +262,12 @@ export default function RecipeDetailPage() {
                       {component.ingredients?.map((ci) => {
                         const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
                         const qtyPP = (ci as any).quantity_per_person || (ci as any).quantity || 0
-                        const unit = (ci as any).unit || 'kg'
+                        const unit = (ci as any).unit || 'g'
+                        const ingredientUnit = (ci as any).ingredient?.unit || undefined
+                        const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
                         const qtyTotal = qtyPP * numberOfServings
-                        const cost = (unit === 'g' || unit === 'ml') ? (price / 1000) * qtyTotal : price * qtyTotal
+                        const costPerPerson = calculateIngredientCost(qtyPP, unit, price, ingredientUnit, weightPerPiece)
+                        const cost = costPerPerson * numberOfServings
                         return (
                           <tr key={ci.id} className="border-b last:border-0 hover:bg-stone-50/50 transition-colors">
                             <td className="py-2.5 font-medium text-stone-900">
@@ -271,7 +276,7 @@ export default function RecipeDetailPage() {
                             <td className="py-2.5 text-right font-mono text-stone-600">{formatQuantity(qtyPP, unit)}</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-900">{formatQuantity(qtyTotal, unit)}</td>
                             <td className="py-2.5 text-right text-stone-400">{ci.unit}</td>
-                            <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(price)}/kg</td>
+                            <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(price)}/{(ci as any).ingredient?.unit === 'stuks' || (ci as any).ingredient?.unit === 'stuk' ? 'stuk' : (ci as any).ingredient?.unit === 'l' ? 'l' : 'kg'}</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-700">{formatCurrency(cost)}</td>
                           </tr>
                         )

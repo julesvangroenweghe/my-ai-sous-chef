@@ -303,7 +303,7 @@ export function useRecipes() {
 
  const recalculateCosts = useCallback(async (id: string) => {
  try {
- // Fetch all component ingredients for this recipe
+ // Fetch all component ingredients with unit info for correct cost calculation
  const { data: recipe } = await supabase
  .from('recipes')
  .select(`
@@ -313,8 +313,9 @@ export function useRecipes() {
  components:recipe_components(
  ingredients:recipe_component_ingredients(
  quantity,
+ unit,
  cost_per_unit,
- ingredient:ingredients(current_price, default_unit_price)
+ ingredient:ingredients(current_price, default_unit_price, unit, weight_per_piece_g)
  )
  )
  `)
@@ -326,15 +327,16 @@ export function useRecipes() {
  let totalCost = 0
  for (const comp of (recipe.components || [])) {
  for (const ing of (comp.ingredients || [])) {
- const price = ing.cost_per_unit || ing.ingredient?.current_price || ing.ingredient?.default_unit_price || 0
- const unit = (ing as any).unit || 'kg'
+ const price = (ing as any).cost_per_unit || (ing as any).ingredient?.current_price || (ing as any).ingredient?.default_unit_price || 0
+ const recipeUnit = (ing as any).unit || 'g'
         const qty = (ing as any).quantity || 0
-        // Use central unit-aware cost calculation
-        totalCost += calculateIngredientCost(qty, unit, price)
+        const ingredientUnit = (ing as any).ingredient?.unit || undefined
+        const weightPerPiece = (ing as any).ingredient?.weight_per_piece_g || undefined
+        // Unit-aware cost: handles kg, l, AND stuks correctly
+        totalCost += calculateIngredientCost(qty, recipeUnit, price, ingredientUnit, weightPerPiece)
  }
  }
 
- const servings = (recipe as any).number_of_servings || 4
  // quantity is per-person, so totalCost is already cost per serving
     const costPerServing = totalCost
  const sellingPrice = recipe.selling_price || 0

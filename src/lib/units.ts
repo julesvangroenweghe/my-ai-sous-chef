@@ -1,6 +1,7 @@
 /**
  * Unit Conversion System
  * Converts between g/kg/ml/l with chef-preferred display unit
+ * Handles stuks/piece ingredients via weight_per_piece_g
  */
 
 export type WeightUnit = 'g' | 'kg'
@@ -49,7 +50,7 @@ function isVolumeUnit(unit: string): boolean {
   return ['ml', 'l', 'cl', 'dl'].includes(unit.toLowerCase())
 }
 
-// Is this a count/piece unit (no conversion needed)?
+// Is this a count/piece unit (needs weight_per_piece for conversion)?
 function isCountUnit(unit: string): boolean {
   return ['stuk', 'stuks', 'st', 'piece', 'pcs', 'bos', 'tak', 'takje', 'blad', 'teen', 'snuf', 'snufje', 'el', 'tl', 'eetlepel', 'theelepel'].includes(unit.toLowerCase())
 }
@@ -129,34 +130,113 @@ export function formatQuantity(
  */
 export function formatPricePerUnit(
   pricePerKg: number,
-  preferences: UnitPreferences = DEFAULT_PREFERENCES
+  _preferences: UnitPreferences = DEFAULT_PREFERENCES
 ): string {
   // Price is always shown per kg for readability (industry standard)
   return `${pricePerKg.toFixed(2)}/kg`
 }
 
 /**
- * Calculate ingredient cost with unit awareness
+ * Calculate ingredient cost with full unit awareness
+ * 
+ * Handles 3 cases:
+ * 1. kg-priced ingredients: cost = (quantity_g / 1000) * price_per_kg
+ * 2. liter-priced ingredients: cost = (quantity_ml / 1000) * price_per_liter
+ * 3. stuks-priced ingredients: cost = (quantity_g / weight_per_piece_g) * price_per_stuk
+ * 
+ * @param recipeQuantity - quantity from recipe (per person)
+ * @param recipeUnit - unit in the recipe (usually 'g' or 'ml')
+ * @param ingredientPrice - price from ingredient table (current_price)
+ * @param ingredientUnit - purchase unit from ingredient table ('kg', 'l', 'stuks', etc.)
+ * @param weightPerPieceG - weight in grams of one piece (only for stuks ingredients)
  */
 export function calculateIngredientCost(
-  quantity: number,
-  unit: string,
-  pricePerKg: number
+  recipeQuantity: number,
+  recipeUnit: string,
+  ingredientPrice: number,
+  ingredientUnit?: string,
+  weightPerPieceG?: number | null
 ): number {
-  if (!pricePerKg || !quantity) return 0
-  
-  // Convert quantity to kg for cost calculation
-  if (isWeightUnit(unit)) {
-    const grams = toGrams(quantity, unit)
-    return (grams / 1000) * pricePerKg
+  if (!ingredientPrice || !recipeQuantity) return 0
+
+  // If no ingredient unit provided, fall back to legacy behavior
+  // (assume price matches recipe unit scale: kg for g, l for ml)
+  if (!ingredientUnit) {
+    if (isWeightUnit(recipeUnit)) {
+      const grams = toGrams(recipeQuantity, recipeUnit)
+      return (grams / 1000) * ingredientPrice
+    }
+    if (isVolumeUnit(recipeUnit)) {
+      const ml = toMl(recipeQuantity, recipeUnit)
+      return (ml / 1000) * ingredientPrice
+    }
+    return 0
   }
-  
-  // For volume, assume 1ml ≈ 1g (rough approximation for liquids)
-  if (isVolumeUnit(unit)) {
-    const ml = toMl(quantity, unit)
-    return (ml / 1000) * pricePerKg
+
+  // Case 1: Ingredient priced per kg (most common)
+  if (['kg', 'g'].includes(ingredientUnit.toLowerCase())) {
+    // Recipe quantity in grams or kg → convert to kg → multiply by price/kg
+    if (isWeightUnit(recipeUnit)) {
+      const grams = toGrams(recipeQuantity, recipeUnit)
+      // If ingredient unit is 'g', price is per gram
+      if (ingredientUnit.toLowerCase() === 'g') {
+        return grams * ingredientPrice
+      }
+      return (grams / 1000) * ingredientPrice
+    }
+    return 0
   }
-  
-  // For count units, can't reliably calculate — return 0
+
+  // Case 2: Ingredient priced per liter
+  if (['l', 'liter', 'ml'].includes(ingredientUnit.toLowerCase())) {
+    if (isVolumeUnit(recipeUnit)) {
+      const ml = toMl(recipeQuantity, recipeUnit)
+      if (ingredientUnit.toLowerCase() === 'ml') {
+        return ml * ingredientPrice
+      }
+      return (ml / 1000) * ingredientPrice
+    }
+    // Recipe uses grams for a liquid ingredient → assume 1ml ≈ 1g
+    if (isWeightUnit(recipeUnit)) {
+      const grams = toGrams(recipeQuantity, recipeUnit)
+      return (grams / 1000) * ingredientPrice
+    }
+    return 0
+  }
+
+  // Case 3: Ingredient priced per stuk/stuks/bos/piece
+  if (isCountUnit(ingredientUnit)) {
+    // We need weight_per_piece to convert grams → number of pieces
+    if (weightPerPieceG && weightPerPieceG > 0) {
+      if (isWeightUnit(recipeUnit)) {
+        const grams = toGrams(recipeQuantity, recipeUnit)
+        const pieces = grams / weightPerPieceG
+        return pieces * ingredientPrice
+      }
+      if (isVolumeUnit(recipeUnit)) {
+        // For liquids measured in ml but ingredient sold per piece (rare)
+        const ml = toMl(recipeQuantity, recipeUnit)
+        const pieces = ml / weightPerPieceG
+        return pieces * ingredientPrice
+      }
+    }
+    // Fallback: if recipe also uses count units, direct multiply
+    if (isCountUnit(recipeUnit)) {
+      return recipeQuantity * ingredientPrice
+    }
+    // No weight_per_piece available — can't calculate
+    return 0
+  }
+
+  // Unknown combination — try best guess
+  if (isWeightUnit(recipeUnit)) {
+    const grams = toGrams(recipeQuantity, recipeUnit)
+    return (grams / 1000) * ingredientPrice
+  }
+  if (isVolumeUnit(recipeUnit)) {
+    const ml = toMl(recipeQuantity, recipeUnit)
+    return (ml / 1000) * ingredientPrice
+  }
+
   return 0
 }
