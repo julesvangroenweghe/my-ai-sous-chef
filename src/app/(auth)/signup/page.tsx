@@ -37,43 +37,43 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sidebar to-slate-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-brand-950 flex items-center justify-center p-6">
+      <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex p-3 bg-sidebar-accent/20 rounded-2xl mb-4">
-            <ChefHat className="h-8 w-8 text-sidebar-accent" />
+          <div className="inline-flex p-3 bg-brand-500/20 rounded-2xl mb-4">
+            <ChefHat className="h-8 w-8 text-brand-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Join the Kitchen</h1>
-          <p className="text-slate-400 mt-1">Create your chef profile</p>
+          <h1 className="text-2xl font-display font-bold text-white">Join the Kitchen</h1>
+          <p className="text-stone-400 mt-1">Create your chef profile</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-diffusion-lg p-8">
           {success ? (
             <div className="text-center py-4">
-              <Mail className="h-12 w-12 text-sidebar-accent mx-auto mb-4" />
-              <h2 className="text-lg font-semibold">Check your email</h2>
-              <p className="text-muted-foreground mt-2">
-                We sent a confirmation link to <strong>{email}</strong>
+              <Mail className="h-12 w-12 text-brand-500 mx-auto mb-4" />
+              <h2 className="text-lg font-semibold font-display">Check your email</h2>
+              <p className="text-stone-500 mt-2">
+                We sent a confirmation link to <strong className="text-stone-900">{email}</strong>
               </p>
             </div>
           ) : (
             <form onSubmit={handleSignup} className="space-y-4">
               {error && (
-                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">
+                <div className="bg-red-50 text-red-700 text-sm p-3 rounded-xl border border-red-100">
                   {error}
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="name">Chef Name</label>
+                <label className="text-sm font-medium text-stone-700" htmlFor="name">Chef Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                   <input
                     id="name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sidebar-accent"
+                    className="input-premium pl-10"
                     placeholder="Chef Jules"
                     required
                   />
@@ -81,15 +81,15 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="email">Email</label>
+                <label className="text-sm font-medium text-stone-700" htmlFor="email">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                   <input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sidebar-accent"
+                    className="input-premium pl-10"
                     placeholder="chef@kitchen.com"
                     required
                   />
@@ -97,16 +97,16 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="password">Password</label>
+                <label className="text-sm font-medium text-stone-700" htmlFor="password">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                   <input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sidebar-accent"
-                    placeholder="••••••••"
+                    className="input-premium pl-10"
+                    placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
                     minLength={6}
                     required
                   />
@@ -116,7 +116,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-sidebar-accent hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="btn-primary w-full disabled:opacity-50"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create Account
@@ -124,9 +124,9 @@ export default function SignupPage() {
             </form>
           )}
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
+          <p className="text-center text-sm text-stone-500 mt-6">
             Already have an account?{' '}
-            <Link href="/login" className="text-sidebar-accent hover:underline font-medium">
+            <Link href="/login" className="text-brand-600 hover:text-brand-700 hover:underline font-medium">
               Sign in
             </Link>
           </p>

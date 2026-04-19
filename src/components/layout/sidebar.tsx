@@ -24,17 +24,17 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 border-r border-white/5',
+        'hidden md:flex flex-col bg-stone-900 text-stone-300 h-screen sticky top-0 transition-all duration-300 border-r border-white/5',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
-        <div className="p-1.5 bg-sidebar-accent/20 rounded-lg shrink-0">
-          <ChefHat className="h-6 w-6 text-sidebar-accent" />
+        <div className="p-1.5 bg-brand-500/20 rounded-lg shrink-0">
+          <ChefHat className="h-6 w-6 text-brand-400" />
         </div>
         {!collapsed && (
-          <span className="font-bold text-white text-sm">My AI Sous Chef</span>
+          <span className="font-display font-bold text-white text-sm">My AI Sous Chef</span>
         )}
       </div>
 
@@ -49,8 +49,8 @@ export function AppSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-sidebar-accent text-white'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-stone-400 hover:bg-white/5 hover:text-white'
               )}
               title={collapsed ? item.label : undefined}
             >
@@ -68,8 +68,8 @@ export function AppSidebar() {
           className={cn(
             'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
             pathname === '/profile'
-              ? 'bg-sidebar-accent text-white'
-              : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              ? 'bg-brand-600 text-white'
+              : 'text-stone-400 hover:bg-white/5 hover:text-white'
           )}
         >
           <User className="h-5 w-5 shrink-0" />
@@ -77,7 +77,7 @@ export function AppSidebar() {
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-white/5 hover:text-white transition-colors w-full"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-white/5 hover:text-white transition-colors w-full"
         >
           {collapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           {!collapsed && <span>Collapse</span>}

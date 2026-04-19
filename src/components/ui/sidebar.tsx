@@ -11,7 +11,7 @@ function Sidebar({ className, collapsed, children, ...props }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300',
+        'flex flex-col bg-stone-900 text-stone-300 h-screen sticky top-0 transition-all duration-300',
         collapsed ? 'w-16' : 'w-64',
         className
       )}
@@ -47,8 +47,8 @@ function SidebarItem({ className, href, icon, active, children, ...props }: Side
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         active
-          ? 'bg-sidebar-accent text-white'
-          : 'text-sidebar-foreground/70 hover:bg-white/5 hover:text-sidebar-foreground',
+          ? 'bg-brand-600 text-white'
+          : 'text-stone-400 hover:bg-white/5 hover:text-white',
         className
       )}
       {...props}
