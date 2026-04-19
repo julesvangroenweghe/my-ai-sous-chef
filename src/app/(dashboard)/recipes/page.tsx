@@ -1,188 +1,210 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
-import { RecipeCard } from '@/components/recipes/recipe-card'
-import { CategoryFilter } from '@/components/recipes/category-filter'
-import { cn } from '@/lib/utils'
-import type { Recipe, RecipeCategory } from '@/types/database'
+import { Plus, Search, BookOpen, Clock, Euro, Filter, ArrowUpDown, ChefHat } from 'lucide-react'
+
+interface Recipe {
+  id: string
+  title: string
+  description: string | null
+  category: string | null
+  cuisine_type: string | null
+  base_servings: number
+  prep_time_minutes: number | null
+  cost_per_serving: number | null
+  created_at: string
+}
+
+function RecipeSkeleton() {
+  return (
+    <div className="card p-6 space-y-4">
+      <div className="skeleton w-full h-32 rounded-xl" />
+      <div className="skeleton w-3/4 h-5 rounded" />
+      <div className="skeleton w-1/2 h-4 rounded" />
+      <div className="flex gap-2">
+        <div className="skeleton w-16 h-6 rounded-full" />
+        <div className="skeleton w-20 h-6 rounded-full" />
+      </div>
+    </div>
+  )
+}
+
+function EmptyRecipes() {
+  return (
+    <div className="card p-12 text-center animate-scale-in">
+      <div className="w-16 h-16 bg-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <BookOpen className="w-8 h-8 text-brand-400" />
+      </div>
+      <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
+        Your recipe book is empty
+      </h3>
+      <p className="text-stone-500 text-sm max-w-[40ch] mx-auto mb-8 leading-relaxed">
+        Start building your collection. Add your first recipe and we will calculate costs, scale portions, and organize everything for you.
+      </p>
+      <Link href="/recipes/new" className="btn-primary">
+        <Plus className="w-4 h-4" />
+        Create Your First Recipe
+      </Link>
+    </div>
+  )
+}
+
+function RecipeCard({ recipe, index }: { recipe: Recipe; index: number }) {
+  const categoryColors: Record<string, string> = {
+    'appetizer': 'bg-emerald-50 text-emerald-700',
+    'main': 'bg-brand-50 text-brand-700',
+    'dessert': 'bg-rose-50 text-rose-700',
+    'amuse': 'bg-violet-50 text-violet-700',
+    'side': 'bg-sky-50 text-sky-700',
+  }
+
+  return (
+    <Link
+      href={`/recipes/${recipe.id}`}
+      className="card-hover p-6 group animate-slide-up opacity-0"
+      style={{ animationDelay: `${index * 75}ms`, animationFillMode: 'forwards' }}
+    >
+      {/* Color bar top */}
+      <div className="w-full h-1 bg-gradient-to-r from-brand-400 to-brand-600 rounded-full mb-5 opacity-60 group-hover:opacity-100 transition-opacity" />
+      
+      <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors mb-2 line-clamp-1">
+        {recipe.title}
+      </h3>
+      
+      {recipe.description && (
+        <p className="text-sm text-stone-500 mb-4 line-clamp-2 leading-relaxed">
+          {recipe.description}
+        </p>
+      )}
+
+      <div className="flex items-center flex-wrap gap-2 mb-4">
+        {recipe.category && (
+          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${categoryColors[recipe.category] || 'bg-stone-100 text-stone-600'}`}>
+            {recipe.category}
+          </span>
+        )}
+        {recipe.cuisine_type && (
+          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-stone-100 text-stone-600">
+            {recipe.cuisine_type}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-4 text-xs text-stone-400">
+        {recipe.prep_time_minutes && (
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{recipe.prep_time_minutes} min</span>
+          </div>
+        )}
+        <div className="flex items-center gap-1.5">
+          <ChefHat className="w-3.5 h-3.5" />
+          <span>{recipe.base_servings} servings</span>
+        </div>
+        {recipe.cost_per_serving && (
+          <div className="flex items-center gap-1.5">
+            <Euro className="w-3.5 h-3.5" />
+            <span className="font-mono tabular-nums">{Number(recipe.cost_per_serving).toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+    </Link>
+  )
+}
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [categories, setCategories] = useState<RecipeCategory[]>([])
-  const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedSub, setSelectedSub] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'name' | 'cost' | 'date'>('date')
   const [loading, setLoading] = useState(true)
-  const [showFilters, setShowFilters] = useState(false)
+  const [search, setSearch] = useState('')
   const supabase = createClient()
 
   useEffect(() => {
-    async function load() {
-      const [recipesRes, categoriesRes] = await Promise.all([
-        supabase
+    async function loadRecipes() {
+      try {
+        const { data } = await supabase
           .from('recipes')
-          .select(`
-            *,
-            category:recipe_categories(id, name),
-            subcategory:recipe_subcategories(id, name),
-            components:recipe_components(
-              id, name, sort_order,
-              ingredients:recipe_component_ingredients(
-                id, quantity, unit, cost_per_unit,
-                ingredient:ingredients(id, name, unit, current_price)
-              )
-            )
-          `)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('recipe_categories')
-          .select('*, subcategories:recipe_subcategories(*)')
-          .order('sort_order'),
-      ])
-      if (recipesRes.data) setRecipes(recipesRes.data as unknown as Recipe[])
-      if (categoriesRes.data) setCategories(categoriesRes.data as unknown as RecipeCategory[])
-      setLoading(false)
-    }
-    load()
-  }, [])
+          .select('*')
+          .order('created_at', { ascending: false })
 
-  const filtered = useMemo(() => {
-    let result = recipes.filter((r) => {
-      const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase()) ||
-        (r.description || '').toLowerCase().includes(search.toLowerCase())
-      const matchesCategory = !selectedCategory || r.category_id === selectedCategory
-      const matchesSub = !selectedSub || r.subcategory_id === selectedSub
-      return matchesSearch && matchesCategory && matchesSub
-    })
-
-    result.sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name)
-      if (sortBy === 'cost') return (b.food_cost_percentage || 0) - (a.food_cost_percentage || 0)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
-
-    return result
-  }, [recipes, search, selectedCategory, selectedSub, sortBy])
-
-  // Count recipes per category
-  const recipeCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: recipes.length }
-    for (const r of recipes) {
-      if (r.category_id) {
-        counts[r.category_id] = (counts[r.category_id] || 0) + 1
+        setRecipes(data || [])
+      } catch (err) {
+        console.error('Error loading recipes:', err)
+      } finally {
+        setLoading(false)
       }
     }
-    return counts
-  }, [recipes])
+    loadRecipes()
+  }, [])
+
+  const filtered = recipes.filter(r => 
+    r.title.toLowerCase().includes(search.toLowerCase()) ||
+    r.category?.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">Recipes</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {recipes.length} recipe{recipes.length !== 1 ? 's' : ''} in your kitchen
+          <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Recipes</h1>
+          <p className="text-stone-500 mt-1">
+            {recipes.length > 0 
+              ? `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} in your kitchen`
+              : 'Manage your recipe collection'
+            }
           </p>
         </div>
-        <Link href="/recipes/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" /> Add Recipe
-          </Button>
+        <Link href="/recipes/new" className="btn-primary shrink-0">
+          <Plus className="w-4 h-4" />
+          Add Recipe
         </Link>
       </div>
 
-      {/* Search + Sort + Filter toggle */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search recipes..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as 'name' | 'cost' | 'date')}
-          className="w-40"
-        >
-          <option value="date">Newest first</option>
-          <option value="name">Name A-Z</option>
-          <option value="cost">Highest cost %</option>
-        </Select>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className={cn('gap-1.5 md:hidden', showFilters && 'bg-primary/10 text-primary')}
-        >
-          <SlidersHorizontal className="h-4 w-4" /> Filters
-        </Button>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Sidebar filter — desktop */}
-        <div className={cn(
-          'w-56 shrink-0 hidden md:block',
-          showFilters && '!block'
-        )}>
-          <div className="sticky top-20">
-            <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Categories</h3>
-            <CategoryFilter
-              categories={categories}
-              selected={selectedCategory}
-              selectedSub={selectedSub}
-              onSelect={(catId, subId) => {
-                setSelectedCategory(catId)
-                setSelectedSub(subId || null)
-              }}
-              recipeCounts={recipeCounts}
+      {/* Search & Filters */}
+      {recipes.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Search recipes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-premium pl-11"
             />
           </div>
+          <button className="btn-secondary">
+            <Filter className="w-4 h-4" />
+            Filter
+          </button>
+          <button className="btn-secondary">
+            <ArrowUpDown className="w-4 h-4" />
+            Sort
+          </button>
         </div>
+      )}
 
-        {/* Recipe grid */}
-        <div className="flex-1 min-w-0">
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-52 bg-muted animate-pulse rounded-xl" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">
-                {search || selectedCategory
-                  ? 'No recipes match your filters.'
-                  : 'No recipes yet. Create your first recipe!'}
-              </p>
-              {!search && !selectedCategory && (
-                <Link href="/recipes/new">
-                  <Button className="mt-4 gap-2">
-                    <Plus className="h-4 w-4" /> Create Recipe
-                  </Button>
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
-              ))}
-            </div>
-          )}
+      {/* Content */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <RecipeSkeleton key={i} />)}
         </div>
-      </div>
+      ) : recipes.length === 0 ? (
+        <EmptyRecipes />
+      ) : filtered.length === 0 ? (
+        <div className="card p-8 text-center">
+          <Search className="w-8 h-8 text-stone-300 mx-auto mb-3" />
+          <p className="text-stone-500">No recipes match &quot;{search}&quot;</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((recipe, i) => (
+            <RecipeCard key={recipe.id} recipe={recipe} index={i} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

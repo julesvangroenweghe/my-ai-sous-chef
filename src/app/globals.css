@@ -1,52 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 47% 16%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 24 95% 53%;
-    --radius: 0.5rem;
+    --color-brand: 234 88 12;
+    --color-surface: 255 255 255;
+    --color-background: 250 250 249;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-surface-muted text-stone-900 font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+
+  /* Focus ring */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500/40 ring-offset-2 ring-offset-surface;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-stone-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-stone-400;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+@layer components {
+  /* Premium card */
+  .card {
+    @apply bg-white rounded-2xl border border-stone-200/50 shadow-diffusion;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 ease-out;
+  }
+
+  .card-hover:hover {
+    @apply shadow-brand-glow -translate-y-0.5;
+  }
+
+  /* Stagger animation utility */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-stone-200/60 rounded-lg animate-pulse;
+  }
+
+  /* Premium input */
+  .input-premium {
+    @apply w-full px-4 py-3 bg-white border border-stone-200 rounded-xl
+           text-stone-900 placeholder:text-stone-400
+           transition-all duration-200
+           focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20 focus:outline-none;
+  }
+
+  /* Premium button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           px-6 py-3 bg-brand-600 text-white font-medium rounded-xl
+           transition-all duration-200
+           hover:bg-brand-700 active:scale-[0.98]
+           shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           px-6 py-3 bg-stone-100 text-stone-700 font-medium rounded-xl
+           transition-all duration-200
+           hover:bg-stone-200 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           px-4 py-2 text-stone-600 font-medium rounded-xl
+           transition-all duration-200
+           hover:bg-stone-100 active:scale-[0.98];
+  }
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+
+@layer utilities {
+  /* Stagger animation children */
+  .animate-stagger > * {
+    @apply opacity-0 animate-slide-up;
+  }
+  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; animation-fill-mode: forwards; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 75ms; animation-fill-mode: forwards; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 150ms; animation-fill-mode: forwards; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 225ms; animation-fill-mode: forwards; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 300ms; animation-fill-mode: forwards; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 375ms; animation-fill-mode: forwards; }
 }

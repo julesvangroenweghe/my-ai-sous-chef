@@ -1,186 +1,125 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Plus, Search, Filter, Calendar as CalIcon, List, Grid3X3 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
-import { EventCard } from '@/components/events/event-card'
-import { useEvents } from '@/hooks/use-events'
-import { EVENT_TYPES, EVENT_STATUSES } from '@/types/mep'
-import type { Event } from '@/types/database'
+import { Plus, CalendarDays, MapPin, Users, ArrowRight, ClipboardList } from 'lucide-react'
+
+interface Event {
+  id: string
+  title: string
+  event_date: string | null
+  location: string | null
+  guest_count: number
+  event_type: string | null
+  status: string
+}
+
+function EmptyEvents() {
+  return (
+    <div className="card p-12 text-center animate-scale-in">
+      <div className="w-16 h-16 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <CalendarDays className="w-8 h-8 text-emerald-400" />
+      </div>
+      <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">No events planned yet</h3>
+      <p className="text-stone-500 text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
+        Create an event and we will auto-generate your MEP production plan with exact quantities, timing, and prep lists.
+      </p>
+      <Link href="/events/new" className="btn-primary">
+        <Plus className="w-4 h-4" />
+        Plan Your First Event
+      </Link>
+    </div>
+  )
+}
 
 export default function EventsPage() {
-  const router = useRouter()
-  const { getEvents, loading } = useEvents()
   const [events, setEvents] = useState<Event[]>([])
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [typeFilter, setTypeFilter] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-
-  const loadEvents = useCallback(async () => {
-    const data = await getEvents({
-      search: search || undefined,
-      status: statusFilter || undefined,
-      event_type: typeFilter || undefined,
-    })
-    setEvents(data)
-  }, [search, statusFilter, typeFilter])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    loadEvents()
-  }, [loadEvents])
+    async function load() {
+      const { data } = await supabase.from('events').select('*').order('event_date', { ascending: false })
+      setEvents(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [])
 
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const upcoming = events.filter((e) => new Date(e.event_date) >= now)
-  const past = events.filter((e) => new Date(e.event_date) < now)
-
-  const handleGenerateMep = (id: string) => {
-    router.push(`/events/${id}?tab=mep&generate=true`)
+  const statusColors: Record<string, string> = {
+    draft: 'bg-stone-100 text-stone-600',
+    confirmed: 'bg-emerald-50 text-emerald-700',
+    completed: 'bg-sky-50 text-sky-700',
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">Events & MEP</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {upcoming.length} upcoming event{upcoming.length !== 1 ? 's' : ''}
-            {events.length > 0 && ` · ${events.length} total`}
-          </p>
+          <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Events & MEP</h1>
+          <p className="text-stone-500 mt-1">Plan events and auto-generate production plans</p>
         </div>
-        <Link href="/events/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" /> New Event
-          </Button>
+        <Link href="/events/new" className="btn-primary shrink-0">
+          <Plus className="w-4 h-4" />
+          New Event
         </Link>
       </div>
 
-      {/* Search & Filters */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search events..."
-              className="pl-9"
-            />
-          </div>
-          <Button
-            variant={showFilters ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-1.5"
-          >
-            <Filter className="h-4 w-4" /> Filters
-          </Button>
-        </div>
-
-        {showFilters && (
-          <div className="flex items-center gap-3 flex-wrap">
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-40"
-            >
-              <option value="">All statuses</option>
-              {EVENT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                </option>
-              ))}
-            </Select>
-            <Select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-44"
-            >
-              <option value="">All types</option>
-              {EVENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                </option>
-              ))}
-            </Select>
-            {(statusFilter || typeFilter) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setStatusFilter('')
-                  setTypeFilter('')
-                }}
-              >
-                Clear filters
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Event list */}
       {loading ? (
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="card p-6 flex gap-4">
+              <div className="skeleton w-14 h-14 rounded-2xl shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton w-48 h-5 rounded" />
+                <div className="skeleton w-32 h-4 rounded" />
+              </div>
+            </div>
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16">
-          <CalIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">
-            {search || statusFilter || typeFilter
-              ? 'No events match your filters'
-              : 'No events yet'}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {search || statusFilter || typeFilter
-              ? 'Try adjusting your search or filters'
-              : 'Create your first event to get started'}
-          </p>
-          {!search && !statusFilter && !typeFilter && (
-            <Link href="/events/new">
-              <Button className="mt-4 gap-2">
-                <Plus className="h-4 w-4" /> Create Event
-              </Button>
-            </Link>
-          )}
-        </div>
+        <EmptyEvents />
       ) : (
-        <div className="space-y-6">
-          {upcoming.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-                Upcoming ({upcoming.length})
-              </h2>
-              {upcoming.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onGenerateMep={handleGenerateMep}
-                />
-              ))}
-            </div>
-          )}
-          {past.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-gray-400" />
-                Past ({past.length})
-              </h2>
-              {past.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          )}
+        <div className="space-y-3">
+          {events.map((event, i) => (
+            <Link
+              key={event.id}
+              href={`/events/${event.id}`}
+              className="card-hover p-6 flex items-center gap-5 group animate-slide-up opacity-0"
+              style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'forwards' }}
+            >
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex flex-col items-center justify-center shrink-0">
+                {event.event_date ? (
+                  <>
+                    <span className="text-xs text-emerald-600 font-medium uppercase">
+                      {new Date(event.event_date).toLocaleDateString('en', { month: 'short' })}
+                    </span>
+                    <span className="text-lg font-bold text-emerald-700 font-mono leading-none">
+                      {new Date(event.event_date).getDate()}
+                    </span>
+                  </>
+                ) : (
+                  <CalendarDays className="w-6 h-6 text-emerald-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors truncate">
+                  {event.title}
+                </h3>
+                <div className="flex items-center gap-4 mt-1 text-sm text-stone-400">
+                  {event.location && (
+                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{event.location}</span>
+                  )}
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{event.guest_count} guests</span>
+                </div>
+              </div>
+              <span className={`px-3 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
+                {event.status}
+              </span>
+              <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-brand-500 transition-colors shrink-0" />
+            </Link>
+          ))}
         </div>
       )}
     </div>

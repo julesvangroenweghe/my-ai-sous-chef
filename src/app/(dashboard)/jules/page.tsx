@@ -1,234 +1,158 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Brain, Bell, Sparkles, BarChart3 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { JulesPanel } from '@/components/jules/jules-panel'
-import { MemoryDisplay } from '@/components/jules/memory-display'
-import { useJules } from '@/hooks/use-jules'
-import { formatCurrency } from '@/lib/utils'
-import type { JulesSuggestion, ChefMemory } from '@/types/database'
+import { useState } from 'react'
+import { Sparkles, Send, Lightbulb, Brain, Bell, ChevronRight } from 'lucide-react'
 
-type Tab = 'alerts' | 'memory' | 'insights'
+type Tab = 'chat' | 'memory' | 'alerts'
+
+const sampleAlerts = [
+  { id: 1, type: 'price', title: 'Tomato prices up 18%', description: 'Cherry tomatoes from Metro went from €3.20 to €3.78/kg. Consider switching to San Marzano from Sligro at €2.95/kg.', time: '2h ago' },
+  { id: 2, type: 'seasonal', title: 'White asparagus season ending', description: 'Dutch white asparagus season typically ends mid-June. Consider stocking up or switching to green asparagus.', time: '1d ago' },
+  { id: 3, type: 'cost', title: 'Food cost alert: Beef Bourguignon', description: 'Cost per serving increased to €8.45 (was €7.20). Main driver: beef cheek price increase.', time: '3d ago' },
+]
 
 export default function JulesPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('alerts')
-  const [suggestions, setSuggestions] = useState<JulesSuggestion[]>([])
-  const [memories, setMemories] = useState<ChefMemory[]>([])
-  const [loading, setLoading] = useState(true)
-  const { getSuggestions, getMemory } = useJules()
+  const [activeTab, setActiveTab] = useState<Tab>('chat')
+  const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      const [sugs, mems] = await Promise.all([getSuggestions(), getMemory()])
-      setSuggestions(sugs)
-      setMemories(mems)
-      setLoading(false)
-    }
-    load()
-  }, [getSuggestions, getMemory])
-
-  const tabs: { id: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
-    {
-      id: 'alerts',
-      label: 'Alerts',
-      icon: <Bell className="h-4 w-4" />,
-      count: suggestions.length,
-    },
-    {
-      id: 'memory',
-      label: 'Memory',
-      icon: <Brain className="h-4 w-4" />,
-      count: memories.length,
-    },
-    {
-      id: 'insights',
-      label: 'Insights',
-      icon: <BarChart3 className="h-4 w-4" />,
-    },
+  const tabs = [
+    { id: 'chat' as Tab, label: 'Chat', icon: Sparkles },
+    { id: 'memory' as Tab, label: 'Memory', icon: Brain },
+    { id: 'alerts' as Tab, label: 'Alerts', icon: Bell, badge: 3 },
   ]
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-purple-100 rounded-xl">
-          <Brain className="h-6 w-6 text-purple-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Jules AI</h1>
-          <p className="text-muted-foreground text-sm">
-            Your proactive kitchen intelligence partner
-          </p>
+      <div className="animate-fade-in">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Jules</h1>
+            <p className="text-stone-500 text-sm">Your culinary intelligence partner</p>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
+      <div className="flex gap-1 p-1 bg-stone-100 rounded-xl w-fit animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-white text-stone-900 shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
             }`}
           >
-            {tab.icon}
+            <tab.icon className="w-4 h-4" />
             {tab.label}
-            {tab.count !== undefined && tab.count > 0 && (
-              <Badge variant={activeTab === tab.id ? 'default' : 'secondary'} className="text-xs h-5 min-w-[20px] flex items-center justify-center">
-                {tab.count}
-              </Badge>
+            {tab.badge && (
+              <span className="w-5 h-5 bg-brand-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {tab.badge}
+              </span>
             )}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      {loading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-muted animate-pulse rounded-xl" />
+      {/* Chat Tab */}
+      {activeTab === 'chat' && (
+        <div className="card overflow-hidden animate-scale-in" style={{ minHeight: '60vh' }}>
+          <div className="flex flex-col h-full" style={{ minHeight: '60vh' }}>
+            {/* Messages area */}
+            <div className="flex-1 p-8 flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Sparkles className="w-8 h-8 text-brand-400" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
+                  What can I help you cook up?
+                </h3>
+                <p className="text-sm text-stone-500 leading-relaxed mb-8">
+                  I know your recipes, your costs, and your style. Ask me anything about your kitchen.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    'What can I make with leftover duck?',
+                    'Optimize my food cost for next week',
+                    'Suggest a seasonal amuse-bouche',
+                    'Calculate portions for 80 guests',
+                  ].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => setMessage(suggestion)}
+                      className="flex items-center gap-2 p-3 bg-stone-50 hover:bg-brand-50 text-left rounded-xl text-sm text-stone-600 hover:text-brand-700 transition-colors group"
+                    >
+                      <Lightbulb className="w-4 h-4 text-stone-400 group-hover:text-brand-500 shrink-0" />
+                      <span className="line-clamp-1">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Input area */}
+            <div className="p-4 border-t border-stone-100">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Ask Jules anything..."
+                  className="input-premium flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && message && setMessage('')}
+                />
+                <button
+                  disabled={!message}
+                  className="btn-primary px-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alerts Tab */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-3 animate-scale-in">
+          {sampleAlerts.map((alert, i) => (
+            <div
+              key={alert.id}
+              className="card-hover p-5 flex items-start gap-4 animate-slide-up opacity-0"
+              style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'forwards' }}
+            >
+              <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                <Bell className="w-5 h-5 text-brand-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-display font-semibold text-stone-900 text-sm">{alert.title}</h4>
+                <p className="text-sm text-stone-500 mt-1 leading-relaxed">{alert.description}</p>
+                <span className="text-xs text-stone-400 mt-2 block">{alert.time}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-stone-300 shrink-0 mt-1" />
+            </div>
           ))}
         </div>
-      ) : (
-        <>
-          {activeTab === 'alerts' && <JulesPanel />}
-
-          {activeTab === 'memory' && (
-            <div className="space-y-6">
-              <MemoryDisplay memories={memories} />
-            </div>
-          )}
-
-          {activeTab === 'insights' && <InsightsTab />}
-        </>
       )}
-    </div>
-  )
-}
 
-function InsightsTab() {
-  const supabase = createClient()
-  const [stats, setStats] = useState({
-    totalRecipes: 0,
-    avgFoodCost: 0,
-    highCostRecipes: 0,
-    totalIngredients: 0,
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadInsights() {
-      const [recipesRes, ingredientsRes] = await Promise.all([
-        supabase.from('recipes').select('food_cost_percentage, total_cost_per_serving').eq('is_active', true),
-        supabase.from('ingredients').select('id', { count: 'exact', head: true }),
-      ])
-
-      const recipes = recipesRes.data || []
-      const avgCost = recipes.length > 0
-        ? recipes.reduce((sum, r) => sum + (r.food_cost_percentage || 0), 0) / recipes.length
-        : 0
-      const highCost = recipes.filter((r) => (r.food_cost_percentage || 0) > 35).length
-
-      setStats({
-        totalRecipes: recipes.length,
-        avgFoodCost: avgCost,
-        highCostRecipes: highCost,
-        totalIngredients: ingredientsRes.count || 0,
-      })
-      setLoading(false)
-    }
-    loadInsights()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-28 bg-muted animate-pulse rounded-xl" />
-        ))}
-      </div>
-    )
-  }
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ]
-  const currentMonth = new Date().getMonth()
-
-  const seasonalSuggestions: Record<number, string[]> = {
-    0: ['Root vegetables', 'Citrus fruits', 'Winter greens'],
-    1: ['Blood oranges', 'Brussels sprouts', 'Celeriac'],
-    2: ['Spring onions', 'Asparagus', 'Rhubarb'],
-    3: ['Asparagus', 'Peas', 'Spring lamb', 'Morels'],
-    4: ['Strawberries', 'Artichokes', 'Broad beans'],
-    5: ['Cherries', 'Courgettes', 'New potatoes'],
-    6: ['Tomatoes', 'Berries', 'Stone fruits'],
-    7: ['Corn', 'Peppers', 'Aubergine'],
-    8: ['Figs', 'Wild mushrooms', 'Squash'],
-    9: ['Pumpkin', 'Apples', 'Game meats'],
-    10: ['Chestnuts', 'Parsnips', 'Cranberries'],
-    11: ['Winter truffles', 'Pomegranate', 'Root vegetables'],
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Total Recipes</p>
-            <p className="text-2xl font-bold mt-1">{stats.totalRecipes}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Avg Food Cost %</p>
-            <p className="text-2xl font-bold mt-1">{stats.avgFoodCost.toFixed(1)}%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">High Cost Recipes</p>
-            <p className="text-2xl font-bold mt-1 text-orange-500">{stats.highCostRecipes}</p>
-            <p className="text-xs text-muted-foreground">&gt;35% food cost</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Ingredients Tracked</p>
-            <p className="text-2xl font-bold mt-1">{stats.totalIngredients}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Seasonal Calendar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            🌿 Seasonal Calendar — {monthNames[currentMonth]}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
-            In-season ingredients for this month:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(seasonalSuggestions[currentMonth] || []).map((item) => (
-              <Badge key={item} variant="secondary" className="text-sm py-1 px-3">
-                {item}
-              </Badge>
-            ))}
+      {/* Memory Tab */}
+      {activeTab === 'memory' && (
+        <div className="card p-8 text-center animate-scale-in">
+          <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Brain className="w-8 h-8 text-violet-400" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">Jules is learning your style</h3>
+          <p className="text-sm text-stone-500 max-w-[45ch] mx-auto leading-relaxed">
+            As you work with recipes, plan events, and chat with Jules, your personal cooking style profile builds here. The more you use it, the smarter Jules gets.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
