@@ -65,20 +65,19 @@ interface MepLine {
   total_quantity: number
   unit: string
   per_person: number
-  cost_total: number
   component_name: string
   recipe_name: string
   course_order: number
 }
 
 const courseLabels: Record<number, string> = {
-  0: '\u{1F944} Amuse',
-  1: '\u{1F957} Voorgerecht',
-  2: '\u{1F372} Tussengerecht',
-  3: '\u{1F969} Hoofdgerecht',
-  4: '\u{1F9C0} Kaas',
-  5: '\u{1F370} Dessert',
-  6: '\u2615 Mignardises',
+  0: '🥄 Amuse',
+  1: '🥗 Voorgerecht',
+  2: '🍲 Tussengerecht',
+  3: '🥩 Hoofdgerecht',
+  4: '🧀 Kaas',
+  5: '🍰 Dessert',
+  6: '☕ Mignardises',
 }
 
 const statusColors: Record<string, string> = {
@@ -90,13 +89,13 @@ const statusColors: Record<string, string> = {
 }
 
 const eventTypeLabels: Record<string, string> = {
-  walking_dinner: '\u{1F37D}\uFE0F Walking Dinner',
-  buffet: '\u{1F371} Buffet',
-  sit_down: '\u{1FA91} Sit-down',
-  cocktail: '\u{1F378} Cocktail',
-  brunch: '\u{1F950} Brunch',
-  tasting: '\u{1F944} Tasting',
-  daily_service: '\u{1F4C5} Dagdienst',
+  walking_dinner: '🍽️ Walking Dinner',
+  buffet: '🍱 Buffet',
+  sit_down: '🪑 Sit-down',
+  cocktail: '🍸 Cocktail',
+  brunch: '🥐 Brunch',
+  tasting: '🥄 Tasting',
+  daily_service: '📅 Dagdienst',
 }
 
 export default function EventDetailPage() {
@@ -209,8 +208,6 @@ export default function EventDetailPage() {
           if (!ing.ingredient) continue
           const perPerson = ing.quantity_per_person || ing.quantity || 0
           const total = perPerson * numPersons
-          const costPerUnit = ing.ingredient.current_price || 0
-          const costTotal = costPerUnit * total
           
           lines.push({
             ingredient_name: ing.ingredient.name,
@@ -218,7 +215,6 @@ export default function EventDetailPage() {
             total_quantity: Math.ceil(total * 100) / 100,
             unit: ing.unit || ing.ingredient.unit || 'g',
             per_person: perPerson,
-            cost_total: Math.round(costTotal * 100) / 100,
             component_name: component.name,
             recipe_name: menuItem.recipe.name,
             course_order: menuItem.course_order,
@@ -281,9 +277,6 @@ export default function EventDetailPage() {
   const revenue = (event.price_per_person || 0) * (event.num_persons || 0)
   const foodCostPct = revenue > 0 ? (totalEventCost / revenue) * 100 : 0
 
-  // Calculate total MEP cost
-  const totalMepCost = mepLines.reduce((sum, line) => sum + line.cost_total, 0)
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -318,15 +311,15 @@ export default function EventDetailPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
           <div className="text-xs text-stone-500 mb-1">Kost/persoon</div>
-          <div className="text-lg font-mono font-bold text-stone-200">\u20AC{totalMenuCost.toFixed(2)}</div>
+          <div className="text-lg font-mono font-bold text-stone-200">€{totalMenuCost.toFixed(2)}</div>
         </div>
         <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
           <div className="text-xs text-stone-500 mb-1">Totale kost</div>
-          <div className="text-lg font-mono font-bold text-stone-200">\u20AC{totalEventCost.toFixed(2)}</div>
+          <div className="text-lg font-mono font-bold text-stone-200">€{totalEventCost.toFixed(2)}</div>
         </div>
         <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
           <div className="text-xs text-stone-500 mb-1">Omzet</div>
-          <div className="text-lg font-mono font-bold text-stone-200">\u20AC{revenue.toFixed(2)}</div>
+          <div className="text-lg font-mono font-bold text-stone-200">€{revenue.toFixed(2)}</div>
         </div>
         <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
           <div className="text-xs text-stone-500 mb-1">Food Cost</div>
@@ -335,7 +328,7 @@ export default function EventDetailPage() {
             foodCostPct < 30 ? 'text-green-400' :
             foodCostPct <= 35 ? 'text-amber-400' : 'text-red-400'
           }`}>
-            {foodCostPct > 0 ? `${foodCostPct.toFixed(1)}%` : '\u2014'}
+            {foodCostPct > 0 ? `${foodCostPct.toFixed(1)}%` : '—'}
           </div>
         </div>
       </div>
@@ -422,7 +415,7 @@ export default function EventDetailPage() {
                       <span className="text-sm font-medium text-stone-200">{item.recipe?.name || 'Onbekend recept'}</span>
                       {item.recipe?.total_cost_per_serving && (
                         <span className="ml-3 text-xs font-mono text-stone-500">
-                          \u20AC{Number(item.recipe.total_cost_per_serving).toFixed(2)}/p
+                          €{Number(item.recipe.total_cost_per_serving).toFixed(2)}/p
                         </span>
                       )}
                     </div>
@@ -468,14 +461,12 @@ export default function EventDetailPage() {
         <div className="bg-stone-900/50 border border-stone-800 rounded-2xl" id="mep-plan">
           <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between">
             <h2 className="text-lg font-display font-semibold text-stone-100 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-brand-400" /> MEP Plan \u2014 {event.name}
+              <ClipboardList className="w-5 h-5 text-brand-400" /> MEP Plan — {event.name}
             </h2>
             <div className="flex items-center gap-2 text-xs text-stone-500">
               <span>{event.num_persons} personen</span>
-              <span>\u00B7</span>
-              <span>{mepLines.length} lijnen</span>
-              <span>\u00B7</span>
-              <span className="font-mono font-bold text-brand-400">\u20AC{totalMepCost.toFixed(2)} totaal</span>
+              <span>·</span>
+              <span>{mepLines.length} ingrediënten</span>
             </div>
           </div>
 
@@ -502,16 +493,13 @@ export default function EventDetailPage() {
                     </div>
                     {recipeLines.map((line, i) => (
                       <div key={i} className="px-6 py-2 flex items-center gap-4 border-b border-stone-800/30 last:border-0 hover:bg-stone-800/10">
-                        <span className="text-xs text-stone-500 w-28 truncate">{line.component_name}</span>
+                        <span className="text-xs text-stone-500 w-24 truncate">{line.component_name}</span>
                         <span className="flex-1 text-sm text-stone-200">{line.ingredient_name}</span>
-                        <span className="text-xs text-stone-500 font-mono w-24 text-right">
+                        <span className="text-xs text-stone-500 font-mono w-20 text-right">
                           {line.per_person} {line.unit}/p
                         </span>
                         <span className="text-sm font-mono font-semibold text-stone-100 w-28 text-right">
                           {line.total_quantity} {line.unit}
-                        </span>
-                        <span className="text-xs font-mono text-stone-500 w-20 text-right">
-                          \u20AC{line.cost_total.toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -523,58 +511,33 @@ export default function EventDetailPage() {
 
           {/* Aggregated Shopping List */}
           <div className="px-6 py-4 border-t border-stone-800">
-            <h3 className="text-sm font-semibold text-stone-300 mb-3">\u{1F4CB} Boodschappenlijst (geaggregeerd)</h3>
+            <h3 className="text-sm font-semibold text-stone-300 mb-3">📋 Boodschappenlijst (geaggregeerd)</h3>
             <div className="space-y-1">
               {(() => {
                 // Aggregate same ingredients
-                const agg: Record<string, { total: number; unit: string; category: string; cost: number }> = {}
+                const agg: Record<string, { total: number; unit: string; category: string }> = {}
                 for (const line of mepLines) {
                   const key = `${line.ingredient_name}_${line.unit}`
                   if (!agg[key]) {
-                    agg[key] = { total: 0, unit: line.unit, category: line.category, cost: 0 }
+                    agg[key] = { total: 0, unit: line.unit, category: line.category }
                   }
                   agg[key].total += line.total_quantity
-                  agg[key].cost += line.cost_total
                 }
-                // Group by category
-                const byCategory: Record<string, { name: string; total: number; unit: string; cost: number }[]> = {}
-                for (const [key, val] of Object.entries(agg)) {
-                  const name = key.split('_')[0]
-                  if (!byCategory[val.category]) byCategory[val.category] = []
-                  byCategory[val.category].push({ name, total: val.total, unit: val.unit, cost: val.cost })
-                }
-
-                return Object.entries(byCategory)
+                return Object.entries(agg)
                   .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([category, items]) => (
-                    <div key={category} className="mb-4">
-                      <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">{category}</div>
-                      {items.sort((a, b) => a.name.localeCompare(b.name)).map((item) => (
-                        <div key={item.name} className="flex items-center gap-3 py-1.5 text-sm">
-                          <span className="text-stone-300 flex-1">{item.name}</span>
-                          <span className="font-mono text-stone-100 font-medium w-28 text-right">
-                            {Math.ceil(item.total * 100) / 100} {item.unit}
-                          </span>
-                          <span className="font-mono text-stone-500 text-xs w-20 text-right">
-                            \u20AC{item.cost.toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ))
+                  .map(([key, val]) => {
+                    const name = key.split('_')[0]
+                    return (
+                      <div key={key} className="flex items-center gap-3 py-1.5 text-sm">
+                        <span className="text-stone-300 flex-1">{name}</span>
+                        <span className="font-mono text-stone-100 font-medium">
+                          {Math.ceil(val.total * 100) / 100} {val.unit}
+                        </span>
+                      </div>
+                    )
+                  })
               })()}
             </div>
-            {/* Total */}
-            <div className="flex items-center justify-between pt-3 mt-3 border-t border-stone-700">
-              <span className="text-sm font-semibold text-stone-200">Totale ingredi\u00EBntkost</span>
-              <span className="text-lg font-mono font-bold text-brand-400">\u20AC{totalMepCost.toFixed(2)}</span>
-            </div>
-            {event.num_persons && totalMepCost > 0 && (
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-stone-500">Per persoon</span>
-                <span className="text-sm font-mono text-stone-400">\u20AC{(totalMepCost / event.num_persons).toFixed(2)}</span>
-              </div>
-            )}
           </div>
         </div>
       )}
