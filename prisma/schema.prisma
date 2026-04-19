@@ -3,141 +3,115 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
-}
-
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  fullName  String?  @map("full_name")
-  avatarUrl String?  @map("avatar_url")
-  role      String   @default("chef")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  recipes     Recipe[]
-  ingredients Ingredient[]
-  events      Event[]
-  menus       Menu[]
-
-  @@map("users")
-}
-
-model Ingredient {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  name      String
-  category  String?
-  unit      String?
-  cost      Float?   @default(0)
-  supplier  String?
-  inStock   Boolean  @default(true) @map("in_stock")
-  notes     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recipeIngredients RecipeIngredient[]
-
-  @@index([userId])
-  @@index([category])
-  @@map("ingredients")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Recipe {
-  id           String   @id @default(uuid()) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  title        String
-  description  String?
-  cuisine      String?
-  course       String?
-  prepTime     Int?     @map("prep_time")
-  cookTime     Int?     @map("cook_time")
-  servings     Int?     @default(4)
-  instructions String?
-  imageUrl     String?  @map("image_url")
-  isPublic     Boolean  @default(false) @map("is_public")
-  tags         String[] @default([])
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ingredients RecipeIngredient[]
-  menuItems   MenuItem[]
-
-  @@index([userId])
-  @@index([cuisine])
-  @@index([course])
-  @@map("recipes")
-}
-
-model RecipeIngredient {
-  id           String  @id @default(uuid()) @db.Uuid
-  recipeId     String  @map("recipe_id") @db.Uuid
-  ingredientId String  @map("ingredient_id") @db.Uuid
-  quantity     Float?
-  unit         String?
-  notes        String?
-
-  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-
-  @@unique([recipeId, ingredientId])
-  @@map("recipe_ingredients")
-}
-
-model Event {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  title       String
+  id          String   @id @default(uuid())
+  name        String
   description String?
-  eventDate   DateTime @map("event_date")
-  location    String?
-  guestCount  Int?     @map("guest_count") @default(0)
-  status      String   @default("planning")
-  budget      Float?   @default(0)
-  notes       String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  category    String?
+  servings    Int      @default(1)
+  chef_id     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  components  RecipeComponent[]
+  menu_items  MenuItem[]
+}
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  menus Menu[]
+model Ingredient {
+  id          String   @id @default(uuid())
+  name        String
+  unit        String?
+  price       Float?
+  supplier    String?
+  category    String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  components  RecipeComponent[]
+}
 
-  @@index([userId])
-  @@index([eventDate])
-  @@map("events")
+model RecipeComponent {
+  id            String     @id @default(uuid())
+  recipe_id     String
+  ingredient_id String
+  quantity      Float
+  unit          String?
+  recipe        Recipe     @relation(fields: [recipe_id], references: [id])
+  ingredient    Ingredient @relation(fields: [ingredient_id], references: [id])
 }
 
 model Menu {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  eventId   String?  @map("event_id") @db.Uuid
-  title     String
-  notes     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  items MenuItem[]
-
-  @@index([userId])
-  @@index([eventId])
-  @@map("menus")
+  id          String   @id @default(uuid())
+  name        String
+  date        DateTime?
+  event_type  String?
+  guest_count Int?
+  status      String   @default("draft")
+  chef_id     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  items       MenuItem[]
 }
 
 model MenuItem {
-  id       String  @id @default(uuid()) @db.Uuid
-  menuId   String  @map("menu_id") @db.Uuid
-  recipeId String  @map("recipe_id") @db.Uuid
-  course   String?
-  position Int     @default(0)
-  notes    String?
+  id        String  @id @default(uuid())
+  menu_id   String
+  recipe_id String
+  course    String?
+  position  Int     @default(0)
+  menu      Menu    @relation(fields: [menu_id], references: [id])
+  recipe    Recipe  @relation(fields: [recipe_id], references: [id])
+}
 
-  menu   Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+model Event {
+  id          String   @id @default(uuid())
+  name        String
+  date        DateTime
+  location    String?
+  guest_count Int?
+  event_type  String?
+  status      String   @default("planning")
+  notes       String?
+  chef_id     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
 
-  @@map("menu_items")
+model Invoice {
+  id            String   @id @default(uuid())
+  supplier      String
+  invoice_number String?
+  date          DateTime?
+  total_amount  Float?
+  status        String   @default("pending")
+  ocr_data      Json?
+  chef_id       String?
+  created_at    DateTime @default(now())
+  items         InvoiceItem[]
+}
+
+model InvoiceItem {
+  id            String  @id @default(uuid())
+  invoice_id    String
+  ingredient_name String
+  quantity      Float?
+  unit          String?
+  unit_price    Float?
+  total_price   Float?
+  invoice       Invoice @relation(fields: [invoice_id], references: [id])
+}
+
+model ChefProfile {
+  id              String   @id @default(uuid())
+  user_id         String   @unique
+  display_name    String
+  cuisine_styles  String[]
+  signature_techniques String[]
+  preferred_ingredients String[]
+  dietary_notes   String?
+  experience_years Int?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
