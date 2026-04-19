@@ -329,9 +329,8 @@ export function useRecipes() {
  const price = ing.cost_per_unit || ing.ingredient?.current_price || ing.ingredient?.default_unit_price || 0
  const unit = (ing as any).unit || 'kg'
         const qty = (ing as any).quantity || 0
-        // g/ml -> divide by 1000 (price is per kg/l), kg/l -> direct multiply
-        const unitCost = (unit === 'g' || unit === 'ml') ? (price / 1000) * qty : price * qty
-        totalCost += unitCost
+        // Use central unit-aware cost calculation
+        totalCost += calculateIngredientCost(qty, unit, price)
  }
  }
 

@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RecipeForm } from '@/components/recipes/recipe-form'
 import { useRecipes } from '@/hooks/use-recipes'
+import { useUnitPreferences } from '@/hooks/use-unit-preferences'
+import { UnitToggle } from '@/components/UnitToggle'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
   ArrowLeft, Edit, Clock, Users, RefreshCw,
@@ -265,8 +267,8 @@ export default function RecipeDetailPage() {
                             <td className="py-2.5 font-medium text-stone-900">
                               {(ci as any).ingredient?.name || '\u2014'}
                             </td>
-                            <td className="py-2.5 text-right font-mono text-stone-600">{qtyPP}{unit}</td>
-                            <td className="py-2.5 text-right font-mono font-medium text-stone-900">{qtyTotal}{unit}</td>
+                            <td className="py-2.5 text-right font-mono text-stone-600">{format(qtyPP, unit)}</td>
+                            <td className="py-2.5 text-right font-mono font-medium text-stone-900">{format(qtyTotal, unit)}</td>
                             <td className="py-2.5 text-right text-stone-400">{ci.unit}</td>
                             <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(price)}/kg</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-700">{formatCurrency(cost)}</td>

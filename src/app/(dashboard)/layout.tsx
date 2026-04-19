@@ -1,6 +1,7 @@
 import { SupabaseProvider } from '@/providers/supabase-provider'
 import { KitchenProvider } from '@/providers/kitchen-provider'
 import Sidebar from '@/components/layout/Sidebar'
+import { UnitPreferencesProvider } from '@/components/UnitPreferencesProvider'
 
 export default function DashboardLayout({
  children,
@@ -10,6 +11,7 @@ export default function DashboardLayout({
  return (
  <SupabaseProvider>
  <KitchenProvider>
+      <UnitPreferencesProvider>
  <div className="flex min-h-[100dvh]">
  <Sidebar />
  <main className="flex-1 min-w-0">
@@ -18,7 +20,8 @@ export default function DashboardLayout({
  </div>
  </main>
  </div>
- </KitchenProvider>
+       </UnitPreferencesProvider>
+    </KitchenProvider>
  </SupabaseProvider>
  )
 }
