@@ -3,9 +3,13 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { 
-  Plus, Search, FlaskConical, ChevronDown, ChevronRight, 
-  Clock, Euro, Edit2, Save, X, Trash2, Package 
+  Plus, Search, ChevronDown, ChevronRight, 
+  Clock, Euro, Edit2, Save, X, Trash2, Package,
+  Beaker, Thermometer, Scale, BookOpen, Sparkles,
+  Timer, ShieldCheck, Droplets, Flame
 } from 'lucide-react'
+import { ClassicalSuggestions } from '@/components/ai/classical-suggestions'
+import { ChefTip } from '@/components/ai/chef-tip'
 
 interface Preparation {
   id: string
@@ -13,10 +17,11 @@ interface Preparation {
   name: string
   category: string | null
   description: string | null
+  method: string | null
   yield_amount: number | null
   yield_unit: string | null
   shelf_life_hours: number | null
-  instructions: string | null
+  storage_temp: string | null
   is_template: boolean
   created_at: string
 }
@@ -25,25 +30,57 @@ interface PrepIngredient {
   id: string
   preparation_id: string
   ingredient_id: string | null
-  ingredient_name: string
+  name_override: string | null
   quantity: number
   unit: string
+  sort_order: number
   ingredient?: { id: string; name: string; current_price: number | null; unit: string | null }
 }
 
-const categoryEmojis: Record<string, string> = {
-  'sauce': '🫗',
-  'marinade': '🥫',
-  'dressing': '🥗',
-  'stock': '🍲',
-  'spice_mix': '🌿',
-  'compound_butter': '🧈',
-  'pickle': '🥒',
-  'garnish': '🌱',
-  'base': '🫕',
-  'paste': '🧄',
-  'dessert_base': '🍮',
-  'bread': '🍞',
+const categoryConfig: Record<string, { emoji: string; color: string; bgColor: string; label: string }> = {
+  sauce: { emoji: '🫗', color: 'text-red-700', bgColor: 'bg-red-50 border-red-100', label: 'Sauzen' },
+  marinade: { emoji: '🥫', color: 'text-orange-700', bgColor: 'bg-orange-50 border-orange-100', label: 'Marinades' },
+  dressing: { emoji: '🥗', color: 'text-lime-700', bgColor: 'bg-lime-50 border-lime-100', label: 'Dressings' },
+  stock: { emoji: '🍲', color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-100', label: 'Fonds' },
+  cream: { emoji: '🫕', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-100', label: 'Crèmes' },
+  crunch: { emoji: '✨', color: 'text-stone-700', bgColor: 'bg-stone-50 border-stone-200', label: 'Crunch' },
+  spice_mix: { emoji: '🌿', color: 'text-green-700', bgColor: 'bg-green-50 border-green-100', label: 'Kruidenmix' },
+  compound_butter: { emoji: '🧈', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-100', label: 'Boter' },
+  pickle: { emoji: '🥒', color: 'text-emerald-700', bgColor: 'bg-emerald-50 border-emerald-100', label: 'Pickles' },
+  garnish: { emoji: '🌱', color: 'text-green-700', bgColor: 'bg-green-50 border-green-100', label: 'Garnituur' },
+  gel: { emoji: '💧', color: 'text-cyan-700', bgColor: 'bg-cyan-50 border-cyan-100', label: 'Gels' },
+  oil: { emoji: '🫒', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-100', label: 'Oliën' },
+  paste: { emoji: '🧄', color: 'text-red-700', bgColor: 'bg-red-50 border-red-100', label: 'Pasta\'s' },
+  bread: { emoji: '🍞', color: 'text-amber-700', bgColor: 'bg-amber-50 border-amber-100', label: 'Brood' },
+  base: { emoji: '🫕', color: 'text-stone-700', bgColor: 'bg-stone-50 border-stone-200', label: 'Basis' },
+  dessert_base: { emoji: '🍮', color: 'text-pink-700', bgColor: 'bg-pink-50 border-pink-100', label: 'Dessert' },
+  emulsion: { emoji: '🥄', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-100', label: 'Emulsies' },
+  espuma: { emoji: '🫧', color: 'text-sky-700', bgColor: 'bg-sky-50 border-sky-100', label: 'Espuma' },
+}
+
+const storageTempLabels: Record<string, { label: string; icon: typeof Thermometer; color: string }> = {
+  fridge: { label: 'Koelkast (2-4°C)', icon: Thermometer, color: 'text-blue-500' },
+  room_temp: { label: 'Kamertemp.', icon: Thermometer, color: 'text-amber-500' },
+  freezer: { label: 'Vriezer (-18°C)', icon: Thermometer, color: 'text-cyan-500' },
+}
+
+function formatShelfLife(hours: number | null): string {
+  if (!hours) return '—'
+  if (hours < 24) return `${hours}u`
+  if (hours < 168) return `${Math.round(hours / 24)}d`
+  if (hours < 720) return `${Math.round(hours / 168)}w`
+  return `${Math.round(hours / 720)}m`
+}
+
+function formatShelfLifeLong(hours: number | null): string {
+  if (!hours) return 'Onbekend'
+  if (hours < 24) return `${hours} uur`
+  const days = Math.round(hours / 24)
+  if (days < 7) return `${days} ${days === 1 ? 'dag' : 'dagen'}`
+  const weeks = Math.round(days / 7)
+  if (weeks < 4) return `${weeks} ${weeks === 1 ? 'week' : 'weken'}`
+  const months = Math.round(days / 30)
+  return `${months} ${months === 1 ? 'maand' : 'maanden'}`
 }
 
 export default function PreparationsPage() {
@@ -53,15 +90,14 @@ export default function PreparationsPage() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [showNew, setShowNew] = useState(false)
-  const [newPrep, setNewPrep] = useState({ name: '', category: 'sauce', description: '', yield_amount: '', yield_unit: 'L', shelf_life_hours: '', instructions: '' })
-  const [saving, setSaving] = useState(false)
+  const [showClassical, setShowClassical] = useState<string | null>(null)
   const supabase = createClient()
 
   const fetchPreparations = useCallback(async () => {
     const { data } = await supabase
       .from('preparations')
       .select('*')
+      .order('category')
       .order('name')
     setPreparations(data || [])
     setLoading(false)
@@ -73,19 +109,11 @@ export default function PreparationsPage() {
       .from('preparation_ingredients')
       .select('*, ingredient:ingredients(id, name, current_price, unit)')
       .eq('preparation_id', prepId)
+      .order('sort_order')
     setPrepIngredients(prev => ({ ...prev, [prepId]: data || [] }))
   }, [prepIngredients])
 
   useEffect(() => { fetchPreparations() }, [fetchPreparations])
-
-  const toggleExpand = (id: string) => {
-    if (expandedId === id) {
-      setExpandedId(null)
-    } else {
-      setExpandedId(id)
-      fetchIngredients(id)
-    }
-  }
 
   const categories = useMemo(() => {
     const cats = [...new Set(preparations.map(p => p.category).filter(Boolean))] as string[]
@@ -94,310 +122,296 @@ export default function PreparationsPage() {
 
   const filtered = useMemo(() => {
     return preparations.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-        (p.description || '').toLowerCase().includes(search.toLowerCase())
-      const matchCategory = selectedCategory === 'all' || p.category === selectedCategory
-      return matchSearch && matchCategory
+      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description || '').toLowerCase().includes(search.toLowerCase())
+      const matchCat = selectedCategory === 'all' || p.category === selectedCategory
+      return matchSearch && matchCat
     })
   }, [preparations, search, selectedCategory])
 
-  const templates = filtered.filter(p => p.is_template)
-  const custom = filtered.filter(p => !p.is_template)
-
-  const handleSaveNew = async () => {
-    if (!newPrep.name.trim()) return
-    setSaving(true)
-    const { error } = await supabase.from('preparations').insert({
-      name: newPrep.name.trim(),
-      category: newPrep.category || null,
-      description: newPrep.description || null,
-      yield_amount: newPrep.yield_amount ? parseFloat(newPrep.yield_amount) : null,
-      yield_unit: newPrep.yield_unit || null,
-      shelf_life_hours: newPrep.shelf_life_hours ? parseInt(newPrep.shelf_life_hours) : null,
-      instructions: newPrep.instructions || null,
-      is_template: false,
-    })
-    if (!error) {
-      await fetchPreparations()
-      setShowNew(false)
-      setNewPrep({ name: '', category: 'sauce', description: '', yield_amount: '', yield_unit: 'L', shelf_life_hours: '', instructions: '' })
+  // Group by category
+  const grouped = useMemo(() => {
+    const groups: Record<string, Preparation[]> = {}
+    for (const p of filtered) {
+      const cat = p.category || 'overig'
+      if (!groups[cat]) groups[cat] = []
+      groups[cat].push(p)
     }
-    setSaving(false)
+    return groups
+  }, [filtered])
+
+  const handleExpand = (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null)
+      setShowClassical(null)
+    } else {
+      setExpandedId(id)
+      fetchIngredients(id)
+      setShowClassical(null)
+    }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Verwijder deze halffabricaat?')) return
-    await supabase.from('preparations').delete().eq('id', id)
-    setPreparations(prev => prev.filter(p => p.id !== id))
-  }
-
-  const getCatEmoji = (cat: string | null) => categoryEmojis[cat || ''] || '🫙'
-
-  const PrepCard = ({ prep }: { prep: Preparation }) => {
-    const isExpanded = expandedId === prep.id
-    const ingredients = prepIngredients[prep.id] || []
-    const estimatedCost = ingredients.reduce((sum, ing) => {
-      const price = ing.ingredient?.current_price || 0
-      return sum + (price * ing.quantity)
-    }, 0)
-
-    return (
-      <div className="bg-stone-900/50 border border-stone-800 rounded-xl overflow-hidden hover:border-stone-700 transition-colors">
-        <button
-          onClick={() => toggleExpand(prep.id)}
-          className="w-full px-5 py-4 flex items-center gap-4 text-left"
-        >
-          <span className="text-2xl">{getCatEmoji(prep.category)}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-stone-200">{prep.name}</span>
-              {prep.is_template && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-brand-500/20 text-brand-400 rounded">
-                  Template
-                </span>
-              )}
-            </div>
-            {prep.description && (
-              <p className="text-xs text-stone-500 mt-0.5 truncate">{prep.description}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-4 text-xs text-stone-500">
-            {prep.yield_amount && (
-              <span className="flex items-center gap-1">
-                <Package className="w-3 h-3" />
-                {prep.yield_amount} {prep.yield_unit}
-              </span>
-            )}
-            {prep.shelf_life_hours && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {prep.shelf_life_hours}u
-              </span>
-            )}
-            <span className="capitalize text-stone-600">{(prep.category || '').replace('_', ' ')}</span>
-          </div>
-          {isExpanded ? <ChevronDown className="w-4 h-4 text-stone-500" /> : <ChevronRight className="w-4 h-4 text-stone-500" />}
-        </button>
-
-        {isExpanded && (
-          <div className="px-5 pb-4 border-t border-stone-800 pt-3 space-y-3">
-            {prep.instructions && (
-              <div>
-                <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Instructies</h4>
-                <p className="text-sm text-stone-300 whitespace-pre-wrap">{prep.instructions}</p>
-              </div>
-            )}
-
-            {ingredients.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Ingrediënten</h4>
-                <div className="space-y-1">
-                  {ingredients.map(ing => (
-                    <div key={ing.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="text-stone-300">{ing.ingredient_name}</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-stone-500 font-mono tabular-nums">{ing.quantity} {ing.unit}</span>
-                        {ing.ingredient?.current_price && (
-                          <span className="text-stone-600 font-mono tabular-nums text-xs">
-                            €{(ing.ingredient.current_price * ing.quantity).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {estimatedCost > 0 && (
-                  <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-stone-800">
-                    <Euro className="w-3 h-3 text-brand-400" />
-                    <span className="text-sm font-semibold text-brand-400">€{estimatedCost.toFixed(2)} geschat</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!prep.is_template && (
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={() => handleDelete(prep.id)}
-                  className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" /> Verwijder
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div><h1 className="text-2xl font-display font-bold text-stone-100">Halffabricaten</h1></div>
-        <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-stone-900/50 border border-stone-800 rounded-xl px-5 py-4 flex items-center gap-4">
-              <div className="w-8 h-8 bg-stone-800 rounded-lg animate-pulse" />
-              <div className="flex-1 space-y-1.5">
-                <div className="w-32 h-4 bg-stone-800 rounded animate-pulse" />
-                <div className="w-48 h-3 bg-stone-800 rounded animate-pulse" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
+  const totalWithMethod = preparations.filter(p => p.method).length
+  const totalWithIngredients = Object.keys(prepIngredients).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Halffabricaten</h1>
-          <p className="text-stone-400 mt-1">
-            {preparations.length} preps · {templates.length} templates · {custom.length} eigen
-          </p>
+      <div className="animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-violet-100 flex items-center justify-center">
+                <Beaker className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Halffabricaten</h1>
+                <p className="text-stone-400 text-sm mt-0.5">
+                  {preparations.length} templates · {categories.length} categorieën
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowNew(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Nieuwe Prep
-        </button>
       </div>
 
-      {/* New prep form */}
-      {showNew && (
-        <div className="bg-stone-900/80 border border-brand-500/30 rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-stone-200">Nieuw Halffabricaat</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="Naam (bv. Chimichurri)"
-              value={newPrep.name}
-              onChange={e => setNewPrep(p => ({ ...p, name: e.target.value }))}
-              className="px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-100 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-            />
-            <select
-              value={newPrep.category}
-              onChange={e => setNewPrep(p => ({ ...p, category: e.target.value }))}
-              className="px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-sm focus:ring-2 focus:ring-brand-500"
-            >
-              {Object.entries(categoryEmojis).map(([k, v]) => (
-                <option key={k} value={k}>{v} {k.replace('_', ' ')}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Beschrijving"
-              value={newPrep.description}
-              onChange={e => setNewPrep(p => ({ ...p, description: e.target.value }))}
-              className="px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-100 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent sm:col-span-2"
-            />
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Opbrengst"
-                value={newPrep.yield_amount}
-                onChange={e => setNewPrep(p => ({ ...p, yield_amount: e.target.value }))}
-                className="flex-1 px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-100 text-sm focus:ring-2 focus:ring-brand-500"
-              />
-              <select
-                value={newPrep.yield_unit}
-                onChange={e => setNewPrep(p => ({ ...p, yield_unit: e.target.value }))}
-                className="w-20 px-2 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-sm"
-              >
-                <option value="L">L</option>
-                <option value="kg">kg</option>
-                <option value="stuks">stuks</option>
-              </select>
-            </div>
-            <input
-              type="number"
-              placeholder="Houdbaarheid (uren)"
-              value={newPrep.shelf_life_hours}
-              onChange={e => setNewPrep(p => ({ ...p, shelf_life_hours: e.target.value }))}
-              className="px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-100 text-sm focus:ring-2 focus:ring-brand-500"
-            />
-          </div>
-          <textarea
-            placeholder="Instructies..."
-            value={newPrep.instructions}
-            onChange={e => setNewPrep(p => ({ ...p, instructions: e.target.value }))}
-            rows={3}
-            className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-100 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          />
-          <div className="flex justify-end gap-2">
-            <button onClick={() => setShowNew(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-200">Annuleer</button>
-            <button 
-              onClick={handleSaveNew} 
-              disabled={saving || !newPrep.name.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium rounded-lg text-sm"
-            >
-              <Save className="w-4 h-4" /> {saving ? 'Opslaan...' : 'Opslaan'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Smart Tip */}
+      <ChefTip
+        tip="Halffabricaten worden automatisch meegenomen in je MEP-berekeningen. Hoe completer je receptuur, hoe nauwkeuriger je productieplan."
+        variant="technique"
+        source="Professionele keukenplanning"
+      />
 
-      {/* Search + Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Search + Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
             placeholder="Zoek halffabricaat..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+            className="input-premium pl-10"
           />
         </div>
-        <select
-          value={selectedCategory}
-          onChange={e => setSelectedCategory(e.target.value)}
-          className="px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-300 text-sm focus:ring-2 focus:ring-brand-500"
-        >
-          <option value="all">Alle categorieën</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{getCatEmoji(cat)} {cat.replace('_', ' ')}</option>
-          ))}
-        </select>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              selectedCategory === 'all'
+                ? 'bg-stone-900 text-white shadow-sm'
+                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+            }`}
+          >
+            Alles ({filtered.length})
+          </button>
+          {categories.map(cat => {
+            const config = categoryConfig[cat] || { emoji: '📦', label: cat, bgColor: '', color: '' }
+            const count = preparations.filter(p => p.category === cat).length
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  selectedCategory === cat
+                    ? 'bg-stone-900 text-white shadow-sm'
+                    : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                <span>{config.emoji}</span> {config.label} <span className="text-xs opacity-60">({count})</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
-          <FlaskConical className="w-12 h-12 text-stone-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-stone-300 mb-1">Geen halffabricaten gevonden</h3>
-          <p className="text-stone-500 text-sm">Maak een nieuw halffabricaat aan of pas je zoekterm aan</p>
+      {/* Preparations Grid */}
+      {loading ? (
+        <div className="grid gap-3">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="card p-5 flex gap-4">
+              <div className="skeleton w-10 h-10 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton w-48 h-5 rounded" />
+                <div className="skeleton w-full h-3 rounded" />
+              </div>
+              <div className="skeleton w-16 h-6 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card p-12 text-center">
+          <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <Beaker className="w-8 h-8 text-violet-300" />
+          </div>
+          <h3 className="font-display text-lg font-semibold text-stone-900 mb-2">Geen halffabricaten gevonden</h3>
+          <p className="text-sm text-stone-400">Probeer een andere zoekterm of categorie</p>
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Templates section */}
-          {templates.length > 0 && (
-            <div>
-              <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4" /> Standaard Templates ({templates.length})
-              </h2>
-              <div className="space-y-2">
-                {templates.map(prep => <PrepCard key={prep.id} prep={prep} />)}
+          {Object.entries(grouped).map(([category, preps]) => {
+            const config = categoryConfig[category] || { emoji: '📦', label: category, bgColor: 'bg-stone-50 border-stone-200', color: 'text-stone-700' }
+            return (
+              <div key={category} className="animate-slide-up opacity-0" style={{ animationFillMode: 'forwards' }}>
+                {/* Category Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">{config.emoji}</span>
+                  <h2 className="font-display font-semibold text-stone-800 text-sm uppercase tracking-wider">{config.label}</h2>
+                  <span className="text-xs text-stone-400 font-mono">{preps.length}</span>
+                  <div className="flex-1 h-px bg-stone-200/60" />
+                </div>
+
+                {/* Items */}
+                <div className="space-y-2">
+                  {preps.map((prep, i) => (
+                    <div key={prep.id} className="card overflow-hidden">
+                      {/* Main Row */}
+                      <button
+                        onClick={() => handleExpand(prep.id)}
+                        className="w-full flex items-center gap-4 p-4 hover:bg-stone-50/50 transition-all text-left"
+                      >
+                        <div className={`w-10 h-10 rounded-xl ${config.bgColor} border flex items-center justify-center shrink-0`}>
+                          <span className="text-base">{config.emoji}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-stone-900">{prep.name}</span>
+                            {prep.is_template && (
+                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">
+                                template
+                              </span>
+                            )}
+                          </div>
+                          {prep.description && (
+                            <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{prep.description}</p>
+                          )}
+                        </div>
+                        {/* Quick info pills */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {prep.yield_amount && (
+                            <span className="text-xs font-mono text-stone-500 bg-stone-50 px-2 py-1 rounded-lg">
+                              {prep.yield_amount}{prep.yield_unit || 'g'}
+                            </span>
+                          )}
+                          {prep.shelf_life_hours && (
+                            <span className="text-xs font-mono text-stone-500 bg-stone-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {formatShelfLife(prep.shelf_life_hours)}
+                            </span>
+                          )}
+                          {prep.storage_temp && (
+                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center ${prep.storage_temp === 'fridge' ? 'bg-blue-50 text-blue-500' : prep.storage_temp === 'freezer' ? 'bg-cyan-50 text-cyan-500' : 'bg-amber-50 text-amber-500'}`}>
+                              <Thermometer className="w-3 h-3" />
+                            </span>
+                          )}
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-stone-300 transition-transform duration-200 ${expandedId === prep.id ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Expanded Detail */}
+                      {expandedId === prep.id && (
+                        <div className="border-t border-stone-100 bg-stone-50/30 p-5 space-y-5 animate-fade-in">
+                          {/* Info Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="bg-white rounded-xl p-3 border border-stone-100">
+                              <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+                                <Scale className="w-3 h-3" /> Opbrengst
+                              </div>
+                              <div className="font-mono text-sm font-semibold text-stone-900">
+                                {prep.yield_amount ? `${prep.yield_amount}${prep.yield_unit || 'g'}` : '—'}
+                              </div>
+                            </div>
+                            <div className="bg-white rounded-xl p-3 border border-stone-100">
+                              <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+                                <Timer className="w-3 h-3" /> Houdbaarheid
+                              </div>
+                              <div className="font-mono text-sm font-semibold text-stone-900">
+                                {formatShelfLifeLong(prep.shelf_life_hours)}
+                              </div>
+                            </div>
+                            <div className="bg-white rounded-xl p-3 border border-stone-100">
+                              <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+                                <Thermometer className="w-3 h-3" /> Bewaring
+                              </div>
+                              <div className="text-sm font-semibold text-stone-900">
+                                {storageTempLabels[prep.storage_temp || '']?.label || '—'}
+                              </div>
+                            </div>
+                            <div className="bg-white rounded-xl p-3 border border-stone-100">
+                              <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+                                <Package className="w-3 h-3" /> Categorie
+                              </div>
+                              <div className="text-sm font-semibold text-stone-900 capitalize">
+                                {config.label}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Method */}
+                          {prep.method && (
+                            <div>
+                              <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+                                <Flame className="w-3 h-3" /> Werkwijze
+                              </h4>
+                              <div className="bg-white rounded-xl p-4 border border-stone-100">
+                                <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">{prep.method}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Ingredients */}
+                          <div>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+                              <Beaker className="w-3 h-3" /> Ingrediënten
+                            </h4>
+                            {prepIngredients[prep.id] && prepIngredients[prep.id].length > 0 ? (
+                              <div className="bg-white rounded-xl border border-stone-100 divide-y divide-stone-50">
+                                {prepIngredients[prep.id].map((ing, idx) => (
+                                  <div key={ing.id} className="flex items-center gap-3 px-4 py-2.5">
+                                    <span className="text-xs text-stone-300 font-mono w-5">{idx + 1}.</span>
+                                    <span className="text-sm text-stone-700 flex-1">
+                                      {ing.ingredient?.name || ing.name_override || 'Onbekend'}
+                                    </span>
+                                    <span className="font-mono text-sm text-stone-500">
+                                      {ing.quantity} {ing.unit}
+                                    </span>
+                                    {ing.ingredient?.current_price && (
+                                      <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                        €{ing.ingredient.current_price.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="bg-white rounded-xl border border-stone-100 p-4 text-center">
+                                <p className="text-sm text-stone-400">Ingrediënten laden...</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Classical Inspiration */}
+                          <div>
+                            <button
+                              onClick={() => setShowClassical(showClassical === prep.id ? null : prep.id)}
+                              className="flex items-center gap-2 text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              {showClassical === prep.id ? 'Verberg' : 'Toon'} klassieke inspiratie voor "{prep.name}"
+                            </button>
+                            {showClassical === prep.id && (
+                              <div className="mt-3">
+                                <ClassicalSuggestions query={prep.name} maxResults={4} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          
-          {/* Custom preps */}
-          {custom.length > 0 && (
-            <div>
-              <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <FlaskConical className="w-4 h-4" /> Eigen Halffabricaten ({custom.length})
-              </h2>
-              <div className="space-y-2">
-                {custom.map(prep => <PrepCard key={prep.id} prep={prep} />)}
-              </div>
-            </div>
-          )}
+            )
+          })}
         </div>
       )}
     </div>

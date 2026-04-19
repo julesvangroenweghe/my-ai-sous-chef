@@ -2,60 +2,71 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BookOpen, CalendarDays, FileText, TrendingUp, ArrowRight, Sparkles, Clock } from 'lucide-react'
+import { 
+  BookOpen, CalendarDays, FileText, TrendingUp, ArrowRight, Sparkles, 
+  Clock, ChefHat, Beaker, Leaf, ClipboardList, Plus, FlaskConical,
+  Activity, Flame, Target, AlertCircle
+} from 'lucide-react'
 import Link from 'next/link'
+import { SeasonWidget } from '@/components/ai/season-widget'
+import { KnowledgeStatsWidget } from '@/components/ai/knowledge-stats'
+import { ChefTip } from '@/components/ai/chef-tip'
 
 interface DashboardStats {
   recipes: number
   events: number
   ingredients: number
   invoices: number
+  preparations: number
+  upcomingEvents: { id: string; name: string; event_date: string; num_persons: number | null; event_type: string; status: string }[]
+  recentRecipes: { id: string; name: string; category: any; updated_at: string }[]
 }
 
-function StatCard({ icon: Icon, label, value, href, color, delay }: {
-  icon: React.ElementType
-  label: string
-  value: number
-  href: string
-  color: string
-  delay: number
-}) {
-  const colorMap: Record<string, string> = {
-    brand: 'bg-brand-50 text-brand-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    amber: 'bg-amber-50 text-amber-600',
-    sky: 'bg-sky-50 text-sky-600',
-  }
-
-  return (
-    <Link
-      href={href}
-      className="card-hover p-6 group animate-slide-up opacity-0"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${colorMap[color]}`}>
-          <Icon className="w-5 h-5" />
-        </div>
-        <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all duration-200" />
-      </div>
-      <div className="font-mono text-2xl font-bold text-stone-900 tabular-nums">{value}</div>
-      <div className="text-sm text-stone-500 mt-1">{label}</div>
-    </Link>
-  )
+// Greeting based on time of day
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 6) return 'Goede nacht'
+  if (hour < 12) return 'Goedemorgen'
+  if (hour < 14) return 'Smakelijke middag'
+  if (hour < 18) return 'Goedemiddag'
+  if (hour < 22) return 'Goedenavond'
+  return 'Goede nacht'
 }
 
-function SkeletonCard() {
-  return (
-    <div className="card p-6 space-y-4">
-      <div className="flex justify-between">
-        <div className="skeleton w-11 h-11 rounded-2xl" />
-        <div className="skeleton w-4 h-4 rounded" />
-      </div>
-      <div className="skeleton w-16 h-8 rounded-lg" />
-      <div className="skeleton w-24 h-4 rounded" />
-    </div>
-  )
+function getMotivation(): string {
+  const tips = [
+    'Mise en place is de basis van alles.',
+    'Een goed gerecht begint bij het product, niet bij het recept.',
+    'Seizoensgebonden koken = beter product, lagere kosten.',
+    'De beste saus ter wereld redt geen slecht product.',
+    'Eenvoud is de hoogste vorm van verfijning.',
+    'Cost control is geen beperking, het is discipline.',
+  ]
+  return tips[Math.floor(Math.random() * tips.length)]
+}
+
+const eventTypeLabels: Record<string, string> = {
+  walking_dinner: 'Walking Dinner',
+  buffet: 'Buffet',
+  sit_down: 'Sit-down',
+  cocktail: 'Cocktail',
+  brunch: 'Brunch',
+}
+
+const eventTypeEmojis: Record<string, string> = {
+  walking_dinner: '🍽️',
+  buffet: '🍱',
+  sit_down: '🪑',
+  cocktail: '🍸',
+  brunch: '🥐',
+}
+
+const statusDots: Record<string, string> = {
+  draft: 'bg-stone-400',
+  confirmed: 'bg-emerald-500',
+  in_prep: 'bg-amber-500',
+  completed: 'bg-blue-400',
+  cancelled: 'bg-red-400',
 }
 
 export default function DashboardPage() {
@@ -70,7 +81,6 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        // Get user name
         const { data: profile } = await supabase
           .from('chef_profiles')
           .select('display_name')
@@ -79,12 +89,21 @@ export default function DashboardPage() {
         
         if (profile?.display_name) setUserName(profile.display_name)
 
-        // Get counts
-        const [recipes, events, ingredients, invoices] = await Promise.all([
+        const [recipes, events, ingredients, invoices, preparations, upcoming, recent] = await Promise.all([
           supabase.from('recipes').select('id', { count: 'exact', head: true }),
           supabase.from('events').select('id', { count: 'exact', head: true }),
           supabase.from('ingredients').select('id', { count: 'exact', head: true }),
           supabase.from('invoices').select('id', { count: 'exact', head: true }),
+          supabase.from('preparations').select('id', { count: 'exact', head: true }),
+          supabase.from('events')
+            .select('id, name, event_date, num_persons, event_type, status')
+            .gte('event_date', new Date().toISOString().split('T')[0])
+            .order('event_date')
+            .limit(5),
+          supabase.from('recipes')
+            .select('id, name, category, updated_at')
+            .order('updated_at', { ascending: false })
+            .limit(4),
         ])
 
         setStats({
@@ -92,10 +111,13 @@ export default function DashboardPage() {
           events: events.count || 0,
           ingredients: ingredients.count || 0,
           invoices: invoices.count || 0,
+          preparations: preparations.count || 0,
+          upcomingEvents: (upcoming.data || []) as any[],
+          recentRecipes: (recent.data || []) as any[],
         })
       } catch (err) {
         console.error('Dashboard load error:', err)
-        setStats({ recipes: 0, events: 0, ingredients: 0, invoices: 0 })
+        setStats({ recipes: 0, events: 0, ingredients: 0, invoices: 0, preparations: 0, upcomingEvents: [], recentRecipes: [] })
       } finally {
         setLoading(false)
       }
@@ -103,83 +125,300 @@ export default function DashboardPage() {
     loadDashboard()
   }, [])
 
-  const greeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 17) return 'Good afternoon'
-    return 'Good evening'
-  }
+  const greeting = getGreeting()
+  const motivation = getMotivation()
 
   return (
-    <div className="space-y-10">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Hero Header */}
       <div className="animate-fade-in">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
-          {greeting()}{userName ? `, ${userName}` : ''}
-        </h1>
-        <p className="text-stone-500 mt-2">
-          Here is what is happening in your kitchen today.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-brand-600 mb-1">{greeting}</p>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
+              {userName ? `Chef ${userName}` : 'Dashboard'}
+            </h1>
+            <p className="text-stone-400 mt-2 text-sm italic max-w-lg">"{motivation}"</p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/recipes/new" className="btn-secondary text-sm py-2.5 px-4">
+              <Plus className="w-4 h-4" /> Recept
+            </Link>
+            <Link href="/events/new" className="btn-primary text-sm py-2.5 px-4">
+              <Plus className="w-4 h-4" /> Event
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid — Asymmetric Bento */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={BookOpen} label="Recipes" value={stats.recipes} href="/recipes" color="brand" delay={0} />
-          <StatCard icon={CalendarDays} label="Events" value={stats.events} href="/events" color="emerald" delay={75} />
-          <StatCard icon={FileText} label="Invoices" value={stats.invoices} href="/invoices" color="amber" delay={150} />
-          <StatCard icon={TrendingUp} label="Ingredients" value={stats.ingredients} href="/ingredients" color="sky" delay={225} />
-        </div>
-      )}
+      {/* AI Tip */}
+      <ChefTip
+        tip="Je hebt 57 halffabricaten klaar in je kennisbank. Koppel ze aan je recepten voor automatische MEP-berekeningen."
+        variant="default"
+        actionLabel="Bekijk halffabricaten"
+        actionHref="/preparations"
+      />
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Jules AI Card — Wide */}
-        <div className="lg:col-span-3 card p-8 animate-slide-up opacity-0" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+      {/* Quick Stats Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+        {loading ? (
+          [...Array(5)].map((_, i) => (
+            <div key={i} className="card p-4 space-y-2">
+              <div className="skeleton w-8 h-8 rounded-xl" />
+              <div className="skeleton w-12 h-6 rounded" />
+              <div className="skeleton w-20 h-3 rounded" />
             </div>
-            <div>
-              <h2 className="font-display font-semibold text-stone-900">Jules AI</h2>
-              <p className="text-sm text-stone-500">Your culinary intelligence partner</p>
+          ))
+        ) : (
+          <>
+            <Link href="/recipes" className="card-hover p-4 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <BookOpen className="w-4.5 h-4.5 text-brand-600" />
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.recipes || 0}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Recepten</div>
+            </Link>
+            <Link href="/events" className="card-hover p-4 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <CalendarDays className="w-4.5 h-4.5 text-emerald-600" />
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.events || 0}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Events</div>
+            </Link>
+            <Link href="/ingredients" className="card-hover p-4 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <FlaskConical className="w-4.5 h-4.5 text-amber-600" />
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.ingredients || 0}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Ingrediënten</div>
+            </Link>
+            <Link href="/preparations" className="card-hover p-4 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
+                  <Beaker className="w-4.5 h-4.5 text-violet-600" />
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.preparations || 0}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Halffabricaten</div>
+            </Link>
+            <Link href="/invoices" className="card-hover p-4 group">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
+                  <FileText className="w-4.5 h-4.5 text-sky-600" />
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.invoices || 0}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Facturen</div>
+            </Link>
+          </>
+        )}
+      </div>
+
+      {/* Main Content Grid — Bento Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column — Upcoming + Recent */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Upcoming Events */}
+          <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between px-6 pt-5 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <CalendarDays className="w-4 h-4 text-emerald-600" />
+                </div>
+                <h3 className="font-display font-semibold text-stone-900">Komende Events</h3>
+              </div>
+              <Link href="/events" className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors">
+                Alle bekijken →
+              </Link>
             </div>
+            
+            {loading ? (
+              <div className="px-6 pb-5 space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex gap-3 items-center">
+                    <div className="skeleton w-12 h-12 rounded-xl" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="skeleton w-48 h-4 rounded" />
+                      <div className="skeleton w-32 h-3 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : stats?.upcomingEvents && stats.upcomingEvents.length > 0 ? (
+              <div className="divide-y divide-stone-100">
+                {stats.upcomingEvents.map((event, i) => {
+                  const date = new Date(event.event_date)
+                  const dayNum = date.getDate()
+                  const monthShort = date.toLocaleDateString('nl-BE', { month: 'short' })
+                  const dayName = date.toLocaleDateString('nl-BE', { weekday: 'short' })
+                  const daysUntil = Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+
+                  return (
+                    <Link
+                      key={event.id}
+                      href={`/events/${event.id}`}
+                      className="flex items-center gap-4 px-6 py-3.5 hover:bg-stone-50/80 transition-all group"
+                    >
+                      {/* Date block */}
+                      <div className="w-12 h-12 rounded-xl bg-stone-900 text-white flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[10px] uppercase tracking-wide text-stone-400 leading-none">{monthShort}</span>
+                        <span className="font-mono text-lg font-bold leading-none mt-0.5">{dayNum}</span>
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm text-stone-900 group-hover:text-brand-700 transition-colors truncate">
+                            {event.name}
+                          </span>
+                          <span className={`w-2 h-2 rounded-full ${statusDots[event.status] || 'bg-stone-300'}`} />
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-stone-400 mt-0.5">
+                          <span>{eventTypeEmojis[event.event_type] || '📅'} {eventTypeLabels[event.event_type] || event.event_type}</span>
+                          {event.num_persons && <span>👥 {event.num_persons} pers.</span>}
+                          <span>{dayName}</span>
+                        </div>
+                      </div>
+                      {/* Days until */}
+                      <div className="text-right shrink-0">
+                        <span className={`text-xs font-mono font-medium ${daysUntil <= 3 ? 'text-red-500' : daysUntil <= 7 ? 'text-amber-500' : 'text-stone-400'}`}>
+                          {daysUntil === 0 ? 'Vandaag!' : daysUntil === 1 ? 'Morgen' : `${daysUntil}d`}
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="px-6 pb-6 text-center">
+                <div className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <CalendarDays className="w-5 h-5 text-stone-300" />
+                </div>
+                <p className="text-sm text-stone-400 mb-3">Geen komende events</p>
+                <Link href="/events/new" className="text-xs font-medium text-brand-600 hover:text-brand-700">
+                  + Eerste event plannen
+                </Link>
+              </div>
+            )}
           </div>
-          <p className="text-stone-500 text-sm leading-relaxed mb-6 max-w-[50ch]">
-            Ask Jules anything about your recipes, costs, or kitchen operations. Jules learns your style and gets smarter over time.
-          </p>
-          <Link href="/jules" className="btn-primary text-sm py-2.5 px-5">
-            Talk to Jules
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+
+          {/* Recent Recipes */}
+          <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between px-6 pt-5 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-brand-600" />
+                </div>
+                <h3 className="font-display font-semibold text-stone-900">Recente Recepten</h3>
+              </div>
+              <Link href="/recipes" className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors">
+                Alle bekijken →
+              </Link>
+            </div>
+            
+            {loading ? (
+              <div className="px-6 pb-5 space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="skeleton h-12 rounded-xl" />
+                ))}
+              </div>
+            ) : stats?.recentRecipes && stats.recentRecipes.length > 0 ? (
+              <div className="divide-y divide-stone-100">
+                {stats.recentRecipes.map((recipe) => {
+                  const date = new Date(recipe.updated_at)
+                  const timeAgo = getTimeAgo(date)
+                  return (
+                    <Link
+                      key={recipe.id}
+                      href={`/recipes/${recipe.id}`}
+                      className="flex items-center gap-3 px-6 py-3 hover:bg-stone-50/80 transition-all group"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-brand-400 shrink-0" />
+                      <span className="text-sm font-medium text-stone-700 group-hover:text-brand-700 transition-colors flex-1 truncate">
+                        {recipe.name}
+                      </span>
+                      <span className="text-xs text-stone-400 shrink-0">{timeAgo}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="px-6 pb-6 text-center">
+                <p className="text-sm text-stone-400 mb-3">Nog geen recepten</p>
+                <Link href="/recipes/new" className="text-xs font-medium text-brand-600 hover:text-brand-700">
+                  + Eerste recept maken
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 card p-6 animate-slide-up opacity-0" style={{ animationDelay: '375ms', animationFillMode: 'forwards' }}>
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-stone-400" />
-            <h3 className="font-display font-semibold text-stone-900 text-sm">Recent Activity</h3>
+        {/* Right Column — Season + Knowledge */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="animate-slide-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
+            <SeasonWidget />
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
-              <div className="w-2 h-2 bg-brand-500 rounded-full shrink-0" />
-              <p className="text-sm text-stone-600">Welcome to My AI Sous Chef!</p>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
-              <div className="w-2 h-2 bg-stone-300 rounded-full shrink-0" />
-              <p className="text-sm text-stone-400">Start by adding your first recipe</p>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
-              <div className="w-2 h-2 bg-stone-300 rounded-full shrink-0" />
-              <p className="text-sm text-stone-400">Upload an invoice to track costs</p>
+          <div className="animate-slide-up opacity-0" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
+            <KnowledgeStatsWidget />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="card p-5 animate-slide-up opacity-0" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Snelle acties</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Link href="/recipes/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+                <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+                  <Plus className="w-4 h-4 text-brand-600" />
+                </div>
+                Nieuw recept
+              </Link>
+              <Link href="/events/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                  <CalendarDays className="w-4 h-4 text-emerald-600" />
+                </div>
+                Nieuw event
+              </Link>
+              <Link href="/mep" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+                <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors">
+                  <ClipboardList className="w-4 h-4 text-sky-600" />
+                </div>
+                MEP Planning
+              </Link>
+              <Link href="/invoices" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                  <FileText className="w-4 h-4 text-amber-600" />
+                </div>
+                Factuur scannen
+              </Link>
             </div>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+// Import at top missed
+
+
+function getTimeAgo(date: Date): string {
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 60) return `${minutes}m geleden`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}u geleden`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d geleden`
+  return date.toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })
 }
