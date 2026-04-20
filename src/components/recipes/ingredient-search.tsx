@@ -81,7 +81,7 @@ export function IngredientSearch({ value, onSelect, onCreateNew, className }: In
  setOpen(true)
  setQuery('')
  }}
- placeholder="Search ingredient..."
+ placeholder="Zoek ingredient..."
  className="flex h-9 w-full rounded-lg border border-input bg-background pl-8 pr-3 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
  />
  </div>
@@ -105,12 +105,12 @@ export function IngredientSearch({ value, onSelect, onCreateNew, className }: In
  >
  <span className="font-medium">{ingredient.name}</span>
  <span className="text-xs text-muted-foreground">
- {ingredient.current_price ? `${formatCurrency(ingredient.current_price)}/${ingredient.unit || 'unit'}` : 'No price'}
+ {ingredient.current_price ? `${formatCurrency(ingredient.current_price)}/${ingredient.unit || 'unit'}` : 'Geen prijs'}
  </span>
  </button>
  ))}
  {results.length === 0 && query && (
- <div className="px-3 py-2 text-sm text-muted-foreground">No ingredients found</div>
+ <div className="px-3 py-2 text-sm text-muted-foreground">Geen ingredienten gevonden</div>
  )}
  {onCreateNew && (
  <button
@@ -123,7 +123,7 @@ export function IngredientSearch({ value, onSelect, onCreateNew, className }: In
  className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-orange-50 transition-colors border-t"
  >
  <Plus className="h-3.5 w-3.5" />
- Create new ingredient{query ? `: "${query}"` : ''}
+ Nieuw ingredient{query ? `: "${query}"` : ''}
  </button>
  )}
  </div>

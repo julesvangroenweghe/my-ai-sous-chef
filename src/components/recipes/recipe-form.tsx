@@ -20,9 +20,9 @@ interface RecipeFormProps {
 }
 
 const STEPS = [
- { label: 'Basics', description: 'Name, category & pricing' },
- { label: 'Components', description: 'Ingredients & quantities' },
- { label: 'Review', description: 'Verify & save' },
+ { label: 'Basis', description: 'Naam, categorie & prijszetting' },
+ { label: 'Componenten', description: 'Ingredienten & hoeveelheden' },
+ { label: 'Overzicht', description: 'Controleer & bewaar' },
 ]
 
 export function RecipeForm({ recipe }: RecipeFormProps) {
@@ -171,47 +171,47 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="space-y-2">
- <Label htmlFor="name">Recipe Name *</Label>
- <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Beef Tartare" required />
+ <Label htmlFor="name">Receptnaam *</Label>
+ <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="bv. Tartaar van Rundsvlees" required />
  </div>
  <div className="space-y-2">
- <Label htmlFor="description">Description</Label>
+ <Label htmlFor="description">Beschrijving</Label>
  <textarea
  id="description"
  value={description}
  onChange={(e) => setDescription(e.target.value)}
  className="flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
- placeholder="Short description of the dish..."
+ placeholder="Korte beschrijving van het gerecht..."
  />
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label>Category</Label>
+ <Label>Categorie</Label>
  <Select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setSubcategoryId('') }}>
- <option value="">Select category</option>
+ <option value="">Kies categorie</option>
  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
  </Select>
  </div>
  <div className="space-y-2">
- <Label>Subcategory</Label>
+ <Label>Subcategorie</Label>
  <Select value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)} disabled={!categoryId}>
- <option value="">Select subcategory</option>
+ <option value="">Kies subcategorie</option>
  {selectedCategory?.subcategories?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
  </Select>
  </div>
  </div>
  <div className="grid grid-cols-3 gap-4">
  <div className="space-y-2">
- <Label htmlFor="servings">Servings</Label>
- <Input id="servings" type="number" value={servings} onChange={(e) => setServings(e.target.value)} placeholder="e.g. 4" />
+ <Label htmlFor="servings">Porties</Label>
+ <Input id="servings" type="number" value={servings} onChange={(e) => setServings(e.target.value)} placeholder="bv. 4" />
  </div>
  <div className="space-y-2">
- <Label htmlFor="prep">Prep Time (min)</Label>
- <Input id="prep" type="number" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} placeholder="e.g. 45" />
+ <Label htmlFor="prep">Bereidingstijd (min)</Label>
+ <Input id="prep" type="number" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} placeholder="bv. 45" />
  </div>
  <div className="space-y-2">
- <Label htmlFor="price">Selling Price (€)</Label>
- <Input id="price" type="number" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="e.g. 28.00" />
+ <Label htmlFor="price">Verkoopprijs (€)</Label>
+ <Input id="price" type="number" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="bv. 28.00" />
  </div>
  </div>
  <div className="space-y-2">
@@ -248,16 +248,16 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <p className="font-semibold">{name}</p>
  </div>
  <div>
- <p className="text-sm text-muted-foreground">Category</p>
+ <p className="text-sm text-muted-foreground">Categorie</p>
  <p className="font-medium">
- {selectedCategory?.name || 'None'}
+ {selectedCategory?.name || 'Geen'}
  {subcategoryId && selectedCategory?.subcategories?.find((s) => s.id === subcategoryId)?.name
  ? ` → ${selectedCategory.subcategories.find((s) => s.id === subcategoryId)!.name}`
  : ''}
  </p>
  </div>
  <div>
- <p className="text-sm text-muted-foreground">Servings</p>
+ <p className="text-sm text-muted-foreground">Porties</p>
  <p className="font-medium">{servings || '—'}</p>
  </div>
  <div>
@@ -276,7 +276,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <CardContent>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
  <div className="space-y-1">
- <p className="text-xs text-muted-foreground uppercase">Total Cost</p>
+ <p className="text-xs text-muted-foreground uppercase">Totale Kost</p>
  <p className="text-xl font-bold">{formatCurrency(totalCost)}</p>
  </div>
  <div className="space-y-1">
@@ -369,15 +369,15 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  )}
  </div>
  <div className="flex gap-3">
- <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
+ <Button type="button" variant="ghost" onClick={() => router.back()}>Annuleren</Button>
  {step < 2 ? (
  <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed()} className="gap-2">
- Next <ArrowRight className="h-4 w-4" />
+ Volgende <ArrowRight className="h-4 w-4" />
  </Button>
  ) : (
  <Button type="button" onClick={handleSubmit} disabled={loading || !name} className="gap-2">
  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
- {recipe ? 'Update Recipe' : 'Save Recipe'}
+ {recipe ? 'Recept Bijwerken' : 'Recept Opslaan'}
  </Button>
  )}
  </div>

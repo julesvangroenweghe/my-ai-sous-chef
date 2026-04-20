@@ -153,9 +153,9 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
  <div className="space-y-4">
  <div className="flex items-center justify-between">
  <div>
- <h2 className="text-lg font-semibold">Components</h2>
+ <h2 className="text-lg font-semibold">Componenten</h2>
  <p className="text-sm text-muted-foreground">
- Total ingredient cost: <span className="font-bold text-foreground">{formatCurrency(totalCost)}</span>
+ Totale ingredientkost: <span className="font-bold text-foreground">{formatCurrency(totalCost)}</span>
  </p>
  </div>
  <Button type="button" variant="outline" size="sm" onClick={addComponent} className="gap-1">
@@ -184,7 +184,7 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
  <Input
  value={comp.name}
  onChange={(e) => updateComponent(ci, 'name', e.target.value)}
- placeholder="Component name (e.g. Tartare mix, Sauce, Garnish)"
+ placeholder="Componentnaam (bv. Tartaarmix, Saus, Garnituur)"
  className="font-medium"
  />
  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
@@ -210,9 +210,9 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
  <div className="space-y-2">
  <div className="grid grid-cols-[1fr,80px,90px,70px,36px] gap-2 text-xs font-medium text-muted-foreground px-1">
  <span>Ingredient</span>
- <span>Qty</span>
- <span>Unit</span>
- <span className="text-right">Cost</span>
+ <span>Hvh</span>
+ <span>Eenheid</span>
+ <span className="text-right">Kost</span>
  <span></span>
  </div>
  {comp.ingredients.map((ing, ii) => (
@@ -264,7 +264,7 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
 
  {components.length === 0 && (
  <div className="border-2 border-dashed rounded-xl p-8 text-center">
- <p className="text-muted-foreground mb-3">No components yet. Add your first component.</p>
+ <p className="text-muted-foreground mb-3">Nog geen componenten. Voeg je eerste component toe.</p>
  <Button type="button" variant="outline" onClick={addComponent} className="gap-2">
  <Plus className="h-4 w-4" /> Add Component
  </Button>
@@ -273,32 +273,32 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
 
  {/* Quick-add ingredient dialog */}
  <Dialog open={showNewIngredient} onOpenChange={setShowNewIngredient}>
- <DialogHeader><DialogTitle>Quick Add Ingredient</DialogTitle></DialogHeader>
+ <DialogHeader><DialogTitle>Snel Ingredient Toevoegen</DialogTitle></DialogHeader>
  <DialogContent className="space-y-4">
  <div className="space-y-2">
- <Label>Name *</Label>
- <Input value={newIngName} onChange={(e) => setNewIngName(e.target.value)} placeholder="e.g. Zeebaarsfilet" />
+ <Label>Naam *</Label>
+ <Input value={newIngName} onChange={(e) => setNewIngName(e.target.value)} placeholder="bv. Zeebaarsfilet" />
  </div>
  <div className="space-y-2">
- <Label>Category</Label>
- <Input value={newIngCategory} onChange={(e) => setNewIngCategory(e.target.value)} placeholder="e.g. Fish" />
+ <Label>Categorie</Label>
+ <Input value={newIngCategory} onChange={(e) => setNewIngCategory(e.target.value)} placeholder="bv. Vis" />
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label>Unit</Label>
+ <Label>Eenheid</Label>
  <Select value={newIngUnit} onChange={(e) => setNewIngUnit(e.target.value)}>
  {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
  </Select>
  </div>
  <div className="space-y-2">
- <Label>Price per Unit (€)</Label>
+ <Label>Prijs per Eenheid (€)</Label>
  <Input type="number" step="0.01" value={newIngPrice} onChange={(e) => setNewIngPrice(e.target.value)} placeholder="0.00" />
  </div>
  </div>
  </DialogContent>
  <DialogFooter>
- <Button variant="outline" onClick={() => setShowNewIngredient(false)}>Cancel</Button>
- <Button onClick={handleSaveNewIngredient} disabled={!newIngName}>Add & Select</Button>
+ <Button variant="outline" onClick={() => setShowNewIngredient(false)}>Annuleren</Button>
+ <Button onClick={handleSaveNewIngredient} disabled={!newIngName}>Toevoegen & Selecteren</Button>
  </DialogFooter>
  </Dialog>
  </div>
