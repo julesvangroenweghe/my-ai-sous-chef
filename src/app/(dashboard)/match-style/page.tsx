@@ -2,34 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ChevronDown, ArrowRight, BookOpen } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 interface LegendeDish {
   id: string
   name: string
-  category: string
+  category_name: string
   elements: { name: string; quantity_grams: number | null; quantity_text: string | null }[]
 }
 
 interface Recipe {
   id: string
   name: string
-  category: string
   description: string
-}
-
-interface MatchResult {
-  dish: LegendeDish
-  suggestions: string[]
-  loading: boolean
 }
 
 export default function MatchMyStylePage() {
   const [dishes, setDishes] = useState<LegendeDish[]>([])
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
-  const [matching, setMatching] = useState(false)
-  const [results, setResults] = useState<MatchResult[]>([])
   const [selectedDish, setSelectedDish] = useState<string | null>(null)
   const [aiResult, setAiResult] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -37,17 +28,22 @@ export default function MatchMyStylePage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: d }, { data: r }, { data: elements }] = await Promise.all([
-        supabase.from('legende_dishes').select('id, name, category').order('name'),
-        supabase.from('recipes').select('id, name, category, description').order('name'),
-        supabase.from('legende_dish_elements').select('legende_dish_id, name, quantity_grams, quantity_text')
+      const [{ data: d }, { data: r }, { data: elements }, { data: cats }] = await Promise.all([
+        supabase.from('legende_dishes').select('id, name, category_id').order('name'),
+        supabase.from('recipes').select('id, name, description').order('name'),
+        supabase.from('legende_dish_elements').select('dish_id, name, quantity_grams, quantity_text'),
+        supabase.from('legende_categories').select('id, name')
       ])
-      
-      const dishesWithElements = (d || []).map(dish => ({
-        ...dish,
-        elements: (elements || []).filter(e => e.legende_dish_id === dish.id)
+
+      const catMap = Object.fromEntries((cats || []).map(c => [c.id, c.name]))
+
+      const dishesWithElements = (d || []).map((dish: any) => ({
+        id: dish.id,
+        name: dish.name,
+        category_name: catMap[dish.category_id] || 'Onbekend',
+        elements: (elements || []).filter((e: any) => e.dish_id === dish.id)
       }))
-      
+
       setDishes(dishesWithElements)
       setRecipes((r || []) as Recipe[])
       setLoading(false)
@@ -65,7 +61,7 @@ export default function MatchMyStylePage() {
         .map(e => `${e.name}${e.quantity_grams ? ` (${e.quantity_grams}g)` : ''}${e.quantity_text ? ` ${e.quantity_text}` : ''}`)
         .join(', ')
 
-      const recipeNames = recipes.map(r => `- ${r.name} (${r.category}): ${r.description || ''}`).join('\n')
+      const recipeNames = recipes.map(r => `- ${r.name}: ${r.description || ''}`).join('\n')
 
       const res = await fetch('/api/jules-chat', {
         method: 'POST',
@@ -74,7 +70,7 @@ export default function MatchMyStylePage() {
           message: `Analyseer dit LEGENDE gerecht en match het met bestaande recepten. Geef ook suggesties hoe dit gerecht past in mijn stijl.
 
 LEGENDE GERECHT: ${dish.name}
-CATEGORIE: ${dish.category}
+CATEGORIE: ${dish.category_name}
 ELEMENTEN: ${elementsText}
 
 MIJN BESTAANDE RECEPTEN:
@@ -108,15 +104,13 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-brand-500/10 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-brand-600" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-display font-bold text-stone-900">Match My Style</h1>
-            <p className="text-stone-400 text-sm mt-1">Match LEGENDE gerechten met je bestaande recepten en stijl</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-brand-500/10 flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-brand-600" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-display font-bold text-stone-900">Match My Style</h1>
+          <p className="text-stone-400 text-sm mt-1">Match LEGENDE gerechten met je bestaande recepten en stijl</p>
         </div>
       </div>
 
@@ -140,28 +134,28 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
       <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-stone-100">
           <h2 className="font-display font-semibold text-stone-900">Selecteer een gerecht om te matchen</h2>
-          <p className="text-xs text-stone-400 mt-1">AI analyseert je stijl en geeft personaliseerde suggesties</p>
+          <p className="text-xs text-stone-400 mt-1">AI analyseert je stijl en geeft gepersonaliseerde suggesties</p>
         </div>
-        
-        <div className="divide-y divide-stone-50 max-h-96 overflow-y-auto">
+
+        <div className="divide-y divide-stone-50 max-h-[500px] overflow-y-auto">
           {dishes.map(dish => (
-            <div key={dish.id} className="px-6 py-3 hover:bg-stone-25 transition-colors">
+            <div key={dish.id} className="px-6 py-3 hover:bg-stone-50/50 transition-colors">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-stone-900 text-sm">{dish.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 uppercase tracking-wider">{dish.category}</span>
+                    <span className="font-medium text-stone-900 text-sm truncate">{dish.name}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 uppercase tracking-wider shrink-0">{dish.category_name}</span>
                   </div>
                   {dish.elements.length > 0 && (
-                    <p className="text-xs text-stone-400 mt-0.5 truncate max-w-lg">
-                      {dish.elements.map(e => e.name).join(' · ')}
+                    <p className="text-xs text-stone-400 mt-0.5 truncate">
+                      {dish.elements.map(e => e.name).join(' \u00b7 ')}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={() => matchDish(dish)}
                   disabled={aiLoading && selectedDish === dish.id}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50 shrink-0 ml-3"
                 >
                   {aiLoading && selectedDish === dish.id ? (
                     <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
@@ -171,13 +165,10 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                   Match
                 </button>
               </div>
-              
-              {/* AI Result inline */}
+
               {selectedDish === dish.id && aiResult && (
-                <div className="mt-3 p-4 bg-gradient-to-br from-violet-50/50 to-brand-50/50 rounded-xl border border-violet-100">
-                  <div className="prose prose-sm prose-stone max-w-none">
-                    <div className="whitespace-pre-wrap text-sm text-stone-700">{aiResult}</div>
-                  </div>
+                <div className="mt-3 p-4 bg-gradient-to-br from-violet-50/50 to-orange-50/50 rounded-xl border border-violet-100/50">
+                  <div className="whitespace-pre-wrap text-sm text-stone-700 leading-relaxed">{aiResult}</div>
                 </div>
               )}
             </div>
