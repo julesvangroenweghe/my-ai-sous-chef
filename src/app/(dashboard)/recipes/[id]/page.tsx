@@ -215,12 +215,19 @@ export default function RecipeDetailPage() {
           const methodExpanded = expandedMethods.has(component.id)
           const method = (component as any).method
           const compCost = (component.ingredients || []).reduce((sum, ci) => {
-            const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
+            const storedCpu = (ci as any).cost_per_unit
             const qty = (ci as any).quantity_per_person || (ci as any).quantity || 0
-            const recipeUnit = (ci as any).unit || 'g'
-            const ingredientUnit = (ci as any).ingredient?.unit || undefined
-            const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
-            const costPerPerson = calculateIngredientCost(qty, recipeUnit, price, ingredientUnit, weightPerPiece)
+            let costPerPerson: number
+            if (storedCpu != null && storedCpu > 0) {
+              // cost_per_unit is per 1 recipe-unit (per gram when unit='g')
+              costPerPerson = qty * storedCpu
+            } else {
+              const fallbackPrice = (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
+              const recipeUnit = (ci as any).unit || 'g'
+              const ingredientUnit = (ci as any).ingredient?.unit || undefined
+              const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
+              costPerPerson = calculateIngredientCost(qty, recipeUnit, fallbackPrice, ingredientUnit, weightPerPiece)
+            }
             return sum + (costPerPerson * numberOfServings)
           }, 0)
 
@@ -262,14 +269,27 @@ export default function RecipeDetailPage() {
                     </thead>
                     <tbody>
                       {component.ingredients?.map((ci) => {
-                        const price = (ci as any).cost_per_unit || (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
+                        const storedCpu2 = (ci as any).cost_per_unit
                         const qtyPP = (ci as any).quantity_per_person || (ci as any).quantity || 0
                         const unit = (ci as any).unit || 'g'
-                        const ingredientUnit = (ci as any).ingredient?.unit || undefined
-                        const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
                         const qtyTotal = qtyPP * numberOfServings
-                        const costPerPerson = calculateIngredientCost(qtyPP, unit, price, ingredientUnit, weightPerPiece)
-                        const cost = costPerPerson * numberOfServings
+                        let costPerPerson2: number
+                        let displayPrice: number
+                        let displayUnit: string
+                        if (storedCpu2 != null && storedCpu2 > 0) {
+                          costPerPerson2 = qtyPP * storedCpu2
+                          // Normalize to per-kg/l for display
+                          displayPrice = ['g', 'ml'].includes(unit) ? storedCpu2 * 1000 : storedCpu2
+                          displayUnit = ['g', 'kg'].includes(unit) ? 'kg' : ['ml', 'l'].includes(unit) ? 'l' : unit
+                        } else {
+                          const fbPrice = (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
+                          const ingUnit = (ci as any).ingredient?.unit || 'kg'
+                          const wpp = (ci as any).ingredient?.weight_per_piece_g || undefined
+                          costPerPerson2 = calculateIngredientCost(qtyPP, unit, fbPrice, ingUnit, wpp)
+                          displayPrice = fbPrice
+                          displayUnit = ingUnit
+                        }
+                        const cost = costPerPerson2 * numberOfServings
                         return (
                           <tr key={ci.id} className="border-b last:border-0 hover:bg-stone-50/50 transition-colors">
                             <td className="py-2.5 font-medium text-stone-900">
@@ -278,7 +298,7 @@ export default function RecipeDetailPage() {
                             <td className="py-2.5 text-right font-mono text-stone-600">{formatHoeveelheid(qtyPP, unit)}</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-900">{formatHoeveelheid(qtyTotal, unit)}</td>
                             <td className="py-2.5 text-right text-stone-400">{ci.unit}</td>
-                            <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(price)}/{(ci as any).ingredient?.unit === 'stuks' || (ci as any).ingredient?.unit === 'stuk' ? 'stuk' : (ci as any).ingredient?.unit === 'l' ? 'l' : 'kg'}</td>
+                            <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(displayPrice)}/{displayUnit}</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-700">{formatCurrency(cost)}</td>
                           </tr>
                         )
