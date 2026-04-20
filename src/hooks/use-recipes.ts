@@ -327,13 +327,19 @@ export function useRecipes() {
      let totalCost = 0
      for (const comp of (recipe.components || [])) {
        for (const ing of (comp.ingredients || [])) {
-         const price = (ing as any).cost_per_unit || (ing as any).ingredient?.current_price || (ing as any).ingredient?.default_unit_price || 0
-         const recipeUnit = (ing as any).unit || 'g'
+         const storedCpu = (ing as any).cost_per_unit
          const qty = (ing as any).quantity || 0
-         const ingredientUnit = (ing as any).ingredient?.unit || undefined
-         const weightPerPiece = (ing as any).ingredient?.weight_per_piece_g || undefined
-         // Unit-aware cost: handles kg, l, AND stuks correctly
-         totalCost += calculateIngredientCost(qty, recipeUnit, price, ingredientUnit, weightPerPiece)
+         if (storedCpu != null && storedCpu > 0) {
+           // cost_per_unit is per 1 recipe-unit (per gram if unit='g')
+           totalCost += qty * storedCpu
+         } else {
+           // Fallback: use ingredient current_price with unit conversion
+           const fallbackPrice = (ing as any).ingredient?.current_price || (ing as any).ingredient?.default_unit_price || 0
+           const recipeUnit = (ing as any).unit || 'g'
+           const ingredientUnit = (ing as any).ingredient?.unit || undefined
+           const weightPerPiece = (ing as any).ingredient?.weight_per_piece_g || undefined
+           totalCost += calculateIngredientCost(qty, recipeUnit, fallbackPrice, ingredientUnit, weightPerPiece)
+         }
        }
      }
 
