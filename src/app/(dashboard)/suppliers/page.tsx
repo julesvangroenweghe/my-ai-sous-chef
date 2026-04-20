@@ -12,7 +12,7 @@ interface SupplierProduct {
   id: string
   product_name: string
   unit: string | null
-  unit_price: number | null
+  price: number | null
   category: string | null
   updated_at: string
 }
@@ -22,10 +22,10 @@ interface Supplier {
   name: string
   contact_email: string | null
   contact_phone: string | null
-  address: string | null
+  website: string | null
   category: string | null
   delivery_days: string | null
-  minimum_order: number | null
+  min_order_amount: number | null
   notes: string | null
   products: SupplierProduct[]
   expanded: boolean
@@ -47,9 +47,9 @@ export default function SuppliersPage() {
     const { data } = await supabase
       .from('suppliers')
       .select(`
-        id, name, contact_email, contact_phone, address, category,
-        delivery_days, minimum_order, notes, updated_at,
-        products:supplier_products(id, product_name, unit, unit_price, category, updated_at)
+        id, name, contact_email, contact_phone, website, category,
+        delivery_days, min_order_amount, notes, updated_at,
+        products:supplier_products(id, product_name, unit, price, category, last_updated)
       `)
       .order('name')
 
@@ -81,7 +81,7 @@ export default function SuppliersPage() {
         s.products
           .filter(p => p.product_name.toLowerCase().includes(productSearch.toLowerCase()))
           .map(p => ({ ...p, supplier_name: s.name }))
-      ).sort((a, b) => (a.unit_price || 0) - (b.unit_price || 0))
+      ).sort((a, b) => (a.price || 0) - (b.price || 0))
     : []
 
   const categoryColors: Record<string, string> = {
@@ -176,7 +176,7 @@ export default function SuppliersPage() {
                   <td className="py-2 px-4 font-medium text-stone-900">{p.product_name}</td>
                   <td className="py-2 px-4 text-stone-600">{p.supplier_name}</td>
                   <td className="py-2 px-4 text-right font-mono font-semibold text-stone-900">
-                    {p.unit_price != null ? formatCurrency(p.unit_price) : '-'}
+                    {p.price != null ? formatCurrency(p.price) : '-'}
                   </td>
                   <td className="py-2 px-4 text-stone-500">{p.unit || '-'}</td>
                 </tr>
@@ -273,7 +273,7 @@ export default function SuppliersPage() {
                             <td className="py-2 px-5 font-medium text-stone-700">{p.product_name}</td>
                             <td className="py-2 px-3 text-stone-500">{p.category || '-'}</td>
                             <td className="py-2 px-3 text-right font-mono text-stone-900">
-                              {p.unit_price != null ? formatCurrency(p.unit_price) : '-'}
+                              {p.price != null ? formatCurrency(p.price) : '-'}
                             </td>
                             <td className="py-2 px-3 text-stone-500">{p.unit || '-'}</td>
                           </tr>
