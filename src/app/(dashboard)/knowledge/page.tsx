@@ -247,21 +247,25 @@ function ParameterResults({ data }: { data: any[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-zinc-700 text-left text-zinc-400">
-            <th className="pb-2 pr-4">Proteïne</th>
-            <th className="pb-2 pr-4">Snit/Type</th>
-            <th className="pb-2 pr-4">Temp.</th>
-            <th className="pb-2 pr-4">Tijd</th>
-            <th className="pb-2">Bron</th>
+            <th className="pb-2 pr-4">Categorie</th>
+            <th className="pb-2 pr-4">Ingrediënt</th>
+            <th className="pb-2 pr-4">Type</th>
+            <th className="pb-2 pr-4">Waarde</th>
+            <th className="pb-2 pr-4">Resultaat</th>
+            <th className="pb-2">Notities</th>
           </tr>
         </thead>
         <tbody>
           {data.map((p: any) => (
             <tr key={p.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
-              <td className="py-2 pr-4 text-white">{p.protein}</td>
-              <td className="py-2 pr-4 text-zinc-300">{p.cut}</td>
-              <td className="py-2 pr-4 text-amber-400 font-mono">{p.temperature_c}°C</td>
-              <td className="py-2 pr-4 text-zinc-300">{p.time_range || `${p.min_time}–${p.max_time}`}</td>
-              <td className="py-2 text-zinc-500">{p.source || 'Baldwin'}</td>
+              <td className="py-2 pr-4 text-white capitalize">{p.ingredient_category}</td>
+              <td className="py-2 pr-4 text-zinc-300">{p.ingredient_specific}</td>
+              <td className="py-2 pr-4 text-zinc-400 capitalize">{p.parameter_type}</td>
+              <td className="py-2 pr-4 text-amber-400 font-mono whitespace-nowrap">
+                {p.value_min}{p.value_max && p.value_max !== p.value_min ? `–${p.value_max}` : ''} {p.value_unit}
+              </td>
+              <td className="py-2 pr-4 text-zinc-300 capitalize">{p.result_description}</td>
+              <td className="py-2 text-zinc-500 text-xs max-w-[200px] truncate">{p.notes}</td>
             </tr>
           ))}
         </tbody>

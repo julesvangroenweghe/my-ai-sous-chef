@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact' })
 
     if (search) {
-      query = query.or(`protein.ilike.%${search}%,cut.ilike.%${search}%`)
+      query = query.or(`ingredient_category.ilike.%${search}%,ingredient_specific.ilike.%${search}%,result_description.ilike.%${search}%`)
     }
 
     query = query.range(offset, offset + limit - 1)
