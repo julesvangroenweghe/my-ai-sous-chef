@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
-interface SupplierProduct {
+interface LeverancierProduct {
   id: string
   product_name: string
   unit: string | null
@@ -17,7 +17,7 @@ interface SupplierProduct {
   last_updated: string
 }
 
-interface Supplier {
+interface Leverancier {
   id: string
   name: string
   contact_email: string | null
@@ -27,13 +27,13 @@ interface Supplier {
   delivery_days: string | null
   min_order_amount: number | null
   notes: string | null
-  products: SupplierProduct[]
+  products: LeverancierProduct[]
   expanded: boolean
   last_updated: string
 }
 
-export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+export default function LeveranciersPage() {
+  const [suppliers, setLeveranciers] = useState<Leverancier[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -54,18 +54,18 @@ export default function SuppliersPage() {
       .order('name')
 
     if (data) {
-      setSuppliers(data.map((s: Record<string, unknown>) => ({
+      setLeveranciers(data.map((s: Record<string, unknown>) => ({
         ...s,
-        products: ((s.products || []) as SupplierProduct[])
+        products: ((s.products || []) as LeverancierProduct[])
           .sort((a, b) => a.product_name.localeCompare(b.product_name)),
         expanded: false,
-      })) as Supplier[])
+      })) as Leverancier[])
     }
     setLoading(false)
   }
 
-  const toggleSupplier = (id: string) => {
-    setSuppliers(prev => prev.map(s =>
+  const toggleLeverancier = (id: string) => {
+    setLeveranciers(prev => prev.map(s =>
       s.id === id ? { ...s, expanded: !s.expanded } : s
     ))
   }
@@ -156,7 +156,7 @@ export default function SuppliersPage() {
       {/* Cross-supplier product search results */}
       {allProducts.length > 0 && (
         <div className="card overflow-hidden animate-slide-up">
-          <div className="px-4 py-3 bg-zinc-800/50 border-b border-zinc-700/50">
+          <div className="px-4 py-3 bg-zinc-900/60 border-b border-zinc-700/50">
             <h3 className="text-sm font-semibold text-zinc-300">
               Prijsvergelijking: &ldquo;{productSearch}&rdquo; ({allProducts.length} resultaten)
             </h3>
@@ -186,18 +186,18 @@ export default function SuppliersPage() {
         </div>
       )}
 
-      {/* Suppliers List */}
+      {/* Leveranciers List */}
       <div className="space-y-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         {filtered.length === 0 ? (
-          <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-12 text-center">
+          <div className="bg-zinc-900/80 border border-zinc-700/50 rounded-lg p-12 text-center">
             <Truck className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
             <p className="font-display font-semibold text-white">Geen leveranciers gevonden</p>
           </div>
         ) : (
           filtered.map(supplier => (
-            <div key={supplier.id} className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg overflow-hidden">
+            <div key={supplier.id} className="bg-zinc-900/80 border border-zinc-700/50 rounded-lg overflow-hidden">
               <button
-                onClick={() => toggleSupplier(supplier.id)}
+                onClick={() => toggleLeverancier(supplier.id)}
                 className="w-full flex items-center justify-between p-5 hover:bg-zinc-800/50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
