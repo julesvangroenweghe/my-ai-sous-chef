@@ -91,6 +91,33 @@ interface GeneratedMenu {
   legende_count?: number
 }
 
+// SVG icons for feedback (no emoji)
+function ThumbUp({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+      />
+    </svg>
+  )
+}
+
+function ThumbDown({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.484.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+      />
+    </svg>
+  )
+}
+
 export default function MenuBuilderPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -118,6 +145,9 @@ export default function MenuBuilderPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  // Feedback state: key = `${courseIdx}-${itemIdx}`, value = 'liked' | 'disliked'
+  const [feedback, setFeedback] = useState<Record<string, 'liked' | 'disliked'>>({})
+
   const toggleAllergy = (val: string) => {
     setAllergies(prev => prev.includes(val) ? prev.filter(a => a !== val) : [...prev, val])
   }
@@ -130,8 +160,8 @@ export default function MenuBuilderPage() {
     setGenerating(true)
     setGenError(null)
     setGeneratedMenu(null)
+    setFeedback({})
 
-    // Cycle loading messages
     let idx = 0
     const interval = setInterval(() => {
       idx = (idx + 1) % LOADING_MESSAGES.length
@@ -171,6 +201,29 @@ export default function MenuBuilderPage() {
     }
   }
 
+  const trackFeedback = async (
+    dishName: string,
+    eventType: 'suggestion_liked' | 'suggestion_disliked',
+    key: string,
+  ) => {
+    const newFeedbackVal = eventType === 'suggestion_liked' ? 'liked' : 'disliked'
+    setFeedback((prev) => ({ ...prev, [key]: newFeedbackVal }))
+
+    try {
+      await fetch('/api/profile/track-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: eventType,
+          entity_name: dishName,
+          metadata: { source: 'menu_builder' },
+        }),
+      })
+    } catch {
+      // Silently ignore tracking errors
+    }
+  }
+
   const saveAsEvent = async () => {
     if (!generatedMenu) return
     setSaving(true)
@@ -205,7 +258,6 @@ export default function MenuBuilderPage() {
 
       if (eventError || !newEvent) throw new Error('Kon event niet aanmaken')
 
-      // Insert menu items with recipes
       const courseOrder: Record<string, number> = {
         AMUSE: 0, FINGERFOOD: 0, VOORGERECHT: 1, TUSSENGERECHT: 2,
         HOOFDGERECHT: 3, KAAS: 4, DESSERT: 5, MIGNARDISES: 6,
@@ -564,52 +616,89 @@ export default function MenuBuilderPage() {
                       {course.course_label}
                     </span>
                   </div>
-                  {course.items?.map((item, ii) => (
-                    <div key={ii} className="px-6 py-4 space-y-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-stone-100">{item.name}</span>
-                            {item.source && SOURCE_BADGES[item.source] && (
-                              <span className={`px-2 py-0.5 text-xs rounded-full ${SOURCE_BADGES[item.source].className}`}>
-                                {SOURCE_BADGES[item.source].label}
-                              </span>
+                  {course.items?.map((item, ii) => {
+                    const fbKey = `${ci}-${ii}`
+                    const fb = feedback[fbKey]
+                    return (
+                      <div key={ii} className="px-6 py-4 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-semibold text-stone-100">{item.name}</span>
+                              {item.source && SOURCE_BADGES[item.source] && (
+                                <span className={`px-2 py-0.5 text-xs rounded-full ${SOURCE_BADGES[item.source].className}`}>
+                                  {SOURCE_BADGES[item.source].label}
+                                </span>
+                              )}
+                            </div>
+                            {item.description && (
+                              <p className="text-xs text-stone-400 mt-1">{item.description}</p>
                             )}
                           </div>
-                          {item.description && (
-                            <p className="text-xs text-stone-400 mt-1">{item.description}</p>
-                          )}
-                        </div>
-                        <span className="text-sm font-mono font-bold text-stone-300 shrink-0">
-                          €{Number(item.estimated_cost_pp || 0).toFixed(2)}/p
-                        </span>
-                      </div>
-                      {item.key_ingredients && item.key_ingredients.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {item.key_ingredients.map((ing, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded-full">
-                              {ing}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-mono font-bold text-stone-300">
+                              €{Number(item.estimated_cost_pp || 0).toFixed(2)}/p
                             </span>
-                          ))}
+                            {/* Feedback buttons */}
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  trackFeedback(item.name, 'suggestion_liked', fbKey)
+                                }
+                                title="Vind ik goed"
+                                className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                                  fb === 'liked'
+                                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                    : 'bg-stone-800 border-stone-700 text-stone-500 hover:border-emerald-500/40 hover:text-emerald-400'
+                                }`}
+                              >
+                                <ThumbUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  trackFeedback(item.name, 'suggestion_disliked', fbKey)
+                                }
+                                title="Vind ik niet goed"
+                                className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                                  fb === 'disliked'
+                                    ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                                    : 'bg-stone-800 border-stone-700 text-stone-500 hover:border-red-500/40 hover:text-red-400'
+                                }`}
+                              >
+                                <ThumbDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      {item.seasonal_highlights && item.seasonal_highlights.length > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-emerald-400">
-                          <Leaf className="w-3 h-3" />
-                          {item.seasonal_highlights.join(', ')}
-                        </div>
-                      )}
-                      {item.classical_reference && (
-                        <div className="flex items-center gap-1 text-xs text-stone-500">
-                          <Star className="w-3 h-3 text-stone-600" />
-                          <span>Gebaseerd op: <span className="italic">{item.classical_reference}</span></span>
-                        </div>
-                      )}
-                      {item.notes && (
-                        <p className="text-xs text-stone-500 italic">{item.notes}</p>
-                      )}
-                    </div>
-                  ))}
+                        {item.key_ingredients && item.key_ingredients.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.key_ingredients.map((ing, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded-full">
+                                {ing}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {item.seasonal_highlights && item.seasonal_highlights.length > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-emerald-400">
+                            <Leaf className="w-3 h-3" />
+                            {item.seasonal_highlights.join(', ')}
+                          </div>
+                        )}
+                        {item.classical_reference && (
+                          <div className="flex items-center gap-1 text-xs text-stone-500">
+                            <Star className="w-3 h-3 text-stone-600" />
+                            <span>Gebaseerd op: <span className="italic">{item.classical_reference}</span></span>
+                          </div>
+                        )}
+                        {item.notes && (
+                          <p className="text-xs text-stone-500 italic">{item.notes}</p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               ))}
             </div>
