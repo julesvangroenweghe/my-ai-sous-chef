@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     supabase.from('chef_profiles').select('*').eq('auth_user_id', user.id).single(),
     supabase.from('recipes').select('id, name, category:recipe_categories(name), total_cost_per_serving, selling_price, food_cost_percentage').eq('status', 'active').limit(50),
     supabase.from('ingredients').select('name, category, current_price, unit').order('name').limit(100),
-    supabase.from('events').select('id, title, event_date, pax, status, event_type').order('event_date', { ascending: false }).limit(10),
-    supabase.from('preparation_templates').select('name, method, yield_percentage, shelf_life').limit(30),
+    supabase.from('events').select('id, name, event_date, num_persons, status, event_type').order('event_date', { ascending: false }).limit(10),
+    supabase.from('preparations').select('name, method, yield_amount, yield_unit, shelf_life_hours').limit(30),
   ])
 
   const profile = profileRes.data
@@ -64,10 +64,10 @@ INGREDIENTEN MET PRIJS (top 50):
 ${ingredients.filter((i: any) => i.current_price).slice(0, 50).map((i: any) => `- ${i.name}: EUR${i.current_price}/kg`).join('\n')}
 
 KOMENDE EVENTS:
-${events.map((e: any) => `- ${e.title} (${e.event_date}, ${e.pax} pax, ${e.event_type})`).join('\n')}
+${events.map((e: any) => `- ${e.name} (${e.event_date}, ${e.num_persons} pax, ${e.event_type})`).join('\n')}
 
 HALFFABRICATEN:
-${preparations.map((p: any) => `- ${p.name} (${p.method || '?'}, yield: ${p.yield_percentage || '?'}%, houdbaarheid: ${p.shelf_life || '?'})`).join('\n')}
+${preparations.map((p: any) => `- ${p.name} (${p.method || '?'}, yield: ${p.yield_amount || '?'}${p.yield_unit || ''}, houdbaarheid: ${p.shelf_life_hours ? p.shelf_life_hours + 'u' : '?'})`).join('\n')}
 
 IN SEIZOEN (${new Date().toLocaleString('nl-BE', { month: 'long' })}):
 ${inSeason.map((s: any) => `- ${s.product_name} (${s.category})`).join('\n')}
@@ -99,7 +99,7 @@ REGELS:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       system: systemPrompt,
       stream: true,

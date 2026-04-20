@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
  .from('jules_suggestions')
  .select('id')
  .eq('chef_id', sug.chef_id)
- .eq('title', sug.title)
+ .eq('name', sug.title)
  .in('status', ['pending', 'seen'])
  .limit(1)
 
