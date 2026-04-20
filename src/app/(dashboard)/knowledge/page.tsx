@@ -84,7 +84,7 @@ export default function KnowledgePage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Culinaire Kennisbank</h1>
         <p className="text-sm text-zinc-400 mt-1">
-          {stats.recipes.toLocaleString()} klassieke recepten, {stats.techniques} technieken, {stats.ratios} ratio&apos;s, {stats.parameters} parameters
+          {stats.recipes.toLocaleString('nl-BE')} klassieke recepten, {stats.techniques} technieken, {stats.ratios} ratio&apos;s, {stats.parameters} parameters
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export default function KnowledgePage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
           <p className="text-sm text-zinc-500">
-            {total.toLocaleString()} resultaten — pagina {page + 1} van {totalPages}
+            {total.toLocaleString('nl-BE')} resultaten — pagina {page + 1} van {totalPages}
           </p>
           <div className="flex gap-2">
             <button
