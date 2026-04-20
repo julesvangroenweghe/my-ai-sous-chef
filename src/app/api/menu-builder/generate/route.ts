@@ -211,6 +211,13 @@ EVENT INFO:
 - Datum: ${date || new Date().toISOString().slice(0, 10)}
 - Gewenste gangen: ${coursesWithLabels}
 - Stijl: ${style}
+${style === 'Klassiek' 
+  ? '→ Klassiek-Europese uitvoering gewenst. Traditionele presentaties, Escoffier-stijl bereidingen zijn oké. Focus op technische correctheid.' 
+  : style === 'Fusion'
+  ? '→ Fusion: combineer Europese basis met Aziatische of Midden-Oosterse technieken. Miso, dashi, yuzu, ponzu welkom. Moderne presentaties verplicht.'
+  : style === 'Seizoensgebonden'
+  ? '→ Seizoensgebonden EN modern: laat seizoensproducten centraal staan maar hertaal klassieke bereidingen naar 2024-2026 fine dining niveau. Geen gedateerde catering-hapjes.'
+  : '→ Modern fine dining catering niveau (2024-2026). Zie HEDENDAAGSE RICHTLIJNEN hieronder — strict toepassen.'}
 - Allergieën: ${allergies.length > 0 ? allergies.join(', ') : 'geen'}
 - Hint van de chef: ${hint || 'geen'}
 
@@ -237,8 +244,35 @@ INSTRUCTIES:
 3. Houd rekening met food cost budget (max €${maxFoodCost}/p totaal)
 4. Vermijd allergieën volledig
 5. Zorg voor een logisch verloop: licht → zwaar → zoet
-6. Bij klassieke inspiratie: moderniseer waar nodig voor hedendaagse keuken
-7. Elk gerecht moet passen bij het chef-profiel en de kookstijl
+6. Elk gerecht moet passen bij het chef-profiel en de kookstijl
+
+HEDENDAAGSE CATERING RICHTLIJNEN (2024-2026 fine dining catering niveau):
+
+VERMIJD ALTIJD (gedateerd — nooit voorstellen tenzij expliciet gevraagd):
+- "Rolletjes" van vleeswaren (parmaham, bresaola, gerookte zalm) als hapje
+- Gevulde tomaatjes of gevulde champignons als hapje
+- Terrine klassiek opgediend op sneetje brood
+- Geleide aspic of gelatine-afwerking
+- Cocktailprikkers en saté-stokjes als presentatievorm
+- Mayonaise-dressings en cocktailsaus
+- Vol-au-vent als ganggerecht (tenzij retro-ironie expliciet gewenst)
+- Mousse au chocolat klassiek tenzij getransformeerd
+- Gegrilde paprika en cherry-tomaat als decoratie
+
+STREEF NAAR (hedendaags niveau):
+- Mono-ingredient focus: één perfect seizoensproduct centraal, 3-5 elementen max per hapje
+- Texturespel: crumble, crunch, gel, crispy sheet, krokante huid — espuma spaarzaam en bewust
+- Koud/warm contrasten op één bord of in één hap
+- Plantaardige basis met dierlijk accent (asperge/plant EERST, vleeswaar als accent niet vice versa)
+- Geroosterd / à la plancha voor karamelisatie en diepte
+- Umami-lagen: miso-crème, gefermenteerde bouillon, gereduceerde dashi, bonito
+- Bouillons en consommés in shotglaasjes i.p.v. soepkommen bij walking dinner
+- Gerechten die moeiteloos met één hand gegeten worden (walking dinner principe)
+- Micro-herbs, eetbare bloemen, finishing zout als afwerking — niet als decoratie-cliché
+- Aziatisch-Europese kruisbestuiving indien passend bij chefprofiel: ponzu, yuzu, dashi, mirin
+
+Bij klassieke Escoffier/historische inspiratie: neem het CONCEPT (smaakcombi, hoofdproduct) maar hertaal de uitvoering.
+Voorbeeld: "Asperges à la polonaise" → Witte asperge carpaccio, broodkruimelcrumble, gedroogde eierdooier, peterseliepoeder. NIET de klassieke bereiding kopiëren.
 
 Geef terug als JSON (ALLEEN JSON, geen markdown):
 {

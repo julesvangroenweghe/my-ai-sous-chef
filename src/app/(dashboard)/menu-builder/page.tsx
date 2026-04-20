@@ -38,7 +38,7 @@ const COURSE_OPTIONS = [
   { value: 'MIGNARDISES', label: 'Mignardises' },
 ]
 
-const STYLE_OPTIONS = ['Modern', 'Klassiek', 'Fusion', 'Seizoensgebonden']
+const STYLE_OPTIONS = ['Modern', 'Seizoensgebonden', 'Klassiek', 'Fusion']
 
 const LOADING_MESSAGES = [
   'Seizoenskalender raadplegen...',
