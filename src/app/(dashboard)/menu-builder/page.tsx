@@ -60,6 +60,7 @@ interface MenuItem {
   source: 'own_recipe' | 'legende' | 'new'
   recipe_id: string | null
   legende_id: string | null
+  classical_reference: string | null
   key_ingredients: string[]
   seasonal_highlights: string[]
   estimated_cost_pp: number
@@ -77,6 +78,7 @@ interface GeneratedMenu {
   total_estimated_cost_pp: number
   total_food_cost_pct: number
   chef_note: string
+  seasonal_score?: number
   event_type: string
   num_persons: number
   price_per_person: number
@@ -85,6 +87,8 @@ interface GeneratedMenu {
   courses: string[]
   allergies: string[]
   style: string
+  own_recipe_count?: number
+  legende_count?: number
 }
 
 export default function MenuBuilderPage() {
@@ -515,6 +519,30 @@ export default function MenuBuilderPage() {
             </div>
           </div>
 
+          {/* Library context */}
+          {(generatedMenu.own_recipe_count !== undefined || generatedMenu.legende_count !== undefined) && (
+            <div className="flex flex-wrap gap-2 text-xs text-stone-500">
+              {generatedMenu.own_recipe_count !== undefined && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 inline-block"></span>
+                  {generatedMenu.own_recipe_count} eigen recepten geanalyseerd
+                </span>
+              )}
+              {generatedMenu.legende_count !== undefined && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+                  {generatedMenu.legende_count} LEGENDE gerechten geanalyseerd
+                </span>
+              )}
+              {generatedMenu.seasonal_score !== undefined && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                  Seizoensscore: {generatedMenu.seasonal_score}%
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Chef note */}
           {generatedMenu.chef_note && (
             <div className="flex gap-3 p-4 bg-brand-500/10 border border-brand-500/20 rounded-xl">
@@ -569,6 +597,12 @@ export default function MenuBuilderPage() {
                         <div className="flex items-center gap-1 text-xs text-emerald-400">
                           <Leaf className="w-3 h-3" />
                           {item.seasonal_highlights.join(', ')}
+                        </div>
+                      )}
+                      {item.classical_reference && (
+                        <div className="flex items-center gap-1 text-xs text-stone-500">
+                          <Star className="w-3 h-3 text-stone-600" />
+                          <span>Gebaseerd op: <span className="italic">{item.classical_reference}</span></span>
                         </div>
                       )}
                       {item.notes && (

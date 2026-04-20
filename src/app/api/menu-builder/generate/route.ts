@@ -17,6 +17,18 @@ const COURSE_LABELS: Record<string, string> = {
   MIGNARDISES: 'Mignardises',
 }
 
+// Map course types to classical_recipes categories for inspiration
+const COURSE_TO_CLASSICAL: Record<string, string[]> = {
+  AMUSE: ['hors_doeuvres', 'soups', 'savouries'],
+  FINGERFOOD: ['hors_doeuvres', 'savouries', 'entrees', 'eggs'],
+  VOORGERECHT: ['entrees', 'fish', 'soups', 'hors_doeuvres', 'eggs'],
+  TUSSENGERECHT: ['fish', 'entrees', 'soups', 'vegetables'],
+  HOOFDGERECHT: ['meat', 'poultry', 'poultry_game', 'fish', 'braised', 'roasts', 'game'],
+  KAAS: ['savouries', 'entrees'],
+  DESSERT: ['desserts', 'frozen_desserts', 'pastry', 'entremets'],
+  MIGNARDISES: ['desserts', 'pastry', 'general'],
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -52,12 +64,23 @@ export async function POST(request: NextRequest) {
       .eq('auth_user_id', user.id)
       .single()
 
-    // Load own recipes
+    // Load ALL own kitchen recipes with components for richer context
     const recipesQuery = supabase
       .from('recipes')
-      .select('id, name, description, category_id, total_cost_per_serving, number_of_servings')
+      .select(`
+        id, name, description, category_id, total_cost_per_serving, 
+        number_of_servings, food_cost_percentage, selling_price, season_tags,
+        recipe_categories(name),
+        recipe_components(
+          name, 
+          recipe_component_ingredients(
+            quantity_per_person, unit,
+            ingredients(name, category)
+          )
+        )
+      `)
       .eq('status', 'active')
-      .limit(60)
+      .limit(100)
 
     if (kitchenId) {
       recipesQuery.eq('kitchen_id', kitchenId)
@@ -65,49 +88,114 @@ export async function POST(request: NextRequest) {
 
     const { data: ownRecipes } = await recipesQuery
 
-    // Load LEGENDE dishes
+    // Load LEGENDE dishes with elements
     const { data: legendeDishes } = await supabase
       .from('legende_dishes')
-      .select('id, name, category_id, element_count, notes, elements:legende_dish_elements(name, quantity_text)')
-      .limit(80)
+      .select('id, name, category_id, notes, service_style, temperature, is_vegetarian, elements:legende_dish_elements(name, quantity_text, element_type)')
+      .limit(100)
 
     // Determine month from date
     const eventDate = date ? new Date(date) : new Date()
     const monthNum = eventDate.getMonth() + 1
     const monthKey = MONTH_NAMES[monthNum] as string
 
-    // Load seasonal peak products
+    // Load seasonal peak products (this month)
     const { data: seasonalItems } = await supabase
       .from('seasonal_calendar')
-      .select(`id, name, category, ${monthKey}`)
+      .select(`id, ingredient_name, category, ${monthKey}`)
       .eq(monthKey, 2)
       .limit(30)
 
+    // Load seasonal available products (score 1 = available)
+    const { data: seasonalAvailable } = await supabase
+      .from('seasonal_calendar')
+      .select(`ingredient_name, category, ${monthKey}`)
+      .eq(monthKey, 1)
+      .limit(20)
+
+    // Load classical recipes as inspiration — filter by relevant categories for requested courses
+    const allClassicalCategories = [...new Set(
+      courses.flatMap((c: string) => COURSE_TO_CLASSICAL[c] || [])
+    )]
+
+    let classicalInspirationByCourse: Record<string, { name_original: string; name_english: string | null; description: string | null; category: string }[]> = {}
+
+    if (allClassicalCategories.length > 0) {
+      const { data: classicalRecipes } = await supabase
+        .from('classical_recipes')
+        .select('name_original, name_english, description, category, techniques')
+        .in('category', allClassicalCategories)
+        .not('name_original', 'ilike', '%recipe%')
+        .not('name_original', 'ilike', '%chapter%')
+        .limit(200)
+
+      // Group by course mapping
+      if (classicalRecipes) {
+        for (const course of courses as string[]) {
+          const relevantCategories = COURSE_TO_CLASSICAL[course] || []
+          const relevant = classicalRecipes
+            .filter(r => relevantCategories.includes(r.category))
+            .filter(r => r.name_original && r.name_original.length > 3 && r.name_original.length < 80)
+            .sort(() => Math.random() - 0.5) // random selection
+            .slice(0, 8)
+          classicalInspirationByCourse[course] = relevant
+        }
+      }
+    }
+
     const maxFoodCost = ((price_per_person * food_cost_target) / 100).toFixed(2)
 
-    // Build prompt
+    // Build chef style info
     const styleInfo = chef?.style_analysis
       ? (typeof chef.style_analysis === 'object'
-        ? (chef.style_analysis as Record<string, unknown>)['style_description'] || JSON.stringify(chef.style_analysis).slice(0, 200)
-        : String(chef.style_analysis).slice(0, 200))
+        ? (chef.style_analysis as Record<string, unknown>)['style_description'] || JSON.stringify(chef.style_analysis).slice(0, 300)
+        : String(chef.style_analysis).slice(0, 300))
       : chef?.cooking_philosophy || chef?.bio || 'niet gespecificeerd'
 
-    const recipesList = (ownRecipes || []).map(r =>
-      `- ${r.name} | €${Number(r.total_cost_per_serving || 0).toFixed(2)}/p | id: ${r.id}`
-    ).join('\n')
+    // Build own recipes list with ingredient details
+    const recipesList = (ownRecipes || []).map(r => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cat = (r.recipe_categories as any)?.name || 'geen categorie'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const components = (r.recipe_components as any[] || []).map((comp: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ingrs = (comp.recipe_component_ingredients || []).map((ci: any) => 
+          ci.ingredients?.name
+        ).filter(Boolean).slice(0, 4).join(', ')
+        return `${comp.name}${ingrs ? ` (${ingrs})` : ''}`
+      }).join(' | ')
+      
+      return `- [EIGEN RECEPT] "${r.name}" | categorie: ${cat} | €${Number(r.total_cost_per_serving || 0).toFixed(2)}/p kostprijs${r.selling_price ? ` | €${r.selling_price} verkoopprijs` : ''} | ${r.food_cost_percentage ? `${Number(r.food_cost_percentage).toFixed(1)}% food cost` : ''} | id: ${r.id}${components ? `\n  Componenten: ${components}` : ''}`
+    }).join('\n')
 
+    // Build LEGENDE list
     const legendeList = (legendeDishes || []).map(d => {
-      const elems = (d.elements as Array<{ name: string; quantity_text: string | null }> || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const elems = (d.elements as Array<{ name: string; quantity_text: string | null; element_type: string }> || [])
         .map(e => e.name).join(', ')
-      return `- ${d.name} | elementen: ${elems || 'nvt'} | id: ${d.id}`
+      return `- [LEGENDE] "${d.name}" | stijl: ${d.service_style || 'nvt'} | temp: ${d.temperature || 'nvt'}${d.is_vegetarian ? ' | vegetarisch' : ''} | id: ${d.id}${elems ? `\n  Elementen: ${elems}` : ''}`
     }).join('\n')
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const seasonalList = (seasonalItems || []).map((s: any) => `- ${s.name} (${s.category})`).join('\n')
+    const seasonalPeakList = (seasonalItems || []).map((s: any) => `- ${s.ingredient_name} (${s.category}) [PIEKSEIZOEN]`).join('\n')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seasonalAvailList = (seasonalAvailable || []).map((s: any) => `- ${s.ingredient_name} (${s.category})`).join('\n')
 
     const coursesWithLabels = courses.map((c: string) => COURSE_LABELS[c] || c).join(', ')
 
-    const prompt = `Je bent een culinaire AI-assistent die een menu samenstelt voor een professionele chef.
+    // Build classical inspiration section per course
+    const classicalSection = courses.map((c: string) => {
+      const items = classicalInspirationByCourse[c] || []
+      if (items.length === 0) return ''
+      const label = COURSE_LABELS[c] || c
+      const itemsList = items.map(r => 
+        `  • ${r.name_english || r.name_original}${r.name_english && r.name_original !== r.name_english ? ` (${r.name_original})` : ''}${r.description ? `: ${r.description.slice(0, 100)}` : ''}`
+      ).join('\n')
+      return `${label}:\n${itemsList}`
+    }).filter(Boolean).join('\n\n')
+
+    const prompt = `Je bent een culinaire AI-assistent die een professioneel menu samenstelt voor een chef.
+Je hebt toegang tot de volledige receptbibliotheek van de chef (eigen recepten + LEGENDE gerechten) én klassieke culinaire referentiewerken.
 
 CHEF PROFIEL:
 - Naam: ${chef?.display_name || 'Chef'}
@@ -126,18 +214,31 @@ EVENT INFO:
 - Allergieën: ${allergies.length > 0 ? allergies.join(', ') : 'geen'}
 - Hint van de chef: ${hint || 'geen'}
 
-EIGEN RECEPTEN (${ownRecipes?.length || 0}):
-${recipesList || '(geen recepten gevonden)'}
+EIGEN RECEPTEN UIT DE LIBRARY (${ownRecipes?.length || 0} recepten):
+${recipesList || '(nog geen recepten aangemaakt)'}
 
-LEGENDE GERECHTEN (${legendeDishes?.length || 0}):
+LEGENDE GERECHTEN (${legendeDishes?.length || 0} gerechten):
 ${legendeList || '(geen LEGENDE gerechten)'}
 
-SEIZOENSPIEK PRODUCTEN (deze maand):
-${seasonalList || '(geen data)'}
+SEIZOENSPIEK PRODUCTEN (nu in piekseizoen — gebruik bij voorkeur):
+${seasonalPeakList || '(geen data)'}
 
-Maak een menu voorstel. Geef voor elke gang 1 gerecht (of 2-3 bij fingerfood/mignardises).
-Prioriteer: (1) eigen recepten van de chef, (2) LEGENDE gerechten, (3) nieuw AI-voorstel.
-Houd rekening met allergieën - vermijd deze ingrediënten volledig.
+SEIZOEN BESCHIKBAAR (beschikbaar maar niet piek):
+${seasonalAvailList || '(geen data)'}
+
+KLASSIEKE CULINAIRE INSPIRATIE (Escoffier, Hirtzler, e.a. — ter referentie):
+${classicalSection || '(geen klassieke inspiratie beschikbaar)'}
+
+---
+
+INSTRUCTIES:
+1. Prioriteer ALTIJD: (1) eigen recepten, (2) LEGENDE gerechten, (3) nieuw AI-voorstel gebaseerd op klassieke inspiratie
+2. Gebruik seizoenspiekproducten als sleutelingrediënten
+3. Houd rekening met food cost budget (max €${maxFoodCost}/p totaal)
+4. Vermijd allergieën volledig
+5. Zorg voor een logisch verloop: licht → zwaar → zoet
+6. Bij klassieke inspiratie: moderniseer waar nodig voor hedendaagse keuken
+7. Elk gerecht moet passen bij het chef-profiel en de kookstijl
 
 Geef terug als JSON (ALLEEN JSON, geen markdown):
 {
@@ -148,25 +249,28 @@ Geef terug als JSON (ALLEEN JSON, geen markdown):
       "items": [
         {
           "name": "Naam gerecht",
-          "description": "Korte beschrijving",
+          "description": "Korte beschrijving (max 2 zinnen)",
           "source": "own_recipe",
           "recipe_id": "uuid of null",
           "legende_id": "uuid of null",
+          "classical_reference": "naam van klassiek recept of null",
           "key_ingredients": ["ingredient1", "ingredient2"],
           "seasonal_highlights": ["seizoensingrediënt"],
           "estimated_cost_pp": 2.50,
-          "notes": "optionele opmerking"
+          "notes": "optionele technische opmerking voor de chef"
         }
       ]
     }
   ],
   "total_estimated_cost_pp": 18.50,
   "total_food_cost_pct": 28.5,
-  "chef_note": "Persoonlijke noot over dit menu"
+  "chef_note": "Persoonlijke noot over dit menu en de gemaakte keuzes",
+  "seasonal_score": 85
 }
 
-Realistische kostenschattingen: amuse €1-3/p, voorgerecht €3-6/p, tussengerecht €4-7/p, hoofdgerecht €6-12/p, dessert €2-5/p, mignardises €1-2/p, fingerfood (3 stuks) €3-6/p.
-source moet "own_recipe", "legende" of "new" zijn. Als je eigen recept gebruikt, zet het echte recipe_id.`
+source moet "own_recipe", "legende" of "new" zijn.
+Als je eigen recept of LEGENDE gebruikt, zet het echte id uit de lijst hierboven.
+Realistische kostenschattingen: amuse €1-3/p, voorgerecht €3-6/p, tussengerecht €4-7/p, hoofdgerecht €6-12/p, dessert €2-5/p, mignardises €1-2/p, fingerfood (3 stuks) €3-6/p.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -213,6 +317,8 @@ source moet "own_recipe", "legende" of "new" zijn. Als je eigen recept gebruikt,
       courses,
       allergies,
       style,
+      own_recipe_count: ownRecipes?.length || 0,
+      legende_count: legendeDishes?.length || 0,
     })
   } catch (error) {
     console.error('Menu builder error:', error)
