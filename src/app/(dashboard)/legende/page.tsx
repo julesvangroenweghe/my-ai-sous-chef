@@ -80,13 +80,18 @@ export default function LegendePage() {
       })
 
       setDishes(mapped)
-      setCategories(
-        (cats || []).map(c => ({
-          id: c.id,
-          name: c.name,
-          dish_count: catCounts.get(c.name) || 0,
-        }))
-      )
+      // Deduplicate categories by name (sub-categories share same name)
+      const uniqueCats = new Map<string, LegendeCategory>()
+      for (const c of (cats || [])) {
+        if (!uniqueCats.has(c.name)) {
+          uniqueCats.set(c.name, {
+            id: c.id,
+            name: c.name,
+            dish_count: catCounts.get(c.name) || 0,
+          })
+        }
+      }
+      setCategories(Array.from(uniqueCats.values()))
     }
     setLoading(false)
   }
