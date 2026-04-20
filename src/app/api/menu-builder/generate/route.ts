@@ -246,33 +246,37 @@ INSTRUCTIES:
 5. Zorg voor een logisch verloop: licht → zwaar → zoet
 6. Elk gerecht moet passen bij het chef-profiel en de kookstijl
 
-HEDENDAAGSE CATERING RICHTLIJNEN (2024-2026 fine dining catering niveau):
+HEDENDAAGSE CATERING FILOSOFIE (2024-2026 fine dining catering niveau):
 
-VERMIJD ALTIJD (gedateerd — nooit voorstellen tenzij expliciet gevraagd):
-- "Rolletjes" van vleeswaren (parmaham, bresaola, gerookte zalm) als hapje
-- Gevulde tomaatjes of gevulde champignons als hapje
-- Terrine klassiek opgediend op sneetje brood
-- Geleide aspic of gelatine-afwerking
-- Cocktailprikkers en saté-stokjes als presentatievorm
-- Mayonaise-dressings en cocktailsaus
-- Vol-au-vent als ganggerecht (tenzij retro-ironie expliciet gewenst)
-- Mousse au chocolat klassiek tenzij getransformeerd
-- Gegrilde paprika en cherry-tomaat als decoratie
+KERNPRINCIPE: "Hertaal, vervang niet"
+Klassieke smaakcombinaties zijn tijdloos. De uitvoering upgrade je.
+Voorbeeld (Jules' eigen aanpak): asperge × ham × hollandaise = tijdloos flavor triplet.
+Niet vervangen door iets compleet anders, maar hertalen:
+→ Iberico ham i.p.v. Parmaham, gepekelde eierdooier i.p.v. klassieke hollandaise, shiitake poeder als umami-laag, kapperblad als zuur accent.
+Het gerecht is herkenbaar maar voelt 2025 aan.
 
-STREEF NAAR (hedendaags niveau):
-- Mono-ingredient focus: één perfect seizoensproduct centraal, 3-5 elementen max per hapje
-- Texturespel: crumble, crunch, gel, crispy sheet, krokante huid — espuma spaarzaam en bewust
-- Koud/warm contrasten op één bord of in één hap
-- Plantaardige basis met dierlijk accent (asperge/plant EERST, vleeswaar als accent niet vice versa)
-- Geroosterd / à la plancha voor karamelisatie en diepte
-- Umami-lagen: miso-crème, gefermenteerde bouillon, gereduceerde dashi, bonito
-- Bouillons en consommés in shotglaasjes i.p.v. soepkommen bij walking dinner
-- Gerechten die moeiteloos met één hand gegeten worden (walking dinner principe)
-- Micro-herbs, eetbare bloemen, finishing zout als afwerking — niet als decoratie-cliché
-- Aziatisch-Europese kruisbestuiving indien passend bij chefprofiel: ponzu, yuzu, dashi, mirin
+HERTAALREGEL — voor elk klassiek gerecht, pas toe:
+1. UPGRADE het hoofdingrediënt naar een premium variant (Parma → Iberico, gewone champignon → trumpet royale, kip → kapoen, zalm → wilde Schotse zalm)
+2. TRANSFORMEER één klassieke saus/bereiding (hollandaise → gepekelde dooier, bearnaise → tarragon gel, mayo → aioli met miso of yuzu)
+3. VOEG één umami/diepte-laag toe (shiitake poeder, bonito flakes, dashi gel, gefermenteerde crème, gereduceerde jus)
+4. VOEG één zuur/fris element toe (kapperblad, gezouten citroen, pickles, kombucha gel, elderflower)
 
-Bij klassieke Escoffier/historische inspiratie: neem het CONCEPT (smaakcombi, hoofdproduct) maar hertaal de uitvoering.
-Voorbeeld: "Asperges à la polonaise" → Witte asperge carpaccio, broodkruimelcrumble, gedroogde eierdooier, peterseliepoeder. NIET de klassieke bereiding kopiëren.
+WAT NOOIT MAG (uitvoering is verouderd, niet het concept):
+- Letterlijk opgerold vleeswaar als fingerfood — wel: vleeswaar als dun lint, crispy chip, of fijn gesneden accent
+- Gevulde tomaatjes/champignons — wel: geroosterde tomaat als basis, tartaar in tarteletje
+- Cocktailprikkers als presentatievorm
+- Sauzen naast het bord in een potje (culinaire kermis) tenzij bewust ironisch
+- Klassieke garnituur-decoratie: gekrulde peterselie, tomatenbloem, citroenwig
+
+STREEF NAAR (hedendaagse uitvoering):
+- Mono-ingredient focus: één seizoensproduct centraal, 3-5 elementen max per hapje
+- Texturespel: crumble, crunch, gel, crispy sheet, krokante huid — espuma spaarzaam
+- Koud/warm contrast op één bord
+- Geroosterd / à la plancha voor karamelisatie en Maillard
+- Bouillons en consommés in shotglaasjes bij walking dinner
+- Één-hand eetbaar (walking dinner principe)
+
+Bij Escoffier/historische recepten als inspiratie: neem CONCEPT + SMAAKLOGICA, hertaal de uitvoering via bovenstaande regels.
 
 Geef terug als JSON (ALLEEN JSON, geen markdown):
 {
