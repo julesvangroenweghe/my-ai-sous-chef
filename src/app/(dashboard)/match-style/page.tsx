@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ChevronDown, ChevronUp, ArrowUpRight } from 'lucide-react'
+import { Sparkles, ChevronDown, ChevronUp, ArrowUpRight, BookOpen, Utensils, FlaskConical, TrendingUp } from 'lucide-react'
 
 interface MatchData {
   match_score: number
@@ -24,10 +24,12 @@ interface LegendeDish {
   best_score: number
 }
 
-interface Recipe {
-  id: string
-  name: string
-  description: string
+interface AIAnalysis {
+  eigen_recepten_match: { naam: string; overeenkomst: string; score: number; transfereerbare_elementen: string[] }[]
+  klassieke_variaties: { naam: string; bron: string; techniek: string; hertaling: string }[]
+  toe_te_passen_halffabricaten: { naam: string; toepassing: string }[]
+  stijl_aanpassing: { klassiek_concept: string; moderne_uitvoering: string; stappen: string[]; mise_en_place_tip: string }
+  food_cost_inschatting: { range: string; food_cost_pct: string; toelichting: string }
 }
 
 function ScoreBadge({ score }: { score: number }) {
@@ -43,10 +45,7 @@ function ScoreBadge({ score }: { score: number }) {
 
 function MatchTypeTag({ type }: { type: string }) {
   const labels: Record<string, string> = {
-    ingredient: 'Ingrediënt',
-    technique: 'Techniek',
-    style: 'Stijl',
-    composite: 'Samengesteld'
+    ingredient: 'Ingrediënt', technique: 'Techniek', style: 'Stijl', composite: 'Samengesteld'
   }
   return (
     <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-600 border border-violet-100">
@@ -55,13 +54,152 @@ function MatchTypeTag({ type }: { type: string }) {
   )
 }
 
+function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { classical_count: number; preps_count: number; main_ingredient: string } }) {
+  return (
+    <div className="space-y-4 mt-4">
+      {/* Meta info */}
+      <div className="flex items-center gap-3 text-xs text-stone-400">
+        <span>Doorzocht: {meta.classical_count} klassieke recepten voor &ldquo;{meta.main_ingredient}&rdquo;</span>
+        <span>·</span>
+        <span>{meta.preps_count} halffabricaten gecontroleerd</span>
+      </div>
+
+      {/* Eigen recepten matches */}
+      {analysis.eigen_recepten_match?.length > 0 && (
+        <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
+            <Utensils className="w-3.5 h-3.5 text-brand-600" />
+            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Eigen recepten die matchen</span>
+          </div>
+          <div className="divide-y divide-stone-50">
+            {analysis.eigen_recepten_match.map((m, i) => (
+              <div key={i} className="px-4 py-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <ScoreBadge score={m.score} />
+                  <span className="text-sm font-medium text-stone-800">{m.naam}</span>
+                </div>
+                <p className="text-xs text-stone-500 leading-relaxed">{m.overeenkomst}</p>
+                {m.transfereerbare_elementen?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {m.transfereerbare_elementen.map((el, j) => (
+                      <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">{el}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Klassieke variaties */}
+      {analysis.klassieke_variaties?.length > 0 && (
+        <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
+            <BookOpen className="w-3.5 h-3.5 text-violet-600" />
+            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Klassieke variaties uit de kennisbank</span>
+          </div>
+          <div className="divide-y divide-stone-50">
+            {analysis.klassieke_variaties.map((v, i) => (
+              <div key={i} className="px-4 py-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-stone-800">{v.naam}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">{v.bron}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-600 border border-violet-100">{v.techniek}</span>
+                </div>
+                <p className="text-xs text-stone-500 leading-relaxed italic">&ldquo;{v.hertaling}&rdquo;</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Halffabricaten */}
+      {analysis.toe_te_passen_halffabricaten?.length > 0 && (
+        <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
+            <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Toe te passen halffabricaten</span>
+          </div>
+          <div className="divide-y divide-stone-50">
+            {analysis.toe_te_passen_halffabricaten.map((h, i) => (
+              <div key={i} className="px-4 py-3">
+                <span className="text-sm font-medium text-stone-800">{h.naam}</span>
+                <p className="text-xs text-stone-500 mt-0.5">{h.toepassing}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stijl aanpassing */}
+      {analysis.stijl_aanpassing && (
+        <div className="bg-gradient-to-br from-brand-50/50 to-violet-50/30 rounded-xl border border-brand-100/50 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-brand-100/30">
+            <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+            <span className="text-xs font-semibold text-brand-700 uppercase tracking-wider">Aanpassing aan jouw stijl</span>
+          </div>
+          <div className="px-4 py-3 space-y-3">
+            <div>
+              <span className="text-[10px] text-stone-400 uppercase tracking-wider">Klassiek concept</span>
+              <p className="text-sm text-stone-700 font-medium mt-0.5">{analysis.stijl_aanpassing.klassiek_concept}</p>
+            </div>
+            <div>
+              <span className="text-[10px] text-stone-400 uppercase tracking-wider">Moderne hertaling</span>
+              <p className="text-sm text-stone-800 font-medium mt-0.5">{analysis.stijl_aanpassing.moderne_uitvoering}</p>
+            </div>
+            {analysis.stijl_aanpassing.stappen?.length > 0 && (
+              <div className="space-y-1">
+                {analysis.stijl_aanpassing.stappen.map((stap, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <span className="text-xs text-stone-600">{stap}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {analysis.stijl_aanpassing.mise_en_place_tip && (
+              <div className="mt-2 p-2 bg-white/60 rounded-lg border border-brand-100/30">
+                <span className="text-[10px] text-stone-400 uppercase tracking-wider">MEP tip</span>
+                <p className="text-xs text-stone-600 mt-0.5">{analysis.stijl_aanpassing.mise_en_place_tip}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Food cost */}
+      {analysis.food_cost_inschatting && (
+        <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Geschatte food cost</span>
+          </div>
+          <div className="px-4 py-3 flex items-center gap-6">
+            <div>
+              <div className="text-xl font-display font-bold text-stone-900">{analysis.food_cost_inschatting.range}</div>
+              <div className="text-xs text-stone-400">per persoon</div>
+            </div>
+            <div>
+              <div className="text-xl font-display font-bold text-emerald-600">{analysis.food_cost_inschatting.food_cost_pct}</div>
+              <div className="text-xs text-stone-400">food cost %</div>
+            </div>
+            {analysis.food_cost_inschatting.toelichting && (
+              <p className="text-xs text-stone-500 flex-1">{analysis.food_cost_inschatting.toelichting}</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MatchMyStylePage() {
   const [dishes, setDishes] = useState<LegendeDish[]>([])
-  const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedDish, setExpandedDish] = useState<string | null>(null)
   const [aiDish, setAiDish] = useState<string | null>(null)
-  const [aiResult, setAiResult] = useState<string | null>(null)
+  const [aiResults, setAiResults] = useState<Record<string, AIAnalysis & { meta: { classical_count: number; preps_count: number; main_ingredient: string } }>>({})
   const [aiLoading, setAiLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'matched' | 'unmatched'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'score'>('score')
@@ -69,13 +207,12 @@ export default function MatchMyStylePage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: d }, { data: r }, { data: elements }, { data: cats }, { data: matches }] = await Promise.all([
+      const [{ data: d }, { data: elements }, { data: cats }, { data: matches }] = await Promise.all([
         supabase.from('legende_dishes').select('id, name, category_id').order('name'),
-        supabase.from('recipes').select('id, name, description').order('name'),
         supabase.from('legende_dish_elements').select('dish_id, name, quantity_grams, quantity_text'),
         supabase.from('legende_categories').select('id, name'),
         supabase.from('legende_recipe_matches').select(`
-          legende_dish_id, recipe_id, match_score, match_type, 
+          legende_dish_id, recipe_id, match_score, match_type,
           shared_ingredients, shared_techniques, style_notes, suggestion,
           recipes:recipe_id(name)
         `)
@@ -83,78 +220,63 @@ export default function MatchMyStylePage() {
 
       const catMap = Object.fromEntries((cats || []).map(c => [c.id, c.name]))
 
-      const dishesWithData = (d || []).map((dish: any) => {
-        const dishMatches = (matches || [])
-          .filter((m: any) => m.legende_dish_id === dish.id)
-          .map((m: any) => ({
-            match_score: Number(m.match_score),
-            match_type: m.match_type,
-            shared_ingredients: m.shared_ingredients || [],
-            shared_techniques: m.shared_techniques || [],
-            style_notes: m.style_notes || '',
-            suggestion: m.suggestion || '',
-            recipe_name: (m.recipes as any)?.name || 'Onbekend',
-            recipe_id: m.recipe_id
-          }))
-          .sort((a: MatchData, b: MatchData) => b.match_score - a.match_score)
+      const dishesWithData = (d || []).map((dish: { id: string; name: string; category_id: string }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dishMatches = (matches || []).filter((m: any) => m.legende_dish_id === dish.id).map((m: any) => ({
+          match_score: Number(m.match_score),
+          match_type: m.match_type,
+          shared_ingredients: m.shared_ingredients || [],
+          shared_techniques: m.shared_techniques || [],
+          style_notes: m.style_notes || '',
+          suggestion: m.suggestion || '',
+          recipe_name: (m.recipes as { name: string })?.name || 'Onbekend',
+          recipe_id: m.recipe_id
+        })).sort((a: MatchData, b: MatchData) => b.match_score - a.match_score)
 
         return {
           id: dish.id,
           name: dish.name,
           category_name: catMap[dish.category_id] || 'Onbekend',
-          elements: (elements || []).filter((e: any) => e.dish_id === dish.id),
+          elements: (elements || []).filter((e: { dish_id: string }) => e.dish_id === dish.id),
           matches: dishMatches,
           best_score: dishMatches.length > 0 ? dishMatches[0].match_score : 0
         }
       })
 
       setDishes(dishesWithData)
-      setRecipes((r || []) as Recipe[])
       setLoading(false)
     }
     load()
-  }, [])
+  }, [supabase])
 
   const matchDishAI = async (dish: LegendeDish) => {
+    // Use cached result if available
+    if (aiResults[dish.id]) {
+      setAiDish(dish.id)
+      return
+    }
+
     setAiDish(dish.id)
     setAiLoading(true)
-    setAiResult(null)
 
     try {
-      const elementsText = dish.elements
-        .map(e => `${e.name}${e.quantity_grams ? ` (${e.quantity_grams}g)` : ''}`)
-        .join(', ')
-
-      const recipeNames = recipes.map(r => `- ${r.name}: ${r.description || ''}`).join('\n')
-
-      const res = await fetch('/api/jules-chat', {
+      const res = await fetch('/api/match-style/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Analyseer dit LEGENDE gerecht en match het met bestaande recepten. Geef ook suggesties hoe dit gerecht past in mijn stijl.
-
-LEGENDE GERECHT: ${dish.name}
-CATEGORIE: ${dish.category_name}
-ELEMENTEN: ${elementsText}
-
-MIJN BESTAANDE RECEPTEN:
-${recipeNames}
-
-Geef:
-1. Welke bestaande recepten het dichtst aansluiten (qua techniek, ingredienten, stijl)
-2. Welke elementen/technieken ik kan overnemen
-3. Hoe ik dit gerecht kan aanpassen aan mijn stijl
-4. Geschatte food cost range gebaseerd op mijn bestaande ingredientprijzen
-
-Antwoord in het Nederlands, beknopt en professioneel.`,
-          context: 'match_style'
+          dishId: dish.id,
+          dishName: dish.name,
+          categoryName: dish.category_name,
+          elements: dish.elements
         })
       })
 
       const data = await res.json()
-      setAiResult(data.response || data.message || 'Geen analyse beschikbaar.')
+      if (data.analysis) {
+        setAiResults(prev => ({ ...prev, [dish.id]: { ...data.analysis, meta: data.meta } }))
+      }
     } catch {
-      setAiResult('Fout bij het analyseren. Probeer opnieuw.')
+      console.error('AI match fout')
     }
     setAiLoading(false)
   }
@@ -165,10 +287,7 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
       if (filter === 'unmatched') return d.matches.length === 0
       return true
     })
-    .sort((a, b) => {
-      if (sortBy === 'score') return b.best_score - a.best_score
-      return a.name.localeCompare(b.name)
-    })
+    .sort((a, b) => sortBy === 'score' ? b.best_score - a.best_score : a.name.localeCompare(b.name))
 
   const totalGekoppeld = dishes.filter(d => d.matches.length > 0).length
   const strongMatches = dishes.filter(d => d.best_score >= 70).length
@@ -195,22 +314,17 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-stone-100 p-5">
-          <div className="text-2xl font-display font-bold text-stone-900">{dishes.length}</div>
-          <div className="text-xs text-stone-400">LEGENDE gerechten</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-stone-100 p-5">
-          <div className="text-2xl font-display font-bold text-emerald-600">{totalGekoppeld}</div>
-          <div className="text-xs text-stone-400">Gematcht</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-stone-100 p-5">
-          <div className="text-2xl font-display font-bold text-violet-600">{strongMatches}</div>
-          <div className="text-xs text-stone-400">Sterke matches (70%+)</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-stone-100 p-5">
-          <div className="text-2xl font-display font-bold text-brand-600">{totalMatchCount}</div>
-          <div className="text-xs text-stone-400">Totaal koppelingen</div>
-        </div>
+        {[
+          { val: dishes.length, label: 'LEGENDE gerechten', color: 'text-stone-900' },
+          { val: totalGekoppeld, label: 'Gematcht', color: 'text-emerald-600' },
+          { val: strongMatches, label: 'Sterke matches (70%+)', color: 'text-violet-600' },
+          { val: totalMatchCount, label: 'Totaal koppelingen', color: 'text-brand-600' },
+        ].map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-stone-100 p-5">
+            <div className={`text-2xl font-display font-bold ${s.color}`}>{s.val}</div>
+            <div className="text-xs text-stone-400">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Filters */}
@@ -232,7 +346,7 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
 
       {/* Dish list */}
       <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-        <div className="divide-y divide-stone-50 max-h-[600px] overflow-y-auto">
+        <div className="divide-y divide-stone-50 max-h-[700px] overflow-y-auto">
           {filteredDishes.map(dish => (
             <div key={dish.id} className="group">
               <div className="px-6 py-3 hover:bg-stone-50/50 transition-colors cursor-pointer"
@@ -246,13 +360,12 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                         {dish.category_name}
                       </span>
                     </div>
-                    {dish.matches.length > 0 && (
+                    {dish.matches.length > 0 ? (
                       <p className="text-xs text-stone-400 mt-0.5">
-                        {dish.matches.length} match{dish.matches.length !== 1 ? 'es' : ''} — 
+                        {dish.matches.length} match{dish.matches.length !== 1 ? 'es' : ''} —{' '}
                         Best: <span className="text-stone-600 font-medium">{dish.matches[0].recipe_name}</span>
                       </p>
-                    )}
-                    {dish.matches.length === 0 && dish.elements.length > 0 && (
+                    ) : (
                       <p className="text-xs text-stone-400 mt-0.5 truncate">
                         {dish.elements.slice(0, 5).map(e => e.name).join(' · ')}
                       </p>
@@ -260,19 +373,21 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
                     <button
-                      onClick={(e) => { e.stopPropagation(); matchDishAI(dish); }}
+                      onClick={(e) => { e.stopPropagation(); matchDishAI(dish) }}
                       disabled={aiLoading && aiDish === dish.id}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
                     >
                       {aiLoading && aiDish === dish.id ? (
                         <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                      ) : aiResults[dish.id] ? (
+                        <Sparkles className="w-3 h-3 text-amber-300" />
                       ) : (
                         <Sparkles className="w-3 h-3" />
                       )}
-                      AI Match
+                      {aiResults[dish.id] ? 'Geanalyseerd' : 'AI Match'}
                     </button>
                     {dish.matches.length > 0 && (
-                      expandedDish === dish.id 
+                      expandedDish === dish.id
                         ? <ChevronUp className="w-4 h-4 text-stone-400" />
                         : <ChevronDown className="w-4 h-4 text-stone-400" />
                     )}
@@ -280,11 +395,11 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                 </div>
               </div>
 
-              {/* Expanded match details */}
-              {expandedDish === dish.id && dish.matches.length > 0 && (
+              {/* Expanded static matches */}
+              {expandedDish === dish.id && dish.matches.length > 0 && !aiResults[dish.id] && (
                 <div className="px-6 pb-4 space-y-2">
                   {dish.matches.map((match, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-gradient-to-br from-violet-50/30 to-orange-50/30 border border-violet-100/30">
+                    <div key={i} className="p-3 rounded-xl bg-gradient-to-br from-violet-50/30 to-stone-50/30 border border-violet-100/30">
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
                           <ScoreBadge score={match.match_score} />
@@ -295,15 +410,11 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                           Bekijk <ArrowUpRight className="w-3 h-3" />
                         </a>
                       </div>
-                      {match.suggestion && (
-                        <p className="text-xs text-stone-600 leading-relaxed">{match.suggestion}</p>
-                      )}
+                      {match.suggestion && <p className="text-xs text-stone-600 leading-relaxed">{match.suggestion}</p>}
                       {match.shared_ingredients.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {match.shared_ingredients.map((ing, j) => (
-                            <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
-                              {ing}
-                            </span>
+                            <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">{ing}</span>
                           ))}
                         </div>
                       )}
@@ -312,15 +423,19 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
                 </div>
               )}
 
-              {/* AI result */}
-              {aiDish === dish.id && aiResult && (
+              {/* AI result cards */}
+              {aiDish === dish.id && aiResults[dish.id] && (
+                <div className="px-6 pb-6">
+                  <AIResultCards analysis={aiResults[dish.id]} meta={aiResults[dish.id].meta} />
+                </div>
+              )}
+
+              {/* Loading state */}
+              {aiDish === dish.id && aiLoading && !aiResults[dish.id] && (
                 <div className="px-6 pb-4">
-                  <div className="p-4 bg-gradient-to-br from-violet-50/50 to-orange-50/50 rounded-xl border border-violet-100/50">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-                      <span className="text-xs font-semibold text-violet-600 uppercase tracking-wider">AI Analyse</span>
-                    </div>
-                    <div className="whitespace-pre-wrap text-sm text-stone-700 leading-relaxed">{aiResult}</div>
+                  <div className="p-4 bg-stone-50 rounded-xl border border-stone-100 flex items-center gap-3">
+                    <div className="w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-stone-500">Analyseren... klassieke recepten doorzoeken</span>
                   </div>
                 </div>
               )}
