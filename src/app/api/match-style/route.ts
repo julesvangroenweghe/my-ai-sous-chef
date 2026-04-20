@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
   const { data: legendeDishes } = await supabase
     .from('legende_dishes')
     .select('*, elements:legende_dish_elements(*)')
+    .limit(20)
 
   // Load chef's existing recipes
   const { data: recipes } = await supabase
@@ -34,13 +35,7 @@ export async function POST(request: NextRequest) {
       )
     `)
     .eq('status', 'active')
-    .limit(50)
-
-  // Load classical recipes
-  const { data: classicalRecipes } = await supabase
-    .from('classical_recipes')
-    .select('*')
-    .limit(100)
+    .limit(20)
 
   // Build analysis prompt
   const prompt = `Je bent een culinaire AI-expert. Analyseer het kookprofiel van deze chef en identificeer patronen.
@@ -67,9 +62,6 @@ LEGENDE GERECHTEN (${legendeDishes?.length || 0}):
 ${(legendeDishes || []).slice(0, 20).map(d => // eslint-disable-next-line @typescript-eslint/no-explicit-any
 `- ${d.name}: ${(d.elements || []).map((e: any) => e.name).join(', ')}`).join('\n')}
 
-KLASSIEKE RECEPTEN BESCHIKBAAR (${classicalRecipes?.length || 0}):
-${(classicalRecipes || []).slice(0, 30).map(r => `- ${r.name} (${r.cuisine || 'klassiek'}): ${r.description || ''}`).join('\n')}
-
 Analyseer en geef terug in JSON:
 {
   "style_tags": ["tag1", "tag2", "tag3"],
@@ -80,9 +72,6 @@ Analyseer en geef terug in JSON:
   "sauce_families": ["saus1", "saus2"],
   "garnish_patterns": ["garnering1", "garnering2"],
   "style_description": "Een paragraaf die de kookstijl van de chef beschrijft",
-  "suggested_classical_recipes": [
-    { "name": "receptnaam", "reason": "waarom dit past" }
-  ],
   "growth_areas": ["suggestie voor groei 1", "suggestie 2"]
 }
 
@@ -98,7 +87,7 @@ Wees specifiek en culinair relevant. Geef 3-5 stijltags, 3-5 technieken, en 3-5 
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2048,
+        max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
