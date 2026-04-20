@@ -27,15 +27,14 @@ export async function POST(request: NextRequest) {
   const preparations = prepsRes.data || []
 
   // Load seasonal data
-  const currentMonth = new Date().getMonth() + 1
+  const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+  const currentMonth = monthNames[new Date().getMonth()]
   const { data: seasonal } = await supabase
-    .from('seasonal_products')
-    .select('product_name, category, peak_months')
+    .from('seasonal_calendar')
+    .select('ingredient_name, category, ' + currentMonth)
+    .gte(currentMonth, 1)
 
-  const inSeason = (seasonal || []).filter((s: any) => {
-    const peaks = s.peak_months || []
-    return peaks.includes(currentMonth)
-  })
+  const inSeason = (seasonal || []).filter((s: any) => (s[currentMonth] || 0) >= 1)
 
   // Load classical recipe suggestions
   const { data: classicalRecipes } = await supabase
@@ -70,7 +69,7 @@ HALFFABRICATEN:
 ${preparations.map((p: any) => `- ${p.name} (${p.method || '?'}, yield: ${p.yield_amount || '?'}${p.yield_unit || ''}, houdbaarheid: ${p.shelf_life_hours ? p.shelf_life_hours + 'u' : '?'})`).join('\n')}
 
 IN SEIZOEN (${new Date().toLocaleString('nl-BE', { month: 'long' })}):
-${inSeason.map((s: any) => `- ${s.product_name} (${s.category})`).join('\n')}
+${inSeason.map((s: any) => `- ${s.ingredient_name} (${s.category})${s[currentMonth] === 2 ? " [PIEK]" : ""}`).join('\n')}
 
 KLASSIEKE RECEPTEN (referentie):
 ${(classicalRecipes || []).slice(0, 15).map((r: any) => `- ${r.name} (${r.source}): ${r.description?.substring(0, 80) || ''}`).join('\n')}
