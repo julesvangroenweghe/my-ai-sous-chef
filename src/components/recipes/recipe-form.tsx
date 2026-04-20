@@ -167,7 +167,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  {step === 0 && (
  <Card>
  <CardHeader>
- <CardTitle className="text-base">Basic Information</CardTitle>
+ <CardTitle className="text-base">Basisinformatie</CardTitle>
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="space-y-2">
@@ -215,13 +215,13 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  </div>
  </div>
  <div className="space-y-2">
- <Label htmlFor="notes">Notes</Label>
+ <Label htmlFor="notes">Notities</Label>
  <textarea
  id="notes"
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  className="flex min-h-[60px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
- placeholder="Internal notes, plating instructions, etc."
+ placeholder="Interne notities, opmaakbeschrijving..."
  />
  </div>
  </CardContent>
@@ -239,7 +239,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  {/* Summary header */}
  <Card>
  <CardHeader>
- <CardTitle className="text-base">Recipe Summary</CardTitle>
+ <CardTitle className="text-base">Receptoverzicht</CardTitle>
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="grid grid-cols-2 gap-4">
@@ -261,7 +261,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <p className="font-medium">{servings || '—'}</p>
  </div>
  <div>
- <p className="text-sm text-muted-foreground">Prep Time</p>
+ <p className="text-sm text-muted-foreground">Bereidingstijd</p>
  <p className="font-medium">{prepTime ? `${prepTime} min` : '—'}</p>
  </div>
  </div>
@@ -271,7 +271,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  {/* Cost summary */}
  <Card>
  <CardHeader>
- <CardTitle className="text-base">Cost Analysis</CardTitle>
+ <CardTitle className="text-base">Kostenanalyse</CardTitle>
  </CardHeader>
  <CardContent>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -280,7 +280,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <p className="text-xl font-bold">{formatCurrency(totalCost)}</p>
  </div>
  <div className="space-y-1">
- <p className="text-xs text-muted-foreground uppercase">Per Serving</p>
+ <p className="text-xs text-muted-foreground uppercase">Per Portie</p>
  <p className="text-xl font-bold">{formatCurrency(costPerServing)}</p>
  </div>
  <div className="space-y-1">
@@ -290,7 +290,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  </p>
  </div>
  <div className="space-y-1">
- <p className="text-xs text-muted-foreground uppercase">Margin</p>
+ <p className="text-xs text-muted-foreground uppercase">Marge</p>
  <p className={cn('text-xl font-bold', margin >= 0 ? 'text-green-600' : 'text-red-600')}>
  {numSellingPrice > 0 ? formatCurrency(margin) : '—'}
  </p>
@@ -335,10 +335,10 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <table className="w-full text-sm">
  <thead>
  <tr className="border-b text-left text-muted-foreground text-xs">
- <th className="pb-2 font-medium">Ingredient</th>
- <th className="pb-2 font-medium text-right">Qty</th>
- <th className="pb-2 font-medium text-right">Unit</th>
- <th className="pb-2 font-medium text-right">Cost</th>
+ <th className="pb-2 font-medium">Ingrediënt</th>
+ <th className="pb-2 font-medium text-right">Hvh</th>
+ <th className="pb-2 font-medium text-right">Eenheid</th>
+ <th className="pb-2 font-medium text-right">Kost</th>
  </tr>
  </thead>
  <tbody>
@@ -364,7 +364,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <div>
  {step > 0 && (
  <Button type="button" variant="outline" onClick={() => setStep(step - 1)} className="gap-2">
- <ArrowLeft className="h-4 w-4" /> Back
+ <ArrowLeft className="h-4 w-4" /> Terug
  </Button>
  )}
  </div>
