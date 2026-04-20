@@ -113,7 +113,7 @@ export default function EventDetailPage() {
  .select(`
  *,
  menu_items:event_menu_items(
- id, recipe_id, course_order,
+ id, recipe_id, course_order, course,
  recipe:recipes(
  id, name, description, total_cost_per_serving,
  components:recipe_components(
@@ -156,7 +156,7 @@ export default function EventDetailPage() {
  setAddingRecipe(true)
  const { error } = await supabase
  .from('event_menu_items')
- .insert({ event_id: event.id, recipe_id: selectedRecipeId, course_order: selectedCourse })
+ .insert({ event_id: event.id, recipe_id: selectedRecipeId, course_order: selectedCourse, course: courseLabels[selectedCourse]?.trim() || `Gang ${selectedCourse}` })
  if (!error) {
  await fetchEvent()
  setShowAddRecipe(false)
