@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RecipeForm } from '@/components/recipes/recipe-form'
 import { useRecipes } from '@/hooks/use-recipes'
 import { useUnitPreferences } from '@/hooks/use-unit-preferences'
-import { formatQuantity, calculateIngredientCost } from '@/lib/units'
+import { formatHoeveelheid, calculateIngredientCost } from '@/lib/units'
 import { UnitToggle } from '@/components/UnitToggle'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
@@ -35,6 +35,8 @@ export default function RecipeDetailPage() {
     if (data) {
       setRecipe(data)
       setExpandedComps(new Set((data.components || []).map((c) => c.id)))
+      // Bereiding default open
+      setExpandedMethods(new Set((data.components || []).filter((c: any) => c.method).map((c) => c.id)))
     }
     setLoading(false)
   }
@@ -53,7 +55,7 @@ export default function RecipeDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to archive this recipe?')) return
+    if (!confirm('Weet je zeker dat je dit recept wilt archiveren?')) return
     const result = await deleteRecipe(id)
     if (result.success) {
       router.push('/recipes')
@@ -88,9 +90,9 @@ export default function RecipeDetailPage() {
   if (!recipe) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground">Recipe not found</p>
+        <p className="text-muted-foreground">Recept niet gevonden</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push('/recipes')}>
-          Back to Recipes
+          Terug naar Recepten
         </Button>
       </div>
     )
@@ -104,8 +106,8 @@ export default function RecipeDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Edit: {recipe.name}</h1>
-            <p className="text-muted-foreground text-sm mt-1">Update recipe details and components</p>
+            <h1 className="text-2xl font-bold">Bewerk: {recipe.name}</h1>
+            <p className="text-muted-foreground text-sm mt-1">Bewerk receptdetails en componenten</p>
           </div>
         </div>
         <RecipeForm recipe={recipe} />
@@ -273,8 +275,8 @@ export default function RecipeDetailPage() {
                             <td className="py-2.5 font-medium text-stone-900">
                               {(ci as any).ingredient?.name || '\u2014'}
                             </td>
-                            <td className="py-2.5 text-right font-mono text-stone-600">{formatQuantity(qtyPP, unit)}</td>
-                            <td className="py-2.5 text-right font-mono font-medium text-stone-900">{formatQuantity(qtyTotal, unit)}</td>
+                            <td className="py-2.5 text-right font-mono text-stone-600">{formatHoeveelheid(qtyPP, unit)}</td>
+                            <td className="py-2.5 text-right font-mono font-medium text-stone-900">{formatHoeveelheid(qtyTotal, unit)}</td>
                             <td className="py-2.5 text-right text-stone-400">{ci.unit}</td>
                             <td className="py-2.5 text-right text-stone-400 font-mono">{formatCurrency(price)}/{(ci as any).ingredient?.unit === 'stuks' || (ci as any).ingredient?.unit === 'stuk' ? 'stuk' : (ci as any).ingredient?.unit === 'l' ? 'l' : 'kg'}</td>
                             <td className="py-2.5 text-right font-mono font-medium text-stone-700">{formatCurrency(cost)}</td>

@@ -47,10 +47,10 @@ export default function LoginPage() {
  />
  </div>
  <h1 className="text-2xl font-semibold text-stone-900 font-outfit">
- Welcome back, Chef
+ Welkom terug, Chef
  </h1>
  <p className="text-stone-500 mt-1">
- Sign in to your kitchen intelligence
+ Log in op je keukenintelligentie
  </p>
  </div>
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
 
  <div>
  <label className="block text-sm font-medium text-stone-700 mb-1.5">
- Email
+ E-mail
  </label>
  <input
  type="email"
@@ -78,7 +78,7 @@ export default function LoginPage() {
 
  <div>
  <label className="block text-sm font-medium text-stone-700 mb-1.5">
- Password
+ Wachtwoord
  </label>
  <input
  type="password"
@@ -95,15 +95,15 @@ export default function LoginPage() {
  disabled={loading}
  className="w-full py-3 px-4 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
  >
- {loading ? 'Signing in...' : 'Sign In'}
+ {loading ? 'Inloggen...' : 'Inloggen'}
  </button>
  </form>
  </div>
 
  <p className="text-center mt-6 text-sm text-stone-500">
- Don&apos;t have an account?{' '}
+ Nog geen account?{' '}
  <Link href="/signup" className="text-brand-500 hover:text-brand-600 font-medium">
- Create one
+ Maak er een aan
  </Link>
  </p>
  </div>

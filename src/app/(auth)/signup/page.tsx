@@ -43,17 +43,17 @@ export default function SignupPage() {
  <div className="inline-flex p-3 bg-brand-500/20 rounded-2xl mb-4">
  <ChefHat className="h-8 w-8 text-brand-400" />
  </div>
- <h1 className="text-2xl font-display font-bold text-white">Join the Kitchen</h1>
- <p className="text-stone-400 mt-1">Create your chef profile</p>
+ <h1 className="text-2xl font-display font-bold text-white">Word lid van de keuken</h1>
+ <p className="text-stone-400 mt-1">Maak je chef-profiel aan</p>
  </div>
 
  <div className="bg-white rounded-2xl shadow-diffusion-lg p-8">
  {success ? (
  <div className="text-center py-4">
  <Mail className="h-12 w-12 text-brand-500 mx-auto mb-4" />
- <h2 className="text-lg font-semibold font-display">Check your email</h2>
+ <h2 className="text-lg font-semibold font-display">Controleer je e-mail</h2>
  <p className="text-stone-500 mt-2">
- We sent a confirmation link to <strong className="text-stone-900">{email}</strong>
+ We hebben een bevestigingslink gestuurd naar <strong className="text-stone-900">{email}</strong>
  </p>
  </div>
  ) : (
@@ -65,7 +65,7 @@ export default function SignupPage() {
  )}
 
  <div className="space-y-2">
- <label className="text-sm font-medium text-stone-700" htmlFor="name">Chef Name</label>
+ <label className="text-sm font-medium text-stone-700" htmlFor="name">Chef naam</label>
  <div className="relative">
  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
  <input
@@ -81,7 +81,7 @@ export default function SignupPage() {
  </div>
 
  <div className="space-y-2">
- <label className="text-sm font-medium text-stone-700" htmlFor="email">Email</label>
+ <label className="text-sm font-medium text-stone-700" htmlFor="email">E-mail</label>
  <div className="relative">
  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
  <input
@@ -97,7 +97,7 @@ export default function SignupPage() {
  </div>
 
  <div className="space-y-2">
- <label className="text-sm font-medium text-stone-700" htmlFor="password">Password</label>
+ <label className="text-sm font-medium text-stone-700" htmlFor="password">Wachtwoord</label>
  <div className="relative">
  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
  <input
@@ -119,15 +119,15 @@ export default function SignupPage() {
  className="btn-primary w-full disabled:opacity-50"
  >
  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
- Create Account
+ Account aanmaken
  </button>
  </form>
  )}
 
  <p className="text-center text-sm text-stone-500 mt-6">
- Already have an account?{' '}
+ Heb je al een account?{' '}
  <Link href="/login" className="text-brand-600 hover:text-brand-700 hover:underline font-medium">
- Sign in
+ Inloggen
  </Link>
  </p>
  </div>

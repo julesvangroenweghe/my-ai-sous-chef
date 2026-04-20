@@ -76,6 +76,7 @@ export default function MepWeekPage() {
  const [weekPlan, setWeekPlan] = useState<WeekPlan | null>(null)
  const [loading, setLoading] = useState(true)
   const [prepHours, setPrepHours] = useState<number | null>(null)
+ const [upcomingEvents, setUpcomingEvents] = useState<{name: string, event_date: string, week: number}[]>([])
  const supabase = createClient()
 
  const fetchWeekData = useCallback(async () => {
@@ -129,6 +130,23 @@ export default function MepWeekPage() {
  total_prep_hours: plan?.total_prep_hours || null,
  events: weekEvents,
  })
+
+    // Fetch upcoming events for quick navigation
+    if (weekEvents.length === 0) {
+      const today = new Date().toISOString().split('T')[0]
+      const { data: upcoming } = await supabase
+        .from('events')
+        .select('name, event_date')
+        .gte('event_date', today)
+        .order('event_date')
+        .limit(3)
+      setUpcomingEvents((upcoming || []).map((e: any) => ({
+        ...e,
+        week: getWeekNumber(new Date(e.event_date))
+      })))
+    } else {
+      setUpcomingEvents([])
+    }
 
     // Calculate prep hours from recipes linked to events this week
     let totalPrepMinutes = 0
@@ -376,6 +394,25 @@ export default function MepWeekPage() {
  <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
  <CalendarDays className="w-12 h-12 text-stone-600 mx-auto mb-4" />
  <h3 className="text-lg font-display font-semibold text-stone-300 mb-2">Geen events in week {currentWeek}</h3>
+                {upcomingEvents.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs text-stone-500 uppercase tracking-wider">Komende events:</p>
+                    {upcomingEvents.map((ue, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setCurrentWeek(ue.week); setCurrentYear(new Date(ue.event_date).getFullYear()) }}
+                        className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg bg-stone-800/50 border border-stone-700 hover:border-brand-500/50 transition-all group"
+                      >
+                        <CalendarDays className="w-4 h-4 text-brand-400" />
+                        <div className="flex-1">
+                          <div className="text-sm text-stone-300 group-hover:text-white transition-colors">{ue.name}</div>
+                          <div className="text-xs text-stone-500">{new Date(ue.event_date).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long' })} — Week {ue.week}</div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-stone-600 group-hover:text-brand-400 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                )}
  <p className="text-stone-500 text-sm max-w-md mx-auto">
  Plan een nieuw event of navigeer naar een andere week.
  </p>
