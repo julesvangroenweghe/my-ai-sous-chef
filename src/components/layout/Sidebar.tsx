@@ -31,6 +31,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
  brands: Building2,
  preparations: Beaker,
  seasonal: Leaf,
+  calendar: CalendarDays,
   scan: ScanLine,
   suppliers: ShoppingCart,
   legende: BookMarked,
@@ -62,6 +63,7 @@ const labelMap: Record<string, string> = {
  brands: 'Brands',
  preparations: 'Halffabricaten',
  seasonal: 'Seizoenskalender',
+  calendar: 'Kalender',
  profile: 'Profiel',
  settings: 'Instellingen',
 }
@@ -88,6 +90,7 @@ const hrefMap: Record<string, string> = {
  brands: '/brands',
  preparations: '/preparations',
  seasonal: '/seasonal',
+  calendar: '/calendar',
  profile: '/profile',
  settings: '/settings',
 }
@@ -106,9 +109,9 @@ const kitchenTypeInfo: Record<string, { icon: React.ReactNode; label: string; co
 const defaultNavByType: Record<string, string[]> = {
  restaurant: ['dashboard', 'recipes', 'menu', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  brasserie: ['dashboard', 'recipes', 'suggestions', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
- catering: ['dashboard', 'recipes', 'events', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+ catering: ['dashboard', 'recipes', 'events', 'calendar', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  foodtruck: ['dashboard', 'recipes', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
- hotel: ['dashboard', 'recipes', 'outlets', 'events', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+ hotel: ['dashboard', 'recipes', 'outlets', 'events', 'calendar', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  dark_kitchen: ['dashboard', 'recipes', 'brands', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
 }
 

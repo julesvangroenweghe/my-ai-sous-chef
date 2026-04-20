@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { 
  Settings, Users, CreditCard, Building, ChefHat, Check,
- UtensilsCrossed, Store, CalendarDays, Truck, Building2
+ UtensilsCrossed, Store, CalendarDays, Truck, Building2,
+ Link2, RefreshCw, AlertCircle
 } from "lucide-react";
 import { useKitchen } from "@/providers/kitchen-provider";
+import { useGoogleIntegration } from "@/hooks/use-google-integration";
 import { createClient } from "@/lib/supabase/client";
 import type { KitchenType } from "@/types/database";
 
@@ -258,6 +260,9 @@ export default function SettingsPage() {
  </CardContent>
  </Card>
 
+        {/* Integrations */}
+        <GoogleIntegrationCard />
+
  {/* Team */}
  <Card className="bg-stone-900/50 border-stone-800">
  <CardHeader>
@@ -298,13 +303,130 @@ export default function SettingsPage() {
  );
 }
 
+function GoogleIntegrationCard() {
+  const {
+    connected, email, status, last_synced,
+    loading, syncing, disconnecting,
+    connect, disconnect, syncCalendar,
+  } = useGoogleIntegration();
+
+  const needsReauth = status === 'needs_reauth';
+
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'Nooit';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <Card className="bg-stone-900/50 border-stone-800">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-stone-100">
+          <Link2 className="h-5 w-5 text-stone-400" /> Integraties
+        </CardTitle>
+        <CardDescription className="text-stone-400">
+          Koppel externe diensten aan je keuken
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-xl border border-stone-700/50 bg-stone-800/30 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              {/* Google icon */}
+              <div className="w-10 h-10 rounded-lg bg-white/5 border border-stone-700/50 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-stone-200 text-sm">Google</span>
+                  {loading ? (
+                    <Badge variant="outline" className="text-stone-500 border-stone-600 text-[10px]">Laden...</Badge>
+                  ) : connected && !needsReauth ? (
+                    <Badge className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px]">Actief</Badge>
+                  ) : needsReauth ? (
+                    <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px]">Herconnectie nodig</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-stone-500 border-stone-600 text-[10px]">Niet gekoppeld</Badge>
+                  )}
+                </div>
+                {connected && email && (
+                  <p className="text-stone-400 text-xs mt-1">{email}</p>
+                )}
+                {connected && (
+                  <p className="text-stone-500 text-[11px] mt-0.5">
+                    Laatste sync: {formatDate(last_synced)}
+                  </p>
+                )}
+                {!connected && !loading && (
+                  <p className="text-stone-500 text-xs mt-1">
+                    Calendar, Gmail en contactgegevens
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {connected && !needsReauth && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => syncCalendar()}
+                    disabled={syncing}
+                    className="border-stone-700 text-stone-300 hover:bg-stone-800 h-8 text-xs"
+                  >
+                    <RefreshCw className={`w-3 h-3 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                    Sync
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={disconnect}
+                    disabled={disconnecting}
+                    className="border-stone-700 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 h-8 text-xs"
+                  >
+                    {disconnecting ? 'Ontkoppelen...' : 'Ontkoppel'}
+                  </Button>
+                </>
+              )}
+              {needsReauth && (
+                <Button
+                  size="sm"
+                  onClick={connect}
+                  className="bg-orange-600 hover:bg-orange-700 text-white h-8 text-xs"
+                >
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Herconnecteer
+                </Button>
+              )}
+              {!connected && !loading && (
+                <Button
+                  size="sm"
+                  onClick={connect}
+                  className="bg-brand-600 hover:bg-brand-700 text-white h-8 text-xs"
+                >
+                  Koppel Google
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function getDefaultFeatures(type: KitchenType): string[] {
  const featureMap: Record<string, string[]> = {
  restaurant: ['dashboard', 'recipes', 'menu', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  brasserie: ['dashboard', 'recipes', 'suggestions', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
- catering: ['dashboard', 'recipes', 'events', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+ catering: ['dashboard', 'recipes', 'events', 'calendar', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  foodtruck: ['dashboard', 'recipes', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
- hotel: ['dashboard', 'recipes', 'outlets', 'events', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
+ hotel: ['dashboard', 'recipes', 'outlets', 'events', 'calendar', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
  dark_kitchen: ['dashboard', 'recipes', 'brands', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
  };
  return featureMap[type] || featureMap.restaurant;
