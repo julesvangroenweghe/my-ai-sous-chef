@@ -9,9 +9,9 @@ import {
 
 interface LegendeDishElement {
   id: string
-  element_name: string
-  quantity: number | null
-  unit: string | null
+  name: string
+  quantity_grams: number | null
+  quantity_text: string | null
   sort_order: number
 }
 
@@ -55,7 +55,7 @@ export default function LegendePage() {
       .from('legende_dishes')
       .select(`
         id, name, category_id, description,
-        elements:legende_dish_elements(id, element_name, quantity, unit, sort_order)
+        elements:legende_dish_elements(id, name, quantity_grams, quantity_text, sort_order)
       `)
       .order('name')
 
@@ -228,9 +228,9 @@ export default function LegendePage() {
                     <tbody>
                       {dish.elements.map(el => (
                         <tr key={el.id} className="border-b border-stone-50">
-                          <td className="py-1.5 text-stone-700">{el.element_name}</td>
-                          <td className="py-1.5 text-right font-mono text-stone-600">{el.quantity || '-'}</td>
-                          <td className="py-1.5 pl-2 text-stone-500">{el.unit || ''}</td>
+                          <td className="py-1.5 text-stone-700">{el.name}</td>
+                          <td className="py-1.5 text-right font-mono text-stone-600">{el.quantity_grams || '-'}</td>
+                          <td className="py-1.5 pl-2 text-stone-500">{el.quantity_text || ''}</td>
                         </tr>
                       ))}
                     </tbody>
