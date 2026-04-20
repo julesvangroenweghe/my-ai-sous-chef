@@ -75,6 +75,7 @@ export default function MepWeekPage() {
  const [currentYear, setCurrentYear] = useState(now.getFullYear())
  const [weekPlan, setWeekPlan] = useState<WeekPlan | null>(null)
  const [loading, setLoading] = useState(true)
+  const [prepHours, setPrepHours] = useState<number | null>(null)
  const supabase = createClient()
 
  const fetchWeekData = useCallback(async () => {
@@ -128,6 +129,26 @@ export default function MepWeekPage() {
  total_prep_hours: plan?.total_prep_hours || null,
  events: weekEvents,
  })
+
+    // Calculate prep hours from recipes linked to events this week
+    let totalPrepMinutes = 0
+    const eventIds = (events || []).map((e: any) => e.id)
+    if (eventIds.length > 0) {
+      const { data: menuItems } = await supabase
+        .from('event_menu_items')
+        .select('recipe_id')
+        .in('event_id', eventIds)
+      const recipeIds = [...new Set((menuItems || []).map((m: any) => m.recipe_id).filter(Boolean))]
+      if (recipeIds.length > 0) {
+        const { data: recipes } = await supabase
+          .from('recipes')
+          .select('prep_time_minutes')
+          .in('id', recipeIds)
+        totalPrepMinutes = (recipes || []).reduce((sum: number, r: any) => sum + (r.prep_time_minutes || 0), 0)
+      }
+    }
+    setPrepHours(totalPrepMinutes > 0 ? totalPrepMinutes / 60 : null)
+
  setLoading(false)
  }, [currentWeek, currentYear])
 
@@ -223,7 +244,7 @@ export default function MepWeekPage() {
  <div className="bg-stone-800/50 rounded-xl p-3 text-center">
  <div className="text-xs text-stone-500">Prep uren</div>
  <div className="text-lg font-bold text-stone-200 font-mono">
- {weekPlan?.total_prep_hours || '—'}
+ {prepHours ? `${prepHours.toFixed(1)} uur` : weekPlan?.total_prep_hours ? `${weekPlan.total_prep_hours} uur` : '—'}
  </div>
  </div>
  </div>
