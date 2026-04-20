@@ -55,7 +55,7 @@ PROFIEL VAN DE CHEF:
 - Naam: ${profile?.display_name || 'Chef'}
 - Stijl: ${(profile?.cuisine_specialties || profile?.cuisine_styles || []).join(', ') || 'niet gespecificeerd'}
 - Filosofie: ${profile?.cooking_philosophy || 'niet gespecificeerd'}
-- Technieken: ${(profile?.signature_techniques || []).join(', ') || 'niet gespecificeerd'}
+- Technieken: ${(profile?.preferred_techniques || []).join(', ') || 'niet gespecificeerd'}
 
 BESCHIKBARE RECEPTEN (${recipes.length}):
 ${recipes.map((r: any) => `- ${r.name} (${r.category?.name || '?'}) — food cost: ${r.food_cost_percentage ? r.food_cost_percentage.toFixed(1) + '%' : '?'}`).join('\n')}
@@ -76,7 +76,7 @@ KLASSIEKE RECEPTEN (referentie):
 ${(classicalRecipes || []).slice(0, 15).map((r: any) => `- ${r.name} (${r.source}): ${r.description?.substring(0, 80) || ''}`).join('\n')}
 
 TECHNIEKEN & PARAMETERS:
-${(techniques || []).map((t: any) => `- ${t.technique}: ${t.parameter_name} = ${t.value} ${t.unit || ''}`).join('\n')}
+${(techniques || []).map((t: any) => `- ${t.ingredient_category || t.ingredient_specific}: ${t.parameter_type} = ${t.value_min}-${t.value_max} ${t.value_unit || ''}`).join('\n')}
 
 REGELS:
 1. Antwoord ALTIJD in het Nederlands
@@ -99,7 +99,7 @@ REGELS:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: systemPrompt,
       stream: true,
