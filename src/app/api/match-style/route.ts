@@ -59,11 +59,13 @@ ${(recipes || []).slice(0, 30).map(r => {
         .map(i => (i.ingredient as Record<string, unknown>)?.name)
         .filter(Boolean)
     )
-    return `- ${r.name} (${(r.category as Record<string, unknown>)?.name || 'geen categorie'}): ${ingNames.join(', ')}`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `- ${r.name} (${(r.category as any)?.name || 'geen categorie'}): ${ingNames.join(', ')}`
   }).join('\n')}
 
 LEGENDE GERECHTEN (${legendeDishes?.length || 0}):
-${(legendeDishes || []).slice(0, 20).map(d => `- ${d.name}: ${(d.elements || []).map((e: Record<string, unknown>) => e.element_name).join(', ')}`).join('\n')}
+${(legendeDishes || []).slice(0, 20).map(d => // eslint-disable-next-line @typescript-eslint/no-explicit-any
+`- ${d.name}: ${(d.elements || []).map((e: any) => e.name).join(', ')}`).join('\n')}
 
 KLASSIEKE RECEPTEN BESCHIKBAAR (${classicalRecipes?.length || 0}):
 ${(classicalRecipes || []).slice(0, 30).map(r => `- ${r.name} (${r.cuisine || 'klassiek'}): ${r.description || ''}`).join('\n')}

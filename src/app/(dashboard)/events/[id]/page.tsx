@@ -7,10 +7,11 @@ import Link from 'next/link'
 import {
  ArrowLeft, CalendarDays, MapPin, Users, Euro, Clock,
  Plus, Trash2, ClipboardList, ChefHat, Loader2,
- X, AlertTriangle, ShoppingCart, Package, Edit2, Save
+ X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
+import { MepOcrImporter } from '@/components/mep/mep-ocr-importer'
 
 interface EventDetail {
  id: string
@@ -106,6 +107,7 @@ export default function EventDetailPage() {
  const [addingRecipe, setAddingRecipe] = useState(false)
  const [activeTab, setActiveTab] = useState<TabId>('menu')
  const [mepRefreshKey, setMepRefreshKey] = useState(0)
+ const [showMepImport, setShowMepImport] = useState(false)
 
  const fetchEvent = useCallback(async () => {
  const { data, error } = await supabase
@@ -404,6 +406,29 @@ export default function EventDetailPage() {
  eventId={eventId}
  numPersons={event.num_persons}
  />
+ )}
+
+ {/* MEP OCR Import */}
+ {activeTab === 'menu' && (
+   <div className="space-y-3">
+     <button
+       onClick={() => setShowMepImport(!showMepImport)}
+       className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all w-full"
+     >
+       <FileUp className="w-4 h-4 text-brand-400" />
+       MEP importeren uit document
+       {showMepImport ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+     </button>
+     {showMepImport && (
+       <MepOcrImporter
+         eventId={eventId}
+         onImportComplete={async () => {
+           setShowMepImport(false)
+           await fetchEvent()
+         }}
+       />
+     )}
+   </div>
  )}
 
  {/* Notes */}
