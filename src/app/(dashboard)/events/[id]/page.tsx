@@ -187,12 +187,13 @@ export default function EventDetailPage() {
  )
  }
 
- // Group menu items by course
- const menuByCourse: Record<number, typeof event.menu_items> = {}
+ // Group menu items by course text label, sorted by course_order
+ const menuByCourse: Record<string, { order: number; items: typeof event.menu_items }> = {}
  for (const item of event.menu_items) {
- const course = item.course_order
- if (!menuByCourse[course]) menuByCourse[course] = []
- menuByCourse[course].push(item)
+ const label = (item.course || courseLabels[item.course_order]?.trim() || `Gang ${item.course_order}`).toUpperCase()
+ if (!menuByCourse[label]) menuByCourse[label] = { order: item.course_order, items: [] }
+ menuByCourse[label].items.push(item)
+ if (item.course_order < menuByCourse[label].order) menuByCourse[label].order = item.course_order
  }
 
  const totalMenuCost = event.menu_items.reduce((sum, item) => sum + (Number(item.recipe?.total_cost_per_serving) || 0), 0)
@@ -341,11 +342,11 @@ export default function EventDetailPage() {
  </div>
  ) : (
  <div className="divide-y divide-stone-800/50">
- {Object.entries(menuByCourse).sort(([a], [b]) => Number(a) - Number(b)).map(([course, items]) => (
- <div key={course}>
+ {Object.entries(menuByCourse).sort(([, a], [, b]) => a.order - b.order).map(([courseLabel, { items }]) => (
+ <div key={courseLabel}>
  <div className="px-6 py-2.5 bg-stone-800/20">
  <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">
- {courseLabels[Number(course)] || `Gang ${course}`}
+ {courseLabel}
  </span>
  </div>
  {items.map((item) => (
