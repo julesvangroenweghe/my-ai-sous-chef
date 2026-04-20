@@ -104,7 +104,7 @@ export default function RecipesPage() {
               </div>
               <div>
                 <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Recepten</h1>
-                <p className="text-stone-400 text-sm mt-0.5">{recipes.length} recepten · Componentniveau kostenberekening</p>
+                <p className="text-stone-400 text-sm mt-0.5">{recipes.length} {recipes.length === 1 ? 'recept' : 'recepten'} · Componentniveau kostenberekening</p>
               </div>
             </div>
           </div>
