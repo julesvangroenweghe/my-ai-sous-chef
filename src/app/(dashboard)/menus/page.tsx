@@ -58,13 +58,11 @@ export default function MenusPage() {
 
   const fetchMenus = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("events")
-      .select(`
-        id, name, event_type, guest_count, event_date, status, notes, venue, created_at,
-        menu_items:event_menu_items(id, course)
-      `)
+      .select("*")
       .order("event_date", { ascending: false })
+    if (error) console.error('Menus fetch error:', error)
     setMenus((data ?? []) as EventMenu[])
     setLoading(false)
   }, [])
