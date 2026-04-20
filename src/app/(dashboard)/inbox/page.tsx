@@ -11,7 +11,7 @@ import {
   ExternalLink, Link2, Inbox, ChevronDown, ChevronUp,
   FileText, Truck, AlertCircle,
 } from 'lucide-react'
-import { format, parseISO, isToday, isYesterday, isThisWeek } from 'date-fns'
+import { format, parseISO, isVandaag, isYesterday, isThisWeek } from 'date-fns'
 import { nl } from 'date-fns/locale'
 
 interface GmailMessage {
@@ -28,7 +28,7 @@ function categorizeEmail(msg: GmailMessage): { label: string; color: string; ico
   const fromLower = (msg.from || '').toLowerCase()
   const snippetLower = (msg.snippet || '').toLowerCase()
   
-  // Supplier/invoice detection
+  // Leverancier/invoice detection
   const supplierKeywords = ['factuur', 'invoice', 'bestelling', 'order', 'levering', 'delivery', 'prijslijst', 'offerte']
   if (supplierKeywords.some(k => subjectLower.includes(k) || snippetLower.includes(k))) {
     return { label: 'Leverancier', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30', icon: Truck }
@@ -50,7 +50,7 @@ function categorizeEmail(msg: GmailMessage): { label: string; color: string; ico
 function formatEmailDate(dateStr: string): string {
   try {
     const date = parseISO(dateStr)
-    if (isToday(date)) return format(date, 'HH:mm')
+    if (isVandaag(date)) return format(date, 'HH:mm')
     if (isYesterday(date)) return 'Gisteren'
     if (isThisWeek(date)) return format(date, 'EEEE', { locale: nl })
     return format(date, 'd MMM', { locale: nl })
@@ -60,7 +60,7 @@ function formatEmailDate(dateStr: string): string {
 }
 
 function extractSenderName(from: string): string {
-  // "Name <email>" → "Name"
+  // "Name <email>" → "Naam"
   const match = from.match(/^"?([^"<]+)"?\s*</)
   if (match) return match[1].trim()
   // Just email

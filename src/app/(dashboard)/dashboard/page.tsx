@@ -219,7 +219,7 @@ export default function DashboardPage() {
      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
        {/* Left Column — Upcoming + Recent */}
        <div className="lg:col-span-7 space-y-6">
-         {/* Upcoming Events */}
+         {/* Komende Events */}
          <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
            <div className="flex items-center justify-between px-6 pt-5 pb-4">
              <div className="flex items-center gap-2.5">
@@ -365,7 +365,7 @@ export default function DashboardPage() {
            <KnowledgeStatsWidget />
          </div>
 
-         {/* Quick Actions */}
+         {/* Snelle Acties */}
          <div className="card p-5 animate-slide-up opacity-0" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Snelle acties</h3>
            <div className="grid grid-cols-2 gap-2">

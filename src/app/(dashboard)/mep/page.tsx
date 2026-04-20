@@ -260,14 +260,14 @@ export default function MepWeekPage() {
  <div className="grid grid-cols-7 gap-2">
  {Object.entries(dayGrid).map(([dateStr, events], i) => {
  const date = new Date(dateStr + 'T12:00:00')
- const isToday = dateStr === now.toISOString().split('T')[0]
+ const isVandaag = dateStr === now.toISOString().split('T')[0]
  const hasEvents = events.length > 0
 
  return (
  <div
  key={dateStr}
  className={`rounded-xl border p-3 min-h-[120px] transition-all ${
- isToday
+ isVandaag
  ? 'border-brand-500/50 bg-brand-500/5'
  : hasEvents
  ? 'border-stone-700 bg-stone-900/50'
@@ -275,10 +275,10 @@ export default function MepWeekPage() {
  }`}
  >
  <div className="flex items-center justify-between mb-2">
- <span className={`text-xs font-medium uppercase ${isToday ? 'text-brand-400' : 'text-stone-500'}`}>
+ <span className={`text-xs font-medium uppercase ${isVandaag ? 'text-brand-400' : 'text-stone-500'}`}>
  {dayNames[i]}
  </span>
- <span className={`text-sm font-mono ${isToday ? 'text-brand-400 font-bold' : 'text-stone-400'}`}>
+ <span className={`text-sm font-mono ${isVandaag ? 'text-brand-400 font-bold' : 'text-stone-400'}`}>
  {date.getDate()}
  </span>
  </div>

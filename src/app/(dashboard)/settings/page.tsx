@@ -148,7 +148,7 @@ export default function SettingsPage() {
  </div>
 
  <div className="grid gap-6">
- {/* Kitchen Mode Selector */}
+ {/* Keuken Modus Selector */}
  <Card className="bg-stone-900/50 border-stone-800">
  <CardHeader>
  <CardTitle className="flex items-center gap-2 text-stone-100">
@@ -230,7 +230,7 @@ export default function SettingsPage() {
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-stone-300">Food Cost Target Min %</Label>
+ <Label className="text-stone-300">Food Cost Doelstelling Min %</Label>
  <Input 
  type="number" 
  value={foodCostMin}
@@ -240,7 +240,7 @@ export default function SettingsPage() {
  />
  </div>
  <div className="space-y-2">
- <Label className="text-stone-300">Food Cost Target Max %</Label>
+ <Label className="text-stone-300">Food Cost Doelstelling Max %</Label>
  <Input 
  type="number" 
  value={foodCostMax}

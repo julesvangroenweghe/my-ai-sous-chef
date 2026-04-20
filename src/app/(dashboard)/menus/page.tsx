@@ -1,147 +1,273 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Loader2, Trash2, UtensilsCrossed, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState, useCallback } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus, Loader2, Trash2, UtensilsCrossed, X, Users, Calendar } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import Link from "next/link"
+
+interface EventMenu {
+  id: string
+  name: string
+  event_type: string | null
+  guest_count: number | null
+  event_date: string | null
+  status: string
+  notes: string | null
+  venue: string | null
+  created_at: string
+  menu_items?: { id: string; course: string }[]
+}
+
+const statusLabels: Record<string, string> = {
+  draft: 'Concept',
+  confirmed: 'Bevestigd',
+  in_progress: 'In uitvoering',
+  completed: 'Afgerond',
+  cancelled: 'Geannuleerd',
+}
+
+const statusColors: Record<string, string> = {
+  draft: 'bg-zinc-700 text-zinc-300',
+  confirmed: 'bg-emerald-500/15 text-emerald-400',
+  in_progress: 'bg-amber-500/15 text-amber-400',
+  completed: 'bg-blue-500/15 text-blue-400',
+  cancelled: 'bg-red-500/15 text-red-400',
+}
+
+const typeLabels: Record<string, string> = {
+  walking_dinner: 'Walking Dinner',
+  buffet: 'Buffet',
+  sit_down: 'Sit-down',
+}
 
 export default function MenusPage() {
- const supabase = createClient();
- const [dialogOpen, setDialogOpen] = useState(false);
- const [title, setTitle] = useState("");
- const [notes, setNotes] = useState("");
- const [menus, setMenus] = useState<any[]>([]);
- const [loading, setLoading] = useState(true);
- const [creating, setCreating] = useState(false);
+  const supabase = createClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [title, setTitle] = useState("")
+  const [notes, setNotes] = useState("")
+  const [eventType, setEventType] = useState("walking_dinner")
+  const [guestCount, setGuestCount] = useState("")
+  const [menus, setMenus] = useState<EventMenu[]>([])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
 
- const fetchMenus = useCallback(async () => {
- setLoading(true);
- const { data } = await supabase
- .from("events")
- .select("*")
- .order("created_at", { ascending: false });
- setMenus(data ?? []);
- setLoading(false);
- }, []);
+  const fetchMenus = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from("events")
+      .select(`
+        id, name, event_type, guest_count, event_date, status, notes, venue, created_at,
+        menu_items:event_menu_items(id, course)
+      `)
+      .order("event_date", { ascending: false })
+    setMenus((data ?? []) as EventMenu[])
+    setLoading(false)
+  }, [])
 
- useEffect(() => { fetchMenus(); }, [fetchMenus]);
+  useEffect(() => { fetchMenus() }, [fetchMenus])
 
- const handleCreate = async () => {
- if (!title) return;
- setCreating(true);
- await supabase.from("events").insert({
- name: title,
- notes: notes || null,
- status: "draft",
- event_date: new Date().toISOString(),
- });
- setTitle("");
- setNotes("");
- setDialogOpen(false);
- setCreating(false);
- fetchMenus();
- };
+  const handleCreate = async () => {
+    if (!title) return
+    setCreating(true)
+    await supabase.from("events").insert({
+      name: title,
+      notes: notes || null,
+      status: "draft",
+      event_type: eventType,
+      guest_count: guestCount ? parseInt(guestCount) : null,
+      event_date: new Date().toISOString(),
+    })
+    setTitle("")
+    setNotes("")
+    setGuestCount("")
+    setDialogOpen(false)
+    setCreating(false)
+    fetchMenus()
+  }
 
- const handleDelete = async (id: string) => {
- await supabase.from("events").delete().eq("id", id);
- fetchMenus();
- };
+  const handleDelete = async (id: string) => {
+    if (!confirm('Dit menu verwijderen?')) return
+    await supabase.from("events").delete().eq("id", id)
+    fetchMenus()
+  }
 
- return (
- <div className="space-y-6">
- <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
- <div>
- <h1 className="text-3xl font-bold tracking-tight">Menus</h1>
- <p className="text-gray-400 mt-1">Create and manage event menus</p>
- </div>
- <Button
- onClick={() => setDialogOpen(true)}
- className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
- >
- <Plus className="mr-2 h-4 w-4" /> New Menu
- </Button>
- </div>
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-600/20 flex items-center justify-center">
+            <UtensilsCrossed className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-white tracking-tight">Menu&apos;s</h1>
+            <p className="text-zinc-500 text-sm mt-0.5">{menus.length} menu&apos;s aangemaakt</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => setDialogOpen(true)}
+          className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Nieuw menu
+        </Button>
+      </div>
 
- {dialogOpen && (
- <Card className="bg-[#111] border-amber-500/30">
- <CardHeader className="flex flex-row items-center justify-between">
- <CardTitle>Create New Menu</CardTitle>
- <Button variant="ghost" size="icon" onClick={() => setDialogOpen(false)}>
- <X className="h-4 w-4" />
- </Button>
- </CardHeader>
- <CardContent className="space-y-4">
- <div className="space-y-2">
- <Label htmlFor="title">Title *</Label>
- <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="bg-[#0a0a0a] border-[#2a2a2a]" />
- </div>
- <div className="space-y-2">
- <Label htmlFor="notes">Notes</Label>
- <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="bg-[#0a0a0a] border-[#2a2a2a]" />
- </div>
- <div className="flex gap-2 justify-end">
- <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-[#2a2a2a]">Cancel</Button>
- <Button onClick={handleCreate} disabled={!title || creating} className="bg-amber-500 hover:bg-amber-600 text-black">
- {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
- Create
- </Button>
- </div>
- </CardContent>
- </Card>
- )}
+      {/* Create dialog */}
+      {dialogOpen && (
+        <Card className="bg-zinc-800/80 border-amber-500/30">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white">Nieuw menu aanmaken</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setDialogOpen(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-zinc-300">Naam *</Label>
+                <Input 
+                  id="title" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  placeholder="bv. Bruiloft Van den Berg"
+                  className="bg-zinc-900 border-zinc-700 text-white" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type" className="text-zinc-300">Type</Label>
+                <select
+                  id="type"
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white px-3 py-2 text-sm"
+                >
+                  <option value="walking_dinner">Walking Dinner</option>
+                  <option value="buffet">Buffet</option>
+                  <option value="sit_down">Sit-down Dinner</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="gasten" className="text-zinc-300">Aantal gasten</Label>
+                <Input 
+                  id="gasten" 
+                  type="number"
+                  value={guestCount} 
+                  onChange={(e) => setGuestCount(e.target.value)} 
+                  placeholder="bv. 80"
+                  className="bg-zinc-900 border-zinc-700 text-white" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="text-zinc-300">Notities</Label>
+                <Textarea 
+                  id="notes" 
+                  value={notes} 
+                  onChange={(e) => setNotes(e.target.value)} 
+                  placeholder="Allergieën, wensen, etc."
+                  className="bg-zinc-900 border-zinc-700 text-white" 
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-zinc-700 text-zinc-300">
+                Annuleren
+              </Button>
+              <Button 
+                onClick={handleCreate} 
+                disabled={!title || creating} 
+                className="bg-amber-500 hover:bg-amber-600 text-black"
+              >
+                {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Aanmaken
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
- {loading ? (
- <div className="flex justify-center py-12">
- <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
- </div>
- ) : menus.length === 0 ? (
- <Card className="bg-[#111] border-[#1a1a1a]">
- <CardContent className="flex flex-col items-center justify-center py-12">
- <p className="text-gray-500 mb-4">No menus found</p>
- <Button onClick={() => setDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-black">
- <Plus className="mr-2 h-4 w-4" /> Create your first menu
- </Button>
- </CardContent>
- </Card>
- ) : (
- <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
- {menus.map((menu) => (
- <Card key={menu.id} className="bg-[#111] border-[#1a1a1a] hover:border-amber-500/30 transition-colors">
- <CardHeader className="pb-3">
- <div className="flex items-start justify-between">
- <CardTitle className="text-lg">{menu.name}</CardTitle>
- <Button
- variant="ghost"
- size="icon"
- className="h-8 w-8 text-gray-500 hover:text-red-400"
- onClick={() => handleDelete(menu.id)}
- >
- <Trash2 className="h-4 w-4" />
- </Button>
- </div>
- </CardHeader>
- <CardContent>
- <div className="flex items-center text-sm text-gray-400">
- <UtensilsCrossed className="mr-2 h-4 w-4" />
- {menu.event_type ?? "General"} · {menu.guest_count ?? 0} guests
- </div>
- {menu.notes && (
- <p className="text-sm text-gray-500 mt-2 truncate">{menu.notes}</p>
- )}
- <span className={`text-xs px-2 py-1 rounded-full mt-3 inline-block ${
- menu.status === "confirmed" ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
- }`}>
- {menu.status}
- </span>
- </CardContent>
- </Card>
- ))}
- </div>
- )}
- </div>
- );
+      {/* Menu list */}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        </div>
+      ) : menus.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center mb-4">
+            <UtensilsCrossed className="w-8 h-8 text-zinc-600" />
+          </div>
+          <p className="text-zinc-400 mb-4">Nog geen menu&apos;s aangemaakt</p>
+          <Button onClick={() => setDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-black">
+            <Plus className="mr-2 h-4 w-4" /> Eerste menu aanmaken
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {menus.map((menu) => (
+            <Link href={`/events/${menu.id}`} key={menu.id}>
+              <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg hover:border-amber-500/30 transition-all hover:bg-zinc-800/80 cursor-pointer h-full">
+                <div className="p-5 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-display font-semibold text-white text-lg leading-tight">
+                      {menu.name}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-zinc-500 hover:text-red-400 shrink-0"
+                      onClick={(e) => { e.preventDefault(); handleDelete(menu.id) }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className={`px-2 py-1 rounded-full font-medium ${statusColors[menu.status] || statusColors.draft}`}>
+                      {statusLabels[menu.status] || menu.status}
+                    </span>
+                    {menu.event_type && (
+                      <span className="px-2 py-1 rounded-full bg-zinc-700 text-zinc-300">
+                        {typeLabels[menu.event_type] || menu.event_type}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-zinc-400">
+                    {menu.guest_count && (
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        {menu.guest_count} gasten
+                      </span>
+                    )}
+                    {menu.event_date && (
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {new Date(menu.event_date).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })}
+                      </span>
+                    )}
+                  </div>
+
+                  {menu.menu_items && menu.menu_items.length > 0 && (
+                    <p className="text-xs text-zinc-500">
+                      {menu.menu_items.length} gerechten
+                    </p>
+                  )}
+                  
+                  {menu.notes && (
+                    <p className="text-sm text-zinc-500 truncate">{menu.notes}</p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }

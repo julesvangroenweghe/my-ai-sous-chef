@@ -241,7 +241,7 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Cooking Philosophy */}
+            {/* Kookfilosofie */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">Keukenfilosofie</label>
               <textarea

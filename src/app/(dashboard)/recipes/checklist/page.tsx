@@ -141,7 +141,7 @@ export default function ChecklistPage() {
     ))
   }
 
-  const updateQuantity = useCallback(async (rciId: string, value: number) => {
+  const updateHoeveelheid = useCallback(async (rciId: string, value: number) => {
     setSaving(rciId)
     await supabase
       .from('recipe_component_ingredients')
@@ -331,7 +331,7 @@ export default function ChecklistPage() {
                           <td className="py-1.5 px-3 text-right">
                             <InlineEdit
                               value={ing.quantity}
-                              onSave={(v) => updateQuantity(ing.id, v)}
+                              onSave={(v) => updateHoeveelheid(ing.id, v)}
                               isSaving={saving === ing.id}
                             />
                           </td>

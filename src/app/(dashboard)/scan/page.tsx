@@ -257,7 +257,7 @@ export default function ScanPage() {
               </button>
             </div>
 
-            {/* Invoice Results */}
+            {/* Factuur Results */}
             {result.type === 'invoice' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-xl">
@@ -408,7 +408,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Scan History */}
+      {/* Scan Geschiedenis */}
       {history.length > 0 && (
         <div className="animate-fade-in">
           <h2 className="font-display font-semibold text-stone-900 mb-4">Recente scans</h2>

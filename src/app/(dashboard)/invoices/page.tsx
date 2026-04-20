@@ -37,7 +37,7 @@ interface OcrData {
   confirmed?: boolean
 }
 
-interface Invoice {
+interface Factuur {
   id: string
   kitchen_id: string
   supplier_name: string | null
@@ -242,9 +242,9 @@ function ReviewPanel({
   onClose,
   confirming,
 }: {
-  invoice: Invoice
+  invoice: Factuur
   ingredients: IngredientOption[]
-  onConfirm: (invoice: Invoice, lineItems: LineItem[]) => void
+  onConfirm: (invoice: Factuur, lineItems: LineItem[]) => void
   onClose: () => void
   confirming: boolean
 }) {
@@ -262,11 +262,11 @@ function ReviewPanel({
   const [editValue, setEditValue] = useState('')
   const [dropdownIdx, setDropdownIdx] = useState<number | null>(null)
 
-  const [supplierName, setSupplierName] = useState(ocr?.supplier_name || invoice.supplier_name || '')
-  const [invoiceDate, setInvoiceDate] = useState(ocr?.invoice_date || invoice.invoice_date || '')
+  const [supplierName, setLeverancierName] = useState(ocr?.supplier_name || invoice.supplier_name || '')
+  const [invoiceDate, setFactuurDate] = useState(ocr?.invoice_date || invoice.invoice_date || '')
 
   const matchedCount = lineItems.filter((i) => i.matched_ingredient_id).length
-  const totalAmount = lineItems.reduce((sum, i) => sum + i.total, 0)
+  const totalBedrag = lineItems.reduce((sum, i) => sum + i.total, 0)
 
   function startEdit(key: string, value: string | number) {
     setEditingCell(key)
@@ -335,7 +335,7 @@ function ReviewPanel({
           <input
             type="text"
             value={supplierName}
-            onChange={(e) => setSupplierName(e.target.value)}
+            onChange={(e) => setLeverancierName(e.target.value)}
             className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:outline-none focus:border-amber-600"
           />
         </div>
@@ -344,14 +344,14 @@ function ReviewPanel({
           <input
             type="date"
             value={invoiceDate}
-            onChange={(e) => setInvoiceDate(e.target.value)}
+            onChange={(e) => setFactuurDate(e.target.value)}
             className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:outline-none focus:border-amber-600"
           />
         </div>
         <div>
           <label className="text-xs font-medium text-stone-400 mb-1.5 block">Totaal</label>
           <div className="px-3 py-2 bg-stone-800/50 border border-stone-700 rounded-lg text-sm font-mono font-semibold text-stone-200">
-            &euro;{totalAmount.toFixed(2)}
+            &euro;{totalBedrag.toFixed(2)}
           </div>
         </div>
       </div>
@@ -412,7 +412,7 @@ function ReviewPanel({
                   )}
                 </td>
 
-                {/* Quantity */}
+                {/* Hoeveelheid */}
                 <td className="text-right px-3 py-2.5 font-mono">
                   {editingCell === `${idx}-quantity` ? (
                     <input
@@ -518,12 +518,12 @@ function ReviewPanel({
         </button>
         <button
           onClick={() => {
-            const updatedInvoice = {
+            const updatedFactuur = {
               ...invoice,
               supplier_name: supplierName,
               invoice_date: invoiceDate,
             }
-            onConfirm(updatedInvoice, lineItems)
+            onConfirm(updatedFactuur, lineItems)
           }}
           disabled={confirming || matchedCount === 0}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-stone-700 disabled:text-stone-500 text-white font-medium text-sm rounded-xl transition-colors"
@@ -542,12 +542,12 @@ function ReviewPanel({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
-export default function InvoicesPage() {
+export default function FactuursPage() {
   const supabase = createClient()
   const { kitchenId } = useKitchen()
 
   // State
-  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoices, setFactuurs] = useState<Factuur[]>([])
   const [ingredients, setIngredients] = useState<IngredientOption[]>([])
   const [loading, setLoading] = useState(true)
   const [pageState, setPageState] = useState<PageState>('list')
@@ -560,18 +560,18 @@ export default function InvoicesPage() {
   const [scanError, setScanError] = useState<string | null>(null)
 
   // Review
-  const [reviewInvoice, setReviewInvoice] = useState<Invoice | null>(null)
+  const [reviewFactuur, setReviewFactuur] = useState<Factuur | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [confirmResult, setConfirmResult] = useState<{ prices: number; recipes: number } | null>(null)
 
   // ─── Load Data ──────────────────────────────────────────────────────────
 
-  const loadInvoices = useCallback(async () => {
+  const loadFactuurs = useCallback(async () => {
     const { data } = await supabase
       .from('invoices')
       .select('*')
       .order('created_at', { ascending: false })
-    setInvoices((data || []) as Invoice[])
+    setFactuurs((data || []) as Factuur[])
   }, [])
 
   const loadIngredients = useCallback(async () => {
@@ -583,8 +583,8 @@ export default function InvoicesPage() {
   }, [])
 
   useEffect(() => {
-    Promise.all([loadInvoices(), loadIngredients()]).then(() => setLoading(false))
-  }, [loadInvoices, loadIngredients])
+    Promise.all([loadFactuurs(), loadIngredients()]).then(() => setLoading(false))
+  }, [loadFactuurs, loadIngredients])
 
   // ─── Upload + Scan Flow ─────────────────────────────────────────────────
 
@@ -657,31 +657,31 @@ export default function InvoicesPage() {
       const scanResult = await scanRes.json()
 
       // 6. Reload invoice with OCR data
-      const { data: updatedInvoice } = await supabase
+      const { data: updatedFactuur } = await supabase
         .from('invoices')
         .select('*')
         .eq('id', invoiceId)
         .single()
 
-      if (updatedInvoice) {
-        setInvoices((prev) => [updatedInvoice as Invoice, ...prev.filter((i) => i.id !== invoiceId)])
-        setReviewInvoice(updatedInvoice as Invoice)
+      if (updatedFactuur) {
+        setFactuurs((prev) => [updatedFactuur as Factuur, ...prev.filter((i) => i.id !== invoiceId)])
+        setReviewFactuur(updatedFactuur as Factuur)
         setPageState('review')
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Er ging iets mis'
       setScanError(msg)
       setPageState('list')
-      await loadInvoices()
+      await loadFactuurs()
     } finally {
       setUploadingFile(null)
       setProcessingId(null)
     }
-  }, [kitchenId, loadInvoices])
+  }, [kitchenId, loadFactuurs])
 
   // ─── Confirm Flow ───────────────────────────────────────────────────────
 
-  const handleConfirm = useCallback(async (inv: Invoice, lineItems: LineItem[]) => {
+  const handleConfirm = useCallback(async (inv: Factuur, lineItems: LineItem[]) => {
     setConfirming(true)
     try {
       const res = await fetch(`/api/invoices/${inv.id}/confirm`, {
@@ -709,12 +709,12 @@ export default function InvoicesPage() {
       setConfirmResult({ prices: pricesUpdated, recipes: 0 })
 
       // Reload
-      await loadInvoices()
+      await loadFactuurs()
       await loadIngredients()
 
       // Show success briefly, then go back to list
       setTimeout(() => {
-        setReviewInvoice(null)
+        setReviewFactuur(null)
         setConfirmResult(null)
         setPageState('list')
       }, 3000)
@@ -723,11 +723,11 @@ export default function InvoicesPage() {
     } finally {
       setConfirming(false)
     }
-  }, [loadInvoices, loadIngredients])
+  }, [loadFactuurs, loadIngredients])
 
   // ─── Filtered List ──────────────────────────────────────────────────────
 
-  const filteredInvoices = invoices.filter((inv) => {
+  const filteredFactuurs = invoices.filter((inv) => {
     if (statusFilter && inv.ocr_status !== statusFilter) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -742,12 +742,12 @@ export default function InvoicesPage() {
   // ─── Render ─────────────────────────────────────────────────────────────
 
   // Review dialog
-  if (pageState === 'review' && reviewInvoice) {
+  if (pageState === 'review' && reviewFactuur) {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => { setReviewInvoice(null); setPageState('list') }}
+            onClick={() => { setReviewFactuur(null); setPageState('list') }}
             className="p-2 rounded-xl hover:bg-stone-800 transition-colors text-stone-400 hover:text-stone-200"
           >
             <X className="w-5 h-5" />
@@ -774,10 +774,10 @@ export default function InvoicesPage() {
 
         <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
           <ReviewPanel
-            invoice={reviewInvoice}
+            invoice={reviewFactuur}
             ingredients={ingredients}
             onConfirm={handleConfirm}
-            onClose={() => { setReviewInvoice(null); setPageState('list') }}
+            onClose={() => { setReviewFactuur(null); setPageState('list') }}
             confirming={confirming}
           />
         </div>
@@ -912,14 +912,14 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Invoice list */}
-      {!loading && filteredInvoices.length > 0 && pageState === 'list' && (
+      {/* Factuur list */}
+      {!loading && filteredFactuurs.length > 0 && pageState === 'list' && (
         <>
           {/* Upload zone inline (compact) */}
           <UploadZone onFileSelected={handleFileUpload} />
 
           <div className="bg-stone-900/50 border border-stone-800 rounded-2xl divide-y divide-stone-800/50 overflow-hidden">
-            {filteredInvoices.map((inv, i) => {
+            {filteredFactuurs.map((inv, i) => {
               const ocr = inv.ocr_data as OcrData | null
               const matchedCount = ocr?.line_items?.filter((i) => i.matched_ingredient_id).length || 0
               const totalItems = ocr?.line_items?.length || 0
@@ -963,7 +963,7 @@ export default function InvoicesPage() {
                   {canReview ? (
                     <button
                       onClick={() => {
-                        setReviewInvoice(inv)
+                        setReviewFactuur(inv)
                         setPageState('review')
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
@@ -988,7 +988,7 @@ export default function InvoicesPage() {
       )}
 
       {/* Empty state */}
-      {!loading && filteredInvoices.length === 0 && invoices.length > 0 && pageState === 'list' && (
+      {!loading && filteredFactuurs.length === 0 && invoices.length > 0 && pageState === 'list' && (
         <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
           <Search className="w-8 h-8 text-stone-600 mx-auto mb-4" />
           <p className="text-stone-400 text-sm">Geen facturen gevonden voor deze zoekopdracht</p>

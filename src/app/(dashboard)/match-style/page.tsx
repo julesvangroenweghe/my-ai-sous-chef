@@ -170,7 +170,7 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
       return a.name.localeCompare(b.name)
     })
 
-  const totalMatched = dishes.filter(d => d.matches.length > 0).length
+  const totalGekoppeld = dishes.filter(d => d.matches.length > 0).length
   const strongMatches = dishes.filter(d => d.best_score >= 70).length
   const totalMatchCount = dishes.reduce((sum, d) => sum + d.matches.length, 0)
 
@@ -200,7 +200,7 @@ Antwoord in het Nederlands, beknopt en professioneel.`,
           <div className="text-xs text-stone-400">LEGENDE gerechten</div>
         </div>
         <div className="bg-white rounded-2xl border border-stone-100 p-5">
-          <div className="text-2xl font-display font-bold text-emerald-600">{totalMatched}</div>
+          <div className="text-2xl font-display font-bold text-emerald-600">{totalGekoppeld}</div>
           <div className="text-xs text-stone-400">Gematcht</div>
         </div>
         <div className="bg-white rounded-2xl border border-stone-100 p-5">
