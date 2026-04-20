@@ -8,8 +8,11 @@ const SCOPES = [
 ]
 
 export function getOAuth2Client() {
+  // Sanitize client ID - fix common typo in env var (gooleusercontent -> googleusercontent)
+  const clientId = (process.env.GOOGLE_CLIENT_ID || '').replace('gooleusercontent', 'googleusercontent')
+  
   return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
+    clientId,
     process.env.GOOGLE_CLIENT_SECRET,
     `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/google/callback`
   )
