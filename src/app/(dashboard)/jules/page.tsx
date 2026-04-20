@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Sparkles, Send, Lightbulb, Brain, Bell, ChevronRight, Loader2 } from 'lucide-react'
 
 type Tab = 'chat' | 'memory' | 'alerts'
@@ -278,8 +279,25 @@ export default function JulesPage() {
                             <span className="text-sm">Jules denkt na...</span>
                           </div>
                         ) : (
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                            {msg.content}
+                          <div className={`text-sm leading-relaxed ${msg.role === 'user' ? 'whitespace-pre-wrap' : 'prose prose-sm prose-stone max-w-none'}`}>
+                            {msg.role === 'assistant' ? (
+                              <ReactMarkdown
+                                components={{
+                                  h1: ({children}) => <h3 className="text-base font-bold text-stone-900 mt-3 mb-1">{children}</h3>,
+                                  h2: ({children}) => <h4 className="text-sm font-bold text-stone-800 mt-3 mb-1">{children}</h4>,
+                                  h3: ({children}) => <h5 className="text-sm font-semibold text-stone-700 mt-2 mb-1">{children}</h5>,
+                                  p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
+                                  strong: ({children}) => <strong className="font-semibold text-stone-900">{children}</strong>,
+                                  ul: ({children}) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
+                                  ol: ({children}) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
+                                  li: ({children}) => <li className="text-stone-700">{children}</li>,
+                                  hr: () => <hr className="my-3 border-stone-200" />,
+                                  code: ({children}) => <code className="bg-stone-200/60 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
+                                }}
+                              >
+                                {msg.content}
+                              </ReactMarkdown>
+                            ) : msg.content}
                           </div>
                         )}
                       </div>
