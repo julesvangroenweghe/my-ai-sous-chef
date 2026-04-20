@@ -39,6 +39,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   checklist: ClipboardCheck,
   integrations: Link2,
   inbox: Mail,
+  knowledge: BookOpen,
  profile: User,
  settings: Settings,
 }
@@ -62,6 +63,7 @@ const labelMap: Record<string, string> = {
   checklist: 'Checklist',
   integrations: 'Integraties',
   inbox: 'Inbox',
+  knowledge: 'Kennisbank',
  daily_prep: 'Dagproductie',
  outlets: 'Outlets',
  brands: 'Brands',
@@ -92,6 +94,7 @@ const hrefMap: Record<string, string> = {
   checklist: '/recipes/checklist',
   integrations: '/integrations',
   inbox: '/inbox',
+  knowledge: '/knowledge',
  outlets: '/outlets',
  brands: '/brands',
  preparations: '/preparations',
