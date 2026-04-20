@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
  Save, Loader2, ClipboardList, Package, ChefHat,
- Pencil, Check, X, Plus, Trash2, Clock
+ Pencil, Check, X, Plus, Trash2, Clock, Printer, ExternalLink
 } from 'lucide-react'
 
 interface MepItemRow {
