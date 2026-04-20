@@ -13,11 +13,11 @@ export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   if (error) {
-    return NextResponse.redirect(`${appUrl}/settings?integration=error&message=${encodeURIComponent(error)}`)
+    return NextResponse.redirect(`${appUrl}/integrations?integration=error&message=${encodeURIComponent(error)}`)
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(`${appUrl}/settings?integration=error&message=missing_params`)
+    return NextResponse.redirect(`${appUrl}/integrations?integration=error&message=missing_params`)
   }
 
   try {
@@ -86,10 +86,10 @@ export async function GET(request: NextRequest) {
         })
     }
 
-    return NextResponse.redirect(`${appUrl}/settings?integration=success`)
+    return NextResponse.redirect(`${appUrl}/integrations?integration=success`)
   } catch (err) {
     console.error('Google OAuth callback error:', err)
     const message = err instanceof Error ? err.message : 'unknown_error'
-    return NextResponse.redirect(`${appUrl}/settings?integration=error&message=${encodeURIComponent(message)}`)
+    return NextResponse.redirect(`${appUrl}/integrations?integration=error&message=${encodeURIComponent(message)}`)
   }
 }

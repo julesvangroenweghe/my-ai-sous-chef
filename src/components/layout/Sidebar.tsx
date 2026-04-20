@@ -7,7 +7,7 @@ import {
  Sparkles, User, Settings, LogOut, ChefHat,
  LayoutDashboard, Menu, X, ClipboardList,
  TrendingUp, Truck, Building2, Store, UtensilsCrossed,
- ShoppingCart, Leaf, Beaker, Camera, ClipboardCheck, BookMarked, ScanLine
+ ShoppingCart, Leaf, Beaker, Camera, ClipboardCheck, BookMarked, ScanLine, Link2
 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -37,6 +37,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   legende: BookMarked,
   match_my_style: ClipboardCheck,
   checklist: ClipboardCheck,
+  integrations: Link2,
  profile: User,
  settings: Settings,
 }
@@ -58,6 +59,7 @@ const labelMap: Record<string, string> = {
   legende: 'LEGENDE',
   match_my_style: 'Match My Style',
   checklist: 'Checklist',
+  integrations: 'Integraties',
  daily_prep: 'Dagproductie',
  outlets: 'Outlets',
  brands: 'Brands',
@@ -86,6 +88,7 @@ const hrefMap: Record<string, string> = {
   legende: '/legende',
   match_my_style: '/match-style',
   checklist: '/recipes/checklist',
+  integrations: '/integrations',
  outlets: '/outlets',
  brands: '/brands',
  preparations: '/preparations',
