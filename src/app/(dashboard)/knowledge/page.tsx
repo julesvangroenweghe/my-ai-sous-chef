@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { BookOpen, Beaker, Scale, Thermometer, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Tab = 'recipes' | 'techniques' | 'ratios' | 'parameters'
@@ -12,9 +12,22 @@ interface Stats {
   parameters: number
 }
 
+
+function cleanRecipeName(name: string): string {
+  if (!name) return ''
+  return name
+    .replace(/^_Class \d+\.?_\s*/i, '')
+    .replace(/^_Example_\s*:\s*/i, '')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_/g, ' ')
+    .trim()
+}
+
 export default function KnowledgePage() {
   const [tab, setTab] = useState<Tab>('recipes')
   const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const debounceRef = useRef<NodeJS.Timeout>()
   const [source, setSource] = useState('')
   const [data, setData] = useState<any[]>([])
   const [total, setTotal] = useState(0)
@@ -48,6 +61,12 @@ export default function KnowledgePage() {
   }, [tab, search, source, page])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setSearch(searchInput), 300)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [searchInput])
 
   useEffect(() => { setPage(0) }, [tab, search, source])
 
@@ -97,8 +116,8 @@ export default function KnowledgePage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
             placeholder="Zoek op naam, ingrediënt of beschrijving..."
             className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-600/50"
           />
@@ -171,7 +190,7 @@ function RecipeResults({ data }: { data: any[] }) {
         <div key={r.id} className="p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-lg hover:border-zinc-600 transition-colors">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h3 className="font-medium text-white truncate">{r.name_original}</h3>
+              <h3 className="font-medium text-white truncate">{cleanRecipeName(r.name_original)}</h3>
               {r.name_french && r.name_french !== r.name_original && (
                 <p className="text-sm text-amber-400/80 mt-0.5">{r.name_french}</p>
               )}
