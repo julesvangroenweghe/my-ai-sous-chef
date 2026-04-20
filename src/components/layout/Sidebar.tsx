@@ -40,6 +40,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   integrations: Link2,
   inbox: Mail,
   knowledge: BookOpen,
+  kennisbank: BookOpen,  // legacy alias
  profile: User,
  settings: Settings,
 }
@@ -64,6 +65,7 @@ const labelMap: Record<string, string> = {
   integrations: 'Integraties',
   inbox: 'Inbox',
   knowledge: 'Kennisbank',
+  kennisbank: 'Kennisbank',  // legacy alias
  daily_prep: 'Dagproductie',
  outlets: 'Outlets',
  brands: 'Brands',
@@ -95,6 +97,7 @@ const hrefMap: Record<string, string> = {
   integrations: '/integrations',
   inbox: '/inbox',
   knowledge: '/knowledge',
+  kennisbank: '/knowledge',  // legacy alias
  outlets: '/outlets',
  brands: '/brands',
  preparations: '/preparations',
