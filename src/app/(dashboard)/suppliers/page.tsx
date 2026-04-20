@@ -248,10 +248,10 @@ export default function SuppliersPage() {
                         {supplier.contact_phone}
                       </span>
                     )}
-                    {supplier.address && (
+                    {supplier.website && (
                       <span className="flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5" />
-                        {supplier.address}
+                        {supplier.website}
                       </span>
                     )}
                   </div>

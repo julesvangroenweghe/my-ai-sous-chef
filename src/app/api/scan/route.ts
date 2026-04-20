@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       // Auto-match to supplier_products for price verification
       const { data: supplierProducts } = await supabase
         .from('supplier_products')
-        .select('id, product_name, unit_price, supplier_id')
+        .select('id, product_name, price, supplier_id')
 
       if (supplierProducts) {
         const lineItems = parsed.data.line_items as Array<Record<string, unknown>>
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
           )
           if (spMatch) {
             item.matched_supplier_product_id = spMatch.id
-            item.supplier_reference_price = spMatch.unit_price
+            item.supplier_reference_price = spMatch.price
           }
         }
       }
