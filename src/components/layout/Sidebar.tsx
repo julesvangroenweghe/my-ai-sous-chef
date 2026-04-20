@@ -7,7 +7,7 @@ import {
  Sparkles, User, Settings, LogOut, ChefHat,
  LayoutDashboard, Menu, X, ClipboardList,
  TrendingUp, Truck, Building2, Store, UtensilsCrossed,
- ShoppingCart, Leaf, Beaker
+ ShoppingCart, Leaf, Beaker, Camera, ClipboardCheck, BookMarked, ScanLine
 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
