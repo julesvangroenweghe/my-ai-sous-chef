@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Sparkles, Send, Lightbulb, Brain, Bell, ChevronRight, Loader2 } from 'lucide-react'
 
 type Tab = 'chat' | 'memory' | 'alerts'
@@ -281,7 +282,7 @@ export default function JulesPage() {
                         ) : (
                           <div className={`text-sm leading-relaxed ${msg.role === 'user' ? 'whitespace-pre-wrap' : 'prose prose-sm prose-stone max-w-none'}`}>
                             {msg.role === 'assistant' ? (
-                              <ReactMarkdown
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}
                                 components={{
                                   h1: ({children}) => <h3 className="text-base font-bold text-stone-900 mt-3 mb-1">{children}</h3>,
                                   h2: ({children}) => <h4 className="text-sm font-bold text-stone-800 mt-3 mb-1">{children}</h4>,
