@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Load chef profile
     const { data: chef } = await supabase
       .from('chef_profiles')
-      .select('display_name, kitchen_type, cuisine_specialties, cooking_philosophy, style_analysis, bio')
+      .select('display_name, kitchen_type, cuisine_specialties, cooking_philosophy, style_analysis, bio, preferred_techniques, preferred_ingredients, cuisine_styles, signature_dishes, style_tags')
       .eq('auth_user_id', user.id)
       .single()
 
@@ -145,12 +145,21 @@ export async function POST(request: NextRequest) {
 
     const maxFoodCost = ((price_per_person * food_cost_target) / 100).toFixed(2)
 
-    // Build chef style info
-    const styleInfo = chef?.style_analysis
-      ? (typeof chef.style_analysis === 'object'
-        ? (chef.style_analysis as Record<string, unknown>)['style_description'] || JSON.stringify(chef.style_analysis).slice(0, 300)
-        : String(chef.style_analysis).slice(0, 300))
-      : chef?.cooking_philosophy || chef?.bio || 'niet gespecificeerd'
+    // Build rich chef DNA block
+    const chefStyleAnalysis = chef?.style_analysis as Record<string, unknown> | null
+    const chefDNA = [
+      chef?.cooking_philosophy ? `Filosofie: ${chef.cooking_philosophy}` : null,
+      chef?.style_tags?.length ? `Stijltags: ${(chef.style_tags as string[]).join(', ')}` : null,
+      chef?.preferred_techniques?.length ? `Signature technieken: ${(chef.preferred_techniques as string[]).join(', ')}` : null,
+      chef?.preferred_ingredients?.length ? `Voorkeursingrediënten: ${(chef.preferred_ingredients as string[]).join(', ')}` : null,
+      chef?.cuisine_styles?.length ? `Culinaire invloeden: ${(chef.cuisine_styles as string[]).join(', ')}` : null,
+      chef?.signature_dishes?.length ? `Signature gerechten als referentie: ${(chef.signature_dishes as string[]).join(' | ')}` : null,
+      chefStyleAnalysis?.flavor_profile ? `Smaakprofiel: dominant=${JSON.stringify(chefStyleAnalysis.flavor_profile)}` : null,
+      chefStyleAnalysis?.texture_approach ? `Textuur aanpak: ${chefStyleAnalysis.texture_approach}` : null,
+      chefStyleAnalysis?.presentation ? `Presentatiestijl: ${chefStyleAnalysis.presentation}` : null,
+      chefStyleAnalysis?.avoid ? `VERMIJD in dit menu: ${JSON.stringify(chefStyleAnalysis.avoid)}` : null,
+    ].filter(Boolean).join('\n')
+    const styleInfo = chefDNA || chef?.bio || 'niet gespecificeerd'
 
     // Build own recipes list with ingredient details
     const recipesList = (ownRecipes || []).map(r => {
@@ -197,10 +206,12 @@ export async function POST(request: NextRequest) {
     const prompt = `Je bent een culinaire AI-assistent die een professioneel menu samenstelt voor een chef.
 Je hebt toegang tot de volledige receptbibliotheek van de chef (eigen recepten + LEGENDE gerechten) én klassieke culinaire referentiewerken.
 
-CHEF PROFIEL:
+CHEF STIJL DNA (KRITISCH — genereer gerechten die passen bij deze chef, niet bij een generieke fine dining chef):
 - Naam: ${chef?.display_name || 'Chef'}
 - Keukentype: ${chef?.kitchen_type || 'catering'}
-- Kookstijl: ${styleInfo}
+${styleInfo}
+
+⚠️ STIJL-INSTRUCTIE: Elk gerecht moet herkenbaar zijn als het werk van deze specifieke chef. Gebruik zijn signature ingrediënten (lavas, dashi, gepekelde dooier, forelkaviaar, furikake, txistorra) als referentiepunt. NIET te ver gezocht — comfort-elegantie, niet laboratorium. Als een gerecht niets te maken heeft met bovenstaand stijl-DNA, vervang het door iets dat er wel bij past.
 
 EVENT INFO:
 - Type: ${event_type}
