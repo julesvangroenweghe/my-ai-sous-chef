@@ -240,3 +240,6 @@ export function calculateIngredientCost(
 
   return 0
 }
+
+// NL alias for formatQuantity — used in recipe detail page
+export const formatHoeveelheid = formatQuantity
