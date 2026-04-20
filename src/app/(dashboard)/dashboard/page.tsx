@@ -76,11 +76,11 @@ export default function DashboardPage() {
 
        const { data: profile } = await supabase
          .from('chef_profiles')
-         .select('display_name')
+         .select('display_name, name')
          .eq('auth_user_id', user.id)
          .single()
        
-       if (profile?.display_name) setUserName(profile.display_name)
+       if (profile?.display_name) { const dn = profile.display_name; setUserName(dn.startsWith('Chef ') ? dn : dn); } else if (profile?.name) { setUserName(profile.name); }
 
        const [recipes, events, ingredients, invoices, preparations, upcoming, recent] = await Promise.all([
          supabase.from('recipes').select('id', { count: 'exact', head: true }),
@@ -129,7 +129,7 @@ export default function DashboardPage() {
          <div>
            <p className="text-sm font-medium text-brand-600 mb-1">{greeting}</p>
            <h1 className="font-display text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
-             {userName ? `Chef ${userName}` : 'Dashboard'}
+             {userName || 'Dashboard'}
            </h1>
            <p className="text-stone-400 mt-2 text-sm italic max-w-lg">"{motivation}"</p>
          </div>
