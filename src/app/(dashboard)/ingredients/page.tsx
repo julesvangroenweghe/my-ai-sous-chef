@@ -10,7 +10,7 @@ interface Ingredient {
  name: string
  category: string
  unit: string
- price_per_unit: number | null
+ current_price: number | null
  standard_portion_g: number | null
  supplier_id: string | null
 }
@@ -72,7 +72,7 @@ export default function IngredientsPage() {
      return true
    })
    .sort((a, b) => {
-     if (sortBy === 'price') return (b.price_per_unit || 0) - (a.price_per_unit || 0)
+     if (sortBy === 'price') return (b.current_price || 0) - (a.current_price || 0)
      if (sortBy === 'category') return (a.category || '').localeCompare(b.category || '')
      return a.name.localeCompare(b.name)
    })
@@ -80,7 +80,7 @@ export default function IngredientsPage() {
  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
- const withPrice = ingredients.filter(i => i.price_per_unit)
+ const withPrice = ingredients.filter(i => i.current_price)
  const withVariants = new Set(variants.map(v => v.ingredient_id))
 
  return (
@@ -213,8 +213,8 @@ export default function IngredientsPage() {
                    </div>
                  </div>
                  <div className="text-right shrink-0">
-                   {ing.price_per_unit ? (
-                     <span className="font-mono text-sm font-semibold text-stone-900">€{ing.price_per_unit.toFixed(2)}<span className="text-stone-400 text-xs">/{ing.unit}</span></span>
+                   {ing.current_price ? (
+                     <span className="font-mono text-sm font-semibold text-stone-900">€{ing.current_price.toFixed(2)}<span className="text-stone-400 text-xs">/{ing.unit}</span></span>
                    ) : (
                      <span className="text-xs text-stone-300">Geen prijs</span>
                    )}
