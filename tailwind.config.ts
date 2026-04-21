@@ -1,44 +1,28 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
-      fontFamily: {
-        display: ['Outfit', 'system-ui', 'sans-serif'],
-        serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-      },
       colors: {
-        // === BRAND — logo amber ===
-        brand: {
-          50:  '#fffbf0',
-          100: '#fef3d0',
-          200: '#fde49a',
-          300: '#fbd063',
-          400: '#f9bd3a',
-          500: '#E8A040',  // logo kleur
-          600: '#d4882a',
-          700: '#b06e1c',
-          800: '#8f5516',
-          900: '#744514',
-          950: '#3f2308',
+        // Brand — amber/gold (logo color)
+        amber: {
+          50:  '#FFFBF2',
+          100: '#FEF3D6',
+          200: '#FDE4A8',
+          300: '#F9CE71',
+          400: '#F0B44A',
+          500: '#E8A040',  // primary brand
+          600: '#C4862A',
+          700: '#9E6A1A',
+          800: '#7A4F10',
+          900: '#563608',
         },
-        // === SIDEBAR — Gronda warm black ===
-        sidebar: {
-          bg:      '#0D0C0A',  // warm black
-          border:  '#1E1C18',
-          text:    '#9E9488',  // warm grey
-          muted:   '#5A5448',  // dimmer
-          hover:   '#161410',  // subtle hover
-          active:  '#1A1814',  // active bg
-        },
-        // === CONTENT — Slate Pro ===
+        // Slate Pro — content/UI
         slate: {
           50:  '#f8fafc',
           100: '#f1f5f9',
@@ -52,51 +36,67 @@ const config: Config = {
           900: '#0f172a',
           950: '#020617',
         },
-        surface: {
-          DEFAULT: '#ffffff',
-          muted: '#f8fafc',
-          subtle: '#f1f5f9',
-          border: '#e2e8f0',
+        // Gronda — sidebar
+        sidebar: {
+          bg:     '#0D0C0A',
+          border: 'rgba(255,255,255,0.06)',
+          text:   '#6B6560',
+          active: '#F5F0EB',
+          accent: '#E8A040',
+        },
+        // Semantic
+        background: '#f8fafc',
+        foreground:  '#0f172a',
+        card:        '#ffffff',
+        muted:       '#64748b',
+        border:      '#e2e8f0',
+        primary:     '#E8A040',
+        // Legacy support for existing components
+        brand: {
+          DEFAULT: '#E8A040',
+          light:   'rgba(232,160,64,0.15)',
+          dark:    '#C4862A',
         },
       },
-      boxShadow: {
-        'card': '0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02)',
-        'card-hover': '0 4px 12px rgba(232, 160, 64, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06)',
-        'amber-glow': '0 0 0 3px rgba(232, 160, 64, 0.2)',
-        'sidebar': '4px 0 24px rgba(0,0,0,0.4)',
+      fontFamily: {
+        sans:  ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Georgia', '"Times New Roman"', 'serif'],
+        display: ['var(--font-outfit)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        '2xs': ['10px', { lineHeight: '1.4' }],
+        xs:    ['11px', { lineHeight: '1.4' }],
+        sm:    ['13px', { lineHeight: '1.5' }],
+        base:  ['14px', { lineHeight: '1.5' }],
+        md:    ['15px', { lineHeight: '1.5' }],
+        lg:    ['16px', { lineHeight: '1.4' }],
+        xl:    ['18px', { lineHeight: '1.3' }],
+        '2xl': ['22px', { lineHeight: '1.2' }],
+        '3xl': ['28px', { lineHeight: '1.15' }],
+        '4xl': ['36px', { lineHeight: '1.1' }],
       },
       borderRadius: {
-        '2xl': '1rem',
-        '3xl': '1.5rem',
-        '4xl': '2rem',
+        sm: '4px',
+        DEFAULT: '6px',
+        md: '8px',
+        lg: '10px',
+        xl: '14px',
+        '2xl': '18px',
       },
-      animation: {
-        'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-in-right': 'slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-        'scale-in': 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+      boxShadow: {
+        sm:  '0 1px 2px rgba(0,0,0,0.05)',
+        DEFAULT: '0 1px 4px rgba(0,0,0,0.08)',
+        md:  '0 2px 8px rgba(0,0,0,0.08)',
+        lg:  '0 4px 16px rgba(0,0,0,0.1)',
+        xl:  '0 8px 32px rgba(0,0,0,0.12)',
+        amber: '0 2px 8px rgba(232,160,64,0.25)',
       },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(-12px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.96)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
-        },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
     },
   },
   plugins: [],
-};
+}
 
-export default config;
+export default config

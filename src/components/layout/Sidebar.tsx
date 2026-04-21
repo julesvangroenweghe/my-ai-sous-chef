@@ -2,471 +2,274 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  BookOpen, CalendarDays, FileText, FlaskConical, 
-  Sparkles, User, Settings, LogOut, ChefHat,
-  LayoutDashboard, Menu, X, ClipboardList,
-  TrendingUp, Truck, Building2, Store, UtensilsCrossed,
-  ShoppingCart, Leaf, Beaker, Camera, ClipboardCheck, BookMarked, ScanLine, Link2, Mail
-} from 'lucide-react'
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useKitchen } from '@/providers/kitchen-provider'
-import type { KitchenType } from '@/types/database'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { useKitchen } from '@/hooks/useKitchen'
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  dashboard: LayoutDashboard,
-  recipes: BookOpen,
-  events: CalendarDays,
-  mep: ClipboardList,
-  invoices: FileText,
-  ingredients: FlaskConical,
-  jules_ai: Sparkles,
-  food_cost: TrendingUp,
-  menu: UtensilsCrossed,
-  suggestions: Store,
-  daily_prep: ShoppingCart,
-  outlets: Building2,
-  brands: Building2,
-  preparations: Beaker,
-  seasonal: Leaf,
-  calendar: CalendarDays,
-  scan: ScanLine,
-  suppliers: ShoppingCart,
-  legende: BookMarked,
-  match_my_style: ClipboardCheck,
-  menu_builder: Sparkles,
-  checklist: ClipboardCheck,
-  integrations: Link2,
-  inbox: Mail,
-  knowledge: BookOpen,
-  kennisbank: BookOpen,
-  profile: User,
-  settings: Settings,
-}
+const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+  { href: '/recipes', label: 'Recepten', icon: 'book' },
+  { href: '/events', label: 'Events & MEP', icon: 'calendar' },
+  { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf' },
+  { href: '/preparations', label: 'Halffabricaten', icon: 'layers' },
+  { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout' },
+  { href: '/scan', label: 'Scan', icon: 'scan' },
+  { href: '/suppliers', label: 'Leveranciers', icon: 'truck' },
+  { href: '/legende', label: 'LEGENDE', icon: 'star' },
+  { href: '/match-style', label: 'Match My Style', icon: 'sparkles' },
+  { href: '/checklist', label: 'Checklist', icon: 'check-square' },
+  { href: '/mep-plans', label: 'MEP Plans', icon: 'clipboard' },
+  { href: '/food-cost', label: 'Food Cost', icon: 'chart' },
+  { href: '/invoices', label: 'Facturen', icon: 'receipt' },
+  { href: '/jules-ai', label: 'Jules AI', icon: 'chef' },
+  { href: '/calendar', label: 'Kalender', icon: 'cal' },
+  { href: '/integrations', label: 'Integraties', icon: 'plug' },
+  { href: '/inbox', label: 'Inbox', icon: 'mail' },
+  { href: '/knowledge', label: 'Kennisbank', icon: 'archive' },
+]
 
-const labelMap: Record<string, string> = {
-  dashboard: 'Dashboard',
-  recipes: 'Recepten',
-  events: 'Events & MEP',
-  mep: 'MEP Plans',
-  invoices: 'Facturen',
-  ingredients: 'Ingrediënten',
-  jules_ai: 'Jules AI',
-  food_cost: 'Food Cost',
-  menu: 'Menukaart',
-  suggestions: 'Dagsuggesties',
-  scan: 'Scan',
-  suppliers: 'Leveranciers',
-  legende: 'LEGENDE',
-  match_my_style: 'Match My Style',
-  menu_builder: 'Menu Builder',
-  checklist: 'Checklist',
-  integrations: 'Integraties',
-  inbox: 'Inbox',
-  knowledge: 'Kennisbank',
-  kennisbank: 'Kennisbank',
-  daily_prep: 'Dagproductie',
-  outlets: 'Outlets',
-  brands: 'Brands',
-  preparations: 'Halffabricaten',
-  seasonal: 'Seizoenskalender',
-  calendar: 'Kalender',
-  profile: 'Profiel',
-  settings: 'Instellingen',
-}
+const bottomItems = [
+  { href: '/profile', label: 'Profiel', icon: 'user' },
+  { href: '/settings', label: 'Instellingen', icon: 'settings' },
+]
 
-const hrefMap: Record<string, string> = {
-  dashboard: '/dashboard',
-  recipes: '/recipes',
-  events: '/events',
-  mep: '/mep',
-  invoices: '/invoices',
-  ingredients: '/ingredients',
-  jules_ai: '/jules',
-  food_cost: '/food-cost',
-  menu: '/menu',
-  suggestions: '/suggestions',
-  daily_prep: '/daily-prep',
-  scan: '/scan',
-  suppliers: '/suppliers',
-  legende: '/legende',
-  match_my_style: '/match-style',
-  menu_builder: '/menu-builder',
-  checklist: '/recipes/checklist',
-  integrations: '/integrations',
-  inbox: '/inbox',
-  knowledge: '/knowledge',
-  kennisbank: '/knowledge',
-  outlets: '/outlets',
-  brands: '/brands',
-  preparations: '/preparations',
-  seasonal: '/seasonal',
-  calendar: '/calendar',
-  profile: '/profile',
-  settings: '/settings',
-}
+function NavIcon({ type, active }: { type: string; active: boolean }) {
+  const color = active ? '#E8A040' : '#6B6560'
+  const s = 16
 
-const kitchenTypeLabel: Record<string, string> = {
-  restaurant: 'Restaurant',
-  brasserie: 'Brasserie',
-  catering: 'Catering',
-  foodtruck: 'Foodtruck',
-  hotel: 'Hotel',
-  dark_kitchen: 'Dark Kitchen',
-}
+  const icons: Record<string, JSX.Element> = {
+    grid: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+    book: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+    calendar: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    leaf: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
+    layers: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+    sprout: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.1 2 3.5c.2-1.4.9-2.7 2-3.5-1.1-.7-2.4-.8-3.6-.7-.4 0-.8.1-1.2.2.2.2.5.3.8.5z"/><path d="M14 7c.7-1 1.5-1.8 2.5-2.3-1.5-.3-3.2 0-4.5 1-1-.4-2-.6-3-.5-.4 0-.7.1-1 .2C9 6.3 10 7.2 10.5 8.3c1.2-1 2.4-1.5 3.5-1.3z"/></svg>,
+    scan: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>,
+    truck: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+    star: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    sparkles: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 3l1.88 5.76L20 10l-6.12 1.24L12 17l-1.88-5.76L4 10l6.12-1.24z"/><path d="M19 3l.75 2.25L22 6l-2.25.75L19 9l-.75-2.25L16 6l2.25-.75z"/></svg>,
+    'check-square': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+    clipboard: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>,
+    chart: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+    receipt: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>,
+    chef: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>,
+    cal: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>,
+    plug: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8H6a2 2 0 0 0-2 2v3a6 6 0 0 0 12 0v-3a2 2 0 0 0-2-2z"/></svg>,
+    mail: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+    archive: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
+    user: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    settings: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  }
 
-const defaultNavByType: Record<string, string[]> = {
-  restaurant: ['dashboard', 'recipes', 'menu', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'food_cost', 'jules_ai'],
-  brasserie: ['dashboard', 'recipes', 'suggestions', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
-  catering: ['dashboard', 'recipes', 'events', 'menu_builder', 'calendar', 'ingredients', 'preparations', 'seasonal', 'mep', 'invoices', 'inbox', 'food_cost', 'jules_ai'],
-  foodtruck: ['dashboard', 'recipes', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
-  hotel: ['dashboard', 'recipes', 'outlets', 'events', 'calendar', 'ingredients', 'mep', 'invoices', 'food_cost', 'jules_ai'],
-  dark_kitchen: ['dashboard', 'recipes', 'brands', 'ingredients', 'daily_prep', 'invoices', 'food_cost'],
+  return icons[type] || icons['grid']
 }
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const supabase = createClient()
-  const { kitchen, kitchenType, settings, loading } = useKitchen()
+  const { signOut } = useAuth()
+  const { kitchen } = useKitchen()
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/login'
+  const isActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard'
+    return pathname.startsWith(href)
   }
 
-  const navFeatures = settings?.features 
-    || defaultNavByType[kitchenType || 'restaurant'] 
-    || defaultNavByType.restaurant
-
-  const mainNav = navFeatures
-    .filter((f: string) => f !== 'settings' && f !== 'profile')
-    .map((feature: string) => ({
-      name: labelMap[feature] || feature,
-      href: hrefMap[feature] || `/${feature}`,
-      icon: iconMap[feature] || LayoutDashboard,
-    }))
-
-  const NavContent = () => (
-    <div className="flex flex-col h-full" style={{ background: '#0D0C0A' }}>
-
-      {/* Logo area — Gronda-stijl: groot, sereen, amber */}
-      <div className="px-5 pt-7 pb-5" style={{ borderBottom: '1px solid #1E1C18' }}>
-        <Link href="/dashboard" className="flex items-center gap-3 group">
+  return (
+    <aside
+      style={{
+        width: 232,
+        minWidth: 232,
+        height: '100vh',
+        backgroundColor: '#0D0C0A',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        zIndex: 40,
+        overflowY: 'auto',
+        scrollbarWidth: 'none',
+      }}
+    >
+      {/* Logo */}
+      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
           {/* Amber chef hat icon */}
-          <div
-            className="flex items-center justify-center flex-shrink-0"
-            style={{
-              width: 36,
-              height: 36,
-              background: 'rgba(232,160,64,0.1)',
-              border: '1px solid rgba(232,160,64,0.2)',
-              borderRadius: 8,
-            }}
-          >
-            <ChefHat style={{ width: 18, height: 18, color: '#E8A040' }} />
+          <div style={{
+            width: 32, height: 32, borderRadius: 6,
+            backgroundColor: 'rgba(232,160,64,0.15)',
+            border: '1px solid rgba(232,160,64,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="16" height="16" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/>
+              <line x1="6" y1="17" x2="18" y2="17"/>
+            </svg>
           </div>
-
-          <div className="flex flex-col">
-            {/* Serif brand name — Gronda-stijl */}
-            <span
-              style={{
-                fontFamily: 'Georgia, Cambria, serif',
-                fontSize: 14,
-                fontWeight: 400,
-                color: '#F0EBE3',
-                letterSpacing: '0.02em',
-                lineHeight: 1.2,
-              }}
-            >
+          <div>
+            <div style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#F5F0EB',
+              letterSpacing: '0.01em',
+              lineHeight: 1.2,
+            }}>
               My AI Sous Chef
-            </span>
-            {kitchen && !loading && (
-              <span
-                style={{
-                  fontSize: 10,
-                  color: '#E8A040',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  fontWeight: 500,
-                  marginTop: 2,
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                }}
-              >
-                {kitchen.name}
-              </span>
-            )}
+            </div>
           </div>
-        </Link>
-      </div>
-
-      {/* Kitchen type pill */}
-      {!loading && kitchenType && (
-        <div className="px-5 pt-4 pb-0">
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: '#5A5448',
-              fontFamily: 'Inter, system-ui, sans-serif',
-            }}
-          >
-            <span
-              style={{
-                width: 5,
-                height: 5,
-                borderRadius: '50%',
-                background: '#E8A040',
-                display: 'inline-block',
-                flexShrink: 0,
-              }}
-            />
-            {kitchenTypeLabel[kitchenType] || kitchenType}
+        </div>
+        {/* Kitchen name */}
+        <div style={{
+          marginTop: 8,
+          paddingTop: 8,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <div style={{
+            width: 5, height: 5, borderRadius: '50%',
+            backgroundColor: '#E8A040',
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: 11,
+            fontFamily: 'Georgia, serif',
+            color: '#E8A040',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase' as const,
+            fontWeight: 400,
+          }}>
+            {kitchen?.name || 'Mijn Keuken'}
+          </span>
+          <span style={{
+            fontSize: 10,
+            color: '#4A4540',
+            marginLeft: 2,
+          }}>
+            · {kitchen?.kitchen_type || 'Catering'}
           </span>
         </div>
-      )}
+      </div>
 
-      {/* Main Navigation */}
-      <nav className="flex-1 px-3 py-5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        {loading ? (
-          Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-3 py-2.5 mb-0.5">
-              <div style={{ width: 16, height: 16, background: '#1E1C18', borderRadius: 4 }} />
-              <div style={{ height: 10, background: '#1E1C18', borderRadius: 3, width: 60 + i * 8 }} />
-            </div>
-          ))
-        ) : (
-          mainNav.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '7px 10px',
-                  marginBottom: 1,
-                  borderRadius: 6,
-                  fontSize: 13,
-                  fontWeight: isActive ? 500 : 400,
-                  letterSpacing: '0.01em',
-                  color: isActive ? '#F0EBE3' : '#6B6358',
-                  background: isActive ? 'rgba(232,160,64,0.07)' : 'transparent',
-                  transition: 'all 0.15s ease',
-                  textDecoration: 'none',
-                  position: 'relative',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  borderLeft: isActive ? '2px solid #E8A040' : '2px solid transparent',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLElement).style.color = '#C8BFB4'
-                    ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLElement).style.color = '#6B6358'
-                    ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                  }
-                }}
-              >
-                <item.icon
-                  style={{
-                    width: 15,
-                    height: 15,
-                    flexShrink: 0,
-                    color: isActive ? '#E8A040' : '#4A4540',
-                    strokeWidth: 1.75,
-                  }}
-                />
-                {item.name}
-              </Link>
-            )
-          })
-        )}
-      </nav>
-
-      {/* Divider */}
-      <div style={{ borderTop: '1px solid #1E1C18', margin: '0 12px' }} />
-
-      {/* Bottom nav */}
-      <div className="px-3 py-4 space-y-0.5">
-        {[
-          { name: 'Profiel', href: '/profile', icon: User },
-          { name: 'Instellingen', href: '/settings', icon: Settings },
-        ].map((item) => {
-          const isActive = pathname.startsWith(item.href)
+      {/* Navigation */}
+      <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
+        {navItems.map((item) => {
+          const active = isActive(item.href)
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '7px 10px',
+                padding: '7px 20px',
+                margin: '1px 8px',
                 borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 400,
-                color: isActive ? '#F0EBE3' : '#5A5448',
-                background: isActive ? 'rgba(232,160,64,0.07)' : 'transparent',
-                transition: 'all 0.15s ease',
                 textDecoration: 'none',
-                borderLeft: isActive ? '2px solid #E8A040' : '2px solid transparent',
-                fontFamily: 'Inter, system-ui, sans-serif',
+                position: 'relative',
+                transition: 'all 0.15s ease',
+                backgroundColor: active ? 'rgba(232,160,64,0.08)' : 'transparent',
+                borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
               }}
             >
-              <item.icon style={{ width: 15, height: 15, flexShrink: 0, color: isActive ? '#E8A040' : '#3A3630', strokeWidth: 1.75 }} />
-              {item.name}
+              <NavIcon type={item.icon} active={active} />
+              <span style={{
+                fontSize: 13,
+                fontWeight: active ? 500 : 400,
+                color: active ? '#F5F0EB' : '#6B6560',
+                letterSpacing: '0.01em',
+                transition: 'color 0.15s ease',
+              }}>
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0 16px' }} />
+
+      {/* Bottom items */}
+      <div style={{ padding: '8px 0 4px' }}>
+        {bottomItems.map((item) => {
+          const active = isActive(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '7px 20px',
+                margin: '1px 8px',
+                borderRadius: 6,
+                textDecoration: 'none',
+                backgroundColor: active ? 'rgba(232,160,64,0.08)' : 'transparent',
+                borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
+              }}
+            >
+              <NavIcon type={item.icon} active={active} />
+              <span style={{
+                fontSize: 13,
+                fontWeight: active ? 500 : 400,
+                color: active ? '#F5F0EB' : '#6B6560',
+              }}>
+                {item.label}
+              </span>
             </Link>
           )
         })}
 
+        {/* Sign out */}
         <button
-          onClick={handleSignOut}
+          onClick={signOut}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '7px 10px',
+            padding: '7px 20px',
+            margin: '1px 8px',
             borderRadius: 6,
-            fontSize: 13,
-            fontWeight: 400,
-            color: '#5A5448',
-            background: 'transparent',
-            transition: 'all 0.15s ease',
+            background: 'none',
             border: 'none',
             cursor: 'pointer',
-            width: '100%',
-            textAlign: 'left',
+            width: 'calc(100% - 16px)',
             borderLeft: '2px solid transparent',
-            fontFamily: 'Inter, system-ui, sans-serif',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = '#ef4444'
-            ;(e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)'
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = '#5A5448'
-            ;(e.currentTarget as HTMLElement).style.background = 'transparent'
           }}
         >
-          <LogOut style={{ width: 15, height: 15, strokeWidth: 1.75 }} />
-          Afmelden
+          <svg width="16" height="16" fill="none" stroke="#4A4540" strokeWidth="1.5" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span style={{ fontSize: 13, color: '#4A4540' }}>Afmelden</span>
         </button>
       </div>
 
-      {/* Food Cost indicator */}
-      {settings && !loading && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderTop: '1px solid #1A1814',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 9,
-              fontWeight: 600,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: '#3A3630',
-              marginBottom: 6,
-              fontFamily: 'Inter, system-ui, sans-serif',
-            }}
-          >
-            Food Cost Target
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div
-              style={{
-                flex: 1,
-                height: 2,
-                background: '#1E1C18',
-                borderRadius: 9999,
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${settings.food_cost_target_max}%`,
-                  background: 'linear-gradient(90deg, #E8A040 0%, #f9bd3a 100%)',
-                  borderRadius: 9999,
-                }}
-              />
-            </div>
-            <span
-              style={{
-                fontSize: 10,
-                color: '#5A5448',
-                fontVariantNumeric: 'tabular-nums',
-                fontFamily: 'Inter, system-ui, sans-serif',
-              }}
-            >
-              {settings.food_cost_target_min}–{settings.food_cost_target_max}%
-            </span>
-          </div>
+      {/* Food cost target */}
+      <div style={{
+        margin: '8px 12px 16px',
+        padding: '10px 12px',
+        borderRadius: 6,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ fontSize: 9, color: '#4A4540', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Food Cost Target
         </div>
-      )}
-    </div>
-  )
-
-  return (
-    <>
-      {/* Mobile toggle */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg text-white shadow-lg"
-        style={{ background: '#0D0C0A', border: '1px solid #1E1C18' }}
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="relative w-60 h-full shadow-sidebar" style={{ background: '#0D0C0A' }}>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-4 right-4 z-10"
-              style={{ color: '#5A5448', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <NavContent />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ flex: 1, height: 3, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
+            <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2, opacity: 0.8 }} />
           </div>
+          <span style={{ fontSize: 11, color: '#6B6560', whiteSpace: 'nowrap' }}>25–30%</span>
         </div>
-      )}
-
-      {/* Desktop sidebar */}
-      <aside
-        className="hidden lg:flex w-56 shrink-0 h-screen sticky top-0"
-        style={{
-          background: '#0D0C0A',
-          borderRight: '1px solid #1A1814',
-        }}
-      >
-        <div className="w-full">
-          <NavContent />
-        </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   )
 }
