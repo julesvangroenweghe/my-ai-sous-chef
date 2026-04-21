@@ -199,7 +199,10 @@ export default function MatchMyStylePage() {
   const [loading, setLoading] = useState(true)
   const [expandedDish, setExpandedDish] = useState<string | null>(null)
   const [aiDish, setAiDish] = useState<string | null>(null)
-  const [aiResults, setAiResults] = useState<Record<string, AIAnalysis & { meta: { classical_count: number; preps_count: number; main_ingredient: string } }>>({})
+  const [aiResults, setAiResults] = useState<Record<string, AIAnalysis & { meta: { classical_count: number; preps_count: number; main_ingredient: string } }>>(() => {
+    if (typeof window === 'undefined') return {}
+    try { return JSON.parse(localStorage.getItem('match_ai_results') || '{}') } catch { return {} }
+  })
   const [aiLoading, setAiLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'matched' | 'unmatched'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'score'>('score')
@@ -435,7 +438,13 @@ export default function MatchMyStylePage() {
                 <div className="px-6 pb-4">
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-100 flex items-center gap-3">
                     <div className="w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-stone-500">Analyseren... klassieke recepten doorzoeken</span>
+                    <div className="space-y-1">
+                      <span className="text-sm text-stone-600">Klassieke recepten doorzoeken...</span>
+                      <div className="w-48 h-1 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-500 rounded-full animate-[progress_3s_ease-in-out_infinite]" style={{width: '60%'}} />
+                      </div>
+                      <span className="text-xs text-stone-400">Duurt 5–10 seconden — resultaten worden bewaard</span>
+                    </div>
                   </div>
                 </div>
               )}

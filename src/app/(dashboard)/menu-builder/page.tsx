@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   ChefHat, Loader2, Sparkles, Users, Euro, Calendar,
   RefreshCw, Save, ChevronRight, ChevronLeft, Check,
-  Leaf, Star, Lightbulb, AlertCircle
+  Leaf, Star, Lightbulb, AlertCircle, Wand2, X
 } from 'lucide-react'
 
 const EVENT_TYPES = [
@@ -145,7 +145,34 @@ export default function MenuBuilderPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Feedback state: key = `${courseIdx}-${itemIdx}`, value = 'liked' | 'disliked'
+  // Hertaal state
+  const [hertaalItem, setHertaalItem] = useState<string | null>(null)
+  const [hertaalResult, setHertaalResult] = useState<Record<string, string>>({})
+  const [hertaalLoading, setHertaalLoading] = useState<string | null>(null)
+
+  const hertaalGerecht = async (item: MenuItem, key: string) => {
+    if (hertaalResult[key]) { setHertaalItem(k => k === key ? null : key); return }
+    setHertaalItem(key)
+    setHertaalLoading(key)
+    try {
+      const res = await fetch('/api/jules/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{
+            role: 'user',
+            content: \`Hertaal dit gerecht in mijn stijl (Belgisch-Frans + Japans umami, comfort-elegantie):\n\nGerecht: \${item.name}\nBeschrijving: \${item.description}\nHoofdbestanddelen: \${(item.key_ingredients || []).join(', ')}\n\nGeef een concrete hertaling in 2-3 zinnen: upgrade het hoofdingrediënt, moderniseer de saus/techniek, voeg een umami-laag toe en balanceer met een zuur-accent. Eindig met een korte MEP-tip.\`
+          }]
+        })
+      })
+      const data = await res.json()
+      const result = data.response || data.content || data.message || ''
+      setHertaalResult(prev => ({ ...prev, [key]: result }))
+    } catch { setHertaalResult(prev => ({ ...prev, [key]: 'Kon niet hertalen. Probeer opnieuw.' })) }
+    setHertaalLoading(null)
+  }
+
+  // Feedback state: key = \`\${courseIdx}-\${itemIdx}\`, value = 'liked' | 'disliked'
   const [feedback, setFeedback] = useState<Record<string, 'liked' | 'disliked'>>({})
 
   const toggleAllergy = (val: string) => {
@@ -696,6 +723,34 @@ export default function MenuBuilderPage() {
                         {item.notes && (
                           <p className="text-xs text-stone-500 italic">{item.notes}</p>
                         )}
+                        {/* Hertaal knop */}
+                        <div>
+                          <button
+                            onClick={() => hertaalGerecht(item, fbKey)}
+                            className={`flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                              hertaalItem === fbKey
+                                ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                                : 'bg-stone-800 text-stone-500 border-stone-700 hover:text-violet-300 hover:border-violet-500/30'
+                            }`}
+                          >
+                            {hertaalLoading === fbKey
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Wand2 className="w-3 h-3" />
+                            }
+                            Hertaal in mijn stijl
+                          </button>
+                          {hertaalItem === fbKey && hertaalResult[fbKey] && (
+                            <div className="mt-2 p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl relative">
+                              <button
+                                onClick={() => setHertaalItem(null)}
+                                className="absolute top-2 right-2 text-stone-600 hover:text-stone-400"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                              <p className="text-xs text-violet-200 leading-relaxed pr-4">{hertaalResult[fbKey]}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
