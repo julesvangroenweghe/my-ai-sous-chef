@@ -13,10 +13,10 @@ export default function DashboardLayout({
     <SupabaseProvider>
       <KitchenProvider>
         <UnitPreferencesProvider>
-          <div className="flex min-h-[100dvh]">
+          <div className="flex min-h-[100dvh]" style={{ background: '#f8fafc' }}>
             <Sidebar />
-            <main className="flex-1 min-w-0">
-              <div className="max-w-7xl mx-auto pl-14 pr-6 md:px-8 lg:px-12 py-8">
+            <main className="flex-1 min-w-0" style={{ background: '#f8fafc' }}>
+              <div className="max-w-7xl mx-auto pl-14 pr-6 md:px-8 lg:px-10 py-8">
                 {children}
               </div>
             </main>

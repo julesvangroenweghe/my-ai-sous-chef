@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded via next/font/google in layout.tsx */
 
 @tailwind base;
 @tailwind components;
@@ -7,38 +6,54 @@
 
 @layer base {
   :root {
-    /* Brand — Ordobox-inspired: diep bordeauxrood + warm zand */
-    --color-brand: 139 34 64;
-    --color-surface: 255 255 255;
-    --color-background: 250 248 244;
+    /* === SLATE PRO — amber accent op slate blauw-grijs === */
 
-    /* shadcn/ui compatible variables — warm zand palette */
-    --background: 250 248 244;
-    --foreground: 30 22 20;
+    /* Brand amber — logo kleur */
+    --color-brand: 232 160 64;
+    --color-brand-dark: 200 130 40;
+
+    /* Content achtergrond — helder wit */
+    --color-surface: 255 255 255;
+    --color-background: 248 249 250;
+
+    /* shadcn/ui compatible */
+    --background: 248 249 250;
+    --foreground: 15 23 42;
+
     --card: 255 255 255;
-    --card-foreground: 30 22 20;
+    --card-foreground: 15 23 42;
+
     --popover: 255 255 255;
-    --popover-foreground: 30 22 20;
-    --primary: 139 34 64;
-    --primary-foreground: 255 255 255;
-    --secondary: 245 240 232;
-    --secondary-foreground: 30 22 20;
-    --muted: 245 240 232;
-    --muted-foreground: 115 95 85;
-    --accent: 245 240 232;
-    --accent-foreground: 30 22 20;
+    --popover-foreground: 15 23 42;
+
+    /* Primary = amber */
+    --primary: 232 160 64;
+    --primary-foreground: 15 23 42;
+
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
+
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+
+    --accent: 255 247 237;
+    --accent-foreground: 154 52 18;
+
     --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
-    --border: 232 226 217;
-    --input: 218 210 198;
-    --ring: 139 34 64;
-    --radius: 0.75rem;
 
-    /* Sidebar — warm donker (Ordobox charcoal) */
-    --sidebar: 26 20 18;
-    --sidebar-foreground: 210 198 188;
-    --sidebar-accent: 139 34 64;
-    --sidebar-accent-foreground: 255 255 255;
+    --border: 226 232 240;
+    --input: 203 213 225;
+    --ring: 232 160 64;
+    --radius: 0.625rem;
+
+    /* Sidebar — diep slate blauw-grijs */
+    --sidebar: 15 23 42;
+    --sidebar-foreground: 148 163 184;
+    --sidebar-accent: 232 160 64;
+    --sidebar-accent-foreground: 15 23 42;
+    --sidebar-border: 30 41 59;
+    --sidebar-muted: 30 41 59;
   }
 
   html {
@@ -49,137 +64,227 @@
   }
 
   body {
-    @apply bg-sand-50 text-stone-900 font-sans;
+    background-color: rgb(248 249 250);
+    color: rgb(15 23 42);
+    font-family: var(--font-inter), system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    font-family: var(--font-outfit), system-ui, sans-serif;
+    letter-spacing: -0.025em;
+    color: rgb(15 23 42);
   }
 
-  /* Selection color */
   ::selection {
-    @apply bg-brand-100 text-brand-900;
+    background-color: rgba(232, 160, 64, 0.2);
+    color: rgb(15 23 42);
   }
 
-  /* Focus ring */
   *:focus-visible {
-    @apply outline-none ring-2 ring-brand-500/40 ring-offset-2 ring-offset-surface;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(232, 160, 64, 0.4);
   }
 
-  /* Scrollbar styling */
   ::-webkit-scrollbar {
-    @apply w-1.5;
+    width: 5px;
+    height: 5px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-stone-300 rounded-full;
+    background: rgb(203 213 225);
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-stone-400;
+    background: rgb(148 163 184);
   }
 }
 
 @layer components {
-  /* Premium card */
+  /* === KAARTEN === */
   .card {
-    @apply bg-white rounded-2xl border border-stone-200/50 shadow-diffusion;
+    background: white;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.625rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
   }
 
   .card-hover {
-    @apply card transition-all duration-300 ease-out;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   }
 
   .card-hover:hover {
-    @apply shadow-brand-glow -translate-y-0.5;
+    border-color: rgba(232, 160, 64, 0.4);
+    box-shadow: 0 4px 12px rgba(232, 160, 64, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
   }
 
-  /* Stagger animation utility */
-  .stagger-1 { animation-delay: 50ms; }
-  .stagger-2 { animation-delay: 100ms; }
-  .stagger-3 { animation-delay: 150ms; }
-  .stagger-4 { animation-delay: 200ms; }
-  .stagger-5 { animation-delay: 250ms; }
-  .stagger-6 { animation-delay: 300ms; }
-
-  /* Skeleton loader */
-  .skeleton {
-    @apply bg-stone-200/60 rounded-lg animate-pulse;
-  }
-
-  /* Premium input */
-  .input-premium {
-    @apply w-full px-4 py-3 bg-white border border-stone-200 rounded-xl
-           text-stone-900 placeholder:text-stone-400
-           transition-all duration-200
-           focus:border-brand-300 focus:ring-2 focus:ring-brand-500/20 focus:outline-none;
-  }
-
-  /* Premium button */
+  /* === KNOPPEN === */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           px-6 py-3 bg-brand-600 text-white font-medium rounded-xl
-           transition-all duration-200
-           hover:bg-brand-700 active:scale-[0.98]
-           shadow-sm hover:shadow-md;
+    background-color: rgb(232 160 64);
+    color: rgb(15 23 42);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: rgb(220 148 48);
+    box-shadow: 0 2px 8px rgba(232, 160, 64, 0.3);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-           px-6 py-3 bg-stone-100 text-stone-700 font-medium rounded-xl
-           transition-all duration-200
-           hover:bg-stone-200 active:scale-[0.98];
+    background-color: white;
+    color: rgb(51 65 85);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(226 232 240);
+    transition: all 0.15s ease;
+    cursor: pointer;
   }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2
-           px-4 py-2 text-stone-600 font-medium rounded-xl
-           transition-all duration-200
-           hover:bg-stone-100 active:scale-[0.98];
+  .btn-secondary:hover {
+    background-color: rgb(248 250 252);
+    border-color: rgb(203 213 225);
   }
-}
 
-@layer utilities {
-  /* shadcn/ui utility classes that reference CSS variables */
-  .bg-background { background-color: rgb(var(--background)); }
-  .text-foreground { color: rgb(var(--foreground)); }
-  .bg-card { background-color: rgb(var(--card)); }
-  .text-card-foreground { color: rgb(var(--card-foreground)); }
-  .bg-popover { background-color: rgb(var(--popover)); }
-  .text-popover-foreground { color: rgb(var(--popover-foreground)); }
-  .bg-primary { background-color: rgb(var(--primary)); }
-  .text-primary-foreground { color: rgb(var(--primary-foreground)); }
-  .bg-secondary { background-color: rgb(var(--secondary)); }
-  .text-secondary-foreground { color: rgb(var(--secondary-foreground)); }
-  .bg-muted { background-color: rgb(var(--muted)); }
-  .text-muted-foreground { color: rgb(var(--muted-foreground)); }
-  .bg-accent { background-color: rgb(var(--accent)); }
-  .text-accent-foreground { color: rgb(var(--accent-foreground)); }
-  .bg-destructive { background-color: rgb(var(--destructive)); }
-  .text-destructive-foreground { color: rgb(var(--destructive-foreground)); }
-  .border-border { border-color: rgb(var(--border)); }
-  .border-input { border-color: rgb(var(--input)); }
-  .ring-ring { --tw-ring-color: rgb(var(--ring)); }
-  .ring-offset-background { --tw-ring-offset-color: rgb(var(--background)); }
-
-  /* Sidebar utilities */
-  .bg-sidebar { background-color: rgb(var(--sidebar)); }
-  .text-sidebar-foreground { color: rgb(var(--sidebar-foreground)); }
-  .bg-sidebar-accent { background-color: rgb(var(--sidebar-accent)); }
-  .text-sidebar-accent { color: rgb(var(--sidebar-accent)); }
-
-  /* Stagger animation children */
-  .animate-stagger > * {
-    @apply opacity-0 animate-slide-up;
+  /* === BADGES === */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
   }
-  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; animation-fill-mode: forwards; }
-  .animate-stagger > *:nth-child(2) { animation-delay: 75ms; animation-fill-mode: forwards; }
-  .animate-stagger > *:nth-child(3) { animation-delay: 150ms; animation-fill-mode: forwards; }
-  .animate-stagger > *:nth-child(4) { animation-delay: 225ms; animation-fill-mode: forwards; }
-  .animate-stagger > *:nth-child(5) { animation-delay: 300ms; animation-fill-mode: forwards; }
-  .animate-stagger > *:nth-child(6) { animation-delay: 375ms; animation-fill-mode: forwards; }
+
+  .badge-amber {
+    background-color: rgba(232, 160, 64, 0.12);
+    color: rgb(154 78 10);
+  }
+
+  .badge-slate {
+    background-color: rgb(241 245 249);
+    color: rgb(71 85 105);
+  }
+
+  .badge-green {
+    background-color: rgb(240 253 244);
+    color: rgb(22 101 52);
+  }
+
+  .badge-red {
+    background-color: rgb(254 242 242);
+    color: rgb(153 27 27);
+  }
+
+  /* === SIDEBAR SPECIFIEK === */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    color: rgb(100 116 139);
+    text-decoration: none;
+  }
+
+  .sidebar-item:hover {
+    background-color: rgb(30 41 59);
+    color: rgb(226 232 240);
+  }
+
+  .sidebar-item.active {
+    background-color: rgba(232, 160, 64, 0.12);
+    color: rgb(232 160 64);
+  }
+
+  .sidebar-item.active svg {
+    color: rgb(232 160 64);
+  }
+
+  /* === INPUTS === */
+  .input-slate {
+    background: white;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: rgb(15 23 42);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+  }
+
+  .input-slate:focus {
+    outline: none;
+    border-color: rgb(232 160 64);
+    box-shadow: 0 0 0 3px rgba(232, 160, 64, 0.12);
+  }
+
+  /* === TABELLEN === */
+  .table-slate th {
+    background: rgb(248 250 252);
+    color: rgb(71 85 105);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(226 232 240);
+  }
+
+  .table-slate td {
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid rgb(241 245 249);
+    font-size: 0.875rem;
+    color: rgb(30 41 59);
+  }
+
+  .table-slate tr:hover td {
+    background: rgb(248 250 252);
+  }
+
+  /* === STAT KAARTEN (dashboard) === */
+  .stat-card {
+    background: white;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.625rem;
+    padding: 1.25rem;
+  }
+
+  .stat-card-accent {
+    background: linear-gradient(135deg, rgb(232 160 64) 0%, rgb(250 189 100) 100%);
+    border: none;
+    color: rgb(15 23 42);
+  }
+
+  /* === PAGE HEADER === */
+  .page-header {
+    border-bottom: 1px solid rgb(226 232 240);
+    background: white;
+    padding: 1rem 1.5rem;
+  }
+
+  /* === DIVIDERS === */
+  .divider {
+    border-top: 1px solid rgb(226 232 240);
+  }
+
+  /* === AMBER GLOW EFFECT (voor special actions) === */
+  .amber-glow:hover {
+    box-shadow: 0 0 0 3px rgba(232, 160, 64, 0.2);
+  }
 }
