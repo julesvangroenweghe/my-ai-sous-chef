@@ -12,6 +12,7 @@ import { SeasonWidget } from '@/components/ai/season-widget'
 import { KnowledgeStatsWidget } from '@/components/ai/knowledge-stats'
 import { AlertsWidget } from '@/components/dashboard/alerts-widget'
 import { CalendarWidget } from '@/components/dashboard/calendar-widget'
+import { FadeIn, StaggerList, StaggerItem } from '@/components/ui/page-transition'
 
 interface DashboardStats {
  recipes: number
@@ -145,12 +146,12 @@ export default function DashboardPage() {
      </div>
 
      {/* Proactive AI Alerts — the first thing the chef sees */}
-     <div className="animate-slide-up opacity-0" style={{ animationDelay: '50ms', animationFillMode: 'forwards' }}>
+     <div className="">
        <AlertsWidget />
      </div>
 
      {/* Quick Stats Strip */}
-     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+     <StaggerList className="grid grid-cols-2 md:grid-cols-5 gap-3">
        {loading ? (
          [...Array(5)].map((_, i) => (
            <div key={i} className="card p-4 space-y-2">
@@ -161,7 +162,7 @@ export default function DashboardPage() {
          ))
        ) : (
          <>
-           <Link href="/recipes" className="card-hover p-4 group">
+           <StaggerItem><Link href="/recipes" className="card-hover p-4 group">
              <div className="flex items-center justify-between mb-2">
                <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
                  <BookOpen className="w-4.5 h-4.5 text-brand-600" />
@@ -170,8 +171,8 @@ export default function DashboardPage() {
              </div>
              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.recipes || 0}</div>
              <div className="text-xs text-stone-400 mt-0.5">Recepten</div>
-           </Link>
-           <Link href="/events" className="card-hover p-4 group">
+           </Link></StaggerItem>
+           <StaggerItem><Link href="/events" className="card-hover p-4 group">
              <div className="flex items-center justify-between mb-2">
                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
                  <CalendarDays className="w-4.5 h-4.5 text-emerald-600" />
@@ -180,8 +181,8 @@ export default function DashboardPage() {
              </div>
              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.events || 0}</div>
              <div className="text-xs text-stone-400 mt-0.5">Events</div>
-           </Link>
-           <Link href="/ingredients" className="card-hover p-4 group">
+           </Link></StaggerItem>
+           <StaggerItem><Link href="/ingredients" className="card-hover p-4 group">
              <div className="flex items-center justify-between mb-2">
                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
                  <FlaskConical className="w-4.5 h-4.5 text-amber-600" />
@@ -189,9 +190,9 @@ export default function DashboardPage() {
                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
              </div>
              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.ingredients || 0}</div>
-             <div className="text-xs text-stone-400 mt-0.5">Ingredienten</div>
-           </Link>
-           <Link href="/preparations" className="card-hover p-4 group">
+             <div className="text-xs text-stone-400 mt-0.5">Ingrediënten</div>
+           </Link></StaggerItem>
+           <StaggerItem><Link href="/preparations" className="card-hover p-4 group">
              <div className="flex items-center justify-between mb-2">
                <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
                  <Beaker className="w-4.5 h-4.5 text-violet-600" />
@@ -200,8 +201,8 @@ export default function DashboardPage() {
              </div>
              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.preparations || 0}</div>
              <div className="text-xs text-stone-400 mt-0.5">Halffabricaten</div>
-           </Link>
-           <Link href="/invoices" className="card-hover p-4 group">
+           </Link></StaggerItem>
+           <StaggerItem><Link href="/invoices" className="card-hover p-4 group">
              <div className="flex items-center justify-between mb-2">
                <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
                  <FileText className="w-4.5 h-4.5 text-sky-600" />
@@ -210,17 +211,17 @@ export default function DashboardPage() {
              </div>
              <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.invoices || 0}</div>
              <div className="text-xs text-stone-400 mt-0.5">Facturen</div>
-           </Link>
+           </Link></StaggerItem>
          </>
        )}
-     </div>
+     </StaggerList>
 
      {/* Main Content Grid — Bento Layout */}
      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
        {/* Left Column — Upcoming + Recent */}
        <div className="lg:col-span-7 space-y-6">
          {/* Komende Events */}
-         <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+         <div className="card overflow-hidden">
            <div className="flex items-center justify-between px-6 pt-5 pb-4">
              <div className="flex items-center gap-2.5">
                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -303,7 +304,7 @@ export default function DashboardPage() {
          </div>
 
          {/* Recent Recipes */}
-         <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
+         <div className="card overflow-hidden">
            <div className="flex items-center justify-between px-6 pt-5 pb-4">
              <div className="flex items-center gap-2.5">
                <div className="w-8 h-8 rounded-xl bg-brand-50 flex items-center justify-center">
@@ -355,18 +356,18 @@ export default function DashboardPage() {
 
        {/* Right Column — Calendar + Season + Knowledge */}
        <div className="lg:col-span-5 space-y-6">
-         <div className="animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+         <div>
            <CalendarWidget />
          </div>
-         <div className="animate-slide-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
+         <div>
            <SeasonWidget />
          </div>
-         <div className="animate-slide-up opacity-0" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
+         <div>
            <KnowledgeStatsWidget />
          </div>
 
          {/* Snelle Acties */}
-         <div className="card p-5 animate-slide-up opacity-0" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
+         <div className="card p-5">
            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Snelle acties</h3>
            <div className="grid grid-cols-2 gap-2">
              <Link href="/recipes/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">

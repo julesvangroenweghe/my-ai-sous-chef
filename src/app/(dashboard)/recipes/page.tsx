@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Plus, ChefHat, Clock, Euro, ArrowRight, Search, TrendingDown, TrendingUp, UtensilsCrossed, Users } from 'lucide-react'
 import { ChefTip } from '@/components/ai/chef-tip'
+import { FadeIn, StaggerList, StaggerItem } from '@/components/ui/page-transition'
 
 interface RecipeRow {
   id: string
@@ -116,28 +117,28 @@ export default function RecipesPage() {
 
       {/* Stats */}
       {recipes.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
-          <div className="card p-4">
+        <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StaggerItem><div className="card p-4">
             <div className="font-mono text-2xl font-bold text-stone-900">{recipes.length}</div>
             <div className="text-xs text-stone-400">Recepten</div>
-          </div>
-          <div className="card p-4">
+          </div></StaggerItem>
+          <StaggerItem><div className="card p-4">
             <div className="font-mono text-2xl font-bold text-stone-900">{categories.length}</div>
-            <div className="text-xs text-stone-400">Categorieen</div>
-          </div>
-          <div className="card p-4">
+            <div className="text-xs text-stone-400">Categorieën</div>
+          </div></StaggerItem>
+          <StaggerItem><div className="card p-4">
             <div className={`font-mono text-2xl font-bold ${avgFoodCost <= 30 ? 'text-emerald-600' : avgFoodCost <= 35 ? 'text-amber-600' : 'text-red-600'}`}>
               {avgFoodCost > 0 ? `${avgFoodCost.toFixed(1)}%` : '\u2014'}
             </div>
             <div className="text-xs text-stone-400">Gem. food cost</div>
-          </div>
-          <div className="card p-4">
+          </div></StaggerItem>
+          <StaggerItem><div className="card p-4">
             <div className={`font-mono text-2xl font-bold ${highCostRecipes.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
               {highCostRecipes.length}
             </div>
             <div className="text-xs text-stone-400">Boven target</div>
-          </div>
-        </div>
+          </div></StaggerItem>
+        </StaggerList>
       )}
 
       {/* Smart tip */}
@@ -150,7 +151,7 @@ export default function RecipesPage() {
 
       {/* Search & Filter */}
       {recipes.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             <input
@@ -220,16 +221,15 @@ export default function RecipesPage() {
           )}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((recipe, i) => {
+        <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((recipe) => {
             const catName = recipe.category?.name || ''
             const catColor = categoryColors[catName] || 'bg-stone-50 text-stone-700'
             return (
+              <StaggerItem key={recipe.id}>
               <Link
-                key={recipe.id}
                 href={`/recipes/${recipe.id}`}
-                className="card-hover p-5 group flex flex-col animate-slide-up opacity-0"
-                style={{ animationDelay: `${Math.min(i * 50, 400)}ms`, animationFillMode: 'forwards' }}
+                className="card-hover p-5 group flex flex-col h-full"
               >
                 {/* Top */}
                 <div className="flex items-start justify-between gap-2 mb-3">
@@ -275,9 +275,10 @@ export default function RecipesPage() {
                   <FoodCostBadge pct={recipe.food_cost_percentage ? Number(recipe.food_cost_percentage) : null} />
                 </div>
               </Link>
+              </StaggerItem>
             )
           })}
-        </div>
+        </StaggerList>
       )}
     </div>
   )
