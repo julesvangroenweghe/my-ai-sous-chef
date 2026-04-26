@@ -252,6 +252,32 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* ⌘K Command Palette trigger */}
+      <button
+        onClick={() => {
+          const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
+          document.dispatchEvent(e)
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          margin: '4px 12px 0',
+          padding: '8px 10px',
+          borderRadius: 6,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          cursor: 'pointer',
+          width: 'calc(100% - 24px)',
+        }}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4A4540" strokeWidth="2" strokeLinecap="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <span style={{ fontSize: 12, color: '#4A4540', flex: 1, textAlign: 'left' }}>Zoeken...</span>
+        <kbd style={{ fontSize: 10, color: '#3A3530', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
+      </button>
+
       {/* Food cost target */}
       <div style={{
         margin: '8px 12px 16px',

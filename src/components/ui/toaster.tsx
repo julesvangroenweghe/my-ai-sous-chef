@@ -1,25 +1,44 @@
-"use client";
+'use client'
 
-import { useToast } from "@/components/ui/use-toast";
-import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast";
+import { Toaster as SonnerToaster } from 'sonner'
 
 export function Toaster() {
- const { toasts } = useToast();
- return (
- <ToastProvider>
- {toasts.map(function ({ id, title, description, action, ...props }) {
- return (
- <Toast key={id} {...props}>
- <div className="grid gap-1">
- {title && <ToastTitle>{title}</ToastTitle>}
- {description && <ToastDescription>{description}</ToastDescription>}
- </div>
- {action}
- <ToastClose />
- </Toast>
- );
- })}
- <ToastViewport />
- </ToastProvider>
- );
+  return (
+    <SonnerToaster
+      position="bottom-right"
+      toastOptions={{
+        style: {
+          background: '#1a1917',
+          border: '1px solid rgba(255,255,255,0.08)',
+          color: '#f5f0e8',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '13px',
+          borderRadius: '8px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        },
+        classNames: {
+          success: 'toast-success',
+          error: 'toast-error',
+          warning: 'toast-warning',
+        },
+      }}
+      icons={{
+        success: (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#E8A040" strokeWidth="1.5"/>
+            <path d="M5 8l2 2 4-4" stroke="#E8A040" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ),
+        error: (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#ef4444" strokeWidth="1.5"/>
+            <path d="M6 6l4 4M10 6l-4 4" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        ),
+      }}
+    />
+  )
 }
+
+// Re-export toast for easy use
+export { toast } from 'sonner'

@@ -3,6 +3,9 @@ import { KitchenProvider } from '@/providers/kitchen-provider'
 import Sidebar from '@/components/layout/Sidebar'
 import JulesAI from '@/components/layout/JulesAI'
 import { UnitPreferencesProvider } from '@/components/UnitPreferencesProvider'
+import { Toaster } from '@/components/ui/toaster'
+import { CommandPalette } from '@/components/ui/command-palette'
+import { PageTransition } from '@/components/ui/page-transition'
 
 export default function DashboardLayout({
   children,
@@ -25,11 +28,16 @@ export default function DashboardLayout({
               }}
             >
               <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 40px' }}>
-                {children}
+                <PageTransition>
+                  {children}
+                </PageTransition>
               </div>
             </main>
             <JulesAI />
           </div>
+          {/* Global UI */}
+          <Toaster />
+          <CommandPalette />
         </UnitPreferencesProvider>
       </KitchenProvider>
     </SupabaseProvider>
