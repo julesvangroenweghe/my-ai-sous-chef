@@ -156,6 +156,7 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
 
   // Step 1
   const [menuType, setMenuType] = useState(briefMenuType)
+  const isBBQ = menuType === 'bbq_buffet'
   const [numPersons, setNumPersons] = useState(briefPersons)
   const [pricePerPerson, setPricePerPerson] = useState(briefPricePp)
   const [foodCostTarget, setFoodCostTarget] = useState(briefFoodCost)
@@ -163,6 +164,18 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
 
   // Step 2
   const [selectedCourses, setSelectedCourses] = useState<string[]>(briefCourses)
+  // Auto-switch courses when BBQ buffet is selected
+  const prevMenuTypeRef = React.useRef(menuType)
+  React.useEffect(() => {
+    if (prevMenuTypeRef.current !== menuType) {
+      prevMenuTypeRef.current = menuType
+      if (menuType === 'bbq_buffet') {
+        setSelectedCourses(['BBQ_HAPJES', 'BBQ_VLEES', 'BBQ_VIS', 'BBQ_SALADES', 'BBQ_BIJGERECHTEN', 'DESSERT'])
+      } else if (prevMenuTypeRef.current === 'bbq_buffet') {
+        setSelectedCourses(['AMUSE', 'HOOFDGERECHT', 'DESSERT'])
+      }
+    }
+  }, [menuType])
   const [style, setStyle] = useState(briefStyle)
   const [pushLevel, setPushLevel] = useState('balanced')
   const [restrictions, setRestrictions] = useState<string[]>(briefRestrictions)
@@ -395,7 +408,7 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
                 <div className="space-y-1.5">
                   <label className="text-xs text-[#9E7E60] font-medium">Gangen</label>
                   <div className="flex flex-wrap gap-2">
-                    {COURSE_OPTIONS.map(c => (
+                    {(isBBQ ? BBQ_COURSE_OPTIONS : COURSE_OPTIONS).map(c => (
                       <button key={c.value} onClick={() => toggleCourse(c.value)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                           selectedCourses.includes(c.value) ? 'border-amber-500/40 text-amber-700' : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
@@ -721,7 +734,7 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
             <div className="space-y-2">
               <label className="text-xs text-[#9E7E60] font-medium">Gangen</label>
               <div className="grid grid-cols-2 gap-2">
-                {COURSE_OPTIONS.map(c => (
+                {(isBBQ ? BBQ_COURSE_OPTIONS : COURSE_OPTIONS).map(c => (
                   <button
                     key={c.value}
                     onClick={() => toggleCourse(c.value)}

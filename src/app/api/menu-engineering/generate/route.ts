@@ -15,6 +15,11 @@ const COURSE_LABELS: Record<string, string> = {
   KAAS: 'Kaas',
   DESSERT: 'Dessert',
   MIGNARDISES: 'Mignardises',
+  BBQ_HAPJES: 'Hapjes van het rooster',
+  BBQ_VLEES: 'Gegrild vlees',
+  BBQ_VIS: 'Gegrilde vis & zeevruchten',
+  BBQ_SALADES: 'Koude salades & dips',
+  BBQ_BIJGERECHTEN: 'Bijgerechten & brood',
 }
 
 const COURSE_TO_CLASSICAL: Record<string, string[]> = {
@@ -26,6 +31,11 @@ const COURSE_TO_CLASSICAL: Record<string, string[]> = {
   KAAS: ['savouries', 'entrees'],
   DESSERT: ['desserts', 'frozen_desserts', 'pastry', 'entremets'],
   MIGNARDISES: ['desserts', 'pastry', 'general'],
+  BBQ_HAPJES: ['hors_doeuvres', 'savouries', 'entrees'],
+  BBQ_VLEES: ['meat', 'poultry', 'roasts', 'braised', 'game'],
+  BBQ_VIS: ['fish'],
+  BBQ_SALADES: ['vegetables', 'salads', 'entrees'],
+  BBQ_BIJGERECHTEN: ['vegetables', 'general'],
 }
 
 function callAnthropic(systemPrompt: string, userPrompt: string, maxTokens = 4096) {
@@ -359,7 +369,16 @@ TECHNIEKEN:
 ${techniquesList || '(geen)'}
 
 PARAMETERS:
-- Menu type: ${menu_type}
+${menu_type === 'bbq_buffet' ? `
+SERVICEFORMAT: BBQ BUFFET — dit is geen walking dinner of borden per persoon.
+- BBQ_HAPJES: kleine hapjes gegrild op het rooster, doorgegeven of op een plank. Max 2-3 hapjes pp. Jules-stijl: elevated BBQ bites met umami/zuur-accent.
+- BBQ_VLEES: 1-2 grote stukken vlees (heel of half, snijdbaar aan tafel). Denk côte à l'os, lams-rib rack, varkenswang slow-cook dan snel gegrild, picanha. Per schaal voor 4-6 personen.
+- BBQ_VIS: 1 hele vis of groot filet op het rooster. Denk hele dorade, makreel, coquilles op half schelp, langoustines gespleten. Jules: zeekraal, dashi-beurre blanc, geroosterd zeewier.
+- BBQ_SALADES: 3-4 koude salades naast de grill. Denk gefermenteerde groenten, graan-salades, gepekelde komkommer. Jules: lavasvinaigrette, miso-dressing, gepekeld eigeel erover.
+- BBQ_BIJGERECHTEN: warm brood van het rooster, gegrilde polenta, pommes grenailles op asbed.
+- DESSERT: licht, kan ook van de grill (gegrild fruit, panna cotta).
+Geef voor elke gang MEERDERE opties (want buffet = keuze). Vlees = 2 opties, Vis = 1-2, Salades = 3-4.
+` : ''}- Menu type: ${menu_type}
 - Keukentype: ${kitchenType}
 - Personen: ${num_persons}
 - Verkoopprijs: €${price_per_person}/p
