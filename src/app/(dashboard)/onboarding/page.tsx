@@ -71,7 +71,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
       </div>
       <div className="h-1 bg-stone-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-orange-500 rounded-full transition-all duration-500"
+          className="h-full bg-amber-500 rounded-full transition-all duration-500"
           style={{ width: `${(current / total) * 100}%` }}
         />
       </div>
@@ -94,7 +94,7 @@ function Chip({
       onClick={onClick}
       className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 ${
         selected
-          ? 'bg-orange-50 border-orange-400 text-orange-900 shadow-sm'
+          ? 'bg-amber-50 border-amber-400 text-amber-900 shadow-sm'
           : 'bg-stone-50 border-stone-200 text-stone-600 hover:border-stone-300 hover:bg-stone-100'
       }`}
     >
@@ -144,7 +144,7 @@ function TagEditor({
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-800 px-2.5 py-0.5 text-xs font-medium"
+            className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2.5 py-0.5 text-xs font-medium"
           >
             {tag}
             <button
@@ -153,7 +153,7 @@ function TagEditor({
                 e.stopPropagation()
                 onRemove(tag)
               }}
-              className="hover:text-orange-950 transition-colors leading-none"
+              className="hover:text-amber-950 transition-colors leading-none"
             >
               <svg
                 className="w-3 h-3"
@@ -218,7 +218,7 @@ function StepWelkom({
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="space-y-3">
-        <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center mb-6">
+        <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center mb-6">
           <svg
             className="w-6 h-6 text-white"
             fill="none"
@@ -252,7 +252,7 @@ function StepWelkom({
             value={displayName}
             onChange={(e) => onDisplayName(e.target.value)}
             placeholder="Chef Jules..."
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
           />
         </div>
 
@@ -267,7 +267,7 @@ function StepWelkom({
             value={yearsExperience}
             onChange={(e) => onYears(e.target.value)}
             placeholder="0"
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
           />
         </div>
 
@@ -278,7 +278,7 @@ function StepWelkom({
           <select
             value={currentRole}
             onChange={(e) => onRole(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all appearance-none"
           >
             <option value="">Selecteer je rol...</option>
             {ROLES.map((r) => (
@@ -295,7 +295,7 @@ function StepWelkom({
           type="button"
           onClick={onNext}
           disabled={!displayName.trim() || !currentRole}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-orange-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -355,14 +355,14 @@ function StepKeukenFilosofie({
               onClick={() => onKitchenType(kt.toLowerCase())}
               className={`px-4 py-3 rounded-xl border-2 text-sm font-medium text-left transition-all duration-150 ${
                 kitchenType === kt.toLowerCase()
-                  ? 'border-orange-400 bg-orange-50 text-orange-900 shadow-sm'
+                  ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-sm'
                   : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
               }`}
             >
               {kt}
               {kitchenType === kt.toLowerCase() && (
                 <svg
-                  className="w-4 h-4 text-orange-500 inline ml-2"
+                  className="w-4 h-4 text-amber-500 inline ml-2"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -389,7 +389,7 @@ function StepKeukenFilosofie({
           }}
           placeholder="Wat drijft je in de keuken? Hoe kijk jij naar voedsel?"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all resize-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all resize-none"
         />
         <p className="text-xs text-stone-400 text-right">
           {philosophy.length}/150
@@ -420,7 +420,7 @@ function StepKeukenFilosofie({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-orange-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -478,7 +478,7 @@ function StepCulinaire({
         ))}
       </div>
       {selected.length >= 5 && (
-        <p className="text-xs text-orange-600">
+        <p className="text-xs text-amber-600">
           Maximum van 5 keukens bereikt.
         </p>
       )}
@@ -507,7 +507,7 @@ function StepCulinaire({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-orange-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -611,7 +611,7 @@ function StepIngredientenTechnieken({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-orange-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Bijna klaar
           <svg
@@ -733,7 +733,7 @@ function StepKlaar({
               {cuisines.map((c) => (
                 <span
                   key={c}
-                  className="px-2.5 py-1 rounded-md bg-orange-100 text-orange-800 text-xs font-medium"
+                  className="px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 text-xs font-medium"
                 >
                   {c}
                 </span>
@@ -814,7 +814,7 @@ function StepKlaar({
           type="button"
           onClick={onFinish}
           disabled={loading}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-orange-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           {loading ? (
             <>

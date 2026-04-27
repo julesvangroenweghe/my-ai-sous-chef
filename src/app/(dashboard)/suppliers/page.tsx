@@ -37,6 +37,7 @@ export default function LeveranciersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [productSearch, setProductSearch] = useState('')
+  const [hideEmpty, setHideEmpty] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -70,10 +71,13 @@ export default function LeveranciersPage() {
     ))
   }
 
-  const filtered = suppliers.filter(s => {
-    if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  const filtered = suppliers
+    .filter(s => {
+      if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
+      if (hideEmpty && s.products.length === 0) return false
+      return true
+    })
+    .sort((a, b) => b.products.length - a.products.length)
 
   // Cross-supplier product search
   const allProducts = productSearch
@@ -124,7 +128,9 @@ export default function LeveranciersPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold text-white tracking-tight">Leveranciers</h1>
-            <p className="text-zinc-500 text-sm mt-0.5">{suppliers.length} leveranciers geregistreerd</p>
+            <p className="text-zinc-500 text-sm mt-0.5">
+              {suppliers.filter(s => s.products.length > 0).length} van {suppliers.length} leveranciers met producten
+            </p>
           </div>
         </div>
       </div>
@@ -186,6 +192,24 @@ export default function LeveranciersPage() {
         </div>
       )}
 
+
+      {/* Toggle lege leveranciers */}
+      <div className="flex items-center justify-between animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
+        <p className="text-sm text-zinc-500">
+          {filtered.length} leveranciers{hideEmpty ? ' (met producten)' : ''}
+        </p>
+        <button
+          onClick={() => setHideEmpty(!hideEmpty)}
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+            hideEmpty
+              ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
+              : 'border-zinc-700 text-zinc-500 hover:text-zinc-300'
+          }`}
+        >
+          {hideEmpty ? 'Alle leveranciers tonen' : 'Lege leveranciers verbergen'}
+        </button>
+      </div>
+
       {/* Leveranciers List */}
       <div className="space-y-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         {filtered.length === 0 ? (
@@ -214,7 +238,9 @@ export default function LeveranciersPage() {
                           {supplier.category}
                         </span>
                       )}
-                      <span>{supplier.products.length} producten</span>
+                      <span className={supplier.products.length > 0 ? 'text-emerald-400' : 'text-zinc-600'}>
+                        {supplier.products.length > 0 ? `${supplier.products.length} producten` : 'Geen producten'}
+                      </span>
                       {supplier.delivery_days && (
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
@@ -257,6 +283,12 @@ export default function LeveranciersPage() {
                   </div>
 
                   {/* Products table */}
+                  {supplier.products.length === 0 && (
+                    <div className="px-5 py-6 text-center">
+                      <p className="text-sm text-zinc-500 mb-1">Geen producten geïmporteerd</p>
+                      <p className="text-xs text-zinc-600">Scan een prijslijst via OCR om producten toe te voegen</p>
+                    </div>
+                  )}
                   {supplier.products.length > 0 && (
                     <table className="w-full text-sm">
                       <thead>
