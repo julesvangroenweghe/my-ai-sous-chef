@@ -198,13 +198,65 @@ export async function POST(request: NextRequest) {
       return `- [EIGEN] "${r.name}" | cat: ${cat} | €${Number(r.total_cost_per_serving || 0).toFixed(2)}/p | id: ${r.id}${components ? `\n  ${components}` : ''}`
     }).join('\n')
 
-    // Build LEGENDE list
+    // Build LEGENDE list — full element details for rich AI inspiration
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const legendeList = legendeDishes.map((d: any) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const elems = (d.elements || []).map((e: any) => e.name).join(', ')
-      return `- [LEGENDE] "${d.name}" | stijl: ${d.service_style || 'nvt'} | id: ${d.id}${elems ? ` | ${elems}` : ''}`
+      const elems = (d.elements || []).map((e: any) => e.name).filter(Boolean)
+      const elemStr = elems.length > 0 ? `\n    → ${elems.join(' · ')}` : ''
+      const tags = [
+        d.service_style ? `${d.service_style}` : null,
+        d.temperature ? `${d.temperature}` : null,
+        d.is_vegetarian ? 'veggie' : null,
+      ].filter(Boolean).join(', ')
+      return `• "${d.name}"${tags ? ` [${tags}]` : ''}${elemStr}`
     }).join('\n')
+
+
+    // SIR 3.0 — Jules' huidige stijlgerechten (meest recente werkdocument)
+    const sir3Dishes = \`
+Witte asperge Miso gebrand
+  → creme dooier, geraspte dooier, jus gefermenteerde asperge, gerookte crunch, daslook olie
+
+Rundstartaar
+  → sjalotje, bieslook, kappertjes, artisjok gegrild, gerookte parmezaan, rucola, sgombro vinaigrette, kappercrunch
+
+Zeeuwse mossel
+  → creme ui, foreleitjes, gepekelde gebrande zilverui in lavas olie
+\`
+
+    // Jules' vaste handtekening-elementen — komen terug in zijn DNA
+    const julesDNA = \`
+VASTE SMAAKELEMENTEN:
+- Lavas: gebruikt als olie, in gribiche, of als aromaat — kenmerkend
+- Dashi: als jus-basis, beurre blanc of bouillon
+- Forelkaviaar: kleine luxe-accent, zoutig-mineraal
+- Gepekelde dooier: geraspt over gerechten voor umami-diepte
+- Knolselder: als tagliatelle, creme, chips, gebrand — veelzijdig
+- Prei: gerookt, BBQ, als emulsie, gefrituurd — steeds anders
+- Hamachi: koud, rauw, ceviche-stijl
+- Zwarte look: als gel of creme voor diepte
+- Sgombro: als vinaigrette of espuma op vlees
+- Gerookte amandel/hazelnoot: textuur en rooktoon
+- Furikake: Japanse touch over vis
+- Kimchi / miso: fermentatie-accenten
+- XO saus: umami-booster
+- Oesterblad: op vrijwel alles mogelijk
+- Mosterdzaad gepekeld: textuur en frisheid
+
+VASTE TECHNIEKEN:
+- 'Konro' = yakitori-grill stijl, intensief roken op houtskool
+- Mi-cuit = half-gegaard voor zachte textuur
+- Gepekeld / lacto-fermentatie voor frisheid en zuur
+- Creme = altijd glad en rijkbottig (niet luchtig)
+- Laags opbouwen: base creme → hoofdelement → garnituur → saus ernaast of errond
+
+PRESENTATIE-DNA:
+- Gerechten zijn complex opgebouwd maar zien er rustig uit
+- Geen drukke borden — élément heeft een rol
+- Koud of lauw (niet warm) voor verfijning
+- Seizoensgroenten zijn altijd startpunt
+\`
 
     // Preparations list
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -255,11 +307,17 @@ AUDIT REGELS (geleerd van deze chef):
     // ==========================================
     // PASS 1: THE GENERATOR
     // ==========================================
-    const generatorSystem = `Je bent een creatief culinair directeur. Je ontwerpt menu's voor professionele keukens.
-Je combineert de eigen stijl van de chef met innovatie en seizoensgebonden producten.
-Prioriteer ALTIJD: (1) eigen recepten van de chef, (2) LEGENDE gerechten, (3) nieuw AI-voorstel.
-Houd rekening met food cost budget en allergenen. Zorg voor een logisch verloop.
-Geef terug als JSON, ALLEEN JSON.`
+    const generatorSystem = `Je bent de culinaire directeur voor een Belgische top-catering chef, Jules Van Groenweghe (Food by Jules).
+Je kent zijn stijl door en door: Belgisch-Frans fundament, Japanse umami-laag, comfort-elegantie.
+Zijn handtekening-elementen: lavas, dashi, forelkaviaar, gepekelde dooier, knolselder als tagliatelle, prei op Konro, hamachi crudo, zwarte look gel, sgombro, oesterblad, miso, kimchi.
+
+REGELS:
+1. NOOIT generieke restaurant-gerechten (geen "zalm met groentjes", geen "poulet rôti")
+2. ELK gerecht moet 1 uniek smaak-accent hebben dat past bij Jules' DNA
+3. Gebruik zijn LEGENDE gerechten als directe blauwdruk — herken het patroon, hertaal het
+4. Hertaal = upgrade ingredient → moderne techniek → umami-laag → zuur-accent
+5. Seizoensproducten zijn startpunt, niet bijzaak
+6. Geef ALLEEN JSON terug, geen uitleg.`
 
     const generatorPrompt = `CHEF PROFIEL:
 - Naam: ${chef?.display_name || 'Chef'}
@@ -270,8 +328,17 @@ ${rulesetContext}
 EIGEN RECEPTEN (${ownRecipes.length}):
 ${recipesList || '(geen)'}
 
-LEGENDE GERECHTEN (${legendeDishes.length}):
+LEGENDE GERECHTEN — JULES' EIGEN STIJL-BIBLIOTHEEK (${legendeDishes.length} gerechten):
+De volgende gerechten zijn Jules' persoonlijke LEGENDE: dit zijn échte gerechten die hij kookt, met hun volledige opbouw.
+Gebruik deze als directe inspiratie — niet kopiëren maar de DNA herkennen en vertalen naar nieuwe context.
 ${legendeList || '(geen)'}
+
+SIR 3.0 — MEEST RECENTE STIJLGERECHTEN:
+Dit zijn Jules' nieuwste gerechten, tonen zijn huidige richting:
+${sir3Dishes}
+
+JULES' HANDTEKENING-DNA:
+${julesDNA}
 
 HALFFABRICATEN:
 ${prepsList || '(geen)'}

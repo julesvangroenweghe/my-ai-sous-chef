@@ -55,9 +55,9 @@ interface MenuResultProps {
 }
 
 const SOURCE_LABELS: Record<string, { label: string; className: string }> = {
-  own_recipe: { label: 'Eigen recept', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
-  legende: { label: 'LEGENDE', className: 'bg-violet-500/20 text-violet-300 border border-violet-500/30' },
-  classical: { label: 'Klassiek', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+  own_recipe: { label: 'Eigen recept', className: 'bg-amber-100 text-amber-800 border border-amber-200' },
+  legende: { label: 'LEGENDE', className: 'bg-violet-100 text-violet-800 border border-violet-200' },
+  classical: { label: 'Klassiek', className: 'bg-blue-100 text-blue-800 border border-blue-200' },
   ai_generated: { label: 'AI voorstel', className: 'bg-[#FDF8F2] text-[#5C4730] border border-[#D4B896]' },
   new: { label: 'Nieuw', className: 'bg-[#FDF8F2] text-[#5C4730] border border-[#D4B896]' },
 }
@@ -109,7 +109,7 @@ export default function MenuResult({
         </div>
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
           <div className="text-xs text-[#B8997A] mb-1">Food Cost %</div>
-          <div className={`text-lg font-mono font-bold ${totalFoodCostPct <= foodCostTarget ? 'text-emerald-400' : 'text-amber-700'}`}>
+          <div className={`text-lg font-mono font-bold ${totalFoodCostPct <= foodCostTarget ? 'text-emerald-700' : 'text-amber-700'}`}>
             {totalFoodCostPct.toFixed(1)}%
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function MenuResult({
             <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/>
             <line x1="6" y1="17" x2="18" y2="17"/>
           </svg>
-          <p className="text-amber-300 text-sm leading-relaxed">{menu.chef_note}</p>
+          <p className="text-amber-800 text-sm leading-relaxed">{menu.chef_note}</p>
         </div>
       )}
 
@@ -218,7 +218,7 @@ export default function MenuResult({
                             </span>
                           )}
                           {dishFeedback && (
-                            <span className={`px-1.5 py-0.5 text-xs rounded font-mono ${dishFeedback.score >= 7 ? 'text-emerald-400' : 'text-amber-700'}`}>
+                            <span className={`px-1.5 py-0.5 text-xs rounded font-mono ${dishFeedback.score >= 7 ? 'text-emerald-700' : 'text-amber-700'}`}>
                               {dishFeedback.score}/10
                             </span>
                           )}
@@ -250,7 +250,7 @@ export default function MenuResult({
                         <span key={i} className="px-2 py-0.5 bg-white text-[#9E7E60] text-xs rounded-full">{ing}</span>
                       ))}
                       {(dish.seasonal_ingredients || []).map((s, i) => (
-                        <span key={`s-${i}`} className="px-2 py-0.5 bg-emerald-900/30 text-emerald-400 text-xs rounded-full flex items-center gap-1">
+                        <span key={`s-${i}`} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs rounded-full flex items-center gap-1">
                           <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
                           </svg>
