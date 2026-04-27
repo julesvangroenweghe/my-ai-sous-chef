@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Get chef profile first (chef_id in kitchen_members = chef_profiles.id, NOT auth.users.id)
     const { data: chefProfile } = await supabase
       .from('chef_profiles')
-      .select('id, style_analysis, taste_preferences, cooking_techniques, specializations, kitchen_type')
+      .select('id, style_analysis, style_tags, preferred_techniques, preferred_cuisines, preferred_ingredients, avoided_ingredients, cuisine_styles, cuisine_specialties, cooking_philosophy, kitchen_type, experience_level, years_experience')
       .eq('auth_user_id', user.id)
       .single()
 
