@@ -50,6 +50,11 @@ interface MepData {
     total_food_cost: number
     food_cost_percentage: number
   }
+  allergens?: Array<{
+    eu_number: number
+    name_nl: string
+    severity: string
+  }>
 }
 
 // ─── Category sort order ──────────────────────────────────────────────────────
@@ -371,6 +376,58 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Helvetica-Bold',
   },
+
+  // Allergen footer
+  allergenSection: {
+    marginTop: 10,
+    paddingTop: 6,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.gray200,
+  },
+  allergenTitle: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.gray600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  allergenRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 4,
+  },
+  allergenBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 2,
+    backgroundColor: colors.amberLight,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 3,
+  },
+  allergenNumber: {
+    fontSize: 6.5,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.amberDark,
+  },
+  allergenName: {
+    fontSize: 6.5,
+    color: colors.amberDark,
+  },
+  allergenMayContainBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 2,
+    backgroundColor: colors.gray100,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 3,
+  },
+  allergenMayContainText: {
+    fontSize: 6.5,
+    color: colors.gray600,
+  },
   generatedAt: {
     fontSize: 6,
     color: colors.gray400,
@@ -617,6 +674,29 @@ export function MepPdfDocument({ data }: { data: MepData }) {
                 </Text>
               </View>
             )}
+          </View>
+        )}
+
+
+        {/* ── Allergen Legend ── */}
+        {data.allergens && data.allergens.length > 0 && (
+          <View style={styles.allergenSection}>
+            <Text style={styles.allergenTitle}>Allergenen</Text>
+            <View style={styles.allergenRow}>
+              {data.allergens
+                .sort((a, b) => a.eu_number - b.eu_number)
+                .map((al, idx) => (
+                <View key={idx} style={al.severity === 'contains' ? styles.allergenBadge : styles.allergenMayContainBadge}>
+                  <Text style={al.severity === 'contains' ? styles.allergenNumber : styles.allergenMayContainText}>
+                    {al.eu_number}
+                  </Text>
+                  <Text style={al.severity === 'contains' ? styles.allergenName : styles.allergenMayContainText}>
+                    {al.name_nl}
+                    {al.severity !== 'contains' ? ` (${al.severity === 'may_contain' ? 'kan bevatten' : 'sporen'})` : ''}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
 

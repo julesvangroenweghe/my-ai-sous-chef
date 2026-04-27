@@ -12,6 +12,7 @@ import {
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
 import { MepOcrImporter } from '@/components/mep/mep-ocr-importer'
+import { EventAllergenSection } from '@/components/allergens/event-allergen-section'
 
 interface EventDetail {
  id: string
@@ -430,6 +431,9 @@ export default function EventDetailPage() {
      )}
    </div>
  )}
+
+ {/* Allergen Overview */}
+ <EventAllergenSection eventId={eventId} />
 
  {/* Notes */}
  {event.notes && (
