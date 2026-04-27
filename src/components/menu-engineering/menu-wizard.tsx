@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Loader2, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { Loader2, Check, ChevronDown, ChevronUp, Wine, GlassWater, Utensils, Users, UtensilsCrossed, Crown, Flame, Coffee, Sun, LayoutGrid } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKitchen } from '@/providers/kitchen-provider'
 import PushLevelSelector from './push-level-selector'
@@ -93,6 +93,28 @@ const COURSE_OPTIONS = [
   { value: 'MIGNARDISES', label: 'Mignardises' },
 ]
 
+const BBQ_COURSE_OPTIONS = [
+  { value: 'BBQ_HAPJES', label: 'Hapjes v/h rooster' },
+  { value: 'BBQ_VLEES', label: 'Gegrild vlees' },
+  { value: 'BBQ_VIS', label: 'Gegrilde vis & zee' },
+  { value: 'BBQ_SALADES', label: 'Koude salades & dips' },
+  { value: 'BBQ_BIJGERECHTEN', label: 'Bijgerechten & brood' },
+  { value: 'DESSERT', label: 'Dessert' },
+]
+
+const FORMAT_ICONS: Record<string, React.ElementType> = {
+  aperitief: Wine,
+  cocktail: GlassWater,
+  cocktail_dinatoire: Utensils,
+  walking_dinner: Users,
+  sit_down_3course: UtensilsCrossed,
+  gala_dinner: Crown,
+  bbq_buffet: Flame,
+  high_tea: Coffee,
+  brunch_garden: Sun,
+  lunch_buffet: LayoutGrid,
+}
+
 const STYLE_OPTIONS = ['Modern', 'Seizoensgebonden', 'Klassiek', 'Fusion']
 
 const SEASON_OPTIONS = [
@@ -165,8 +187,8 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
   // Step 2
   const [selectedCourses, setSelectedCourses] = useState<string[]>(briefCourses)
   // Auto-switch courses when BBQ buffet is selected
-  const prevMenuTypeRef = React.useRef(menuType)
-  React.useEffect(() => {
+  const prevMenuTypeRef = useRef(menuType)
+  useEffect(() => {
     if (prevMenuTypeRef.current !== menuType) {
       prevMenuTypeRef.current = menuType
       if (menuType === 'bbq_buffet') {
@@ -186,6 +208,28 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
   const [genError, setGenError] = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any>(null)
+
+  // Catering formats from DB
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [formats, setFormats] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedFormat, setSelectedFormat] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/catering-scenarios')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setFormats(data) })
+      .catch(() => {})
+  }, [])
+
+  // When menuType changes, sync selectedFormat
+  useEffect(() => {
+    if (formats.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const found = formats.find((f: any) => f.format_type === menuType)
+      setSelectedFormat(found || null)
+    }
+  }, [menuType, formats])
 
   const menuTypes = MENU_TYPES_BY_KITCHEN[kitchenType || ''] || DEFAULT_MENU_TYPES
   const maxFoodCost = ((pricePerPerson * foodCostTarget) / 100).toFixed(2)
@@ -389,20 +433,74 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
                   </div>
                 </div>
 
-                {/* Menu type */}
-                <div className="space-y-1.5">
-                  <label className="text-xs text-[#9E7E60] font-medium">Menu type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {menuTypes.map(t => (
-                      <button key={t.value} onClick={() => setMenuType(t.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                          menuType === t.value ? 'border-amber-500/40 text-amber-700' : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
-                        }`}
-                        style={menuType === t.value ? { backgroundColor: 'rgba(232,160,64,0.15)' } : {}}
-                      >{t.label}</button>
-                    ))}
+                {/* Menu type / Catering format */}
+                {kitchenType === 'catering' && formats.length > 0 ? (
+                  <div className="space-y-2">
+                    <label className="text-xs text-[#9E7E60] font-medium">Cateringformat</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {formats.map((f: any) => {
+                        const Icon = FORMAT_ICONS[f.format_type] || Utensils
+                        const isSelected = menuType === f.format_type
+                        return (
+                          <button
+                            key={f.format_type}
+                            onClick={() => setMenuType(f.format_type)}
+                            className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left border transition-all ${
+                              isSelected
+                                ? 'border-[#E8A040]/60 bg-[#FEF3E2]'
+                                : 'bg-white border-[#E8D5B5] hover:border-[#D4B896]'
+                            }`}
+                          >
+                            <Icon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#E8A040]' : 'text-[#B8997A]'}`} />
+                            <span className={`text-xs font-medium truncate ${isSelected ? 'text-[#2C1810]' : 'text-[#5C4730]'}`}>
+                              {f.format_label_nl}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {selectedFormat && selectedFormat.courses && (
+                      <div className="p-3 bg-[#FEF3E2] rounded-lg border border-[#E8D5B5]">
+                        <h4 className="text-xs font-semibold text-[#2C1810] mb-1.5">Gangstructuur</h4>
+                        <div className="space-y-0.5">
+                          {(selectedFormat.courses as any[]).map((course: any, i: number) => (
+                            <div key={i} className="flex items-start gap-1.5 text-xs text-[#9E7E60]">
+                              <span className="text-[#E8A040]">&#8250;</span>
+                              <div>
+                                <span className="font-medium text-[#2C1810]">{course.name_nl}</span>
+                                {course.items_pp_min !== undefined && (
+                                  <span className="ml-1">&#183; {course.items_pp_min}-{course.items_pp_max} pp</span>
+                                )}
+                                {course.weight_pp_min_g && (
+                                  <span className="ml-1">&#183; {course.weight_pp_min_g}-{course.weight_pp_max_g}g</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedFormat.items_per_person_min && (
+                          <p className="mt-1.5 text-xs text-[#C4703A] font-medium">
+                            Totaal: {selectedFormat.items_per_person_min}-{selectedFormat.items_per_person_max} {selectedFormat.items_unit} pp
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-[#9E7E60] font-medium">Menu type</label>
+                    <div className="flex flex-wrap gap-2">
+                      {menuTypes.map(t => (
+                        <button key={t.value} onClick={() => setMenuType(t.value)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                            menuType === t.value ? 'border-amber-500/40 text-amber-700' : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
+                          }`}
+                          style={menuType === t.value ? { backgroundColor: 'rgba(232,160,64,0.15)' } : {}}
+                        >{t.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Gangen */}
                 <div className="space-y-1.5">
@@ -543,25 +641,93 @@ export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWi
           >
             <h2 className="text-lg font-display font-semibold text-[#2C1810]">Basisgegevens</h2>
 
-            <div className="space-y-2">
-              <label className="text-xs text-[#9E7E60] font-medium">Menu type</label>
-              <div className="flex flex-wrap gap-2">
-                {menuTypes.map(t => (
-                  <button
-                    key={t.value}
-                    onClick={() => setMenuType(t.value)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                      menuType === t.value
-                        ? 'border-amber-500/40 text-amber-300'
-                        : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
-                    }`}
-                    style={menuType === t.value ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+            {/* Menu type / Format selector */}
+            {kitchenType === 'catering' && formats.length > 0 ? (
+              <div className="space-y-3">
+                <label className="text-xs text-[#9E7E60] font-medium">Cateringformat</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {formats.map((f: any) => {
+                    const Icon = FORMAT_ICONS[f.format_type] || Utensils
+                    const isSelected = menuType === f.format_type
+                    return (
+                      <button
+                        key={f.format_type}
+                        onClick={() => setMenuType(f.format_type)}
+                        className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl text-left border transition-all ${
+                          isSelected
+                            ? 'border-[#E8A040]/60 bg-[#FEF3E2]'
+                            : 'bg-white border-[#E8D5B5] hover:border-[#D4B896]'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isSelected ? 'text-[#E8A040]' : 'text-[#B8997A]'}`} />
+                        <div className="min-w-0">
+                          <div className={`text-xs font-semibold truncate ${isSelected ? 'text-[#2C1810]' : 'text-[#5C4730]'}`}>
+                            {f.format_label_nl}
+                          </div>
+                          {f.items_per_person_min && (
+                            <div className="text-[10px] text-[#9E7E60] truncate">
+                              {f.items_per_person_min}-{f.items_per_person_max} {f.items_unit} pp
+                            </div>
+                          )}
+                          <div className="text-[10px] text-[#B8997A]">
+                            {f.typical_duration_min}-{f.typical_duration_max} min
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Gangstructuur preview */}
+                {selectedFormat && selectedFormat.courses && (
+                  <div className="mt-2 p-4 bg-[#FEF3E2] rounded-lg border border-[#E8D5B5]">
+                    <h4 className="text-sm font-semibold text-[#2C1810] mb-2">Gangstructuur</h4>
+                    <div className="space-y-1">
+                      {(selectedFormat.courses as any[]).map((course: any, i: number) => (
+                        <div key={i} className="flex items-start gap-2 text-xs text-[#9E7E60]">
+                          <span className="text-[#E8A040] mt-0.5">&#8250;</span>
+                          <div>
+                            <span className="font-medium text-[#2C1810]">{course.name_nl}</span>
+                            {course.items_pp_min !== undefined && (
+                              <span className="ml-1">&#183; {course.items_pp_min}-{course.items_pp_max} pp</span>
+                            )}
+                            {course.weight_pp_min_g && (
+                              <span className="ml-1">&#183; {course.weight_pp_min_g}-{course.weight_pp_max_g}g pp</span>
+                            )}
+                            {course.notes && <span className="ml-1 italic">({course.notes})</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedFormat.items_per_person_min && (
+                      <p className="mt-2 text-xs text-[#C4703A] font-medium">
+                        Totaal: {selectedFormat.items_per_person_min}-{selectedFormat.items_per_person_max} {selectedFormat.items_unit} per persoon
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-xs text-[#9E7E60] font-medium">Menu type</label>
+                <div className="flex flex-wrap gap-2">
+                  {menuTypes.map(t => (
+                    <button
+                      key={t.value}
+                      onClick={() => setMenuType(t.value)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
+                        menuType === t.value
+                          ? 'border-amber-500/40 text-amber-300'
+                          : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
+                      }`}
+                      style={menuType === t.value ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

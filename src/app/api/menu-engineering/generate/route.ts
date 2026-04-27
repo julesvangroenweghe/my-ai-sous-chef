@@ -38,6 +38,62 @@ const COURSE_TO_CLASSICAL: Record<string, string[]> = {
   BBQ_BIJGERECHTEN: ['vegetables', 'general'],
 }
 
+function buildScenarioContext(scenario: any): string {
+  if (!scenario) return ''
+
+  const courses = scenario.courses as any[]
+  const rules = scenario.service_rules as string[]
+  const tempRules = scenario.temperature_rules as string[]
+  const satiation = scenario.satiation_curve as any[]
+
+  let ctx = `\n## CATERING SCENARIO: ${scenario.format_label_nl}\n`
+  ctx += `Duratie: ${scenario.typical_duration_min}-${scenario.typical_duration_max} min\n`
+
+  if (scenario.items_per_person_min) {
+    ctx += `Portienorm: ${scenario.items_per_person_min}-${scenario.items_per_person_max} ${scenario.items_unit} per persoon\n`
+  }
+
+  if (satiation?.length > 0) {
+    ctx += `\nVerzadigingscurve (richtlijn per uur):\n`
+    satiation.forEach((s: any) => {
+      if (s.hour) ctx += `- Uur ${s.hour}: ca. ${s.items} items\n`
+      if (s.hour_part) ctx += `- ${s.hour_part}: ca. ${s.items} items\n`
+    })
+  }
+
+  if (courses?.length > 0) {
+    ctx += `\nGangstructuur (VERPLICHT volgen):\n`
+    courses.forEach((c: any) => {
+      const min = c.items_pp_min !== undefined ? c.items_pp_min : (c.weight_pp_min_g ? `${c.weight_pp_min_g}g` : '?')
+      const max = c.items_pp_max !== undefined ? c.items_pp_max : (c.weight_pp_max_g ? `${c.weight_pp_max_g}g` : '?')
+      ctx += `- ${c.name_nl}: ${min}-${max} pp | ${c.hot_cold} | ${c.passing_plated}\n`
+      if (c.notes) ctx += `  > ${c.notes}\n`
+    })
+  }
+
+  if (rules?.length > 0) {
+    ctx += `\nService regels (ALTIJD respecteren):\n`
+    rules.forEach(r => ctx += `- ${r}\n`)
+  }
+
+  if (tempRules?.length > 0) {
+    ctx += `\nTemperatuurregels:\n`
+    tempRules.forEach(r => ctx += `- ${r}\n`)
+  }
+
+  const foodCostRange = scenario.food_cost_pp_min
+    ? `\u20ac${scenario.food_cost_pp_min}-${scenario.food_cost_pp_max} food cost pp (Belgische markt)`
+    : null
+  if (foodCostRange) ctx += `\nFood cost benchmark: ${foodCostRange}\n`
+
+  const staffing = scenario.cooks_per_50_guests
+    ? `${scenario.cooks_per_50_guests} koks per 50 gasten, ${scenario.service_per_50_guests} bediening per 50 gasten`
+    : null
+  if (staffing) ctx += `Personeel richtlijn: ${staffing}\n`
+
+  return ctx
+}
+
 function callAnthropic(systemPrompt: string, userPrompt: string, maxTokens = 4096) {
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -101,6 +157,18 @@ export async function POST(request: NextRequest) {
       event_id,
       style = 'Modern',
     } = body
+
+    // Fetch catering scenario data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let scenarioData: any = null
+    if (menu_type) {
+      const { data: scenario } = await supabase
+        .from('catering_scenarios')
+        .select('*')
+        .eq('format_type', menu_type)
+        .single()
+      scenarioData = scenario
+    }
 
     // Get chef profile first (chef_id in kitchen_members = chef_profiles.id, NOT auth.users.id)
     const { data: chefProfile } = await supabase
@@ -224,7 +292,7 @@ export async function POST(request: NextRequest) {
 
 
     // SIR 3.0 — Jules' huidige stijlgerechten (meest recente werkdocument)
-    const sir3Dishes = \`
+    const sir3Dishes = `
 Witte asperge Miso gebrand
   → creme dooier, geraspte dooier, jus gefermenteerde asperge, gerookte crunch, daslook olie
 
@@ -233,10 +301,10 @@ Rundstartaar
 
 Zeeuwse mossel
   → creme ui, foreleitjes, gepekelde gebrande zilverui in lavas olie
-\`
+`
 
     // Jules' vaste handtekening-elementen — komen terug in zijn DNA
-    const julesDNA = \`
+    const julesDNA = `
 VASTE SMAAKELEMENTEN:
 - Lavas: gebruikt als olie, in gribiche, of als aromaat — kenmerkend
 - Dashi: als jus-basis, beurre blanc of bouillon
@@ -266,7 +334,7 @@ PRESENTATIE-DNA:
 - Geen drukke borden — élément heeft een rol
 - Koud of lauw (niet warm) voor verfijning
 - Seizoensgroenten zijn altijd startpunt
-\`
+`
 
     // Preparations list
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -329,12 +397,14 @@ REGELS:
 5. Seizoensproducten zijn startpunt, niet bijzaak
 6. Geef ALLEEN JSON terug, geen uitleg.`
 
+    const scenarioContext = buildScenarioContext(scenarioData)
+
     const generatorPrompt = `CHEF PROFIEL:
 - Naam: ${chef?.display_name || 'Chef'}
 - Keukentype: ${kitchenType}
 ${styleInfo}
 ${rulesetContext}
-
+${scenarioContext}
 EIGEN RECEPTEN (${ownRecipes.length}):
 ${recipesList || '(geen)'}
 
