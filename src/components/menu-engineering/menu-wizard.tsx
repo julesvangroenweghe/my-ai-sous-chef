@@ -1,11 +1,43 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Check } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Loader2, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKitchen } from '@/providers/kitchen-provider'
 import PushLevelSelector from './push-level-selector'
 import MenuResult from './menu-result'
+
+interface PricingConfig {
+  target_food_cost_pct: number
+  staff_chef_cost_pp: number
+  staff_service_cost_pp: number
+  staff_commis_cost_pp: number
+  staff_extra_cost_pp: number
+  mobile_kitchen_included: boolean
+  mobile_kitchen_cost_pp: number
+  transport_cost_pp: number
+  equipment_rental_cost_pp: number
+  overhead_cost_pp: number
+  commission_venue_pct: number
+  commission_agent_pct: number
+  commission_platform_pct: number
+  custom_costs: Array<{ id: string; name: string; type: 'fixed_pp' | 'pct_revenue'; value: number; category: string }>
+  target_margin_pct: number
+  vat_pct: number
+}
+
+function calcSuggestedPrice(config: PricingConfig, foodCostPp: number) {
+  const staff_pp = (config.staff_chef_cost_pp||0) + (config.staff_service_cost_pp||0) + (config.staff_commis_cost_pp||0) + (config.staff_extra_cost_pp||0)
+  const equipment_pp = (config.mobile_kitchen_included ? (config.mobile_kitchen_cost_pp||0) : 0) + (config.transport_cost_pp||0) + (config.equipment_rental_cost_pp||0)
+  const overhead_pp = config.overhead_cost_pp || 0
+  const custom_fixed_pp = (config.custom_costs||[]).filter(c => c.type === 'fixed_pp').reduce((s, c) => s + (c.value||0), 0)
+  const base_cost_pp = foodCostPp + staff_pp + equipment_pp + overhead_pp + custom_fixed_pp
+  const commission_pct = (config.commission_venue_pct||0) + (config.commission_agent_pct||0) + (config.commission_platform_pct||0) + (config.custom_costs||[]).filter(c => c.type === 'pct_revenue' && c.category === 'commission').reduce((s, c) => s + (c.value||0), 0)
+  const margin_pct = config.target_margin_pct || 20
+  const price_excl_vat = base_cost_pp / Math.max(0.01, 1 - margin_pct/100) / Math.max(0.01, 1 - commission_pct/100)
+  const price_incl_vat = price_excl_vat * (1 + (config.vat_pct||6)/100)
+  return { staff_pp, equipment_pp, overhead_pp, custom_fixed_pp, base_cost_pp, commission_pct, price_excl_vat, price_incl_vat }
+}
 
 const MENU_TYPES_BY_KITCHEN: Record<string, Array<{ value: string; label: string }>> = {
   restaurant: [
@@ -86,6 +118,10 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
   const [step, setStep] = useState(1)
   const [loadingPhase, setLoadingPhase] = useState(0)
 
+  // Pricing config
+  const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null)
+  const [showPricingBreakdown, setShowPricingBreakdown] = useState(false)
+
   // Step 1
   const [menuType, setMenuType] = useState('event')
   const [numPersons, setNumPersons] = useState(50)
@@ -108,6 +144,28 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
   const menuTypes = MENU_TYPES_BY_KITCHEN[kitchenType || ''] || DEFAULT_MENU_TYPES
   const maxFoodCost = ((pricePerPerson * foodCostTarget) / 100).toFixed(2)
+
+  // Load pricing config
+  const loadPricingConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/kitchen/pricing-config')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.config) {
+          setPricingConfig(data.config)
+          // Sync food cost target from config
+          if (data.config.target_food_cost_pct) setFoodCostTarget(data.config.target_food_cost_pct)
+        }
+      }
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { loadPricingConfig() }, [loadPricingConfig])
+
+  // Compute suggested price from pricing config
+  const pricingPreview = pricingConfig
+    ? calcSuggestedPrice(pricingConfig, (pricePerPerson * foodCostTarget) / 100)
+    : null
 
   useEffect(() => {
     if (!generating) return
@@ -312,6 +370,86 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                 {SEASON_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
+
+            {/* Pricing breakdown (only when config is loaded) */}
+            {pricingConfig && pricingPreview && (
+              <div className="border border-[#E8D5B5] rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowPricingBreakdown(o => !o)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#FEF9F2] hover:bg-[#FEF3E2] transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <svg width="15" height="15" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    <span className="text-sm font-semibold text-[#2C1810]">Volledige kostprijsberekening</span>
+                    <span className="text-xs text-[#9E7E60]">— geschatte verkoopprijs: <strong className="text-amber-700">€{pricingPreview.price_excl_vat.toFixed(2)} excl. BTW</strong></span>
+                  </div>
+                  {showPricingBreakdown
+                    ? <ChevronUp size={15} className="text-[#9E7E60]" />
+                    : <ChevronDown size={15} className="text-[#9E7E60]" />}
+                </button>
+                {showPricingBreakdown && (
+                  <div className="p-4 bg-white space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
+                      <div className="flex justify-between col-span-2 text-xs text-[#9E7E60] uppercase tracking-wide font-semibold pb-1 border-b border-[#F0E4CC]">
+                        <span>Kostentype</span><span>Per persoon</span>
+                      </div>
+                      <div className="flex justify-between col-span-2">
+                        <span className="text-[#5C4730]">Ingrediënten (food cost {foodCostTarget}%)</span>
+                        <span className="font-medium text-[#2C1810]">€{((pricePerPerson * foodCostTarget) / 100).toFixed(2)}</span>
+                      </div>
+                      {pricingPreview.staff_pp > 0 && (
+                        <div className="flex justify-between col-span-2">
+                          <span className="text-[#5C4730]">Personeel</span>
+                          <span className="font-medium text-[#2C1810]">€{pricingPreview.staff_pp.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {pricingPreview.equipment_pp > 0 && (
+                        <div className="flex justify-between col-span-2">
+                          <span className="text-[#5C4730]">Materiaal & logistiek</span>
+                          <span className="font-medium text-[#2C1810]">€{pricingPreview.equipment_pp.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {pricingPreview.overhead_pp > 0 && (
+                        <div className="flex justify-between col-span-2">
+                          <span className="text-[#5C4730]">Overhead</span>
+                          <span className="font-medium text-[#2C1810]">€{pricingPreview.overhead_pp.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between col-span-2 font-semibold border-t border-[#F0E4CC] pt-1.5 mt-0.5">
+                        <span className="text-[#2C1810]">Totale kostprijs</span>
+                        <span className="text-[#2C1810]">€{pricingPreview.base_cost_pp.toFixed(2)}</span>
+                      </div>
+                      {pricingPreview.commission_pct > 0 && (
+                        <div className="flex justify-between col-span-2 text-xs text-[#9E7E60]">
+                          <span>Commissies ({pricingPreview.commission_pct.toFixed(1)}%) + winstmarge ({pricingConfig.target_margin_pct}%)</span>
+                          <span></span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2 border border-amber-200 mt-2">
+                      <div>
+                        <div className="font-bold text-amber-800">€{pricingPreview.price_excl_vat.toFixed(2)} <span className="font-normal text-xs">excl. BTW</span></div>
+                        <div className="text-xs text-amber-700">€{pricingPreview.price_incl_vat.toFixed(2)} incl. {pricingConfig.vat_pct}% BTW</div>
+                      </div>
+                      <button
+                        onClick={() => setPricePerPerson(Math.ceil(pricingPreview.price_excl_vat))}
+                        className="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+                      >
+                        Gebruik deze prijs
+                      </button>
+                    </div>
+                    <p className="text-xs text-[#9E7E60]">
+                      Instellingen aanpassen?{' '}
+                      <a href="/instellingen/prijsberekening" className="text-amber-600 underline">Prijsberekening instellingen</a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end">
               <button

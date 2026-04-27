@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import PricingConfigPanel from "@/components/menu-engineering/pricing-config-panel";
 import { 
  Settings, Users, CreditCard, Building, ChefHat, Check,
  UtensilsCrossed, Store, CalendarDays, Truck, Building2,
@@ -148,6 +149,25 @@ export default function SettingsPage() {
  </div>
 
  <div className="grid gap-6">
+ {/* Prijsberekening */}
+ <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
+   <CardHeader>
+     <CardTitle className="flex items-center gap-2 text-[#2C1810]">
+       <svg width="18" height="18" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24">
+         <line x1="12" y1="1" x2="12" y2="23"/>
+         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+       </svg>
+       Prijsberekening
+     </CardTitle>
+     <CardDescription className="text-[#9E7E60]">
+       Personeel, overhead, commissies en BTW — de app berekent automatisch je verkoopprijs per persoon in Menu Engineering.
+     </CardDescription>
+   </CardHeader>
+   <CardContent>
+     <PricingConfigPanel compact />
+   </CardContent>
+ </Card>
+
  {/* Keuken Modus Selector */}
  <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
  <CardHeader>
