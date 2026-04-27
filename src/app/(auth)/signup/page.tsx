@@ -44,7 +44,7 @@ export default function SignupPage() {
  <ChefHat className="h-8 w-8 text-brand-400" />
  </div>
  <h1 className="text-2xl font-display font-bold text-white">Word lid van de keuken</h1>
- <p className="text-stone-400 mt-1">Maak je chef-profiel aan</p>
+ <p className="text-[#9E7E60] mt-1">Maak je chef-profiel aan</p>
  </div>
 
  <div className="bg-white rounded-2xl shadow-diffusion-lg p-8">
@@ -52,7 +52,7 @@ export default function SignupPage() {
  <div className="text-center py-4">
  <Mail className="h-12 w-12 text-brand-500 mx-auto mb-4" />
  <h2 className="text-lg font-semibold font-display">Controleer je e-mail</h2>
- <p className="text-stone-500 mt-2">
+ <p className="text-[#B8997A] mt-2">
  We hebben een bevestigingslink gestuurd naar <strong className="text-stone-900">{email}</strong>
  </p>
  </div>
@@ -67,7 +67,7 @@ export default function SignupPage() {
  <div className="space-y-2">
  <label className="text-sm font-medium text-stone-700" htmlFor="name">Chef naam</label>
  <div className="relative">
- <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+ <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9E7E60]" />
  <input
  id="name"
  type="text"
@@ -83,7 +83,7 @@ export default function SignupPage() {
  <div className="space-y-2">
  <label className="text-sm font-medium text-stone-700" htmlFor="email">E-mail</label>
  <div className="relative">
- <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+ <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9E7E60]" />
  <input
  id="email"
  type="email"
@@ -99,7 +99,7 @@ export default function SignupPage() {
  <div className="space-y-2">
  <label className="text-sm font-medium text-stone-700" htmlFor="password">Wachtwoord</label>
  <div className="relative">
- <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+ <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9E7E60]" />
  <input
  id="password"
  type="password"
@@ -124,7 +124,7 @@ export default function SignupPage() {
  </form>
  )}
 
- <p className="text-center text-sm text-stone-500 mt-6">
+ <p className="text-center text-sm text-[#B8997A] mt-6">
  Heb je al een account?{' '}
  <Link href="/login" className="text-brand-600 hover:text-brand-700 hover:underline font-medium">
  Inloggen

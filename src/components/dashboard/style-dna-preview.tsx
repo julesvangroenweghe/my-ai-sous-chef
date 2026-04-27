@@ -74,7 +74,7 @@ export function StyleDnaPreview() {
         <h3 className="font-display font-semibold text-stone-900 group-hover:text-[#E8A040] transition-colors">
           Stijl-DNA
         </h3>
-        <p className="text-xs text-stone-400 mt-0.5 mb-4">
+        <p className="text-xs text-[#9E7E60] mt-0.5 mb-4">
           Ontdek je culinaire identiteit
         </p>
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-stone-200 group-hover:border-[#E8A040]/30 transition-colors">
@@ -82,7 +82,7 @@ export function StyleDnaPreview() {
             <path d="M10 2C10 2 4 6 4 10C4 14 7 18 10 18C13 18 16 14 16 10C16 6 10 2 10 2Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M10 2V18" stroke="currentColor" strokeWidth="1.2" />
           </svg>
-          <span className="text-sm font-medium text-stone-500 group-hover:text-stone-700 transition-colors">
+          <span className="text-sm font-medium text-[#B8997A] group-hover:text-stone-700 transition-colors">
             Start je stijlprofiel
           </span>
         </div>
@@ -97,9 +97,9 @@ export function StyleDnaPreview() {
           <h3 className="font-display font-semibold text-stone-900 group-hover:text-[#E8A040] transition-colors">
             Stijl-DNA
           </h3>
-          <p className="text-xs text-stone-400 mt-0.5">Je culinaire identiteit</p>
+          <p className="text-xs text-[#9E7E60] mt-0.5">Je culinaire identiteit</p>
         </div>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-stone-300 group-hover:text-[#E8A040] transition-colors">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-[#5C4730] group-hover:text-[#E8A040] transition-colors">
           <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
@@ -109,7 +109,7 @@ export function StyleDnaPreview() {
         {data.keywords.map((keyword) => (
           <span
             key={keyword}
-            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-600"
+            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-[#5C4730]"
           >
             {keyword}
           </span>
@@ -117,7 +117,7 @@ export function StyleDnaPreview() {
       </div>
 
       {/* LEGENDE match count */}
-      <div className="flex items-center gap-2 text-xs text-stone-400">
+      <div className="flex items-center gap-2 text-xs text-[#9E7E60]">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#E8A040]">
           <path d="M7 1L8.8 4.6L13 5.2L10 8L10.6 13L7 11L3.4 13L4 8L1 5.2L5.2 4.6L7 1Z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

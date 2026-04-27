@@ -58,8 +58,8 @@ const SOURCE_LABELS: Record<string, { label: string; className: string }> = {
   own_recipe: { label: 'Eigen recept', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
   legende: { label: 'LEGENDE', className: 'bg-violet-500/20 text-violet-300 border border-violet-500/30' },
   classical: { label: 'Klassiek', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  ai_generated: { label: 'AI voorstel', className: 'bg-stone-700 text-stone-300 border border-stone-600' },
-  new: { label: 'Nieuw', className: 'bg-stone-700 text-stone-300 border border-stone-600' },
+  ai_generated: { label: 'AI voorstel', className: 'bg-[#FDF8F2] text-[#5C4730] border border-[#D4B896]' },
+  new: { label: 'Nieuw', className: 'bg-[#FDF8F2] text-[#5C4730] border border-[#D4B896]' },
 }
 
 function ScoreBadge({ score }: { score: number }) {
@@ -97,49 +97,49 @@ export default function MenuResult({
     <div className="space-y-4">
       {/* Score + Summary Row */}
       <div className="grid grid-cols-4 gap-3">
-        <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4 flex flex-col items-center justify-center">
-          <div className="text-xs text-stone-500 mb-2">Audit Score</div>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4 flex flex-col items-center justify-center">
+          <div className="text-xs text-[#B8997A] mb-2">Audit Score</div>
           <ScoreBadge score={audit.overall_score || 0} />
         </div>
-        <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-          <div className="text-xs text-stone-500 mb-1">Food Cost / persoon</div>
-          <div className="text-lg font-mono font-bold text-stone-200">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+          <div className="text-xs text-[#B8997A] mb-1">Food Cost / persoon</div>
+          <div className="text-lg font-mono font-bold text-[#3D2810]">
             EUR {totalCostPp.toFixed(2)}
           </div>
         </div>
-        <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-          <div className="text-xs text-stone-500 mb-1">Food Cost %</div>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+          <div className="text-xs text-[#B8997A] mb-1">Food Cost %</div>
           <div className={`text-lg font-mono font-bold ${totalFoodCostPct <= foodCostTarget ? 'text-emerald-400' : 'text-amber-400'}`}>
             {totalFoodCostPct.toFixed(1)}%
           </div>
         </div>
-        <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-          <div className="text-xs text-stone-500 mb-1">Target</div>
-          <div className="text-lg font-mono font-bold text-stone-400">{foodCostTarget}%</div>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+          <div className="text-xs text-[#B8997A] mb-1">Target</div>
+          <div className="text-lg font-mono font-bold text-[#9E7E60]">{foodCostTarget}%</div>
         </div>
       </div>
 
       {/* Audit Radar */}
       {audit.dimensions && Object.keys(audit.dimensions).length > 0 && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6">
           <button
             onClick={() => setShowAuditDetail(!showAuditDetail)}
             className="w-full flex items-center justify-between mb-4"
           >
-            <h3 className="text-sm font-semibold text-stone-200">Culinaire Audit</h3>
-            {showAuditDetail ? <ChevronUp className="w-4 h-4 text-stone-500" /> : <ChevronDown className="w-4 h-4 text-stone-500" />}
+            <h3 className="text-sm font-semibold text-[#3D2810]">Culinaire Audit</h3>
+            {showAuditDetail ? <ChevronUp className="w-4 h-4 text-[#B8997A]" /> : <ChevronDown className="w-4 h-4 text-[#B8997A]" />}
           </button>
           <AuditRadar dimensions={audit.dimensions} />
           {showAuditDetail && (
             <div className="mt-4 space-y-2">
               {Object.entries(audit.dimensions).map(([key, dim]) => (
                 <div key={key} className="flex items-start gap-3 text-xs">
-                  <div className="w-20 shrink-0 text-stone-400 font-medium capitalize">
+                  <div className="w-20 shrink-0 text-[#9E7E60] font-medium capitalize">
                     {key.replace(/_/g, ' ')}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <div className="w-16 h-1.5 bg-stone-800 rounded-full overflow-hidden">
+                      <div className="w-16 h-1.5 bg-white rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -148,23 +148,23 @@ export default function MenuResult({
                           }}
                         />
                       </div>
-                      <span className="text-stone-300 font-mono">{dim.score}/10</span>
+                      <span className="text-[#5C4730] font-mono">{dim.score}/10</span>
                     </div>
-                    {dim.opmerking && <p className="text-stone-500">{dim.opmerking}</p>}
+                    {dim.opmerking && <p className="text-[#B8997A]">{dim.opmerking}</p>}
                   </div>
                 </div>
               ))}
               {audit.overall_feedback && (
-                <div className="mt-3 pt-3 border-t border-stone-800">
-                  <p className="text-xs text-stone-400 leading-relaxed">{audit.overall_feedback}</p>
+                <div className="mt-3 pt-3 border-t border-[#E8D5B5]">
+                  <p className="text-xs text-[#9E7E60] leading-relaxed">{audit.overall_feedback}</p>
                 </div>
               )}
               {audit.top_improvements && audit.top_improvements.length > 0 && (
                 <div className="mt-2">
-                  <div className="text-xs font-medium text-stone-400 mb-1">Verbeterpunten:</div>
+                  <div className="text-xs font-medium text-[#9E7E60] mb-1">Verbeterpunten:</div>
                   <ul className="space-y-1">
                     {audit.top_improvements.map((imp, i) => (
-                      <li key={i} className="text-xs text-stone-500 flex items-start gap-1.5">
+                      <li key={i} className="text-xs text-[#B8997A] flex items-start gap-1.5">
                         <span className="text-amber-500 mt-0.5">--</span> {imp}
                       </li>
                     ))}
@@ -188,17 +188,17 @@ export default function MenuResult({
       )}
 
       {/* Menu Courses */}
-      <div className="bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between">
-          <h2 className="text-lg font-display font-semibold text-stone-100">
+      <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center justify-between">
+          <h2 className="text-lg font-display font-semibold text-[#2C1810]">
             {menu.menu_name || 'Gegenereerd menu'}
           </h2>
         </div>
-        <div className="divide-y divide-stone-800/50">
+        <div className="divide-y divide-[#E8D5B5]/50">
           {(menu.courses || []).map((course, ci) => (
             <div key={ci}>
-              <div className="px-6 py-3 bg-stone-800/30">
-                <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+              <div className="px-6 py-3 bg-white/30">
+                <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
                   {course.label || course.name}
                 </span>
               </div>
@@ -211,7 +211,7 @@ export default function MenuResult({
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-stone-100">{dish.name}</span>
+                          <span className="text-sm font-semibold text-[#2C1810]">{dish.name}</span>
                           {dish.source && SOURCE_LABELS[dish.source] && (
                             <span className={`px-2 py-0.5 text-xs rounded-full ${SOURCE_LABELS[dish.source].className}`}>
                               {SOURCE_LABELS[dish.source].label}
@@ -224,19 +224,19 @@ export default function MenuResult({
                           )}
                         </div>
                         {dish.description && (
-                          <p className="text-xs text-stone-400 mt-1 leading-relaxed">{dish.description}</p>
+                          <p className="text-xs text-[#9E7E60] mt-1 leading-relaxed">{dish.description}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {dish.cost_pp !== undefined && (
-                          <span className="text-sm font-mono font-bold text-stone-300">
+                          <span className="text-sm font-mono font-bold text-[#5C4730]">
                             EUR {Number(dish.cost_pp).toFixed(2)}/p
                           </span>
                         )}
                         {dishFeedback && (
                           <button
                             onClick={() => setExpandedDish(isExpanded ? null : dishKey)}
-                            className="p-1.5 rounded-lg border bg-stone-800 border-stone-700 text-stone-500 hover:text-stone-300 transition-all"
+                            className="p-1.5 rounded-lg border bg-white border-[#E8D5B5] text-[#B8997A] hover:text-[#5C4730] transition-all"
                           >
                             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
@@ -247,7 +247,7 @@ export default function MenuResult({
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1">
                       {(dish.key_ingredients || []).map((ing, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded-full">{ing}</span>
+                        <span key={i} className="px-2 py-0.5 bg-white text-[#9E7E60] text-xs rounded-full">{ing}</span>
                       ))}
                       {(dish.seasonal_ingredients || []).map((s, i) => (
                         <span key={`s-${i}`} className="px-2 py-0.5 bg-emerald-900/30 text-emerald-400 text-xs rounded-full flex items-center gap-1">
@@ -261,8 +261,8 @@ export default function MenuResult({
 
                     {/* Expanded audit feedback */}
                     {isExpanded && dishFeedback && (
-                      <div className="mt-2 p-3 bg-stone-800/50 border border-stone-700 rounded-xl space-y-1.5">
-                        <p className="text-xs text-stone-300">{dishFeedback.feedback}</p>
+                      <div className="mt-2 p-3 bg-[#FDF8F2]/80 border border-[#E8D5B5] rounded-xl space-y-1.5">
+                        <p className="text-xs text-[#5C4730]">{dishFeedback.feedback}</p>
                         {dishFeedback.improvement && (
                           <p className="text-xs text-amber-400">
                             <span className="font-medium">Suggestie:</span> {dishFeedback.improvement}
@@ -280,9 +280,9 @@ export default function MenuResult({
 
       {/* Arbiter notes */}
       {menu.arbiter_notes && (
-        <div className="p-3 bg-stone-800/50 border border-stone-700 rounded-xl">
-          <div className="text-xs font-medium text-stone-400 mb-1">Arbiter aanpassingen</div>
-          <p className="text-xs text-stone-500 leading-relaxed">{menu.arbiter_notes}</p>
+        <div className="p-3 bg-[#FDF8F2]/80 border border-[#E8D5B5] rounded-xl">
+          <div className="text-xs font-medium text-[#9E7E60] mb-1">Arbiter aanpassingen</div>
+          <p className="text-xs text-[#B8997A] leading-relaxed">{menu.arbiter_notes}</p>
         </div>
       )}
 
@@ -291,7 +291,7 @@ export default function MenuResult({
         <button
           onClick={onModify}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all disabled:opacity-50"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path d="M15 6l-6 6 6 6" />
@@ -301,7 +301,7 @@ export default function MenuResult({
         <button
           onClick={onRegenerate}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all disabled:opacity-50"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />

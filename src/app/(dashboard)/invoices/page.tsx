@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: string }) {
     pending: {
       icon: <Clock className="w-3 h-3" />,
       label: 'Wachtend',
-      classes: 'bg-stone-800/60 text-stone-300 border-stone-700',
+      classes: 'bg-white/80 text-[#5C4730] border-[#E8D5B5]',
     },
     processing: {
       icon: <Loader2 className="w-3 h-3 animate-spin" />,
@@ -140,7 +140,7 @@ function UploadZone({ onFileSelected, disabled }: { onFileSelected: (file: File)
       className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-200 ${
         dragActive
           ? 'border-amber-500 bg-amber-950/30'
-          : 'border-stone-700 bg-stone-900/30 hover:border-stone-600 hover:bg-stone-900/50'
+          : 'border-[#E8D5B5] bg-[#FDF8F2]/60 hover:border-[#D4B896] hover:bg-[#FDFAF6]/80'
       } ${disabled ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
       onClick={() => inputRef.current?.click()}
     >
@@ -152,16 +152,16 @@ function UploadZone({ onFileSelected, disabled }: { onFileSelected: (file: File)
         onChange={handleChange}
         disabled={disabled}
       />
-      <div className="w-14 h-14 bg-stone-800/80 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-stone-700">
+      <div className="w-14 h-14 bg-white/90 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#E8D5B5]">
         <Upload className="w-7 h-7 text-amber-500" />
       </div>
-      <p className="font-display text-base font-semibold text-stone-200 mb-1">
+      <p className="font-display text-base font-semibold text-[#3D2810] mb-1">
         Sleep een factuur hierheen
       </p>
-      <p className="text-stone-500 text-sm">
+      <p className="text-[#B8997A] text-sm">
         of klik om te selecteren
       </p>
-      <p className="text-stone-600 text-xs mt-3">
+      <p className="text-[#5C4730] text-xs mt-3">
         JPG, PNG, WEBP of PDF
       </p>
     </div>
@@ -187,24 +187,24 @@ function IngredientDropdown({
   ).slice(0, 15)
 
   return (
-    <div className="absolute z-50 top-full left-0 mt-1 w-72 bg-stone-800 border border-stone-700 rounded-xl shadow-xl overflow-hidden">
-      <div className="p-2 border-b border-stone-700">
+    <div className="absolute z-50 top-full left-0 mt-1 w-72 bg-white border border-[#E8D5B5] rounded-xl shadow-xl overflow-hidden">
+      <div className="p-2 border-b border-[#E8D5B5]">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-500" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#B8997A]" />
           <input
             autoFocus
             type="text"
             placeholder="Zoek ingrediënt..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 bg-stone-900 border border-stone-700 rounded-lg text-sm text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-600"
+            className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#3D2810] placeholder:text-[#B8997A] focus:outline-none focus:border-amber-600"
           />
         </div>
       </div>
       <div className="max-h-48 overflow-y-auto">
         <button
           onClick={() => { onSelect(null); onClose() }}
-          className="w-full text-left px-3 py-2 text-sm text-stone-400 hover:bg-stone-700/50 flex items-center gap-2"
+          className="w-full text-left px-3 py-2 text-sm text-[#9E7E60] hover:bg-[#FDF8F2]/70 flex items-center gap-2"
         >
           <X className="w-3 h-3" />
           Geen match
@@ -213,20 +213,20 @@ function IngredientDropdown({
           <button
             key={ing.id}
             onClick={() => { onSelect(ing); onClose() }}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-stone-700/50 flex items-center justify-between ${
-              ing.id === currentId ? 'bg-amber-900/20 text-amber-300' : 'text-stone-200'
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-[#FDF8F2]/70 flex items-center justify-between ${
+              ing.id === currentId ? 'bg-amber-900/20 text-amber-300' : 'text-[#3D2810]'
             }`}
           >
             <span className="truncate">{ing.name}</span>
             {ing.current_price != null && (
-              <span className="text-xs font-mono text-stone-500 shrink-0 ml-2">
+              <span className="text-xs font-mono text-[#B8997A] shrink-0 ml-2">
                 &euro;{ing.current_price.toFixed(2)}/{ing.unit || 'st'}
               </span>
             )}
           </button>
         ))}
         {filtered.length === 0 && (
-          <p className="px-3 py-4 text-xs text-stone-500 text-center">Geen ingrediënten gevonden</p>
+          <p className="px-3 py-4 text-xs text-[#B8997A] text-center">Geen ingrediënten gevonden</p>
         )}
       </div>
     </div>
@@ -331,26 +331,26 @@ function ReviewPanel({
       {/* Header info */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="text-xs font-medium text-stone-400 mb-1.5 block">Leverancier</label>
+          <label className="text-xs font-medium text-[#9E7E60] mb-1.5 block">Leverancier</label>
           <input
             type="text"
             value={supplierName}
             onChange={(e) => setLeverancierName(e.target.value)}
-            className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:outline-none focus:border-amber-600"
+            className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#3D2810] focus:outline-none focus:border-amber-600"
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-stone-400 mb-1.5 block">Factuurdatum</label>
+          <label className="text-xs font-medium text-[#9E7E60] mb-1.5 block">Factuurdatum</label>
           <input
             type="date"
             value={invoiceDate}
             onChange={(e) => setFactuurDate(e.target.value)}
-            className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:outline-none focus:border-amber-600"
+            className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#3D2810] focus:outline-none focus:border-amber-600"
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-stone-400 mb-1.5 block">Totaal</label>
-          <div className="px-3 py-2 bg-stone-800/50 border border-stone-700 rounded-lg text-sm font-mono font-semibold text-stone-200">
+          <label className="text-xs font-medium text-[#9E7E60] mb-1.5 block">Totaal</label>
+          <div className="px-3 py-2 bg-[#FDF8F2]/80 border border-[#E8D5B5] rounded-lg text-sm font-mono font-semibold text-[#3D2810]">
             &euro;{totalBedrag.toFixed(2)}
           </div>
         </div>
@@ -367,7 +367,7 @@ function ReviewPanel({
           {matchedCount}/{lineItems.length} gematcht
         </span>
         {ocr?.confidence != null && (
-          <span className="text-xs text-stone-500">
+          <span className="text-xs text-[#B8997A]">
             OCR zekerheid: {(ocr.confidence * 100).toFixed(0)}%
           </span>
         )}
@@ -377,18 +377,18 @@ function ReviewPanel({
       <div className="overflow-x-auto -mx-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-stone-700/50">
-              <th className="text-left text-xs font-medium text-stone-500 px-6 py-2">Product</th>
-              <th className="text-right text-xs font-medium text-stone-500 px-3 py-2 w-20">Aantal</th>
-              <th className="text-center text-xs font-medium text-stone-500 px-3 py-2 w-16">Eenheid</th>
-              <th className="text-right text-xs font-medium text-stone-500 px-3 py-2 w-24">Prijs/eenheid</th>
-              <th className="text-right text-xs font-medium text-stone-500 px-3 py-2 w-24">Totaal</th>
-              <th className="text-left text-xs font-medium text-stone-500 px-3 py-2 w-48">Match</th>
+            <tr className="border-b border-[#E8D5B5]/60">
+              <th className="text-left text-xs font-medium text-[#B8997A] px-6 py-2">Product</th>
+              <th className="text-right text-xs font-medium text-[#B8997A] px-3 py-2 w-20">Aantal</th>
+              <th className="text-center text-xs font-medium text-[#B8997A] px-3 py-2 w-16">Eenheid</th>
+              <th className="text-right text-xs font-medium text-[#B8997A] px-3 py-2 w-24">Prijs/eenheid</th>
+              <th className="text-right text-xs font-medium text-[#B8997A] px-3 py-2 w-24">Totaal</th>
+              <th className="text-left text-xs font-medium text-[#B8997A] px-3 py-2 w-48">Match</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-800/50">
+          <tbody className="divide-y divide-[#E8D5B5]/50">
             {lineItems.map((item, idx) => (
-              <tr key={item.id || idx} className="hover:bg-stone-800/30 group">
+              <tr key={item.id || idx} className="hover:bg-white/30 group">
                 {/* Product name */}
                 <td className="px-6 py-2.5">
                   {editingCell === `${idx}-product_name` ? (
@@ -399,15 +399,15 @@ function ReviewPanel({
                       onChange={(e) => setEditValue(e.target.value)}
                       onBlur={() => commitEdit(idx, 'product_name')}
                       onKeyDown={(e) => handleKeyDown(e, idx, 'product_name')}
-                      className="w-full px-2 py-0.5 bg-stone-900 border border-amber-600 rounded text-sm text-stone-200 focus:outline-none"
+                      className="w-full px-2 py-0.5 bg-white border border-amber-600 rounded text-sm text-[#3D2810] focus:outline-none"
                     />
                   ) : (
                     <button
                       onClick={() => startEdit(`${idx}-product_name`, item.product_name)}
-                      className="text-left text-stone-200 hover:text-amber-400 transition-colors flex items-center gap-1.5 group/edit"
+                      className="text-left text-[#3D2810] hover:text-amber-400 transition-colors flex items-center gap-1.5 group/edit"
                     >
                       <span>{item.product_name}</span>
-                      <Pencil className="w-3 h-3 text-stone-600 opacity-0 group-hover/edit:opacity-100 transition-opacity" />
+                      <Pencil className="w-3 h-3 text-[#5C4730] opacity-0 group-hover/edit:opacity-100 transition-opacity" />
                     </button>
                   )}
                 </td>
@@ -423,12 +423,12 @@ function ReviewPanel({
                       onChange={(e) => setEditValue(e.target.value)}
                       onBlur={() => commitEdit(idx, 'quantity')}
                       onKeyDown={(e) => handleKeyDown(e, idx, 'quantity')}
-                      className="w-full px-2 py-0.5 bg-stone-900 border border-amber-600 rounded text-sm text-right text-stone-200 focus:outline-none"
+                      className="w-full px-2 py-0.5 bg-white border border-amber-600 rounded text-sm text-right text-[#3D2810] focus:outline-none"
                     />
                   ) : (
                     <button
                       onClick={() => startEdit(`${idx}-quantity`, item.quantity)}
-                      className="font-mono text-stone-200 hover:text-amber-400 transition-colors"
+                      className="font-mono text-[#3D2810] hover:text-amber-400 transition-colors"
                     >
                       {item.quantity}
                     </button>
@@ -436,7 +436,7 @@ function ReviewPanel({
                 </td>
 
                 {/* Unit */}
-                <td className="text-center px-3 py-2.5 text-stone-400 text-xs">
+                <td className="text-center px-3 py-2.5 text-[#9E7E60] text-xs">
                   {item.unit}
                 </td>
 
@@ -452,12 +452,12 @@ function ReviewPanel({
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={() => commitEdit(idx, 'unit_price')}
                         onKeyDown={(e) => handleKeyDown(e, idx, 'unit_price')}
-                        className="w-full px-2 py-0.5 bg-stone-900 border border-amber-600 rounded text-sm text-right text-stone-200 focus:outline-none"
+                        className="w-full px-2 py-0.5 bg-white border border-amber-600 rounded text-sm text-right text-[#3D2810] focus:outline-none"
                       />
                     ) : (
                       <button
                         onClick={() => startEdit(`${idx}-unit_price`, item.unit_price)}
-                        className="font-mono text-stone-200 hover:text-amber-400 transition-colors"
+                        className="font-mono text-[#3D2810] hover:text-amber-400 transition-colors"
                       >
                         &euro;{item.unit_price.toFixed(2)}
                       </button>
@@ -467,7 +467,7 @@ function ReviewPanel({
                 </td>
 
                 {/* Total */}
-                <td className="text-right px-3 py-2.5 font-mono font-semibold text-stone-200">
+                <td className="text-right px-3 py-2.5 font-mono font-semibold text-[#3D2810]">
                   &euro;{item.total.toFixed(2)}
                 </td>
 
@@ -509,10 +509,10 @@ function ReviewPanel({
       </div>
 
       {/* Footer actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-stone-800">
+      <div className="flex items-center justify-between pt-2 border-t border-[#E8D5B5]">
         <button
           onClick={onClose}
-          className="px-4 py-2 text-sm text-stone-400 hover:text-stone-200 transition-colors"
+          className="px-4 py-2 text-sm text-[#9E7E60] hover:text-[#3D2810] transition-colors"
         >
           Annuleren
         </button>
@@ -526,7 +526,7 @@ function ReviewPanel({
             onConfirm(updatedFactuur, lineItems)
           }}
           disabled={confirming || matchedCount === 0}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-stone-700 disabled:text-stone-500 text-white font-medium text-sm rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-[#FDF8F2] disabled:text-[#B8997A] text-white font-medium text-sm rounded-xl transition-colors"
         >
           {confirming ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -748,13 +748,13 @@ export default function FactuursPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => { setReviewFactuur(null); setPageState('list') }}
-            className="p-2 rounded-xl hover:bg-stone-800 transition-colors text-stone-400 hover:text-stone-200"
+            className="p-2 rounded-xl hover:bg-white transition-colors text-[#9E7E60] hover:text-[#3D2810]"
           >
             <X className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="font-display text-2xl font-bold text-stone-100 tracking-tight">Factuur controleren</h1>
-            <p className="text-stone-500 text-sm mt-0.5">Controleer de gescande gegevens en bevestig de prijzen</p>
+            <h1 className="font-display text-2xl font-bold text-[#2C1810] tracking-tight">Factuur controleren</h1>
+            <p className="text-[#B8997A] text-sm mt-0.5">Controleer de gescande gegevens en bevestig de prijzen</p>
           </div>
         </div>
 
@@ -772,7 +772,7 @@ export default function FactuursPage() {
           </div>
         )}
 
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6">
           <ReviewPanel
             invoice={reviewFactuur}
             ingredients={ingredients}
@@ -790,8 +790,8 @@ export default function FactuursPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold text-stone-100 tracking-tight">Facturen</h1>
-          <p className="text-stone-500 mt-1">Scan facturen om ingrediëntprijzen automatisch bij te werken</p>
+          <h1 className="font-display text-3xl font-bold text-[#2C1810] tracking-tight">Facturen</h1>
+          <p className="text-[#B8997A] mt-1">Scan facturen om ingrediëntprijzen automatisch bij te werken</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -807,7 +807,7 @@ export default function FactuursPage() {
               input.setAttribute('capture', 'environment')
               input.click()
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 font-medium text-sm rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#3D2810] font-medium text-sm rounded-xl transition-colors"
           >
             <Camera className="w-4 h-4" />
             Scannen
@@ -830,14 +830,14 @@ export default function FactuursPage() {
 
       {/* Upload / Processing states */}
       {(pageState === 'uploading' || pageState === 'processing') && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-8 text-center animate-fade-in">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-8 text-center animate-fade-in">
           <div className="w-16 h-16 bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-700/30">
             <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
           </div>
-          <h3 className="font-display text-lg font-semibold text-stone-200 mb-1">
+          <h3 className="font-display text-lg font-semibold text-[#3D2810] mb-1">
             {pageState === 'uploading' ? 'Bestand uploaden...' : 'Factuur analyseren...'}
           </h3>
-          <p className="text-stone-500 text-sm">
+          <p className="text-[#B8997A] text-sm">
             {pageState === 'uploading'
               ? `${uploadingFile} wordt geüpload`
               : 'Even geduld, we extracten alle gegevens met OCR'}
@@ -865,13 +865,13 @@ export default function FactuursPage() {
       {invoices.length > 0 && pageState === 'list' && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8997A]" />
             <input
               type="text"
               placeholder="Zoek op leverancier of factuurnummer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-stone-900/50 border border-stone-800 rounded-xl text-sm text-stone-200 placeholder:text-stone-600 focus:outline-none focus:border-stone-600"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl text-sm text-[#3D2810] placeholder:text-[#5C4730] focus:outline-none focus:border-[#D4B896]"
             />
           </div>
           <div className="flex gap-2">
@@ -884,8 +884,8 @@ export default function FactuursPage() {
                   onClick={() => setStatusFilter(s === 'all' ? null : s)}
                   className={`px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
                     active
-                      ? 'bg-stone-800 border-stone-600 text-stone-200'
-                      : 'bg-transparent border-stone-800 text-stone-500 hover:text-stone-300 hover:border-stone-700'
+                      ? 'bg-white border-[#D4B896] text-[#3D2810]'
+                      : 'bg-transparent border-[#E8D5B5] text-[#B8997A] hover:text-[#5C4730] hover:border-[#E8D5B5]'
                   }`}
                 >
                   {labels[s]}
@@ -900,13 +900,13 @@ export default function FactuursPage() {
       {loading && (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-stone-900/50 border border-stone-800 rounded-xl p-5 flex items-center gap-4">
-              <div className="w-10 h-10 bg-stone-800 rounded-xl animate-pulse" />
+            <div key={i} className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-5 flex items-center gap-4">
+              <div className="w-10 h-10 bg-white rounded-xl animate-pulse" />
               <div className="flex-1 space-y-2">
-                <div className="w-40 h-4 bg-stone-800 rounded animate-pulse" />
-                <div className="w-24 h-3 bg-stone-800/60 rounded animate-pulse" />
+                <div className="w-40 h-4 bg-white rounded animate-pulse" />
+                <div className="w-24 h-3 bg-white/80 rounded animate-pulse" />
               </div>
-              <div className="w-20 h-4 bg-stone-800 rounded animate-pulse" />
+              <div className="w-20 h-4 bg-white rounded animate-pulse" />
             </div>
           ))}
         </div>
@@ -918,7 +918,7 @@ export default function FactuursPage() {
           {/* Upload zone inline (compact) */}
           <UploadZone onFileSelected={handleFileUpload} />
 
-          <div className="bg-stone-900/50 border border-stone-800 rounded-2xl divide-y divide-stone-800/50 overflow-hidden">
+          <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl divide-y divide-[#E8D5B5]/50 overflow-hidden">
             {filteredFactuurs.map((inv, i) => {
               const ocr = inv.ocr_data as OcrData | null
               const matchedCount = ocr?.line_items?.filter((i) => i.matched_ingredient_id).length || 0
@@ -928,17 +928,17 @@ export default function FactuursPage() {
               return (
                 <div
                   key={inv.id}
-                  className="p-5 flex items-center gap-4 hover:bg-stone-800/30 transition-colors group"
+                  className="p-5 flex items-center gap-4 hover:bg-white/30 transition-colors group"
                 >
-                  <div className="w-10 h-10 bg-stone-800/80 rounded-xl flex items-center justify-center shrink-0 border border-stone-700/50">
+                  <div className="w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center shrink-0 border border-[#E8D5B5]/60">
                     <FileText className="w-5 h-5 text-amber-500" />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-stone-200 text-sm truncate">
+                    <p className="font-medium text-[#3D2810] text-sm truncate">
                       {inv.supplier_name || 'Onbekende leverancier'}
                     </p>
-                    <p className="text-xs text-stone-500 mt-0.5">
+                    <p className="text-xs text-[#B8997A] mt-0.5">
                       {ocr?.invoice_number ? `#${ocr.invoice_number} · ` : ''}
                       {inv.invoice_date
                         ? new Date(inv.invoice_date).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -947,7 +947,7 @@ export default function FactuursPage() {
                   </div>
 
                   {totalItems > 0 && (
-                    <span className="text-xs text-stone-500 hidden sm:block">
+                    <span className="text-xs text-[#B8997A] hidden sm:block">
                       {matchedCount}/{totalItems} items
                     </span>
                   )}
@@ -955,7 +955,7 @@ export default function FactuursPage() {
                   <StatusBadge status={inv.ocr_status} />
 
                   {inv.total_amount != null && (
-                    <span className="font-mono text-sm font-semibold text-stone-200 tabular-nums w-24 text-right">
+                    <span className="font-mono text-sm font-semibold text-[#3D2810] tabular-nums w-24 text-right">
                       &euro;{Number(inv.total_amount).toFixed(2)}
                     </span>
                   )}
@@ -989,9 +989,9 @@ export default function FactuursPage() {
 
       {/* Empty state */}
       {!loading && filteredFactuurs.length === 0 && invoices.length > 0 && pageState === 'list' && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
-          <Search className="w-8 h-8 text-stone-600 mx-auto mb-4" />
-          <p className="text-stone-400 text-sm">Geen facturen gevonden voor deze zoekopdracht</p>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-12 text-center">
+          <Search className="w-8 h-8 text-[#5C4730] mx-auto mb-4" />
+          <p className="text-[#9E7E60] text-sm">Geen facturen gevonden voor deze zoekopdracht</p>
         </div>
       )}
     </div>

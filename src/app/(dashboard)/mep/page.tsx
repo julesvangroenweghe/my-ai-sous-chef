@@ -63,7 +63,7 @@ function getWeekDates(week: number, year: number): { start: Date; end: Date } {
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-stone-700 text-stone-300',
+  draft: 'bg-[#FDF8F2] text-[#5C4730]',
   confirmed: 'bg-emerald-500/20 text-emerald-400',
   in_prep: 'bg-[#E8A040]/20 text-[#E8A040]',
   approved: 'bg-emerald-500/20 text-emerald-300',
@@ -246,11 +246,11 @@ export default function MepWeekPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-display font-bold text-[#2C1810] tracking-tight flex items-center gap-2">
             <ClipboardList className="w-6 h-6 text-[#E8A040]" />
             MEP Planning
           </h1>
-          <p className="text-stone-500 text-sm mt-1">Weekoverzicht en productieplannen</p>
+          <p className="text-[#B8997A] text-sm mt-1">Weekoverzicht en productieplannen</p>
         </div>
         <Link
           href="/events/new"
@@ -262,19 +262,19 @@ export default function MepWeekPage() {
       </div>
 
       {/* Week Navigator */}
-      <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-4">
+      <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateWeek(-1)}
-            className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="text-center">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-display font-bold text-stone-100">Week {currentWeek}</h2>
-              <span className="text-stone-500">·</span>
-              <span className="text-stone-400 text-sm">
+              <h2 className="text-xl font-display font-bold text-[#2C1810]">Week {currentWeek}</h2>
+              <span className="text-[#B8997A]">·</span>
+              <span className="text-[#9E7E60] text-sm">
                 {start.toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })} —{' '}
                 {end.toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
@@ -287,7 +287,7 @@ export default function MepWeekPage() {
           </div>
           <button
             onClick={() => navigateWeek(1)}
-            className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -295,18 +295,18 @@ export default function MepWeekPage() {
 
         {/* Week stats */}
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="bg-stone-800/50 rounded-xl p-3 text-center">
-            <div className="text-xs text-stone-500">Events</div>
-            <div className="text-lg font-bold text-stone-200 font-mono">{totalEvents}</div>
+          <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
+            <div className="text-xs text-[#B8997A]">Events</div>
+            <div className="text-lg font-bold text-[#3D2810] font-mono">{totalEvents}</div>
             <div className="text-xs text-emerald-400">{approvedEvents} goedgekeurd</div>
           </div>
-          <div className="bg-stone-800/50 rounded-xl p-3 text-center">
-            <div className="text-xs text-stone-500">Totaal personen</div>
-            <div className="text-lg font-bold text-stone-200 font-mono">{totalPersons}</div>
+          <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
+            <div className="text-xs text-[#B8997A]">Totaal personen</div>
+            <div className="text-lg font-bold text-[#3D2810] font-mono">{totalPersons}</div>
           </div>
-          <div className="bg-stone-800/50 rounded-xl p-3 text-center">
-            <div className="text-xs text-stone-500">Prep uren</div>
-            <div className="text-lg font-bold text-stone-200 font-mono">
+          <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
+            <div className="text-xs text-[#B8997A]">Prep uren</div>
+            <div className="text-lg font-bold text-[#3D2810] font-mono">
               {prepHours
                 ? `${prepHours.toFixed(1)} uur`
                 : weekPlan?.total_prep_hours
@@ -337,15 +337,15 @@ export default function MepWeekPage() {
                     isVandaag
                       ? 'border-[#E8A040]/50 bg-[#E8A040]/5'
                       : hasEvents
-                      ? 'border-stone-700 bg-stone-900/50'
-                      : 'border-stone-800/50 bg-stone-900/20'
+                      ? 'border-[#E8D5B5] bg-[#FDFAF6]/80'
+                      : 'border-[#E8D5B5]/70 bg-white/20'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-medium uppercase ${isVandaag ? 'text-[#E8A040]' : 'text-stone-500'}`}>
+                    <span className={`text-xs font-medium uppercase ${isVandaag ? 'text-[#E8A040]' : 'text-[#B8997A]'}`}>
                       {dayNames[i]}
                     </span>
-                    <span className={`text-sm font-mono ${isVandaag ? 'text-[#E8A040] font-bold' : 'text-stone-400'}`}>
+                    <span className={`text-sm font-mono ${isVandaag ? 'text-[#E8A040] font-bold' : 'text-[#9E7E60]'}`}>
                       {date.getDate()}
                     </span>
                   </div>
@@ -353,12 +353,12 @@ export default function MepWeekPage() {
                     <Link
                       key={event.id}
                       href={`/mep/${event.id}`}
-                      className="block p-2 rounded-lg bg-stone-800/50 hover:bg-stone-800 border border-stone-700/50 hover:border-[#E8A040]/30 transition-all mb-1 group"
+                      className="block p-2 rounded-lg bg-[#FDF8F2]/80 hover:bg-white border border-[#E8D5B5]/60 hover:border-[#E8A040]/30 transition-all mb-1 group"
                     >
-                      <div className="text-xs font-medium text-stone-200 truncate group-hover:text-[#E8A040] transition-colors">
+                      <div className="text-xs font-medium text-[#3D2810] truncate group-hover:text-[#E8A040] transition-colors">
                         {event.name}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-[10px] text-stone-500">
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-[#B8997A]">
                         {event.num_persons && <span>{event.num_persons}p</span>}
                         <span
                           className={`px-1 py-0.5 rounded text-[9px] ${statusColors[event.status] || statusColors.draft}`}
@@ -375,7 +375,7 @@ export default function MepWeekPage() {
 
           {/* Status filter tabs */}
           {allEvents.length > 0 && (
-            <div className="flex items-center gap-1 bg-stone-900/50 border border-stone-800 rounded-xl p-1 w-fit">
+            <div className="flex items-center gap-1 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-1 w-fit">
               {filterTabs.map((tab) => (
                 <button
                   key={tab.key}
@@ -383,7 +383,7 @@ export default function MepWeekPage() {
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                     statusFilter === tab.key
                       ? 'bg-[#E8A040] text-stone-900 font-bold'
-                      : 'text-stone-400 hover:text-stone-200'
+                      : 'text-[#9E7E60] hover:text-[#3D2810]'
                   }`}
                 >
                   {tab.label}
@@ -407,11 +407,11 @@ export default function MepWeekPage() {
           {/* Event list */}
           {filteredEvents.length > 0 ? (
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider">Events deze week</h3>
+              <h3 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider">Events deze week</h3>
               {filteredEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="bg-stone-900/50 border border-stone-800 rounded-2xl p-5 hover:border-[#E8A040]/30 transition-all group"
+                  className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5 hover:border-[#E8A040]/30 transition-all group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -419,10 +419,10 @@ export default function MepWeekPage() {
                         <CalendarDays className="w-5 h-5 text-[#E8A040]" />
                       </div>
                       <div>
-                        <h4 className="font-display font-semibold text-stone-100 group-hover:text-[#E8A040] transition-colors">
+                        <h4 className="font-display font-semibold text-[#2C1810] group-hover:text-[#E8A040] transition-colors">
                           {event.name}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-stone-500">
+                        <div className="flex items-center gap-3 mt-1 text-xs text-[#B8997A]">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="w-3 h-3" />
                             {new Date(event.event_date + 'T12:00:00').toLocaleDateString('nl-BE', {
@@ -449,7 +449,7 @@ export default function MepWeekPage() {
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="flex items-center gap-1 text-stone-400">
+                          <span className="flex items-center gap-1 text-[#9E7E60]">
                             <ChefHat className="w-3 h-3" /> {event.menu_item_count} gerechten
                           </span>
                           {event.mep_item_count > 0 ? (
@@ -463,7 +463,7 @@ export default function MepWeekPage() {
                           ) : null}
                         </div>
                         {event.price_per_person && (
-                          <div className="text-xs text-stone-500 mt-1">
+                          <div className="text-xs text-[#B8997A] mt-1">
                             €{Number(event.price_per_person).toFixed(0)}/pp
                           </div>
                         )}
@@ -484,16 +484,16 @@ export default function MepWeekPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
-              <CalendarDays className="w-12 h-12 text-stone-600 mx-auto mb-4" />
-              <h3 className="text-lg font-display font-semibold text-stone-300 mb-2">
+            <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-12 text-center">
+              <CalendarDays className="w-12 h-12 text-[#5C4730] mx-auto mb-4" />
+              <h3 className="text-lg font-display font-semibold text-[#5C4730] mb-2">
                 {allEvents.length > 0
                   ? `Geen events met status "${filterTabs.find((t) => t.key === statusFilter)?.label}"`
                   : `Geen events in week ${currentWeek}`}
               </h3>
               {allEvents.length === 0 && upcomingEvents.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-xs text-stone-500 uppercase tracking-wider">Komende events:</p>
+                  <p className="text-xs text-[#B8997A] uppercase tracking-wider">Komende events:</p>
                   {upcomingEvents.map((ue, i) => (
                     <button
                       key={i}
@@ -501,14 +501,14 @@ export default function MepWeekPage() {
                         setCurrentWeek(ue.week)
                         setCurrentYear(new Date(ue.event_date).getFullYear())
                       }}
-                      className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg bg-stone-800/50 border border-stone-700 hover:border-[#E8A040]/50 transition-all group"
+                      className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg bg-[#FDF8F2]/80 border border-[#E8D5B5] hover:border-[#E8A040]/50 transition-all group"
                     >
                       <CalendarDays className="w-4 h-4 text-[#E8A040]" />
                       <div className="flex-1">
-                        <div className="text-sm text-stone-300 group-hover:text-white transition-colors">
+                        <div className="text-sm text-[#5C4730] group-hover:text-white transition-colors">
                           {ue.name}
                         </div>
-                        <div className="text-xs text-stone-500">
+                        <div className="text-xs text-[#B8997A]">
                           {new Date(ue.event_date).toLocaleDateString('nl-BE', {
                             day: 'numeric',
                             month: 'long',
@@ -516,14 +516,14 @@ export default function MepWeekPage() {
                           — Week {ue.week}
                         </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-stone-600 group-hover:text-[#E8A040] transition-colors" />
+                      <ArrowRight className="w-4 h-4 text-[#5C4730] group-hover:text-[#E8A040] transition-colors" />
                     </button>
                   ))}
                 </div>
               )}
               {allEvents.length === 0 && (
                 <div className="mt-4">
-                  <p className="text-stone-500 text-sm max-w-md mx-auto mb-4">
+                  <p className="text-[#B8997A] text-sm max-w-md mx-auto mb-4">
                     Plan een nieuw event of navigeer naar een andere week.
                   </p>
                   <Link

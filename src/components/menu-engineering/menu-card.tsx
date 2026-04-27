@@ -30,9 +30,9 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
-  draft: { label: 'Concept', className: 'bg-stone-700 text-stone-300' },
+  draft: { label: 'Concept', className: 'bg-[#FDF8F2] text-[#5C4730]' },
   active: { label: 'Actief', className: 'bg-emerald-500/20 text-emerald-400' },
-  archived: { label: 'Gearchiveerd', className: 'bg-stone-800 text-stone-500' },
+  archived: { label: 'Gearchiveerd', className: 'bg-white text-[#B8997A]' },
 }
 
 export default function MenuCard({ menu, onArchive, onDelete, onDuplicate }: MenuCardProps) {
@@ -40,16 +40,16 @@ export default function MenuCard({ menu, onArchive, onDelete, onDuplicate }: Men
   const dishCount = menu.saved_menu_items?.length || 0
 
   return (
-    <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-5 hover:border-stone-700 transition-all group">
+    <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-5 hover:border-[#E8D5B5] transition-all group">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <h3 className="text-sm font-semibold text-stone-100 truncate">{menu.name}</h3>
+            <h3 className="text-sm font-semibold text-[#2C1810] truncate">{menu.name}</h3>
             <span className={`px-2 py-0.5 text-xs rounded-full ${status.className}`}>
               {status.label}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-stone-500">
+          <div className="flex items-center gap-3 text-xs text-[#B8997A]">
             <span>{TYPE_LABELS[menu.menu_type] || menu.menu_type}</span>
             {menu.num_persons && <span>{menu.num_persons} personen</span>}
             <span>{new Date(menu.created_at).toLocaleDateString('nl-BE')}</span>
@@ -72,18 +72,18 @@ export default function MenuCard({ menu, onArchive, onDelete, onDuplicate }: Men
       {dishCount > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {(menu.saved_menu_items || []).slice(0, 5).map(item => (
-            <span key={item.id} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded-full truncate max-w-[160px]">
+            <span key={item.id} className="px-2 py-0.5 bg-white text-[#9E7E60] text-xs rounded-full truncate max-w-[160px]">
               {item.custom_name || item.course}
             </span>
           ))}
           {dishCount > 5 && (
-            <span className="px-2 py-0.5 text-xs text-stone-500">+{dishCount - 5}</span>
+            <span className="px-2 py-0.5 text-xs text-[#B8997A]">+{dishCount - 5}</span>
           )}
         </div>
       )}
 
       {/* Cost info */}
-      <div className="flex items-center gap-4 text-xs text-stone-500 mb-3">
+      <div className="flex items-center gap-4 text-xs text-[#B8997A] mb-3">
         {menu.price_per_person && (
           <span>EUR {Number(menu.price_per_person).toFixed(0)}/p</span>
         )}
@@ -96,19 +96,19 @@ export default function MenuCard({ menu, onArchive, onDelete, onDuplicate }: Men
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onDuplicate(menu.id)}
-          className="px-2.5 py-1 text-xs bg-stone-800 hover:bg-stone-700 text-stone-400 rounded-lg border border-stone-700 transition-all"
+          className="px-2.5 py-1 text-xs bg-white hover:bg-[#FDF8F2] text-[#9E7E60] rounded-lg border border-[#E8D5B5] transition-all"
         >
           Dupliceren
         </button>
         <button
           onClick={() => onArchive(menu.id)}
-          className="px-2.5 py-1 text-xs bg-stone-800 hover:bg-stone-700 text-stone-400 rounded-lg border border-stone-700 transition-all"
+          className="px-2.5 py-1 text-xs bg-white hover:bg-[#FDF8F2] text-[#9E7E60] rounded-lg border border-[#E8D5B5] transition-all"
         >
           Archiveren
         </button>
         <button
           onClick={() => onDelete(menu.id)}
-          className="px-2.5 py-1 text-xs bg-stone-800 hover:bg-red-900/30 text-stone-500 hover:text-red-400 rounded-lg border border-stone-700 hover:border-red-800 transition-all"
+          className="px-2.5 py-1 text-xs bg-white hover:bg-red-900/30 text-[#B8997A] hover:text-red-400 rounded-lg border border-[#E8D5B5] hover:border-red-800 transition-all"
         >
           Verwijderen
         </button>

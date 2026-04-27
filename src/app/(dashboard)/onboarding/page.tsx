@@ -62,10 +62,10 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   return (
     <div className="w-full max-w-lg mx-auto mb-8">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-stone-400 font-medium">
+        <span className="text-xs text-[#9E7E60] font-medium">
           Stap {current} van {total}
         </span>
-        <span className="text-xs text-stone-400">
+        <span className="text-xs text-[#9E7E60]">
           {Math.round((current / total) * 100)}%
         </span>
       </div>
@@ -95,7 +95,7 @@ function Chip({
       className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 ${
         selected
           ? 'bg-amber-50 border-amber-400 text-amber-900 shadow-sm'
-          : 'bg-stone-50 border-stone-200 text-stone-600 hover:border-stone-300 hover:bg-stone-100'
+          : 'bg-stone-50 border-stone-200 text-[#5C4730] hover:border-stone-300 hover:bg-stone-100'
       }`}
     >
       {label}
@@ -178,16 +178,16 @@ function TagEditor({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
             placeholder={tags.length === 0 ? placeholder : ''}
-            className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-stone-800 placeholder:text-stone-400"
+            className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-stone-800 placeholder:text-[#9E7E60]"
           />
         )}
       </div>
       {suggestions && suggestions.length > 0 && (
-        <p className="text-xs text-stone-400">
+        <p className="text-xs text-[#9E7E60]">
           Suggesties: {suggestions.slice(0, 5).join(', ')}...
         </p>
       )}
-      <p className="text-xs text-stone-400">
+      <p className="text-xs text-[#9E7E60]">
         {tags.length}/{max} toegevoegd — druk Enter om toe te voegen
       </p>
     </div>
@@ -236,7 +236,7 @@ function StepWelkom({
         <h1 className="text-3xl font-bold text-stone-800 tracking-tight">
           Welkom bij My AI Sous Chef
         </h1>
-        <p className="text-stone-500 leading-relaxed">
+        <p className="text-[#B8997A] leading-relaxed">
           Laten we jouw kookstijl leren kennen zodat de AI echt voor{' '}
           <em>jóu</em> werkt.
         </p>
@@ -252,7 +252,7 @@ function StepWelkom({
             value={displayName}
             onChange={(e) => onDisplayName(e.target.value)}
             placeholder="Chef Jules..."
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-[#9E7E60] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
           />
         </div>
 
@@ -267,7 +267,7 @@ function StepWelkom({
             value={yearsExperience}
             onChange={(e) => onYears(e.target.value)}
             placeholder="0"
-            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
+            className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-[#9E7E60] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all"
           />
         </div>
 
@@ -338,7 +338,7 @@ function StepKeukenFilosofie({
         <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
           Jouw keuken
         </h2>
-        <p className="text-stone-500 text-sm mt-1">
+        <p className="text-[#B8997A] text-sm mt-1">
           Wat is jouw werkomgeving?
         </p>
       </div>
@@ -356,7 +356,7 @@ function StepKeukenFilosofie({
               className={`px-4 py-3 rounded-xl border-2 text-sm font-medium text-left transition-all duration-150 ${
                 kitchenType === kt.toLowerCase()
                   ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-sm'
-                  : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                  : 'border-stone-200 bg-white text-[#5C4730] hover:border-stone-300'
               }`}
             >
               {kt}
@@ -389,9 +389,9 @@ function StepKeukenFilosofie({
           }}
           placeholder="Wat drijft je in de keuken? Hoe kijk jij naar voedsel?"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all resize-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 placeholder:text-[#9E7E60] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all resize-none"
         />
-        <p className="text-xs text-stone-400 text-right">
+        <p className="text-xs text-[#9E7E60] text-right">
           {philosophy.length}/150
         </p>
       </div>
@@ -400,7 +400,7 @@ function StepKeukenFilosofie({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors font-medium"
+          className="flex items-center gap-2 text-[#B8997A] hover:text-stone-700 transition-colors font-medium"
         >
           <svg
             className="w-4 h-4"
@@ -459,7 +459,7 @@ function StepCulinaire({
         <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
           Culinaire invloeden
         </h2>
-        <p className="text-stone-500 text-sm mt-1">
+        <p className="text-[#B8997A] text-sm mt-1">
           Welke keukens inspireren je? Kies maximaal 5.
         </p>
       </div>
@@ -487,7 +487,7 @@ function StepCulinaire({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors font-medium"
+          className="flex items-center gap-2 text-[#B8997A] hover:text-stone-700 transition-colors font-medium"
         >
           <svg
             className="w-4 h-4"
@@ -554,7 +554,7 @@ function StepIngredientenTechnieken({
         <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
           Jouw signatuur
         </h2>
-        <p className="text-stone-500 text-sm mt-1">
+        <p className="text-[#B8997A] text-sm mt-1">
           Wat zijn jouw go-to ingrediënten en technieken?
         </p>
       </div>
@@ -591,7 +591,7 @@ function StepIngredientenTechnieken({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors font-medium"
+          className="flex items-center gap-2 text-[#B8997A] hover:text-stone-700 transition-colors font-medium"
         >
           <svg
             className="w-4 h-4"
@@ -681,7 +681,7 @@ function StepKlaar({
         <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
           Jouw profiel is klaar.
         </h2>
-        <p className="text-stone-500 text-sm">
+        <p className="text-[#B8997A] text-sm">
           Hier is een overzicht van wat je hebt ingevuld.
         </p>
       </div>
@@ -692,13 +692,13 @@ function StepKlaar({
             Profiel
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            <span className="text-stone-500">Naam</span>
+            <span className="text-[#B8997A]">Naam</span>
             <span className="text-stone-800 font-medium">{displayName}</span>
-            <span className="text-stone-500">Rol</span>
+            <span className="text-[#B8997A]">Rol</span>
             <span className="text-stone-800 font-medium">{currentRole}</span>
             {yearsExperience && (
               <>
-                <span className="text-stone-500">Ervaring</span>
+                <span className="text-[#B8997A]">Ervaring</span>
                 <span className="text-stone-800 font-medium">
                   {yearsExperience} jaar
                 </span>
@@ -706,7 +706,7 @@ function StepKlaar({
             )}
             {kitchenType && (
               <>
-                <span className="text-stone-500">Keukentype</span>
+                <span className="text-[#B8997A]">Keukentype</span>
                 <span className="text-stone-800 font-medium capitalize">
                   {kitchenType}
                 </span>
@@ -793,7 +793,7 @@ function StepKlaar({
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors font-medium disabled:opacity-40"
+          className="flex items-center gap-2 text-[#B8997A] hover:text-stone-700 transition-colors font-medium disabled:opacity-40"
         >
           <svg
             className="w-4 h-4"

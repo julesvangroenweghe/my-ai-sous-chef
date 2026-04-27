@@ -176,10 +176,10 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
   const matchedCount = parseResult?.dishes.filter(d => d.selected && d.matched_recipe).length || 0
 
   return (
-    <div className="bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-stone-800 flex items-center gap-2">
+    <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center gap-2">
         <FileUp className="w-5 h-5 text-brand-400" />
-        <h3 className="text-base font-display font-semibold text-stone-100">MEP importeren uit document</h3>
+        <h3 className="text-base font-display font-semibold text-[#2C1810]">MEP importeren uit document</h3>
       </div>
 
       <div className="p-6 space-y-4">
@@ -193,7 +193,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
             className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
               dragging
                 ? 'border-brand-400 bg-brand-500/10'
-                : 'border-stone-700 hover:border-stone-600 hover:bg-stone-800/30'
+                : 'border-[#E8D5B5] hover:border-[#D4B896] hover:bg-white/30'
             }`}
           >
             <input
@@ -205,19 +205,19 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
             />
             <div className="flex flex-col items-center gap-3">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-                dragging ? 'bg-brand-500/20' : 'bg-stone-800'
+                dragging ? 'bg-brand-500/20' : 'bg-white'
               }`}>
-                <Upload className={`w-7 h-7 ${dragging ? 'text-brand-400' : 'text-stone-500'}`} />
+                <Upload className={`w-7 h-7 ${dragging ? 'text-brand-400' : 'text-[#B8997A]'}`} />
               </div>
               <div>
-                <p className="text-stone-300 font-medium">
+                <p className="text-[#5C4730] font-medium">
                   {dragging ? 'Loslaten om te uploaden' : 'Sleep een document hierheen'}
                 </p>
-                <p className="text-stone-500 text-sm mt-1">
+                <p className="text-[#B8997A] text-sm mt-1">
                   of klik om te bladeren — PDF, JPG, PNG
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-xs text-stone-600">
+              <div className="flex items-center gap-4 text-xs text-[#5C4730]">
                 <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> Menu</span>
                 <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> Offerte</span>
                 <span className="flex items-center gap-1"><Image className="w-3.5 h-3.5" /> MEP lijst</span>
@@ -233,13 +233,13 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
               <div className="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-8 h-8 text-brand-400" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-stone-900 rounded-full flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center">
                 <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />
               </div>
             </div>
             <div className="text-center">
-              <p className="text-stone-200 font-medium">Document analyseren...</p>
-              <p className="text-stone-500 text-sm mt-1">AI leest uw document en extraheert gerechten</p>
+              <p className="text-[#3D2810] font-medium">Document analyseren...</p>
+              <p className="text-[#B8997A] text-sm mt-1">AI leest uw document en extraheert gerechten</p>
             </div>
           </div>
         )}
@@ -262,45 +262,45 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
         {parseResult && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="flex items-center gap-3 p-3 bg-stone-800/50 rounded-xl">
+            <div className="flex items-center gap-3 p-3 bg-[#FDF8F2]/80 rounded-xl">
               <Check className="w-4 h-4 text-emerald-400" />
-              <div className="flex-1 text-sm text-stone-300">
+              <div className="flex-1 text-sm text-[#5C4730]">
                 <span className="font-medium">{parseResult.dishes.length} gerechten</span> geëxtraheerd
                 {parseResult.document_type && (
-                  <span className="text-stone-500"> uit {parseResult.document_type}</span>
+                  <span className="text-[#B8997A]"> uit {parseResult.document_type}</span>
                 )}
               </div>
               <button
                 onClick={() => { setParseResult(null); setError(null) }}
-                className="text-xs text-stone-500 hover:text-stone-300 transition-colors"
+                className="text-xs text-[#B8997A] hover:text-[#5C4730] transition-colors"
               >
                 Opnieuw uploaden
               </button>
             </div>
 
             {parseResult.notes && (
-              <p className="text-xs text-stone-500 italic">{parseResult.notes}</p>
+              <p className="text-xs text-[#B8997A] italic">{parseResult.notes}</p>
             )}
 
             {/* Dishes list */}
             <div className="space-y-2">
               {parseResult.dishes.map((dish, i) => (
                 <div key={i} className={`border rounded-xl overflow-hidden transition-all ${
-                  dish.selected ? 'border-stone-700' : 'border-stone-800 opacity-50'
+                  dish.selected ? 'border-[#E8D5B5]' : 'border-[#E8D5B5] opacity-50'
                 }`}>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-stone-800/30">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-white/30">
                     <button
                       onClick={() => toggleDish(i)}
                       className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all ${
                         dish.selected
                           ? 'bg-brand-500 border-brand-400'
-                          : 'border-stone-600 hover:border-stone-500'
+                          : 'border-[#D4B896] hover:border-stone-500'
                       }`}
                     >
                       {dish.selected && <Check className="w-3 h-3 text-white" />}
                     </button>
 
-                    <span className="text-sm font-medium text-stone-200 flex-1">{dish.name}</span>
+                    <span className="text-sm font-medium text-[#3D2810] flex-1">{dish.name}</span>
 
                     {dish.matched_recipe && (
                       <span className="px-2 py-0.5 bg-brand-500/20 text-brand-300 text-xs rounded-full border border-brand-500/30">
@@ -312,14 +312,14 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                       value={dish.editedCategory}
                       onChange={e => updateCategory(i, e.target.value)}
                       onClick={e => e.stopPropagation()}
-                      className="px-2 py-1 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      className="px-2 py-1 bg-white border border-[#E8D5B5] rounded-lg text-[#5C4730] text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
                     >
                       {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
 
                     <button
                       onClick={() => toggleExpanded(i)}
-                      className="p-1 text-stone-500 hover:text-stone-300 transition-colors"
+                      className="p-1 text-[#B8997A] hover:text-[#5C4730] transition-colors"
                     >
                       {expandedDishes.has(i)
                         ? <ChevronUp className="w-4 h-4" />
@@ -329,13 +329,13 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                   </div>
 
                   {expandedDishes.has(i) && dish.components && dish.components.length > 0 && (
-                    <div className="px-4 py-3 border-t border-stone-800">
+                    <div className="px-4 py-3 border-t border-[#E8D5B5]">
                       <div className="space-y-1">
                         {dish.components.map((comp, ci) => (
                           <div key={ci} className="flex items-center gap-3 text-xs">
-                            <span className="text-stone-500 w-24 shrink-0">{comp.group}</span>
-                            <span className="text-stone-300 flex-1">{comp.name}</span>
-                            <span className="text-stone-400 font-mono">
+                            <span className="text-[#B8997A] w-24 shrink-0">{comp.group}</span>
+                            <span className="text-[#5C4730] flex-1">{comp.name}</span>
+                            <span className="text-[#9E7E60] font-mono">
                               {comp.quantity_per_person} {comp.unit}/p
                             </span>
                           </div>
@@ -349,7 +349,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
 
             {/* Save button */}
             <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-[#B8997A]">
                 {selectedCount} geselecteerd · {matchedCount} met receptkoppeling
               </p>
               <button

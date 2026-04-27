@@ -88,13 +88,13 @@ export default function MenuEngineeringPage() {
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Menu Engineering</h1>
-          <p className="text-stone-400 text-sm">AI-gestuurd menuontwerp met culinaire audit</p>
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Menu Engineering</h1>
+          <p className="text-[#9E7E60] text-sm">AI-gestuurd menuontwerp met culinaire audit</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-stone-900/50 border border-stone-800 rounded-xl">
+      <div className="flex gap-1 p-1 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl">
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -102,7 +102,7 @@ export default function MenuEngineeringPage() {
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? 'text-white'
-                : 'text-stone-400 hover:text-stone-300'
+                : 'text-[#9E7E60] hover:text-[#5C4730]'
             }`}
             style={activeTab === tab.id ? { backgroundColor: 'rgba(232,160,64,0.15)', color: '#E8A040' } : {}}
           >
@@ -132,7 +132,7 @@ export default function MenuEngineeringPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   filterStatus === f.value
                     ? 'border-amber-500/40 text-amber-300'
-                    : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                    : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                 }`}
                 style={filterStatus === f.value ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
               >
@@ -143,18 +143,18 @@ export default function MenuEngineeringPage() {
 
           {/* Menu list */}
           {loadingMenus ? (
-            <div className="flex items-center justify-center py-12 text-stone-500 text-sm">
+            <div className="flex items-center justify-center py-12 text-[#B8997A] text-sm">
               <svg className="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M12 2v4m0 12v4m-8-10H2m20 0h-4m-2.343-5.657L14.243 4.929m-4.486 14.142L8.343 20.485m9.314-1.414l1.414-1.414m-14.142-9.314L3.515 7.343" />
               </svg>
               Menus laden...
             </div>
           ) : menus.length === 0 ? (
-            <div className="text-center py-16 bg-stone-900/50 border border-stone-800 rounded-2xl">
-              <svg className="w-10 h-10 mx-auto mb-3 text-stone-600" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+            <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
+              <svg className="w-10 h-10 mx-auto mb-3 text-[#5C4730]" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
                 <path d="M4 6h16M4 12h16M4 18h10" />
               </svg>
-              <p className="text-stone-400 text-sm">Nog geen opgeslagen menus</p>
+              <p className="text-[#9E7E60] text-sm">Nog geen opgeslagen menus</p>
               <button
                 onClick={() => setActiveTab('nieuw')}
                 className="mt-3 px-4 py-2 text-sm font-medium rounded-xl transition-all"
@@ -180,12 +180,12 @@ export default function MenuEngineeringPage() {
       )}
 
       {activeTab === 'analyse' && (
-        <div className="text-center py-16 bg-stone-900/50 border border-stone-800 rounded-2xl">
-          <svg className="w-12 h-12 mx-auto mb-4 text-stone-600" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+        <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
+          <svg className="w-12 h-12 mx-auto mb-4 text-[#5C4730]" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
             <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
-          <h3 className="text-lg font-display font-semibold text-stone-300 mb-2">Menu Analyse</h3>
-          <p className="text-stone-500 text-sm max-w-md mx-auto leading-relaxed">
+          <h3 className="text-lg font-display font-semibold text-[#5C4730] mb-2">Menu Analyse</h3>
+          <p className="text-[#B8997A] text-sm max-w-md mx-auto leading-relaxed">
             BCG-matrix, variatie-score, populariteitsanalyse en menu-optimalisatie.
             Binnenkort beschikbaar.
           </p>

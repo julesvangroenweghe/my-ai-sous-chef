@@ -18,7 +18,7 @@ type Severity = 'contains' | 'may_contain' | 'trace'
 const severityOptions: { value: Severity; label: string; color: string }[] = [
   { value: 'contains', label: 'Bevat', color: 'bg-amber-100 text-amber-800' },
   { value: 'may_contain', label: 'Kan bevatten', color: 'bg-yellow-50 text-yellow-700' },
-  { value: 'trace', label: 'Sporen', color: 'bg-stone-100 text-stone-500' },
+  { value: 'trace', label: 'Sporen', color: 'bg-stone-100 text-[#B8997A]' },
 ]
 
 export function AllergenEditor({
@@ -104,13 +104,13 @@ export function AllergenEditor({
 
   if (loading) {
     return (
-      <div className="p-3 text-xs text-stone-400">Laden...</div>
+      <div className="p-3 text-xs text-[#9E7E60]">Laden...</div>
     )
   }
 
   return (
     <div className="p-3 space-y-1 max-h-80 overflow-y-auto">
-      <div className="text-[10px] text-stone-400 uppercase tracking-wider font-semibold mb-2 px-1">
+      <div className="text-[10px] text-[#9E7E60] uppercase tracking-wider font-semibold mb-2 px-1">
         Klik om te wisselen: bevat &rarr; kan bevatten &rarr; sporen &rarr; verwijder
       </div>
       {allergens.map((allergen) => {
@@ -143,14 +143,14 @@ export function AllergenEditor({
                   ? 'bg-amber-200 text-amber-900'
                   : severity === 'may_contain'
                   ? 'bg-yellow-200 text-yellow-800'
-                  : 'bg-stone-200 text-stone-600'
-                : 'bg-stone-100 text-stone-400'
+                  : 'bg-stone-200 text-[#5C4730]'
+                : 'bg-stone-100 text-[#9E7E60]'
             )}>
               {allergen.eu_number}
             </span>
             <span className={cn(
               'flex-1 font-medium',
-              severity ? 'text-stone-900' : 'text-stone-400'
+              severity ? 'text-stone-900' : 'text-[#9E7E60]'
             )}>
               {allergen.name_nl}
             </span>
@@ -161,7 +161,7 @@ export function AllergenEditor({
                   ? 'bg-amber-100 text-amber-700'
                   : severity === 'may_contain'
                   ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-stone-100 text-stone-500'
+                  : 'bg-stone-100 text-[#B8997A]'
               )}>
                 {severity === 'contains' ? 'Bevat' : severity === 'may_contain' ? 'Kan bevatten' : 'Sporen'}
               </span>

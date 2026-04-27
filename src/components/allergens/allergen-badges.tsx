@@ -17,7 +17,7 @@ export interface AllergenLink {
 const severityStyles: Record<string, string> = {
   contains: 'bg-amber-100 text-amber-800 border-amber-200',
   may_contain: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  trace: 'bg-stone-100 text-stone-500 border-stone-200',
+  trace: 'bg-stone-100 text-[#B8997A] border-stone-200',
 }
 
 const severityLabel: Record<string, string> = {
@@ -79,7 +79,7 @@ export function AllergenBadgeList({
       ))}
       {remaining > 0 && (
         <span className={cn(
-          'inline-flex items-center rounded-full bg-stone-100 text-stone-500 border border-stone-200 font-medium',
+          'inline-flex items-center rounded-full bg-stone-100 text-[#B8997A] border border-stone-200 font-medium',
           size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs'
         )}>
           +{remaining}
@@ -112,10 +112,10 @@ export function AllergenSummary({
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-[#B8997A] uppercase tracking-wider">
             Allergenen
           </span>
-          <span className="text-xs text-stone-400">({sorted.length})</span>
+          <span className="text-xs text-[#9E7E60]">({sorted.length})</span>
         </div>
         <div className="flex flex-wrap gap-1">
           {sorted.map((link) => (
@@ -145,7 +145,7 @@ export function AllergenSummary({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-[#B8997A] uppercase tracking-wider">
           Allergenen
         </span>
       </div>
@@ -171,7 +171,7 @@ export function AllergenSummary({
       )}
       {groups.trace.length > 0 && (
         <div>
-          <span className="text-[10px] font-medium text-stone-500 uppercase tracking-wider">Sporen</span>
+          <span className="text-[10px] font-medium text-[#B8997A] uppercase tracking-wider">Sporen</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {groups.trace.sort((a, b) => a.allergen.eu_number - b.allergen.eu_number).map((l) => (
               <AllergenBadge key={l.allergen.code} allergen={l.allergen} severity="trace" />

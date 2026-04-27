@@ -1,219 +1,150 @@
-/* Fonts loaded via next/font/google in layout.tsx */
+/* ===================================================
+   MY AI SOUS CHEF — Perkament & Koper Design System
+   Warm, elegant, readable. No dark backgrounds.
+   =================================================== */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Perkament & Koper — content palette */
-    --background: #FDF8F2;
-    --foreground: #2C1810;
-    --muted: #9E7E60;
-    --muted-bg: #F5EBDB;
-    --border: #E8DCC8;
-    --card: #FFFFFF;
-    --card-border: #EDE0CC;
+    /* Perkament & Koper palette */
+    --perkament-50:  #FDFAF6;
+    --perkament-100: #FDF8F2;
+    --perkament-200: #F5ECD8;
+    --perkament-300: #E8D5B5;
+    --koper-400:     #D4B896;
+    --koper-500:     #C4703A;
+    --amber:         #E8A040;
+    --text-primary:  #2C1810;
+    --text-secondary:#5C4730;
+    --text-muted:    #9E7E60;
 
-    /* Sidebar — warm parchment (light!) */
-    --sidebar-bg: #F2E8D5;
-    --sidebar-border: #DDD0B8;
-    --sidebar-text: #5C4730;
-    --sidebar-text-sub: #9C8060;
-    --sidebar-text-active: #B5631A;
-    --sidebar-active-bg: #FEF3E2;
-    --sidebar-hover-bg: #F5EBDB;
-
-    /* Brand */
-    --amber: #E8A040;
-    --amber-light: rgba(232,160,64,0.15);
-    --amber-dark: #C4791A;
-    --copper: #C4703A;
+    /* Shadcn/ui CSS variables — light warm */
+    --background: 43 30% 97%;
+    --foreground: 20 40% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 40% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 40% 13%;
+    --primary: 35 78% 57%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 30% 92%;
+    --secondary-foreground: 20 40% 20%;
+    --muted: 35 20% 95%;
+    --muted-foreground: 25 30% 55%;
+    --accent: 35 78% 57%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 35 30% 82%;
+    --input: 35 30% 82%;
+    --ring: 35 78% 57%;
+    --radius: 0.75rem;
   }
 
   * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    @apply border-border;
   }
 
   html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply antialiased;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
+    background-color: #FDF8F2;
+    color: #2C1810;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
+  /* ── Native form elements: always light + warm ── */
+  input, textarea, select {
+    background-color: #ffffff !important;
+    color: #2C1810 !important;
+    border-color: #E8D5B5 !important;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #B8997A !important;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: #E8A040 !important;
+    box-shadow: 0 0 0 2px rgba(232, 160, 64, 0.2) !important;
+  }
+
+  /* ── Typography ── */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: -0.025em;
-    color: var(--foreground);
-    line-height: 1.2;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: #2C1810;
+    font-weight: 600;
   }
 
-  /* Scrollbars — warm sand */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #DDD0B8; border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: #C8BAA0; }
+  /* ── Cards & panels: never dark ── */
+  .card, [class*="rounded-2xl"], [class*="rounded-xl"] {
+    background-color: inherit;
+  }
 
-  /* Selection */
-  ::selection { background: rgba(232,160,64,0.2); color: inherit; }
+  /* ── Scrollbar: warm + subtle ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #FDF8F2; }
+  ::-webkit-scrollbar-thumb { background: #D4B896; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #C4703A; }
 }
 
 @layer components {
-  /* Cards */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
-    padding: 20px;
-  }
+  /* ── Font utilities ── */
+  .font-display { font-family: 'Outfit', 'Inter', sans-serif; }
+  .font-serif-display { font-family: Georgia, 'Times New Roman', serif; }
 
-  /* Primary button — amber */
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: var(--amber);
-    color: #fff;
-    font-family: var(--font-outfit), sans-serif;
-    font-size: 13px;
+  /* ── Amber button ── */
+  .btn-amber {
+    background-color: #E8A040;
+    color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1.25rem;
     font-weight: 600;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.15s ease, box-shadow 0.15s ease;
-    text-decoration: none;
+    transition: all 0.15s;
   }
-  .btn-primary:hover {
-    background: var(--amber-dark);
-    box-shadow: 0 2px 8px rgba(232,160,64,0.3);
+  .btn-amber:hover { background-color: #d4903a; }
+
+  /* ── Warm card ── */
+  .card-warm {
+    background-color: #ffffff;
+    border: 1px solid #E8D5B5;
+    border-radius: 1rem;
   }
 
-  /* Secondary button */
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: transparent;
-    color: var(--foreground);
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-    text-decoration: none;
+  /* ── Form field ── */
+  .field-warm {
+    background-color: #ffffff;
+    border: 1px solid #E8D5B5;
+    border-radius: 0.5rem;
+    color: #2C1810;
+    padding: 0.5rem 0.75rem;
   }
-  .btn-secondary:hover {
-    background: var(--muted-bg);
-    border-color: #C8BAA0;
+  .field-warm:focus {
+    border-color: #E8A040;
+    box-shadow: 0 0 0 2px rgba(232, 160, 64, 0.2);
   }
 
-  /* Badge */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 500;
-    background: var(--muted-bg);
-    color: var(--muted);
-  }
-  .badge-amber {
-    background: rgba(232,160,64,0.12);
-    color: #C4791A;
+  /* ── Sidebar amber active border ── */
+  .sidebar-active {
+    border-left: 3px solid #E8A040;
+    background-color: rgba(232, 160, 64, 0.08);
+    color: #E8A040;
   }
 
-  /* Input */
-  .input {
-    width: 100%;
-    padding: 8px 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    font-size: 14px;
-    color: var(--foreground);
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    font-family: var(--font-inter), sans-serif;
-  }
-  .input:focus {
-    border-color: var(--amber);
-    box-shadow: 0 0 0 3px rgba(232,160,64,0.12);
+  /* ── Page transitions ── */
+  .page-enter { animation: pageIn 0.25s ease forwards; }
+  @keyframes pageIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Page header */
-  .page-header {
-    margin-bottom: 24px;
-  }
-  .page-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--foreground);
-    font-family: var(--font-outfit), sans-serif;
-    letter-spacing: -0.03em;
-  }
-  .page-subtitle {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  /* Table */
-  .table-row {
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s ease;
-    gap: 12px;
-  }
-  .table-row:hover {
-    background: var(--muted-bg);
-  }
-
-  /* Stat card */
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .stat-number {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: var(--font-outfit), sans-serif;
-    color: var(--foreground);
-    letter-spacing: -0.04em;
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-}
-
-@layer utilities {
-  .text-amber { color: var(--amber); }
-  .bg-amber { background: var(--amber); }
-  .border-amber { border-color: var(--amber); }
-  .bg-sidebar { background: var(--sidebar-bg); }
-  .text-muted { color: var(--muted); }
-  .bg-muted { background: var(--muted-bg); }
-  .border-default { border-color: var(--border); }
+  /* ── Sonner toasts ── */
+  [data-sonner-toaster] [data-type="success"] { background: #ffffff !important; border-color: #E8A040 !important; }
+  [data-sonner-toaster] [data-type="error"]   { background: #ffffff !important; }
 }

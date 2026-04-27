@@ -27,10 +27,10 @@ export function RecipeAllergenSection({ recipeId }: { recipeId: string }) {
 
   return (
     <div className="card p-4 space-y-2">
-      <div className="flex items-center gap-2 text-stone-400 text-xs">
+      <div className="flex items-center gap-2 text-[#9E7E60] text-xs">
         <ShieldAlert className="h-3.5 w-3.5" />
         <span className="font-medium uppercase tracking-wider">Allergenen</span>
-        <span className="text-stone-300">({new Set(links.map(l => l.allergen.code)).size})</span>
+        <span className="text-[#5C4730]">({new Set(links.map(l => l.allergen.code)).size})</span>
       </div>
       <AllergenSummary links={links} grouped />
     </div>

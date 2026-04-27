@@ -132,7 +132,7 @@ export default function ScanPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Scanner</h1>
-            <p className="text-stone-400 text-sm mt-0.5">Scan facturen, MEP-lijsten of recepten met AI-herkenning</p>
+            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, MEP-lijsten of recepten met AI-herkenning</p>
           </div>
         </div>
       </div>
@@ -156,13 +156,13 @@ export default function ScanPage() {
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${
                 dragOver ? 'bg-amber-100' : 'bg-stone-100'
               }`}>
-                <Upload className={`w-8 h-8 ${dragOver ? 'text-amber-600' : 'text-stone-400'}`} />
+                <Upload className={`w-8 h-8 ${dragOver ? 'text-amber-600' : 'text-[#9E7E60]'}`} />
               </div>
               <div>
                 <p className="font-display font-semibold text-stone-900 text-lg">
                   Sleep een document hierheen
                 </p>
-                <p className="text-stone-400 text-sm mt-1">
+                <p className="text-[#9E7E60] text-sm mt-1">
                   Of klik om een bestand te selecteren
                 </p>
               </div>
@@ -176,13 +176,13 @@ export default function ScanPage() {
                 </button>
                 <button
                   onClick={() => cameraInputRef.current?.click()}
-                  className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-stone-600 hover:bg-stone-50 flex items-center gap-2 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 flex items-center gap-2 transition-colors"
                 >
                   <Camera className="w-4 h-4" />
                   Camera
                 </button>
               </div>
-              <p className="text-[11px] text-stone-300 mt-2">
+              <p className="text-[11px] text-[#5C4730] mt-2">
                 JPG, PNG, HEIC, PDF - max 10MB
               </p>
             </div>
@@ -230,7 +230,7 @@ export default function ScanPage() {
               <p className="font-display font-semibold text-stone-900">
                 {state === 'uploading' ? 'Document uploaden...' : 'AI analyseert je document...'}
               </p>
-              <p className="text-stone-400 text-sm mt-1">
+              <p className="text-[#9E7E60] text-sm mt-1">
                 {state === 'processing' && 'Tekst herkennen, gegevens extraheren en matchen'}
               </p>
             </div>
@@ -248,11 +248,11 @@ export default function ScanPage() {
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${typeColors[result.type]}`}>
                   {typeLabels[result.type]}
                 </span>
-                <span className="text-xs text-stone-400">
+                <span className="text-xs text-[#9E7E60]">
                   Betrouwbaarheid: {Math.round(result.confidence * 100)}%
                 </span>
               </div>
-              <button onClick={resetScan} className="text-stone-400 hover:text-stone-600 transition-colors">
+              <button onClick={resetScan} className="text-[#9E7E60] hover:text-[#5C4730] transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -262,15 +262,15 @@ export default function ScanPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-xl">
                   <div>
-                    <p className="text-[11px] text-stone-400 uppercase tracking-wider">Leverancier</p>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Leverancier</p>
                     <p className="font-medium text-stone-900">{result.data.supplier_name as string || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-stone-400 uppercase tracking-wider">Factuurdatum</p>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Factuurdatum</p>
                     <p className="font-medium text-stone-900">{result.data.invoice_date as string || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-stone-400 uppercase tracking-wider">Factuurnummer</p>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Factuurnummer</p>
                     <p className="font-medium text-stone-900">{result.data.invoice_number as string || '-'}</p>
                   </div>
                 </div>
@@ -279,21 +279,21 @@ export default function ScanPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-stone-100">
-                        <th className="text-left py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Product</th>
-                        <th className="text-right py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Aantal</th>
-                        <th className="text-left py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Eenheid</th>
-                        <th className="text-right py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Stukprijs</th>
-                        <th className="text-right py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Totaal</th>
-                        <th className="text-center py-2 px-3 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Match</th>
+                        <th className="text-left py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Product</th>
+                        <th className="text-right py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Aantal</th>
+                        <th className="text-left py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Eenheid</th>
+                        <th className="text-right py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Stukprijs</th>
+                        <th className="text-right py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Totaal</th>
+                        <th className="text-center py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Match</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(result.data.line_items as Array<Record<string, unknown>> || []).map((item, i) => (
                         <tr key={i} className="border-b border-stone-50 hover:bg-stone-50/50">
                           <td className="py-2.5 px-3 font-medium text-stone-900">{item.product_name as string}</td>
-                          <td className="py-2.5 px-3 text-right text-stone-600">{item.quantity as number}</td>
-                          <td className="py-2.5 px-3 text-stone-500">{item.unit as string}</td>
-                          <td className="py-2.5 px-3 text-right font-mono text-stone-600">{formatCurrency(item.unit_price as number)}</td>
+                          <td className="py-2.5 px-3 text-right text-[#5C4730]">{item.quantity as number}</td>
+                          <td className="py-2.5 px-3 text-[#B8997A]">{item.unit as string}</td>
+                          <td className="py-2.5 px-3 text-right font-mono text-[#5C4730]">{formatCurrency(item.unit_price as number)}</td>
                           <td className="py-2.5 px-3 text-right font-mono font-medium text-stone-900">{formatCurrency(item.total as number)}</td>
                           <td className="py-2.5 px-3 text-center">
                             {item.matched_ingredient_name ? (
@@ -302,7 +302,7 @@ export default function ScanPage() {
                                 {item.matched_ingredient_name as string}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-stone-300">Geen match</span>
+                              <span className="text-[10px] text-[#5C4730]">Geen match</span>
                             )}
                           </td>
                         </tr>
@@ -338,18 +338,18 @@ export default function ScanPage() {
                       className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition-colors"
                     >
                       <span className="font-medium text-stone-900">{dish.name as string}</span>
-                      {expandedDishes.has(i) ? <ChevronDown className="w-4 h-4 text-stone-400" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
+                      {expandedDishes.has(i) ? <ChevronDown className="w-4 h-4 text-[#9E7E60]" /> : <ChevronRight className="w-4 h-4 text-[#9E7E60]" />}
                     </button>
                     {expandedDishes.has(i) && (
                       <div className="px-4 pb-4 space-y-3">
                         {(dish.components as Array<Record<string, unknown>> || []).map((comp, j) => (
                           <div key={j}>
-                            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">{comp.name as string}</p>
+                            <p className="text-xs font-semibold text-[#B8997A] uppercase tracking-wider mb-1">{comp.name as string}</p>
                             <div className="space-y-1">
                               {(comp.ingredients as Array<Record<string, unknown>> || []).map((ing, k) => (
                                 <div key={k} className="flex items-center justify-between text-sm py-1">
                                   <span className="text-stone-700">{ing.name as string}</span>
-                                  <span className="font-mono text-stone-500">{ing.quantity as string}{ing.unit as string}</span>
+                                  <span className="font-mono text-[#B8997A]">{ing.quantity as string}{ing.unit as string}</span>
                                 </div>
                               ))}
                             </div>
@@ -370,7 +370,7 @@ export default function ScanPage() {
             {result.type === 'recipe' && (
               <div className="space-y-4">
                 <h3 className="font-display text-xl font-semibold text-stone-900">{result.data.name as string}</h3>
-                <div className="flex gap-4 text-sm text-stone-500">
+                <div className="flex gap-4 text-sm text-[#B8997A]">
                   {result.data.servings && <span>{result.data.servings as number} personen</span>}
                   {result.data.prep_time_minutes && <span>{result.data.prep_time_minutes as number} min</span>}
                 </div>
@@ -381,7 +381,7 @@ export default function ScanPage() {
                       {(result.data.ingredients as Array<Record<string, unknown>> || []).map((ing, i) => (
                         <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-stone-50">
                           <span className="text-stone-700">{ing.name as string}</span>
-                          <span className="font-mono text-stone-500">{ing.quantity as string} {ing.unit as string}</span>
+                          <span className="font-mono text-[#B8997A]">{ing.quantity as string} {ing.unit as string}</span>
                         </div>
                       ))}
                     </div>
@@ -392,7 +392,7 @@ export default function ScanPage() {
                       {(result.data.method as string[] || []).map((step, i) => (
                         <li key={i} className="flex gap-3 text-sm">
                           <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs font-semibold">{i + 1}</span>
-                          <span className="text-stone-600 leading-relaxed">{step}</span>
+                          <span className="text-[#5C4730] leading-relaxed">{step}</span>
                         </li>
                       ))}
                     </ol>
@@ -421,7 +421,7 @@ export default function ScanPage() {
                   </span>
                   <span className="text-sm font-medium text-stone-900">{item.title}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-stone-400">
+                <div className="flex items-center gap-3 text-xs text-[#9E7E60]">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatDate(item.date)}

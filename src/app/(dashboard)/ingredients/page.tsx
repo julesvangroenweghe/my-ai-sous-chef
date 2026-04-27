@@ -128,7 +128,7 @@ export default function IngredientsPage() {
               </div>
               <div>
                 <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Ingredienten</h1>
-                <p className="text-stone-400 text-sm mt-0.5">{ingredients.length} ingredienten · {variants.length} chef-level varianten</p>
+                <p className="text-[#9E7E60] text-sm mt-0.5">{ingredients.length} ingredienten · {variants.length} chef-level varianten</p>
               </div>
             </div>
           </div>
@@ -142,30 +142,30 @@ export default function IngredientsPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="card p-4">
           <div className="font-mono text-2xl font-bold text-stone-900">{ingredients.length}</div>
-          <div className="text-xs text-stone-400">Totaal</div>
+          <div className="text-xs text-[#9E7E60]">Totaal</div>
         </div>
         <div className="card p-4">
           <div className="font-mono text-2xl font-bold text-emerald-600">{withPrice.length}</div>
-          <div className="text-xs text-stone-400">Met prijs</div>
+          <div className="text-xs text-[#9E7E60]">Met prijs</div>
         </div>
         <div className="card p-4">
           <div className="font-mono text-2xl font-bold text-violet-600">{variants.length}</div>
-          <div className="text-xs text-stone-400">Varianten</div>
+          <div className="text-xs text-[#9E7E60]">Varianten</div>
         </div>
         <div className="card p-4">
           <div className="font-mono text-2xl font-bold text-stone-900">{categories.length}</div>
-          <div className="text-xs text-stone-400">Categorieen</div>
+          <div className="text-xs text-[#9E7E60]">Categorieen</div>
         </div>
         <div className="card p-4">
           <div className="font-mono text-2xl font-bold text-amber-600">{totalAllergenLinks}</div>
-          <div className="text-xs text-stone-400">Allergeen-links</div>
+          <div className="text-xs text-[#9E7E60]">Allergeen-links</div>
         </div>
       </div>
 
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek ingredient..."
@@ -175,14 +175,14 @@ export default function IngredientsPage() {
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          <button onClick={() => setCatFilter(null)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${!catFilter ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'}`}>
+          <button onClick={() => setCatFilter(null)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${!catFilter ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}>
             Alles
           </button>
           {categories.slice(0, 10).map(cat => (
             <button
               key={cat}
               onClick={() => setCatFilter(catFilter === cat ? null : cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${catFilter === cat ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${catFilter === cat ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}
             >
               {categoryEmoji[cat] || ''} {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
@@ -191,7 +191,7 @@ export default function IngredientsPage() {
       </div>
 
       {/* Sort */}
-      <div className="flex gap-2 text-xs text-stone-400 animate-slide-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
+      <div className="flex gap-2 text-xs text-[#9E7E60] animate-slide-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
         <span className="flex items-center gap-1"><ArrowUpDown className="w-3 h-3" /> Sorteer:</span>
         {[
           { key: 'name' as const, label: 'Naam' },
@@ -201,7 +201,7 @@ export default function IngredientsPage() {
           <button
             key={s.key}
             onClick={() => setSortBy(s.key)}
-            className={`px-2 py-0.5 rounded ${sortBy === s.key ? 'bg-stone-900 text-white' : 'hover:bg-stone-100'}`}
+            className={`px-2 py-0.5 rounded ${sortBy === s.key ? 'bg-white text-white' : 'hover:bg-stone-100'}`}
           >
             {s.label}
           </button>
@@ -251,7 +251,7 @@ export default function IngredientsPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-stone-400 mt-0.5">
+                    <div className="text-xs text-[#9E7E60] mt-0.5">
                       {ing.category} · {ing.unit}
                       {ing.standard_portion_g && ` · ${ing.standard_portion_g}g portie`}
                     </div>
@@ -270,7 +270,7 @@ export default function IngredientsPage() {
                       {ingAllergens.length > 0 ? (
                         <AllergenBadgeList links={ingAllergens} maxVisible={3} size="xs" />
                       ) : (
-                        <span className="text-[10px] text-stone-300 flex items-center gap-1">
+                        <span className="text-[10px] text-[#5C4730] flex items-center gap-1">
                           <ShieldAlert className="w-3 h-3" /> Geen
                         </span>
                       )}
@@ -297,9 +297,9 @@ export default function IngredientsPage() {
 
                   <div className="text-right shrink-0">
                     {ing.current_price ? (
-                      <span className="font-mono text-sm font-semibold text-stone-900">€{ing.current_price.toFixed(2)}<span className="text-stone-400 text-xs">/{ing.unit}</span></span>
+                      <span className="font-mono text-sm font-semibold text-stone-900">€{ing.current_price.toFixed(2)}<span className="text-[#9E7E60] text-xs">/{ing.unit}</span></span>
                     ) : (
-                      <span className="text-xs text-stone-300">Geen prijs</span>
+                      <span className="text-xs text-[#5C4730]">Geen prijs</span>
                     )}
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export default function IngredientsPage() {
                         {v.quality_grade && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">{v.quality_grade}</span>
                         )}
-                        {v.origin && <span className="text-[10px] text-stone-400">{v.origin}</span>}
+                        {v.origin && <span className="text-[10px] text-[#9E7E60]">{v.origin}</span>}
                         <span className="ml-auto font-mono text-xs font-semibold text-violet-600">
                           {v.typical_price_per_kg ? `€${v.typical_price_per_kg.toFixed(2)}/kg` : '—'}
                         </span>
@@ -332,7 +332,7 @@ export default function IngredientsPage() {
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-between py-4">
-        <div className="text-xs text-stone-400">
+        <div className="text-xs text-[#9E7E60]">
           {filtered.length > 0
             ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} van ${filtered.length} ingredienten`
             : `0 van ${ingredients.length} ingredienten`}
@@ -341,17 +341,17 @@ export default function IngredientsPage() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-stone-600 border-stone-200 hover:border-stone-300"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-[#5C4730] border-stone-200 hover:border-stone-300"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Vorige
           </button>
-          <span className="text-xs text-stone-500 px-2">
+          <span className="text-xs text-[#B8997A] px-2">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-stone-600 border-stone-200 hover:border-stone-300"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-[#5C4730] border-stone-200 hover:border-stone-300"
           >
             Volgende <ChevronRight className="w-3.5 h-3.5" />
           </button>

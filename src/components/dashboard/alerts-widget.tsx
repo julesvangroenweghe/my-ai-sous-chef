@@ -111,7 +111,7 @@ export function AlertsWidget() {
   if (error) {
     return (
       <div className="card p-5">
-        <div className="flex items-center gap-2 text-stone-400 text-sm">
+        <div className="flex items-center gap-2 text-[#9E7E60] text-sm">
           <AlertCircle className="w-4 h-4" />
           <span>Meldingen konden niet geladen worden</span>
           <button onClick={fetchAlerts} className="ml-auto text-brand-600 hover:text-brand-700">
@@ -131,7 +131,7 @@ export function AlertsWidget() {
           </div>
           <div>
             <h3 className="font-display font-semibold text-stone-900 text-sm">Alles onder controle</h3>
-            <p className="text-xs text-stone-400">Geen meldingen op dit moment. Goed bezig, chef!</p>
+            <p className="text-xs text-[#9E7E60]">Geen meldingen op dit moment. Goed bezig, chef!</p>
           </div>
         </div>
       </div>
@@ -147,14 +147,14 @@ export function AlertsWidget() {
           </div>
           <h3 className="font-display font-semibold text-stone-900">Meldingen</h3>
           {alerts.length > 0 && (
-            <span className="text-xs font-mono font-medium text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-mono font-medium text-[#9E7E60] bg-stone-100 px-2 py-0.5 rounded-full">
               {alerts.length}
             </span>
           )}
         </div>
         <button
           onClick={fetchAlerts}
-          className="text-stone-300 hover:text-stone-500 transition-colors"
+          className="text-[#5C4730] hover:text-[#B8997A] transition-colors"
           title="Vernieuw meldingen"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export function AlertsWidget() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-stone-800">{alert.title}</p>
-                <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">{alert.message}</p>
+                <p className="text-xs text-[#B8997A] mt-0.5 leading-relaxed">{alert.message}</p>
               </div>
               {alert.actionHref && alert.actionLabel && (
                 <Link
@@ -196,7 +196,7 @@ export function AlertsWidget() {
         <div className="px-6 py-3 border-t border-stone-100">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors flex items-center gap-1 mx-auto"
+            className="text-xs font-medium text-[#9E7E60] hover:text-brand-600 transition-colors flex items-center gap-1 mx-auto"
           >
             {showAll ? (
               <>Toon minder <ChevronUp className="w-3 h-3" /></>

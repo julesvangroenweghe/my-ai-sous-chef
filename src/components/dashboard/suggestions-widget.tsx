@@ -188,16 +188,16 @@ export function SuggestionsWidget() {
 
   return (
     <div className="card p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Suggesties</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-3">Suggesties</h3>
       <div className="space-y-1">
         {suggestions.map((s) => {
           const config = typeConfig[s.type]
           const inner = (
             <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg hover:bg-stone-50 transition-colors group">
               <span className={`mt-0.5 shrink-0 ${config.color}`}>{config.icon}</span>
-              <span className="text-sm text-stone-600 group-hover:text-stone-800 transition-colors">{s.message}</span>
+              <span className="text-sm text-[#5C4730] group-hover:text-stone-800 transition-colors">{s.message}</span>
               {s.href && (
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 ml-auto mt-0.5 text-stone-300 group-hover:text-[#E8A040] transition-colors">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 ml-auto mt-0.5 text-[#5C4730] group-hover:text-[#E8A040] transition-colors">
                   <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}

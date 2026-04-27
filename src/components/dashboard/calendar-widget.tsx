@@ -109,7 +109,7 @@ export function CalendarWidget() {
           </div>
           <div className="flex-1">
             <h3 className="font-display font-semibold text-stone-900 text-sm">Google Agenda</h3>
-            <p className="text-xs text-stone-400 mt-0.5">
+            <p className="text-xs text-[#9E7E60] mt-0.5">
               Koppel je Google account om je agenda hier te zien
             </p>
           </div>
@@ -137,13 +137,13 @@ export function CalendarWidget() {
           <div>
             <h3 className="font-display font-semibold text-stone-900">Google Agenda</h3>
             {data.email && (
-              <p className="text-[11px] text-stone-400">{data.email}</p>
+              <p className="text-[11px] text-[#9E7E60]">{data.email}</p>
             )}
           </div>
         </div>
         <button
           onClick={fetchCalendar}
-          className="text-stone-300 hover:text-stone-500 transition-colors"
+          className="text-[#5C4730] hover:text-[#B8997A] transition-colors"
           title="Vernieuw"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -153,9 +153,9 @@ export function CalendarWidget() {
       {events.length === 0 ? (
         <div className="px-6 pb-6 text-center">
           <div className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <CalendarDays className="w-5 h-5 text-stone-300" />
+            <CalendarDays className="w-5 h-5 text-[#5C4730]" />
           </div>
-          <p className="text-sm text-stone-400">Geen komende afspraken</p>
+          <p className="text-sm text-[#9E7E60]">Geen komende afspraken</p>
         </div>
       ) : (
         <div className="divide-y divide-stone-100">
@@ -174,7 +174,7 @@ export function CalendarWidget() {
                 className="flex items-start gap-3 px-6 py-3 hover:bg-stone-50/80 transition-all group"
               >
                 {/* Time indicator */}
-                <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-blue-100 text-blue-700' : 'bg-stone-100 text-stone-500'}`}>
+                <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-blue-100 text-blue-700' : 'bg-stone-100 text-[#B8997A]'}`}>
                   {startDate && (
                     <>
                       <span className="text-[10px] uppercase leading-none font-medium">
@@ -191,18 +191,18 @@ export function CalendarWidget() {
                   <p className="text-sm font-medium text-stone-700 group-hover:text-blue-700 transition-colors truncate">
                     {event.title}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-stone-400 mt-0.5">
+                  <div className="flex items-center gap-2 text-xs text-[#9E7E60] mt-0.5">
                     <Clock className="w-3 h-3" />
                     <span>{formatEventTime(event.start, event.end, event.isAllDay)}</span>
                   </div>
                   {event.location && (
-                    <div className="flex items-center gap-2 text-xs text-stone-400 mt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-[#9E7E60] mt-0.5">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{event.location}</span>
                     </div>
                   )}
                 </div>
-                <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-blue-500 shrink-0 mt-1 transition-colors" />
+                <ExternalLink className="w-3 h-3 text-[#5C4730] group-hover:text-blue-500 shrink-0 mt-1 transition-colors" />
               </a>
             )
           })}

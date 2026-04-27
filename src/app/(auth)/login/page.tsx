@@ -49,7 +49,7 @@ export default function LoginPage() {
  <h1 className="text-2xl font-semibold text-stone-900 font-outfit">
  Welkom terug, Chef
  </h1>
- <p className="text-stone-500 mt-1">
+ <p className="text-[#B8997A] mt-1">
  Log in op je keukenintelligentie
  </p>
  </div>
@@ -70,7 +70,7 @@ export default function LoginPage() {
  type="email"
  value={email}
  onChange={(e) => setEmail(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+ className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 placeholder:text-[#9E7E60] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
  placeholder="chef@kitchen.com"
  required
  />
@@ -84,7 +84,7 @@ export default function LoginPage() {
  type="password"
  value={password}
  onChange={(e) => setPassword(e.target.value)}
- className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+ className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 placeholder:text-[#9E7E60] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
  placeholder="••••••••"
  required
  />
@@ -100,7 +100,7 @@ export default function LoginPage() {
  </form>
  </div>
 
- <p className="text-center mt-6 text-sm text-stone-500">
+ <p className="text-center mt-6 text-sm text-[#B8997A]">
  Nog geen account?{' '}
  <Link href="/signup" className="text-brand-500 hover:text-brand-600 font-medium">
  Maak er een aan

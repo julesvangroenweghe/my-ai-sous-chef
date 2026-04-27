@@ -206,13 +206,13 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
         ].map(({ n, label }) => (
           <div key={n} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              step === n ? 'text-white' : step > n ? 'bg-emerald-500/20 text-emerald-400' : 'bg-stone-800 text-stone-500'
+              step === n ? 'text-white' : step > n ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white text-[#B8997A]'
             }`} style={step === n ? { backgroundColor: '#E8A040' } : {}}>
               {step > n ? <Check className="w-4 h-4" /> : n}
             </div>
-            <span className={`text-sm font-medium ${step === n ? 'text-stone-100' : 'text-stone-500'}`}>{label}</span>
+            <span className={`text-sm font-medium ${step === n ? 'text-[#2C1810]' : 'text-[#B8997A]'}`}>{label}</span>
             {n < 3 && (
-              <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#5C4730]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path d="M9 6l6 6-6 6" />
               </svg>
             )}
@@ -228,12 +228,12 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-5"
+            className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-5"
           >
-            <h2 className="text-lg font-display font-semibold text-stone-100">Basisgegevens</h2>
+            <h2 className="text-lg font-display font-semibold text-[#2C1810]">Basisgegevens</h2>
 
             <div className="space-y-2">
-              <label className="text-xs text-stone-400 font-medium">Menu type</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Menu type</label>
               <div className="flex flex-wrap gap-2">
                 {menuTypes.map(t => (
                   <button
@@ -242,7 +242,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                       menuType === t.value
                         ? 'border-amber-500/40 text-amber-300'
-                        : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                        : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                     }`}
                     style={menuType === t.value ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
                   >
@@ -254,26 +254,26 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs text-stone-400 font-medium">Aantal personen</label>
+                <label className="text-xs text-[#9E7E60] font-medium">Aantal personen</label>
                 <input
                   type="number"
                   min={1}
                   value={numPersons}
                   onChange={e => setNumPersons(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs text-stone-400 font-medium">Verkoopprijs per persoon</label>
+                <label className="text-xs text-[#9E7E60] font-medium">Verkoopprijs per persoon</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 text-sm">EUR</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#B8997A] text-sm">EUR</span>
                   <input
                     type="number"
                     min={0}
                     step={0.5}
                     value={pricePerPerson}
                     onChange={e => setPricePerPerson(Number(e.target.value))}
-                    className="w-full pl-12 pr-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    className="w-full pl-12 pr-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                   />
                 </div>
               </div>
@@ -282,10 +282,10 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
             {/* Food cost slider */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-stone-400 font-medium">Target food cost %</label>
+                <label className="text-xs text-[#9E7E60] font-medium">Target food cost %</label>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-mono font-bold" style={{ color: '#E8A040' }}>{foodCostTarget}%</span>
-                  <span className="text-xs text-stone-500">= max EUR {maxFoodCost}/p</span>
+                  <span className="text-xs text-[#B8997A]">= max EUR {maxFoodCost}/p</span>
                 </div>
               </div>
               <input
@@ -296,18 +296,18 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                 onChange={e => setFoodCostTarget(Number(e.target.value))}
                 className="w-full accent-amber-500"
               />
-              <div className="flex justify-between text-xs text-stone-600">
+              <div className="flex justify-between text-xs text-[#5C4730]">
                 <span>15%</span><span>30%</span><span>45%</span>
               </div>
             </div>
 
             {/* Season */}
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium">Seizoen</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Seizoen</label>
               <select
                 value={season}
                 onChange={e => setSeason(e.target.value)}
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               >
                 {SEASON_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
@@ -335,13 +335,13 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-5"
+            className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-5"
           >
-            <h2 className="text-lg font-display font-semibold text-stone-100">Verfijning</h2>
+            <h2 className="text-lg font-display font-semibold text-[#2C1810]">Verfijning</h2>
 
             {/* Courses */}
             <div className="space-y-2">
-              <label className="text-xs text-stone-400 font-medium">Gangen</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Gangen</label>
               <div className="grid grid-cols-2 gap-2">
                 {COURSE_OPTIONS.map(c => (
                   <button
@@ -350,12 +350,12 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${
                       selectedCourses.includes(c.value)
                         ? 'border-amber-500/40 text-amber-300'
-                        : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                        : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                     }`}
                     style={selectedCourses.includes(c.value) ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
                   >
                     <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                      selectedCourses.includes(c.value) ? 'border-amber-400' : 'border-stone-600'
+                      selectedCourses.includes(c.value) ? 'border-amber-400' : 'border-[#D4B896]'
                     }`} style={selectedCourses.includes(c.value) ? { backgroundColor: '#E8A040' } : {}}>
                       {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-white" />}
                     </div>
@@ -367,7 +367,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
             {/* Style */}
             <div className="space-y-2">
-              <label className="text-xs text-stone-400 font-medium">Stijl</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Stijl</label>
               <div className="flex gap-2 flex-wrap">
                 {STYLE_OPTIONS.map(s => (
                   <button
@@ -376,7 +376,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                       style === s
                         ? 'border-amber-500/40 text-amber-300'
-                        : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                        : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                     }`}
                     style={style === s ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
                   >
@@ -391,7 +391,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
             {/* Dietary */}
             <div className="space-y-2">
-              <label className="text-xs text-stone-400 font-medium">Dieetwensen</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Dieetwensen</label>
               <div className="flex flex-wrap gap-2">
                 {ALLERGY_OPTIONS.map(a => (
                   <button
@@ -400,7 +400,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                       restrictions.includes(a.value)
                         ? 'bg-red-500/20 text-red-300 border-red-500/40'
-                        : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                        : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                     }`}
                   >
                     {restrictions.includes(a.value) && <Check className="w-3 h-3 inline mr-1" />}
@@ -412,13 +412,13 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
             {/* Custom prompt */}
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium">Extra wensen of context</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Extra wensen of context</label>
               <textarea
                 value={customPrompt}
                 onChange={e => setCustomPrompt(e.target.value)}
                 rows={3}
                 placeholder="Bijvoorbeeld: thema, specifieke ingredienten, aanleiding..."
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
               />
             </div>
 
@@ -434,7 +434,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
             <div className="flex justify-between">
               <button
                 onClick={() => setStep(1)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M15 6l-6 6 6 6" />

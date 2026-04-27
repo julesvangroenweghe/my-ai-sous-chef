@@ -39,7 +39,7 @@ const categoryColors: Record<string, string> = {
 }
 
 function FoodCostBadge({ pct }: { pct: number | null }) {
-  if (pct == null || pct === 0) return <span className="text-[10px] text-stone-300 font-mono">&mdash;</span>
+  if (pct == null || pct === 0) return <span className="text-[10px] text-[#5C4730] font-mono">&mdash;</span>
   const isGood = pct <= 32
   const isWarn = pct > 32 && pct <= 38
   return (
@@ -105,7 +105,7 @@ export default function RecipesPage() {
               </div>
               <div>
                 <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Recepten</h1>
-                <p className="text-stone-400 text-sm mt-0.5">{recipes.length} {recipes.length === 1 ? 'recept' : 'recepten'} · Componentniveau kostenberekening</p>
+                <p className="text-[#9E7E60] text-sm mt-0.5">{recipes.length} {recipes.length === 1 ? 'recept' : 'recepten'} · Componentniveau kostenberekening</p>
               </div>
             </div>
           </div>
@@ -120,23 +120,23 @@ export default function RecipesPage() {
         <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StaggerItem><div className="card p-4">
             <div className="font-mono text-2xl font-bold text-stone-900">{recipes.length}</div>
-            <div className="text-xs text-stone-400">Recepten</div>
+            <div className="text-xs text-[#9E7E60]">Recepten</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
             <div className="font-mono text-2xl font-bold text-stone-900">{categories.length}</div>
-            <div className="text-xs text-stone-400">Categorieën</div>
+            <div className="text-xs text-[#9E7E60]">Categorieën</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
             <div className={`font-mono text-2xl font-bold ${avgFoodCost <= 30 ? 'text-emerald-600' : avgFoodCost <= 35 ? 'text-amber-600' : 'text-red-600'}`}>
               {avgFoodCost > 0 ? `${avgFoodCost.toFixed(1)}%` : '\u2014'}
             </div>
-            <div className="text-xs text-stone-400">Gem. food cost</div>
+            <div className="text-xs text-[#9E7E60]">Gem. food cost</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
             <div className={`font-mono text-2xl font-bold ${highCostRecipes.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
               {highCostRecipes.length}
             </div>
-            <div className="text-xs text-stone-400">Boven target</div>
+            <div className="text-xs text-[#9E7E60]">Boven target</div>
           </div></StaggerItem>
         </StaggerList>
       )}
@@ -153,7 +153,7 @@ export default function RecipesPage() {
       {recipes.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
             <input
               type="text"
               placeholder="Zoek recept..."
@@ -166,19 +166,19 @@ export default function RecipesPage() {
             <button
               onClick={() => setCatFilter(null)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                !catFilter ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
+                !catFilter ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
               }`}
             >
               Alles
             </button>
             {categories.map(cat => {
-              const color = categoryColors[cat] || 'bg-stone-50 text-stone-600'
+              const color = categoryColors[cat] || 'bg-stone-50 text-[#5C4730]'
               return (
                 <button
                   key={cat}
                   onClick={() => setCatFilter(catFilter === cat ? null : cat)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                    catFilter === cat ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
+                    catFilter === cat ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
                   }`}
                 >
                   {cat}
@@ -208,7 +208,7 @@ export default function RecipesPage() {
           <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
             {recipes.length > 0 ? 'Geen recepten gevonden' : 'Begin je receptenboek'}
           </h3>
-          <p className="text-stone-400 text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
+          <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
             {recipes.length > 0
               ? 'Pas je zoekterm of filter aan.'
               : 'Voeg recepten toe met componentniveau kostenberekening. Prijzen worden automatisch bijgewerkt via factuurscans.'
@@ -240,7 +240,7 @@ export default function RecipesPage() {
                       </span>
                     )}
                   </div>
-                  <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
+                  <ArrowRight className="w-4 h-4 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
                 </div>
 
                 {/* Name */}
@@ -250,12 +250,12 @@ export default function RecipesPage() {
 
                 {/* Description */}
                 {recipe.description && (
-                  <p className="text-sm text-stone-400 line-clamp-2 mb-3 leading-relaxed">{recipe.description}</p>
+                  <p className="text-sm text-[#9E7E60] line-clamp-2 mb-3 leading-relaxed">{recipe.description}</p>
                 )}
 
                 {/* Meta */}
                 <div className="mt-auto pt-3 border-t border-stone-100 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 text-xs text-stone-400">
+                  <div className="flex items-center gap-3 text-xs text-[#9E7E60]">
                     {recipe.number_of_servings && (
                       <span className="flex items-center gap-1">
                         <Users className="w-3 h-3" /> {recipe.number_of_servings}p

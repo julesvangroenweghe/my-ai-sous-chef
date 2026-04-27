@@ -29,7 +29,7 @@ const eventTypeConfig: Record<string, { label: string; color: string }> = {
 }
 
 const statusConfig: Record<string, { label: string; dot: string; bg: string }> = {
-  draft: { label: 'Concept', dot: 'bg-stone-400', bg: 'bg-stone-50 text-stone-600' },
+  draft: { label: 'Concept', dot: 'bg-stone-400', bg: 'bg-stone-50 text-[#5C4730]' },
   confirmed: { label: 'Bevestigd', dot: 'bg-emerald-500', bg: 'bg-emerald-50 text-emerald-700' },
   in_prep: { label: 'In voorbereiding', dot: 'bg-amber-500', bg: 'bg-amber-50 text-amber-700' },
   approved: { label: 'Goedgekeurd', dot: 'bg-emerald-400', bg: 'bg-emerald-50 text-emerald-700' },
@@ -104,7 +104,7 @@ export default function EventsPage() {
                 <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">
                   Events & MEP
                 </h1>
-                <p className="text-stone-400 text-sm mt-0.5">
+                <p className="text-[#9E7E60] text-sm mt-0.5">
                   Plan events en genereer automatische productieplannen
                 </p>
               </div>
@@ -150,23 +150,23 @@ export default function EventsPage() {
         >
           <div className="card p-4 text-center">
             <div className="font-mono text-2xl font-bold text-stone-900">{upcoming.length}</div>
-            <div className="text-xs text-stone-400">Komende events</div>
+            <div className="text-xs text-[#9E7E60]">Komende events</div>
           </div>
           <div className="card p-4 text-center">
             <div className="font-mono text-2xl font-bold text-stone-900">{totalPersons}</div>
-            <div className="text-xs text-stone-400">Totaal personen</div>
+            <div className="text-xs text-[#9E7E60]">Totaal personen</div>
           </div>
           <div className="card p-4 text-center">
             <div className="font-mono text-2xl font-bold text-emerald-600">
               €{totalRevenue.toLocaleString('nl-BE')}
             </div>
-            <div className="text-xs text-stone-400">Verwachte omzet</div>
+            <div className="text-xs text-[#9E7E60]">Verwachte omzet</div>
           </div>
           <Link href="/mep" className="card-hover p-4 text-center group">
             <div className="font-mono text-2xl font-bold text-brand-600">
               <ClipboardList className="w-6 h-6 mx-auto" />
             </div>
-            <div className="text-xs text-stone-400 group-hover:text-brand-600 transition-colors">
+            <div className="text-xs text-[#9E7E60] group-hover:text-brand-600 transition-colors">
               MEP Planning →
             </div>
           </Link>
@@ -203,7 +203,7 @@ export default function EventsPage() {
           <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
             Nog geen events gepland
           </h3>
-          <p className="text-stone-400 text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
+          <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
             Plan je eerste event en genereer automatisch een MEP productieplan met exacte hoeveelheden,
             timing en preplijsten.
           </p>
@@ -216,7 +216,7 @@ export default function EventsPage() {
           {/* Upcoming */}
           {upcoming.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3 flex items-center gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Komende events ({upcoming.length})
               </h2>
@@ -230,7 +230,7 @@ export default function EventsPage() {
                   const dayName = date.toLocaleDateString('nl-BE', { weekday: 'long' })
                   const typeConfig = eventTypeConfig[event.event_type] || {
                     label: event.event_type,
-                    color: 'bg-stone-50 text-stone-600 border-stone-200',
+                    color: 'bg-stone-50 text-[#5C4730] border-stone-200',
                   }
                   const status = statusConfig[event.status] || statusConfig.draft
                   const relative = getRelativeDate(event.event_date)
@@ -253,7 +253,7 @@ export default function EventsPage() {
                       {/* Date Block */}
                       <div
                         className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 ${
-                          relative.urgent ? 'bg-brand-600 text-white' : 'bg-stone-900 text-white'
+                          relative.urgent ? 'bg-brand-600 text-white' : 'bg-white text-white'
                         }`}
                       >
                         <span className="text-[10px] uppercase tracking-wide opacity-70">
@@ -281,7 +281,7 @@ export default function EventsPage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 mt-1.5 text-sm text-stone-400">
+                        <div className="flex items-center gap-4 mt-1.5 text-sm text-[#9E7E60]">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="w-3.5 h-3.5" /> {dayName}
                           </span>
@@ -308,17 +308,17 @@ export default function EventsPage() {
                         </span>
                         <div
                           className={`text-xs font-mono ${
-                            relative.urgent ? 'text-brand-600 font-semibold' : 'text-stone-400'
+                            relative.urgent ? 'text-brand-600 font-semibold' : 'text-[#9E7E60]'
                           }`}
                         >
                           {relative.text}
                         </div>
                         {event.price_per_person && (
-                          <div className="text-xs text-stone-400">€{event.price_per_person}/pp</div>
+                          <div className="text-xs text-[#9E7E60]">€{event.price_per_person}/pp</div>
                         )}
                       </div>
 
-                      <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </Link>
                   )
                 })}
@@ -329,7 +329,7 @@ export default function EventsPage() {
           {/* Past */}
           {past.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-3">
                 Afgelopen events ({past.length})
               </h2>
               <div className="space-y-2 opacity-60">
@@ -349,7 +349,7 @@ export default function EventsPage() {
                         <span className="text-sm font-medium text-stone-700 truncate block">
                           {event.name}
                         </span>
-                        <span className="text-xs text-stone-400">
+                        <span className="text-xs text-[#9E7E60]">
                           {date.toLocaleDateString('nl-BE', {
                             day: 'numeric',
                             month: 'long',
@@ -358,7 +358,7 @@ export default function EventsPage() {
                         </span>
                       </div>
                       {event.num_persons && (
-                        <span className="text-xs text-stone-400">{event.num_persons} pers.</span>
+                        <span className="text-xs text-[#9E7E60]">{event.num_persons} pers.</span>
                       )}
                     </Link>
                   )

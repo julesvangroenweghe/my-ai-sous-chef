@@ -143,18 +143,18 @@ export default function SettingsPage() {
  return (
  <div className="space-y-8">
  <div>
- <h1 className="text-2xl font-display font-bold text-stone-100">Instellingen</h1>
- <p className="text-stone-400 mt-1">Beheer je keuken, team en abonnement</p>
+ <h1 className="text-2xl font-display font-bold text-[#2C1810]">Instellingen</h1>
+ <p className="text-[#9E7E60] mt-1">Beheer je keuken, team en abonnement</p>
  </div>
 
  <div className="grid gap-6">
  {/* Keuken Modus Selector */}
- <Card className="bg-stone-900/50 border-stone-800">
+ <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
  <CardHeader>
- <CardTitle className="flex items-center gap-2 text-stone-100">
+ <CardTitle className="flex items-center gap-2 text-[#2C1810]">
  <ChefHat className="h-5 w-5 text-brand-400" /> Keuken Modus
  </CardTitle>
- <CardDescription className="text-stone-400">
+ <CardDescription className="text-[#9E7E60]">
  Kies je type keuken — dit bepaalt welke workflows en navigatie je ziet. 
  Je kan meerdere keukens aanmaken met verschillende types.
  </CardDescription>
@@ -172,7 +172,7 @@ export default function SettingsPage() {
  transition-all duration-200 text-left
  ${isSelected 
  ? `${mode.color} border-opacity-100 ring-1 ring-white/10` 
- : 'border-stone-700/50 bg-stone-800/30 hover:border-stone-600 hover:bg-stone-800/50'
+ : 'border-[#E8D5B5]/60 bg-white/30 hover:border-[#D4B896] hover:bg-[#FDF8F2]/80'
  }
  `}
  >
@@ -181,16 +181,16 @@ export default function SettingsPage() {
  <Check className="w-4 h-4 text-brand-400" />
  </div>
  )}
- <div className={`${isSelected ? 'text-white' : 'text-stone-400'}`}>
+ <div className={`${isSelected ? 'text-white' : 'text-[#9E7E60]'}`}>
  {mode.icon}
  </div>
  <div>
- <div className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-stone-300'}`}>
+ <div className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-[#5C4730]'}`}>
  {mode.label}
  </div>
- <div className="text-xs text-stone-500 mt-0.5">{mode.description}</div>
+ <div className="text-xs text-[#B8997A] mt-0.5">{mode.description}</div>
  </div>
- <div className="text-[10px] text-stone-500 font-mono">
+ <div className="text-[10px] text-[#B8997A] font-mono">
  FC target: {mode.targets}
  </div>
  </button>
@@ -201,51 +201,51 @@ export default function SettingsPage() {
  </Card>
 
  {/* Kitchen Info */}
- <Card className="bg-stone-900/50 border-stone-800">
+ <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
  <CardHeader>
- <CardTitle className="flex items-center gap-2 text-stone-100">
- <Building className="h-5 w-5 text-stone-400" /> Keuken Informatie
+ <CardTitle className="flex items-center gap-2 text-[#2C1810]">
+ <Building className="h-5 w-5 text-[#9E7E60]" /> Keuken Informatie
  </CardTitle>
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-stone-300">Keuken Naam</Label>
+ <Label className="text-[#5C4730]">Keuken Naam</Label>
  <Input 
  value={kitchenName}
  onChange={(e) => setKitchenName(e.target.value)}
- className="bg-stone-800 border-stone-700 text-stone-100"
+ className="bg-white border-[#E8D5B5] text-[#2C1810]"
  placeholder="Mijn Restaurant"
  />
  </div>
  <div className="space-y-2">
- <Label className="text-stone-300">Type</Label>
- <div className="flex items-center gap-2 h-10 px-3 rounded-md bg-stone-800 border border-stone-700">
+ <Label className="text-[#5C4730]">Type</Label>
+ <div className="flex items-center gap-2 h-10 px-3 rounded-md bg-white border border-[#E8D5B5]">
  <Badge variant="outline" className="text-brand-400 border-brand-400/30">
  {kitchenModes.find(m => m.type === selectedType)?.label || selectedType}
  </Badge>
- <span className="text-xs text-stone-500">Selecteer hierboven</span>
+ <span className="text-xs text-[#B8997A]">Selecteer hierboven</span>
  </div>
  </div>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-stone-300">Food Cost Doelstelling Min %</Label>
+ <Label className="text-[#5C4730]">Food Cost Doelstelling Min %</Label>
  <Input 
  type="number" 
  value={foodCostMin}
  onChange={(e) => setFoodCostMin(Number(e.target.value))}
- className="bg-stone-800 border-stone-700 text-stone-100"
+ className="bg-white border-[#E8D5B5] text-[#2C1810]"
  min={10} max={50}
  />
  </div>
  <div className="space-y-2">
- <Label className="text-stone-300">Food Cost Doelstelling Max %</Label>
+ <Label className="text-[#5C4730]">Food Cost Doelstelling Max %</Label>
  <Input 
  type="number" 
  value={foodCostMax}
  onChange={(e) => setFoodCostMax(Number(e.target.value))}
- className="bg-stone-800 border-stone-700 text-stone-100"
+ className="bg-white border-[#E8D5B5] text-[#2C1810]"
  min={10} max={50}
  />
  </div>
@@ -264,34 +264,34 @@ export default function SettingsPage() {
         <GoogleIntegrationCard />
 
  {/* Team */}
- <Card className="bg-stone-900/50 border-stone-800">
+ <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
  <CardHeader>
- <CardTitle className="flex items-center gap-2 text-stone-100">
- <Users className="h-5 w-5 text-stone-400" /> Team
+ <CardTitle className="flex items-center gap-2 text-[#2C1810]">
+ <Users className="h-5 w-5 text-[#9E7E60]" /> Team
  </CardTitle>
- <CardDescription className="text-stone-400">
+ <CardDescription className="text-[#9E7E60]">
  Beheer wie toegang heeft tot deze keuken
  </CardDescription>
  </CardHeader>
  <CardContent>
- <p className="text-stone-500 mb-4">Nog geen teamleden toegevoegd.</p>
- <Button variant="outline" className="border-stone-700 text-stone-300 hover:bg-stone-800">
+ <p className="text-[#B8997A] mb-4">Nog geen teamleden toegevoegd.</p>
+ <Button variant="outline" className="border-[#E8D5B5] text-[#5C4730] hover:bg-white">
  Chef Uitnodigen
  </Button>
  </CardContent>
  </Card>
 
  {/* Billing */}
- <Card className="bg-stone-900/50 border-stone-800">
+ <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
  <CardHeader>
- <CardTitle className="flex items-center gap-2 text-stone-100">
- <CreditCard className="h-5 w-5 text-stone-400" /> Abonnement
+ <CardTitle className="flex items-center gap-2 text-[#2C1810]">
+ <CreditCard className="h-5 w-5 text-[#9E7E60]" /> Abonnement
  </CardTitle>
  </CardHeader>
  <CardContent>
  <div className="flex items-center gap-2 mb-4">
- <span className="font-medium text-stone-300">Huidig plan:</span>
- <Badge className="bg-stone-700 text-stone-300">Free</Badge>
+ <span className="font-medium text-[#5C4730]">Huidig plan:</span>
+ <Badge className="bg-[#FDF8F2] text-[#5C4730]">Free</Badge>
  </div>
  <Button className="bg-brand-600 hover:bg-brand-700 text-white">
  Upgrade Plan
@@ -319,21 +319,21 @@ function GoogleIntegrationCard() {
   };
 
   return (
-    <Card className="bg-stone-900/50 border-stone-800">
+    <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5]">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-stone-100">
-          <Link2 className="h-5 w-5 text-stone-400" /> Integraties
+        <CardTitle className="flex items-center gap-2 text-[#2C1810]">
+          <Link2 className="h-5 w-5 text-[#9E7E60]" /> Integraties
         </CardTitle>
-        <CardDescription className="text-stone-400">
+        <CardDescription className="text-[#9E7E60]">
           Koppel externe diensten aan je keuken
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="rounded-xl border border-stone-700/50 bg-stone-800/30 p-4">
+        <div className="rounded-xl border border-[#E8D5B5]/60 bg-white/30 p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               {/* Google icon */}
-              <div className="w-10 h-10 rounded-lg bg-white/5 border border-stone-700/50 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-white/5 border border-[#E8D5B5]/60 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -343,27 +343,27 @@ function GoogleIntegrationCard() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-stone-200 text-sm">Google</span>
+                  <span className="font-medium text-[#3D2810] text-sm">Google</span>
                   {loading ? (
-                    <Badge variant="outline" className="text-stone-500 border-stone-600 text-[10px]">Laden...</Badge>
+                    <Badge variant="outline" className="text-[#B8997A] border-[#D4B896] text-[10px]">Laden...</Badge>
                   ) : connected && !needsReauth ? (
                     <Badge className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px]">Actief</Badge>
                   ) : needsReauth ? (
                     <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px]">Herconnectie nodig</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-stone-500 border-stone-600 text-[10px]">Niet gekoppeld</Badge>
+                    <Badge variant="outline" className="text-[#B8997A] border-[#D4B896] text-[10px]">Niet gekoppeld</Badge>
                   )}
                 </div>
                 {connected && email && (
-                  <p className="text-stone-400 text-xs mt-1">{email}</p>
+                  <p className="text-[#9E7E60] text-xs mt-1">{email}</p>
                 )}
                 {connected && (
-                  <p className="text-stone-500 text-[11px] mt-0.5">
+                  <p className="text-[#B8997A] text-[11px] mt-0.5">
                     Laatste sync: {formatDate(last_synced)}
                   </p>
                 )}
                 {!connected && !loading && (
-                  <p className="text-stone-500 text-xs mt-1">
+                  <p className="text-[#B8997A] text-xs mt-1">
                     Calendar, Gmail en contactgegevens
                   </p>
                 )}
@@ -377,7 +377,7 @@ function GoogleIntegrationCard() {
                     size="sm"
                     onClick={() => syncCalendar()}
                     disabled={syncing}
-                    className="border-stone-700 text-stone-300 hover:bg-stone-800 h-8 text-xs"
+                    className="border-[#E8D5B5] text-[#5C4730] hover:bg-white h-8 text-xs"
                   >
                     <RefreshCw className={`w-3 h-3 mr-1 ${syncing ? 'animate-spin' : ''}`} />
                     Sync
@@ -387,7 +387,7 @@ function GoogleIntegrationCard() {
                     size="sm"
                     onClick={disconnect}
                     disabled={disconnecting}
-                    className="border-stone-700 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 h-8 text-xs"
+                    className="border-[#E8D5B5] text-red-400 hover:bg-red-500/10 hover:border-red-500/30 h-8 text-xs"
                   >
                     {disconnecting ? 'Ontkoppelen...' : 'Ontkoppel'}
                   </Button>

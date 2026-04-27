@@ -136,7 +136,7 @@ export default function DashboardPage() {
             <h1 className="font-display text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
               {userName || 'Dashboard'}
             </h1>
-            <p className="text-stone-400 mt-2 text-sm italic max-w-lg">"{motivation}"</p>
+            <p className="text-[#9E7E60] mt-2 text-sm italic max-w-lg">"{motivation}"</p>
           </div>
           <div className="flex gap-2">
             <Link href="/recipes/new" className="btn-secondary text-sm py-2.5 px-4">
@@ -186,50 +186,50 @@ export default function DashboardPage() {
                 <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
                   <BookOpen className="w-4.5 h-4.5 text-brand-600" />
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.recipes || 0}</div>
-              <div className="text-xs text-stone-400 mt-0.5">Recepten</div>
+              <div className="text-xs text-[#9E7E60] mt-0.5">Recepten</div>
             </Link></StaggerItem>
             <StaggerItem><Link href="/events" className="card-hover p-4 group">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
                   <CalendarDays className="w-4.5 h-4.5 text-emerald-600" />
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.events || 0}</div>
-              <div className="text-xs text-stone-400 mt-0.5">Events</div>
+              <div className="text-xs text-[#9E7E60] mt-0.5">Events</div>
             </Link></StaggerItem>
             <StaggerItem><Link href="/ingredients" className="card-hover p-4 group">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
                   <FlaskConical className="w-4.5 h-4.5 text-amber-600" />
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.ingredients || 0}</div>
-              <div className="text-xs text-stone-400 mt-0.5">Ingrediënten</div>
+              <div className="text-xs text-[#9E7E60] mt-0.5">Ingrediënten</div>
             </Link></StaggerItem>
             <StaggerItem><Link href="/preparations" className="card-hover p-4 group">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
                   <Beaker className="w-4.5 h-4.5 text-violet-600" />
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.preparations || 0}</div>
-              <div className="text-xs text-stone-400 mt-0.5">Halffabricaten</div>
+              <div className="text-xs text-[#9E7E60] mt-0.5">Halffabricaten</div>
             </Link></StaggerItem>
             <StaggerItem><Link href="/invoices" className="card-hover p-4 group">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
                   <FileText className="w-4.5 h-4.5 text-sky-600" />
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
               </div>
               <div className="font-mono text-xl font-bold text-stone-900 tabular-nums">{stats?.invoices || 0}</div>
-              <div className="text-xs text-stone-400 mt-0.5">Facturen</div>
+              <div className="text-xs text-[#9E7E60] mt-0.5">Facturen</div>
             </Link></StaggerItem>
           </>
         )}
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                 </div>
                 <h3 className="font-display font-semibold text-stone-900">Komende Events</h3>
               </div>
-              <Link href="/events" className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors">
+              <Link href="/events" className="text-xs font-medium text-[#9E7E60] hover:text-brand-600 transition-colors">
                 Alle bekijken
               </Link>
             </div>
@@ -281,8 +281,8 @@ export default function DashboardPage() {
                       className="flex items-center gap-4 px-6 py-3.5 hover:bg-stone-50/80 transition-all group"
                     >
                       {/* Date block */}
-                      <div className="w-12 h-12 rounded-xl bg-stone-900 text-white flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[10px] uppercase tracking-wide text-stone-400 leading-none">{monthShort}</span>
+                      <div className="w-12 h-12 rounded-xl bg-white text-white flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[10px] uppercase tracking-wide text-[#9E7E60] leading-none">{monthShort}</span>
                         <span className="font-mono text-lg font-bold leading-none mt-0.5">{dayNum}</span>
                       </div>
                       {/* Info */}
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                           </span>
                           <span className={`w-2 h-2 rounded-full ${statusDots[event.status] || 'bg-stone-300'}`} />
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-stone-400 mt-0.5">
+                        <div className="flex items-center gap-3 text-xs text-[#9E7E60] mt-0.5">
                           <span>{eventTypeLabels[event.event_type] || event.event_type}</span>
                           {event.num_persons && <span>{event.num_persons} pers.</span>}
                           <span>{dayName}</span>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                       </div>
                       {/* Days until */}
                       <div className="text-right shrink-0">
-                        <span className={`text-xs font-mono font-medium ${daysUntil <= 3 ? 'text-red-500' : daysUntil <= 7 ? 'text-amber-500' : 'text-stone-400'}`}>
+                        <span className={`text-xs font-mono font-medium ${daysUntil <= 3 ? 'text-red-500' : daysUntil <= 7 ? 'text-amber-500' : 'text-[#9E7E60]'}`}>
                           {daysUntil === 0 ? 'Vandaag!' : daysUntil === 1 ? 'Morgen' : `${daysUntil}d`}
                         </span>
                       </div>
@@ -312,9 +312,9 @@ export default function DashboardPage() {
             ) : (
               <div className="px-6 pb-6 text-center">
                 <div className="w-12 h-12 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <CalendarDays className="w-5 h-5 text-stone-300" />
+                  <CalendarDays className="w-5 h-5 text-[#5C4730]" />
                 </div>
-                <p className="text-sm text-stone-400 mb-3">Geen komende events</p>
+                <p className="text-sm text-[#9E7E60] mb-3">Geen komende events</p>
                 <Link href="/events/new" className="text-xs font-medium text-brand-600 hover:text-brand-700">
                   + Eerste event plannen
                 </Link>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                 </div>
                 <h3 className="font-display font-semibold text-stone-900">Recente Recepten</h3>
               </div>
-              <Link href="/recipes" className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors">
+              <Link href="/recipes" className="text-xs font-medium text-[#9E7E60] hover:text-brand-600 transition-colors">
                 Alle bekijken
               </Link>
             </div>
@@ -357,14 +357,14 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium text-stone-700 group-hover:text-brand-700 transition-colors flex-1 truncate">
                         {recipe.name}
                       </span>
-                      <span className="text-xs text-stone-400 shrink-0">{timeAgo}</span>
+                      <span className="text-xs text-[#9E7E60] shrink-0">{timeAgo}</span>
                     </Link>
                   )
                 })}
               </div>
             ) : (
               <div className="px-6 pb-6 text-center">
-                <p className="text-sm text-stone-400 mb-3">Nog geen recepten</p>
+                <p className="text-sm text-[#9E7E60] mb-3">Nog geen recepten</p>
                 <Link href="/recipes/new" className="text-xs font-medium text-brand-600 hover:text-brand-700">
                   + Eerste recept maken
                 </Link>
@@ -388,27 +388,27 @@ export default function DashboardPage() {
 
           {/* Snelle Acties */}
           <div className="card p-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Snelle acties</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-3">Snelle acties</h3>
             <div className="grid grid-cols-2 gap-2">
-              <Link href="/recipes/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+              <Link href="/recipes/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-[#5C4730] hover:text-brand-700 group">
                 <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
                   <Plus className="w-4 h-4 text-brand-600" />
                 </div>
                 Nieuw recept
               </Link>
-              <Link href="/events/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+              <Link href="/events/new" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-[#5C4730] hover:text-brand-700 group">
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                   <CalendarDays className="w-4 h-4 text-emerald-600" />
                 </div>
                 Nieuw event
               </Link>
-              <Link href="/mep" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+              <Link href="/mep" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-[#5C4730] hover:text-brand-700 group">
                 <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors">
                   <ClipboardList className="w-4 h-4 text-sky-600" />
                 </div>
                 MEP Planning
               </Link>
-              <Link href="/invoices" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-stone-600 hover:text-brand-700 group">
+              <Link href="/invoices" className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-stone-50 transition-all text-sm text-[#5C4730] hover:text-brand-700 group">
                 <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                   <FileText className="w-4 h-4 text-amber-600" />
                 </div>

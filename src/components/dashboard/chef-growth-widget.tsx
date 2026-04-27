@@ -187,7 +187,7 @@ export function ChefGrowthWidget() {
               r="28"
               fill="none"
               stroke="currentColor"
-              className="text-stone-100"
+              className="text-[#2C1810]"
               strokeWidth="5"
             />
             <circle
@@ -211,7 +211,7 @@ export function ChefGrowthWidget() {
         {/* Title + Next Step */}
         <div className="flex-1 min-w-0">
           <h2 className="font-display text-lg font-semibold text-stone-900">Jouw Keuken</h2>
-          <p className="text-sm text-stone-400 mt-0.5">{nextStep}</p>
+          <p className="text-sm text-[#9E7E60] mt-0.5">{nextStep}</p>
         </div>
       </div>
 
@@ -243,11 +243,11 @@ function GrowthItemRow({ item }: { item: GrowthItem }) {
           <circle cx="8" cy="8" r="7.5" stroke="#D6D3D1" />
         </svg>
       )}
-      <span className={`truncate ${item.done ? 'text-stone-400' : 'text-stone-600'}`}>
+      <span className={`truncate ${item.done ? 'text-[#9E7E60]' : 'text-[#5C4730]'}`}>
         {item.label}
       </span>
       {!item.done && item.href && (
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 ml-auto text-stone-300 group-hover:text-[#E8A040] transition-colors">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 ml-auto text-[#5C4730] group-hover:text-[#E8A040] transition-colors">
           <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}

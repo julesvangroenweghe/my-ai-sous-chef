@@ -27,7 +27,7 @@ export function MobileNav() {
  href={item.href}
  className={cn(
  'flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors',
- isActive ? 'text-brand-600' : 'text-stone-400'
+ isActive ? 'text-brand-600' : 'text-[#9E7E60]'
  )}
  >
  <item.icon className="h-5 w-5" />

@@ -44,7 +44,7 @@ const prepDayOptions = [
 ]
 
 const statusOptions = [
- { value: 'pending', label: '⏳ Te doen', color: 'text-stone-400' },
+ { value: 'pending', label: '⏳ Te doen', color: 'text-[#9E7E60]' },
  { value: 'in_progress', label: ' Bezig', color: 'text-amber-400' },
  { value: 'done', label: ' Klaar', color: 'text-emerald-400' },
 ]
@@ -274,11 +274,11 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <ClipboardList className="w-5 h-5 text-brand-400" />
- <h3 className="text-lg font-display font-semibold text-stone-100">
+ <h3 className="text-lg font-display font-semibold text-[#2C1810]">
  MEP Plan
  </h3>
  {items.length > 0 && (
- <span className="text-xs text-stone-500">
+ <span className="text-xs text-[#B8997A]">
  {items.length} items · {completedCount}/{totalCount} klaar ({progress}%)
  </span>
  )}
@@ -288,7 +288,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  <button
  onClick={generateMep}
  disabled={generating}
- className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-xs rounded-lg transition-all"
+ className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#5C4730] text-xs rounded-lg transition-all"
  >
  Herbereken
  </button>
@@ -310,7 +310,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
 
  {/* Progress bar */}
  {items.length > 0 && (
- <div className="w-full bg-stone-800 rounded-full h-2">
+ <div className="w-full bg-white rounded-full h-2">
  <div
  className="bg-gradient-to-r from-brand-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
  style={{ width: `${progress}%` }}
@@ -319,7 +319,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  )}
 
  {items.length === 0 ? (
- <div className="text-center py-8 text-stone-500">
+ <div className="text-center py-8 text-[#B8997A]">
  <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
  <p className="text-sm">Genereer een MEP plan vanuit je menu</p>
  </div>
@@ -340,20 +340,20 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  }
 
  return (
- <div key={day} className="bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden">
- <div className="px-5 py-3 bg-stone-800/30 border-b border-stone-800 flex items-center justify-between">
+ <div key={day} className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+ <div className="px-5 py-3 bg-white/30 border-b border-[#E8D5B5] flex items-center justify-between">
  <div className="flex items-center gap-2">
  <Clock className="w-4 h-4 text-brand-400" />
- <span className="text-sm font-semibold text-stone-200">{dayLabel}</span>
- <span className="text-xs text-stone-500">
+ <span className="text-sm font-semibold text-[#3D2810]">{dayLabel}</span>
+ <span className="text-xs text-[#B8997A]">
  {dayItems.length} items · {dayDoneCount} klaar
  </span>
  </div>
  </div>
 
- <div className="divide-y divide-stone-800/50">
+ <div className="divide-y divide-[#E8D5B5]/50">
  {/* Table header */}
- <div className="px-5 py-2 flex items-center gap-3 text-xs text-stone-500 font-medium bg-stone-800/10">
+ <div className="px-5 py-2 flex items-center gap-3 text-xs text-[#B8997A] font-medium bg-white/10">
  <span className="w-6"></span>
  <span className="flex-1">Ingrediënt</span>
  <span className="w-16 text-right">Component</span>
@@ -372,7 +372,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  key={item.id}
  className={`px-5 py-2.5 flex items-center gap-3 transition-all ${
  item.status === 'done' ? 'opacity-60' : ''
- } ${isEditing ? 'bg-brand-500/5 border-l-2 border-brand-500' : 'hover:bg-stone-800/20'}`}
+ } ${isEditing ? 'bg-brand-500/5 border-l-2 border-brand-500' : 'hover:bg-white/20'}`}
  >
  {/* Status toggle */}
  <button
@@ -380,19 +380,19 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
  item.status === 'done'
  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
- : 'border-stone-600 hover:border-brand-500'
+ : 'border-[#D4B896] hover:border-brand-500'
  }`}
  >
  {item.status === 'done' && <Check className="w-3 h-3" />}
  </button>
 
  {/* Item name */}
- <span className={`flex-1 text-sm ${item.status === 'done' ? 'line-through text-stone-500' : 'text-stone-200'}`}>
+ <span className={`flex-1 text-sm ${item.status === 'done' ? 'line-through text-[#B8997A]' : 'text-[#3D2810]'}`}>
  {item.item_name}
  </span>
 
  {/* Component */}
- <span className="w-16 text-xs text-stone-500 text-right truncate">
+ <span className="w-16 text-xs text-[#B8997A] text-right truncate">
  {item.notes || ''}
  </span>
 
@@ -402,17 +402,17 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  type="number"
  value={item.quantity_per_person}
  onChange={(e) => updateItem(item.id, 'quantity_per_person', Number(e.target.value))}
- className="w-20 px-2 py-1 bg-stone-800 border border-brand-500/50 rounded text-sm text-right text-stone-200 font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
+ className="w-20 px-2 py-1 bg-white border border-brand-500/50 rounded text-sm text-right text-[#3D2810] font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
  step="0.1"
  />
  ) : (
- <span className="w-20 text-sm text-stone-400 text-right font-mono">
+ <span className="w-20 text-sm text-[#9E7E60] text-right font-mono">
  {item.quantity_per_person}
  </span>
  )}
 
  {/* Total quantity */}
- <span className="w-24 text-sm font-semibold text-stone-100 text-right font-mono">
+ <span className="w-24 text-sm font-semibold text-[#2C1810] text-right font-mono">
  {isEditing ? item.total_quantity : item.total_quantity}
  </span>
 
@@ -422,10 +422,10 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  type="text"
  value={item.unit}
  onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
- className="w-12 px-1 py-1 bg-stone-800 border border-brand-500/50 rounded text-xs text-right text-stone-200 focus:outline-none focus:ring-1 focus:ring-brand-500"
+ className="w-12 px-1 py-1 bg-white border border-brand-500/50 rounded text-xs text-right text-[#3D2810] focus:outline-none focus:ring-1 focus:ring-brand-500"
  />
  ) : (
- <span className="w-12 text-xs text-stone-500 text-right">{item.unit}</span>
+ <span className="w-12 text-xs text-[#B8997A] text-right">{item.unit}</span>
  )}
 
  {/* Actions */}
@@ -441,7 +441,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  </button>
  <button
  onClick={cancelEdit}
- className="p-1 text-stone-500 hover:text-stone-300 transition-colors"
+ className="p-1 text-[#B8997A] hover:text-[#5C4730] transition-colors"
  >
  <X className="w-3.5 h-3.5" />
  </button>
@@ -450,13 +450,13 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  <>
  <button
  onClick={() => startEdit(item.id)}
- className="p-1 text-stone-600 hover:text-brand-400 transition-colors"
+ className="p-1 text-[#5C4730] hover:text-brand-400 transition-colors"
  >
  <Pencil className="w-3.5 h-3.5" />
  </button>
  <button
  onClick={() => deleteItem(item.id)}
- className="p-1 text-stone-600 hover:text-red-400 transition-colors"
+ className="p-1 text-[#5C4730] hover:text-red-400 transition-colors"
  >
  <Trash2 className="w-3.5 h-3.5" />
  </button>

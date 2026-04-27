@@ -69,10 +69,10 @@ export function EventAllergenSection({ eventId }: { eventId: string }) {
   const uniqueLinks = [...unique.values()]
 
   return (
-    <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
+    <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6">
       <div className="flex items-center gap-2 mb-3">
         <ShieldAlert className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-stone-200">
+        <h3 className="text-sm font-semibold text-[#3D2810]">
           Allergenen in dit menu ({uniqueLinks.length})
         </h3>
       </div>
@@ -87,7 +87,7 @@ export function EventAllergenSection({ eventId }: { eventId: string }) {
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                 : link.severity === 'may_contain'
                 ? 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20'
-                : 'bg-stone-700 text-stone-400 border-stone-600'
+                : 'bg-[#FDF8F2] text-[#9E7E60] border-[#D4B896]'
             }`}
           >
             <span className="font-bold">{link.allergen.eu_number}</span>

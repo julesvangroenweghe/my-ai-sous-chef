@@ -51,7 +51,7 @@ const LOADING_MESSAGES = [
 const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
   own_recipe: { label: 'Jouw recept', className: 'bg-brand-500/20 text-brand-300 border border-brand-500/30' },
   legende: { label: 'LEGENDE', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
-  new: { label: 'Nieuw voorstel', className: 'bg-stone-700 text-stone-300 border border-stone-600' },
+  new: { label: 'Nieuw voorstel', className: 'bg-[#FDF8F2] text-[#5C4730] border border-[#D4B896]' },
 }
 
 interface MenuItem {
@@ -323,8 +323,8 @@ export default function MenuBuilderPage() {
           <Sparkles className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">AI Menu Builder</h1>
-          <p className="text-stone-400 text-sm">Stel een gepersonaliseerd menu samen met AI</p>
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">AI Menu Builder</h1>
+          <p className="text-[#9E7E60] text-sm">Stel een gepersonaliseerd menu samen met AI</p>
         </div>
       </div>
 
@@ -339,47 +339,47 @@ export default function MenuBuilderPage() {
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
               step === n ? 'bg-brand-600 text-white'
               : step > n ? 'bg-emerald-500/20 text-emerald-400'
-              : 'bg-stone-800 text-stone-500'
+              : 'bg-white text-[#B8997A]'
             }`}>
               {step > n ? <Check className="w-4 h-4" /> : n}
             </div>
-            <span className={`text-sm font-medium ${step === n ? 'text-stone-100' : 'text-stone-500'}`}>{label}</span>
-            {n < 3 && <ChevronRight className="w-4 h-4 text-stone-600" />}
+            <span className={`text-sm font-medium ${step === n ? 'text-[#2C1810]' : 'text-[#B8997A]'}`}>{label}</span>
+            {n < 3 && <ChevronRight className="w-4 h-4 text-[#5C4730]" />}
           </div>
         ))}
       </div>
 
       {/* STEP 1: Klantinfo */}
       {step === 1 && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-5">
-          <h2 className="text-lg font-display font-semibold text-stone-100">Klant & Event informatie</h2>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-5">
+          <h2 className="text-lg font-display font-semibold text-[#2C1810]">Klant & Event informatie</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium">Evenementtype</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Evenementtype</label>
               <select
                 value={eventType}
                 onChange={e => setEventType(e.target.value)}
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium flex items-center gap-1.5">
+              <label className="text-xs text-[#9E7E60] font-medium flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" /> Datum evenement
               </label>
               <input
                 type="date"
                 value={eventDate}
                 onChange={e => setEventDate(e.target.value)}
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium flex items-center gap-1.5">
+              <label className="text-xs text-[#9E7E60] font-medium flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" /> Aantal personen
               </label>
               <input
@@ -387,12 +387,12 @@ export default function MenuBuilderPage() {
                 min={1}
                 value={numPersons}
                 onChange={e => setNumPersons(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-stone-400 font-medium flex items-center gap-1.5">
+              <label className="text-xs text-[#9E7E60] font-medium flex items-center gap-1.5">
                 <Euro className="w-3.5 h-3.5" /> Verkoopprijs per persoon
               </label>
               <input
@@ -401,7 +401,7 @@ export default function MenuBuilderPage() {
                 step={0.5}
                 value={pricePerPerson}
                 onChange={e => setPricePerPerson(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -409,10 +409,10 @@ export default function MenuBuilderPage() {
           {/* Food cost slider */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-stone-400 font-medium">Target food cost %</label>
+              <label className="text-xs text-[#9E7E60] font-medium">Target food cost %</label>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-mono font-bold text-brand-400">{foodCostTarget}%</span>
-                <span className="text-xs text-stone-500">= max €{maxFoodCost}/p</span>
+                <span className="text-xs text-[#B8997A]">= max €{maxFoodCost}/p</span>
               </div>
             </div>
             <input
@@ -423,7 +423,7 @@ export default function MenuBuilderPage() {
               onChange={e => setFoodCostTarget(Number(e.target.value))}
               className="w-full accent-brand-500"
             />
-            <div className="flex justify-between text-xs text-stone-600">
+            <div className="flex justify-between text-xs text-[#5C4730]">
               <span>20%</span>
               <span>30%</span>
               <span>40%</span>
@@ -432,7 +432,7 @@ export default function MenuBuilderPage() {
 
           {/* Allergies */}
           <div className="space-y-2">
-            <label className="text-xs text-stone-400 font-medium">Allergieën / dieetwensen</label>
+            <label className="text-xs text-[#9E7E60] font-medium">Allergieën / dieetwensen</label>
             <div className="flex flex-wrap gap-2">
               {ALLERGY_OPTIONS.map(a => (
                 <button
@@ -441,7 +441,7 @@ export default function MenuBuilderPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                     allergies.includes(a.value)
                       ? 'bg-red-500/20 text-red-300 border-red-500/40'
-                      : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                      : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                   }`}
                 >
                   {allergies.includes(a.value) && <Check className="w-3 h-3 inline mr-1" />}
@@ -453,13 +453,13 @@ export default function MenuBuilderPage() {
 
           {/* Client notes */}
           <div className="space-y-1.5">
-            <label className="text-xs text-stone-400 font-medium">Klantnotities (optioneel)</label>
+            <label className="text-xs text-[#9E7E60] font-medium">Klantnotities (optioneel)</label>
             <textarea
               value={clientNotes}
               onChange={e => setClientNotes(e.target.value)}
               rows={3}
               placeholder="Speciale wensen, thema, budget opmerkingen..."
-              className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+              className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
             />
           </div>
 
@@ -476,11 +476,11 @@ export default function MenuBuilderPage() {
 
       {/* STEP 2: Menu structuur */}
       {step === 2 && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-5">
-          <h2 className="text-lg font-display font-semibold text-stone-100">Menustructuur</h2>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-5">
+          <h2 className="text-lg font-display font-semibold text-[#2C1810]">Menustructuur</h2>
 
           <div className="space-y-2">
-            <label className="text-xs text-stone-400 font-medium">Verloop avond — selecteer gangen</label>
+            <label className="text-xs text-[#9E7E60] font-medium">Verloop avond — selecteer gangen</label>
             <div className="grid grid-cols-2 gap-2">
               {COURSE_OPTIONS.map(c => (
                 <button
@@ -489,13 +489,13 @@ export default function MenuBuilderPage() {
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${
                     selectedCourses.includes(c.value)
                       ? 'bg-brand-600/20 text-brand-300 border-brand-500/40'
-                      : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                      : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                   }`}
                 >
                   <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                     selectedCourses.includes(c.value)
                       ? 'bg-brand-500 border-brand-400'
-                      : 'border-stone-600'
+                      : 'border-[#D4B896]'
                   }`}>
                     {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-white" />}
                   </div>
@@ -507,7 +507,7 @@ export default function MenuBuilderPage() {
 
           {/* Style */}
           <div className="space-y-2">
-            <label className="text-xs text-stone-400 font-medium">Stijl</label>
+            <label className="text-xs text-[#9E7E60] font-medium">Stijl</label>
             <div className="flex gap-2 flex-wrap">
               {STYLE_OPTIONS.map(s => (
                 <button
@@ -516,7 +516,7 @@ export default function MenuBuilderPage() {
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                     menuStyle === s
                       ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-600'
+                      : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                   }`}
                 >
                   {s}
@@ -527,7 +527,7 @@ export default function MenuBuilderPage() {
 
           {/* Hint */}
           <div className="space-y-1.5">
-            <label className="text-xs text-stone-400 font-medium flex items-center gap-1.5">
+            <label className="text-xs text-[#9E7E60] font-medium flex items-center gap-1.5">
               <Lightbulb className="w-3.5 h-3.5" /> AI-hint (optioneel)
             </label>
             <input
@@ -535,14 +535,14 @@ export default function MenuBuilderPage() {
               value={hint}
               onChange={e => setHint(e.target.value)}
               placeholder="Wat wil je uitdrukken met dit menu?"
-              className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#3D2810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all"
             >
               <ChevronLeft className="w-4 h-4" /> Terug
             </button>
@@ -577,14 +577,14 @@ export default function MenuBuilderPage() {
         <div className="space-y-4">
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-              <div className="text-xs text-stone-500 mb-1">Food cost/p</div>
-              <div className="text-lg font-mono font-bold text-stone-200">
+            <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+              <div className="text-xs text-[#B8997A] mb-1">Food cost/p</div>
+              <div className="text-lg font-mono font-bold text-[#3D2810]">
                 €{generatedMenu.total_estimated_cost_pp?.toFixed(2) || '—'}
               </div>
             </div>
-            <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-              <div className="text-xs text-stone-500 mb-1">Food cost %</div>
+            <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+              <div className="text-xs text-[#B8997A] mb-1">Food cost %</div>
               <div className={`text-lg font-mono font-bold ${
                 (generatedMenu.total_food_cost_pct || 0) <= generatedMenu.food_cost_target
                   ? 'text-emerald-400' : 'text-amber-400'
@@ -592,29 +592,29 @@ export default function MenuBuilderPage() {
                 {generatedMenu.total_food_cost_pct?.toFixed(1) || '—'}%
               </div>
             </div>
-            <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
-              <div className="text-xs text-stone-500 mb-1">Target</div>
-              <div className="text-lg font-mono font-bold text-stone-400">{generatedMenu.food_cost_target}%</div>
+            <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
+              <div className="text-xs text-[#B8997A] mb-1">Target</div>
+              <div className="text-lg font-mono font-bold text-[#9E7E60]">{generatedMenu.food_cost_target}%</div>
             </div>
           </div>
 
           {/* Library context */}
           {(generatedMenu.own_recipe_count !== undefined || generatedMenu.legende_count !== undefined) && (
-            <div className="flex flex-wrap gap-2 text-xs text-stone-500">
+            <div className="flex flex-wrap gap-2 text-xs text-[#B8997A]">
               {generatedMenu.own_recipe_count !== undefined && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                <span className="flex items-center gap-1 px-2 py-1 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-400 inline-block"></span>
                   {generatedMenu.own_recipe_count} eigen recepten geanalyseerd
                 </span>
               )}
               {generatedMenu.legende_count !== undefined && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                <span className="flex items-center gap-1 px-2 py-1 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
                   {generatedMenu.legende_count} LEGENDE gerechten geanalyseerd
                 </span>
               )}
               {generatedMenu.seasonal_score !== undefined && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-stone-900/50 border border-stone-800 rounded-lg">
+                <span className="flex items-center gap-1 px-2 py-1 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
                   Seizoensscore: {generatedMenu.seasonal_score}%
                 </span>
@@ -631,15 +631,15 @@ export default function MenuBuilderPage() {
           )}
 
           {/* Menu courses */}
-          <div className="bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-stone-800">
-              <h2 className="text-lg font-display font-semibold text-stone-100">Gegenereerd menu</h2>
+          <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#E8D5B5]">
+              <h2 className="text-lg font-display font-semibold text-[#2C1810]">Gegenereerd menu</h2>
             </div>
-            <div className="divide-y divide-stone-800/50">
+            <div className="divide-y divide-[#E8D5B5]/50">
               {generatedMenu.menu?.map((course, ci) => (
                 <div key={ci}>
-                  <div className="px-6 py-3 bg-stone-800/30">
-                    <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+                  <div className="px-6 py-3 bg-white/30">
+                    <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
                       {course.course_label}
                     </span>
                   </div>
@@ -651,7 +651,7 @@ export default function MenuBuilderPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold text-stone-100">{item.name}</span>
+                              <span className="text-sm font-semibold text-[#2C1810]">{item.name}</span>
                               {item.source && SOURCE_BADGES[item.source] && (
                                 <span className={`px-2 py-0.5 text-xs rounded-full ${SOURCE_BADGES[item.source].className}`}>
                                   {SOURCE_BADGES[item.source].label}
@@ -659,11 +659,11 @@ export default function MenuBuilderPage() {
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-xs text-stone-400 mt-1">{item.description}</p>
+                              <p className="text-xs text-[#9E7E60] mt-1">{item.description}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-sm font-mono font-bold text-stone-300">
+                            <span className="text-sm font-mono font-bold text-[#5C4730]">
                               €{Number(item.estimated_cost_pp || 0).toFixed(2)}/p
                             </span>
                             {/* Feedback buttons */}
@@ -677,7 +677,7 @@ export default function MenuBuilderPage() {
                                 className={`p-1.5 rounded-lg border transition-all duration-150 ${
                                   fb === 'liked'
                                     ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                                    : 'bg-stone-800 border-stone-700 text-stone-500 hover:border-emerald-500/40 hover:text-emerald-400'
+                                    : 'bg-white border-[#E8D5B5] text-[#B8997A] hover:border-emerald-500/40 hover:text-emerald-400'
                                 }`}
                               >
                                 <ThumbUp className="w-3.5 h-3.5" />
@@ -691,7 +691,7 @@ export default function MenuBuilderPage() {
                                 className={`p-1.5 rounded-lg border transition-all duration-150 ${
                                   fb === 'disliked'
                                     ? 'bg-red-500/20 border-red-500/40 text-red-400'
-                                    : 'bg-stone-800 border-stone-700 text-stone-500 hover:border-red-500/40 hover:text-red-400'
+                                    : 'bg-white border-[#E8D5B5] text-[#B8997A] hover:border-red-500/40 hover:text-red-400'
                                 }`}
                               >
                                 <ThumbDown className="w-3.5 h-3.5" />
@@ -702,7 +702,7 @@ export default function MenuBuilderPage() {
                         {item.key_ingredients && item.key_ingredients.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {item.key_ingredients.map((ing, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded-full">
+                              <span key={i} className="px-2 py-0.5 bg-white text-[#9E7E60] text-xs rounded-full">
                                 {ing}
                               </span>
                             ))}
@@ -715,13 +715,13 @@ export default function MenuBuilderPage() {
                           </div>
                         )}
                         {item.classical_reference && (
-                          <div className="flex items-center gap-1 text-xs text-stone-500">
-                            <Star className="w-3 h-3 text-stone-600" />
+                          <div className="flex items-center gap-1 text-xs text-[#B8997A]">
+                            <Star className="w-3 h-3 text-[#5C4730]" />
                             <span>Gebaseerd op: <span className="italic">{item.classical_reference}</span></span>
                           </div>
                         )}
                         {item.notes && (
-                          <p className="text-xs text-stone-500 italic">{item.notes}</p>
+                          <p className="text-xs text-[#B8997A] italic">{item.notes}</p>
                         )}
                         {/* Hertaal knop */}
                         <div>
@@ -730,7 +730,7 @@ export default function MenuBuilderPage() {
                             className={`flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
                               hertaalItem === fbKey
                                 ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
-                                : 'bg-stone-800 text-stone-500 border-stone-700 hover:text-violet-300 hover:border-violet-500/30'
+                                : 'bg-white text-[#B8997A] border-[#E8D5B5] hover:text-violet-300 hover:border-violet-500/30'
                             }`}
                           >
                             {hertaalLoading === fbKey
@@ -743,7 +743,7 @@ export default function MenuBuilderPage() {
                             <div className="mt-2 p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl relative">
                               <button
                                 onClick={() => setHertaalItem(null)}
-                                className="absolute top-2 right-2 text-stone-600 hover:text-stone-400"
+                                className="absolute top-2 right-2 text-[#5C4730] hover:text-[#9E7E60]"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -763,14 +763,14 @@ export default function MenuBuilderPage() {
           <div className="flex gap-3">
             <button
               onClick={() => { setStep(2); setGeneratedMenu(null) }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all"
             >
               <ChevronLeft className="w-4 h-4" /> Aanpassen
             </button>
             <button
               onClick={generateMenu}
               disabled={generating}
-              className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium rounded-xl transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] text-[#5C4730] font-medium rounded-xl transition-all disabled:opacity-50"
             >
               <RefreshCw className="w-4 h-4" /> Opnieuw genereren
             </button>

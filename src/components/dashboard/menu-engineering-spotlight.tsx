@@ -75,11 +75,11 @@ export function MenuEngineeringSpotlight() {
           <h3 className="font-display font-semibold text-stone-900 group-hover:text-[#E8A040] transition-colors">
             Menu Engineering
           </h3>
-          <p className="text-xs text-stone-400 mt-0.5">
+          <p className="text-xs text-[#9E7E60] mt-0.5">
             AI-gestuurd menu samenstellen met culinaire audit
           </p>
         </div>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-stone-300 group-hover:text-[#E8A040] transition-colors">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-[#5C4730] group-hover:text-[#E8A040] transition-colors">
           <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
@@ -94,12 +94,12 @@ export function MenuEngineeringSpotlight() {
             </svg>
             <div className="flex-1 min-w-0">
               <span className="text-sm font-medium text-stone-700 truncate block">{data.latestMenu.name}</span>
-              <span className="text-xs text-stone-400">
+              <span className="text-xs text-[#9E7E60]">
                 {new Date(data.latestMenu.created_at).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })}
               </span>
             </div>
             {data.latestMenu.status && (
-              <span className="text-xs font-medium text-stone-400 capitalize">{data.latestMenu.status}</span>
+              <span className="text-xs font-medium text-[#9E7E60] capitalize">{data.latestMenu.status}</span>
             )}
           </div>
 
@@ -108,8 +108,8 @@ export function MenuEngineeringSpotlight() {
             <div className="flex items-center gap-3">
               <MiniScoreRing score={data.avgScore} />
               <div>
-                <span className="text-xs font-medium text-stone-600">Audit score</span>
-                <span className="text-xs text-stone-400 ml-2">{data.auditCount || 0} audits</span>
+                <span className="text-xs font-medium text-[#5C4730]">Audit score</span>
+                <span className="text-xs text-[#9E7E60] ml-2">{data.auditCount || 0} audits</span>
               </div>
             </div>
           )}
@@ -120,7 +120,7 @@ export function MenuEngineeringSpotlight() {
             <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.2" />
             <path d="M10 6V14M6 10H14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
-          <span className="text-sm font-medium text-stone-500 group-hover:text-stone-700 transition-colors">
+          <span className="text-sm font-medium text-[#B8997A] group-hover:text-stone-700 transition-colors">
             Stel je eerste menu samen
           </span>
         </div>
