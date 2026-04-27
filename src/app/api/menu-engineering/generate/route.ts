@@ -523,7 +523,7 @@ Geef voor elke gang MEERDERE opties (want buffet = keuze). Vlees = 2 opties, Vis
 
 SERVICE TIMING VUISTREGELS (STRIKT RESPECTEREN):
 - Ontvangst/aankomst: altijd 15 min — gasten settelen, eerste drankje
-- Per hapje staand/walking: 15 min cadans — nooit 2 hapjes tegelijk serveren
+- Per hapje staand/walking: 15 min per ronde — fingerbites (1 hap, geen potje) mogen 2 tegelijk worden doorgegeven; hapjes MET potje of schaal altijd 1 tegelijk (te druk voor gast + bediening)
 - Walking dinner per gerecht: 30 min — tijd om te eten EN te bewegen tussen courses
 - Zittend diner (≤50 pax): 45 min per gang
 - Zittend diner (>50 pax): 60 min per gang — logistiek trager bij grote groepen
