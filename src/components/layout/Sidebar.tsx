@@ -6,25 +6,25 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { useKitchen } from '@/hooks/useKitchen'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
-  { href: '/recipes', label: 'Recepten', icon: 'book' },
-  { href: '/events', label: 'Events & MEP', icon: 'calendar' },
-  { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf' },
-  { href: '/preparations', label: 'Halffabricaten', icon: 'layers' },
-  { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout' },
-  { href: '/scan', label: 'Scan', icon: 'scan' },
-  { href: '/suppliers', label: 'Leveranciers', icon: 'truck' },
-  { href: '/legende', label: 'LEGENDE', icon: 'star' },
-  { href: '/match-style', label: 'Match My Style', icon: 'sparkles' },
-  { href: '/checklist', label: 'Checklist', icon: 'check-square' },
-  { href: '/mep-plans', label: 'MEP Plans', icon: 'clipboard' },
-  { href: '/food-cost', label: 'Food Cost', icon: 'chart' },
-  { href: '/invoices', label: 'Facturen', icon: 'receipt' },
-  { href: '/jules-ai', label: 'Jules AI', icon: 'chef' },
-  { href: '/calendar', label: 'Kalender', icon: 'cal' },
-  { href: '/integrations', label: 'Integraties', icon: 'plug' },
-  { href: '/inbox', label: 'Inbox', icon: 'mail' },
-  { href: '/knowledge', label: 'Kennisbank', icon: 'archive' },
+  { href: '/dashboard', label: 'Dashboard', icon: 'grid', sub: null },
+  { href: '/recipes', label: 'Recepten', icon: 'book', sub: null },
+  { href: '/events', label: 'Events & MEP', icon: 'calendar', sub: 'Mis en place planning' },
+  { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf', sub: null },
+  { href: '/preparations', label: 'Halffabricaten', icon: 'layers', sub: 'Sauzen, bases, fondsen' },
+  { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout', sub: null },
+  { href: '/scan', label: 'Scan', icon: 'scan', sub: 'OCR facturen & recepten' },
+  { href: '/suppliers', label: 'Leveranciers', icon: 'truck', sub: null },
+  { href: '/legende', label: 'LEGENDE', icon: 'star', sub: 'Jouw signatuurgerechten' },
+  { href: '/match-style', label: 'Match My Style', icon: 'sparkles', sub: 'AI stijlmatch' },
+  { href: '/checklist', label: 'Checklist', icon: 'check-square', sub: null },
+  { href: '/mep-plans', label: 'MEP Plans', icon: 'clipboard', sub: 'Productieplanning' },
+  { href: '/food-cost', label: 'Food Cost', icon: 'chart', sub: null },
+  { href: '/invoices', label: 'Facturen', icon: 'receipt', sub: null },
+  { href: '/jules-ai', label: 'Jules AI', icon: 'chef', sub: null },
+  { href: '/calendar', label: 'Kalender', icon: 'cal', sub: null },
+  { href: '/integrations', label: 'Integraties', icon: 'plug', sub: null },
+  { href: '/inbox', label: 'Inbox', icon: 'mail', sub: null },
+  { href: '/knowledge', label: 'Kennisbank', icon: 'archive', sub: 'Escoffier & klassiekers' },
 ]
 
 const bottomItems = [
@@ -185,6 +185,18 @@ export default function Sidebar() {
                 transition: 'color 0.15s ease',
               }}>
                 {item.label}
+                {(item as any).sub && (
+                  <span style={{
+                    display: 'block',
+                    fontSize: 9,
+                    color: active ? '#8B6A3E' : '#4A4540',
+                    lineHeight: 1.2,
+                    marginTop: 1,
+                    fontWeight: 400,
+                  }}>
+                    {(item as any).sub}
+                  </span>
+                )}
               </span>
             </Link>
           )
