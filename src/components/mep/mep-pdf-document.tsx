@@ -5,7 +5,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -16,6 +15,7 @@ interface Ingredient {
   total_quantity: number
   unit: string
   cost_per_unit: number
+  grammage_warning?: boolean
 }
 
 interface Component {
@@ -25,7 +25,9 @@ interface Component {
 
 interface Course {
   course: string
+  course_label?: string
   course_order: number
+  category_sort_order?: number
   recipe_name: string
   cost_per_person: number
   total_cost: number
@@ -42,11 +44,29 @@ interface MepData {
     price_per_person: number | null
   }
   courses: Course[]
+  categories?: Array<{ code: string; label: string; sort_order: number }>
   totals: {
     food_cost_per_person: number
     total_food_cost: number
     food_cost_percentage: number
   }
+}
+
+// ─── Category sort order ──────────────────────────────────────────────────────
+
+const MEP_CATEGORY_ORDER: Record<string, number> = {
+  DRANKEN: 10,
+  FINGERFOOD: 20,
+  FINGERBITES: 30,
+  HAPJES: 40,
+  AMUSE: 50,
+  VOORGERECHT: 60,
+  TUSSENGERECHT: 70,
+  HOOFDGERECHT: 80,
+  DESSERT: 90,
+  KAAS: 100,
+  MIGNARDISES: 200,
+  HALFABRICAAT: 250,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -74,6 +94,30 @@ function formatEur(val: number) {
   return `€${val.toFixed(2).replace('.', ',')}`
 }
 
+function getCategoryLabel(courseCode: string, categories?: MepData['categories']): string {
+  const code = courseCode.toUpperCase().trim()
+  if (categories) {
+    const cat = categories.find((c) => c.code === code)
+    if (cat) return cat.label
+  }
+  // Fallback labels
+  const labels: Record<string, string> = {
+    DRANKEN: 'Dranken',
+    FINGERFOOD: 'Fingerfood',
+    FINGERBITES: 'Fingerbites',
+    HAPJES: 'Hapjes',
+    AMUSE: 'Amuse',
+    VOORGERECHT: 'Voorgerecht',
+    TUSSENGERECHT: 'Tussengerecht',
+    HOOFDGERECHT: 'Hoofdgerecht',
+    DESSERT: 'Dessert',
+    KAAS: 'Kaas',
+    MIGNARDISES: 'Mignardises',
+    HALFABRICAAT: 'Halfabricaat',
+  }
+  return labels[code] || courseCode
+}
+
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const colors = {
@@ -86,6 +130,7 @@ const colors = {
   gray600: '#57534E',
   gray800: '#292524',
   white: '#FFFFFF',
+  amberDark: '#92400E',
 }
 
 const styles = StyleSheet.create({
@@ -93,15 +138,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
     backgroundColor: colors.white,
     paddingTop: 28,
-    paddingBottom: 28,
-    paddingHorizontal: 24,
+    paddingBottom: 32,
+    paddingHorizontal: 22,
     fontSize: 8,
     color: colors.black,
   },
 
   // ── Header
   header: {
-    marginBottom: 12,
+    marginBottom: 14,
     paddingBottom: 10,
     borderBottomWidth: 2,
     borderBottomColor: colors.amber,
@@ -113,106 +158,147 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   eventName: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: colors.black,
     letterSpacing: 0.5,
+    maxWidth: 280,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
   },
   headerDate: {
-    fontSize: 9,
+    fontSize: 8,
     color: colors.gray600,
     textAlign: 'right',
   },
   headerMeta: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 10,
     marginTop: 4,
+    flexWrap: 'wrap',
   },
   metaBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: colors.gray100,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 4,
   },
   metaLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: colors.gray400,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   metaValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontFamily: 'Helvetica-Bold',
     color: colors.black,
   },
   costBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: colors.amberLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 4,
   },
   costValue: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontFamily: 'Helvetica-Bold',
-    color: '#92400E',
+    color: colors.amberDark,
   },
 
   // ── Column layout
   columnContainer: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     alignItems: 'flex-start',
   },
   column: {
     flex: 1,
   },
 
+  // ── Category separator
+  categorySection: {
+    marginBottom: 2,
+  },
+  categorySeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    marginTop: 8,
+  },
+  categoryLine: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: colors.gray200,
+  },
+  categoryLabel: {
+    fontSize: 6.5,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.amber,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginHorizontal: 6,
+  },
+
   // ── Course block
   courseBlock: {
-    marginBottom: 10,
-    borderWidth: 1,
+    marginBottom: 8,
+    borderWidth: 0.5,
     borderColor: colors.gray200,
-    borderRadius: 4,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   courseHeader: {
     backgroundColor: colors.black,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  courseLabel: {
+  courseHeaderLeft: {
+    flex: 1,
+  },
+  recipeName: {
+    fontSize: 8.5,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.white,
+  },
+  servingSize: {
+    fontSize: 6.5,
+    color: colors.gray400,
+    marginTop: 1,
+  },
+  courseHeaderRight: {
+    alignItems: 'flex-end',
+    marginLeft: 6,
+  },
+  courseCostPp: {
     fontSize: 7,
     fontFamily: 'Helvetica-Bold',
     color: colors.amber,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  recipeName: {
-    fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
-    color: colors.white,
-    marginTop: 1,
   },
   courseBody: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
   },
 
   // ── Component group
   componentLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     fontFamily: 'Helvetica-Bold',
     color: colors.amber,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 3,
-    marginTop: 5,
+    marginBottom: 2,
+    marginTop: 4,
   },
   componentLabelFirst: {
     marginTop: 0,
@@ -222,62 +308,47 @@ const styles = StyleSheet.create({
   ingredientRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 2,
-    borderBottomWidth: 0.5,
+    paddingVertical: 1.5,
+    borderBottomWidth: 0.3,
     borderBottomColor: colors.gray200,
   },
   ingredientName: {
     flex: 1,
-    fontSize: 8,
+    fontSize: 7.5,
     color: colors.black,
   },
   ingredientQpp: {
-    width: 36,
-    fontSize: 7,
-    color: colors.gray600,
+    width: 32,
+    fontSize: 6.5,
+    color: colors.gray400,
     textAlign: 'right',
-    fontFamily: 'Helvetica',
   },
   ingredientTotal: {
-    width: 42,
-    fontSize: 8,
+    width: 38,
+    fontSize: 7.5,
     fontFamily: 'Helvetica-Bold',
     color: colors.black,
     textAlign: 'right',
   },
 
-  // ── Course cost footer
-  courseCost: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingTop: 4,
-    marginTop: 4,
-    borderTopWidth: 0.5,
-    borderTopColor: colors.gray200,
-  },
-  courseCostText: {
-    fontSize: 7,
-    color: colors.gray600,
-  },
-  courseCostValue: {
-    fontSize: 7,
-    fontFamily: 'Helvetica-Bold',
-    color: colors.black,
-    marginLeft: 4,
+  // ── Space between dishes
+  dishSpacer: {
+    height: 3,
   },
 
   // ── Footer
   footer: {
     marginTop: 14,
     paddingTop: 8,
-    borderTopWidth: 2,
+    borderTopWidth: 1.5,
     borderTopColor: colors.black,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
+  footerLeft: {},
   footerLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: colors.gray600,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -286,14 +357,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: colors.black,
+    marginTop: 1,
   },
-  footerPct: {
-    fontSize: 9,
+  footerSubValue: {
+    fontSize: 8,
     color: colors.gray600,
     marginTop: 2,
   },
   footerRight: {
     alignItems: 'flex-end',
+  },
+  footerPct: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
   },
   generatedAt: {
     fontSize: 6,
@@ -301,22 +377,43 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center',
   },
+
+  // VAT lines
+  vatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  vatLabel: {
+    fontSize: 7,
+    color: colors.gray400,
+  },
+  vatValue: {
+    fontSize: 7,
+    color: colors.gray600,
+    fontFamily: 'Helvetica-Bold',
+  },
 })
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Course Card Component ────────────────────────────────────────────────────
 
 function CourseCard({ course }: { course: Course }) {
   return (
     <View style={styles.courseBlock}>
       <View style={styles.courseHeader}>
-        <Text style={styles.courseLabel}>{course.course.toUpperCase()}</Text>
-        <Text style={styles.recipeName}>{course.recipe_name}</Text>
+        <View style={styles.courseHeaderLeft}>
+          <Text style={styles.recipeName}>{course.recipe_name}</Text>
+        </View>
+        {course.cost_per_person > 0 && (
+          <View style={styles.courseHeaderRight}>
+            <Text style={styles.courseCostPp}>{formatEur(course.cost_per_person)}/p</Text>
+          </View>
+        )}
       </View>
       <View style={styles.courseBody}>
         {course.components.length === 0 ? (
           <View style={styles.ingredientRow}>
             <Text style={styles.ingredientName}>Geen componenten</Text>
-            <Text style={styles.ingredientTotal}>{formatEur(course.cost_per_person)}/p</Text>
           </View>
         ) : (
           course.components.map((comp, ci) => (
@@ -326,7 +423,10 @@ function CourseCard({ course }: { course: Course }) {
               </Text>
               {comp.ingredients.map((ing, ii) => (
                 <View key={ii} style={styles.ingredientRow}>
-                  <Text style={styles.ingredientName}>{ing.ingredient_name}</Text>
+                  <Text style={styles.ingredientName}>
+                    {ing.ingredient_name}
+                    {ing.grammage_warning ? ' !' : ''}
+                  </Text>
                   <Text style={styles.ingredientQpp}>
                     {ing.quantity_per_person}
                     {ing.unit}/p
@@ -339,26 +439,82 @@ function CourseCard({ course }: { course: Course }) {
             </View>
           ))
         )}
-        {course.cost_per_person > 0 && (
-          <View style={styles.courseCost}>
-            <Text style={styles.courseCostText}>Kostprijs:</Text>
-            <Text style={styles.courseCostValue}>{formatEur(course.cost_per_person)}/p</Text>
-          </View>
-        )}
       </View>
     </View>
   )
 }
 
+// ─── Main PDF Document ────────────────────────────────────────────────────────
+
 export function MepPdfDocument({ data }: { data: MepData }) {
-  const { event, courses, totals } = data
+  const { event, courses, totals, categories } = data
   const numCols = event.num_persons >= 60 ? 4 : 3
 
-  // Distribute courses across columns (roughly evenly)
-  const columns: Course[][] = Array.from({ length: numCols }, () => [])
-  courses.forEach((course, i) => {
-    columns[i % numCols].push(course)
+  // Sort courses by category sort_order (MIGNARDISES=200 always last, HALFABRICAAT=250 absolute last)
+  const sortedCourses = [...courses].sort((a, b) => {
+    const aSortOrder =
+      a.category_sort_order ||
+      MEP_CATEGORY_ORDER[a.course.toUpperCase().trim()] ||
+      (a.course_order || 50) * 10
+    const bSortOrder =
+      b.category_sort_order ||
+      MEP_CATEGORY_ORDER[b.course.toUpperCase().trim()] ||
+      (b.course_order || 50) * 10
+    if (aSortOrder !== bSortOrder) return aSortOrder - bSortOrder
+    return a.course_order - b.course_order
   })
+
+  // Group courses by category for display with separators
+  interface CategoryGroup {
+    code: string
+    label: string
+    sortOrder: number
+    courses: Course[]
+  }
+
+  const categoryGroups: CategoryGroup[] = []
+  for (const course of sortedCourses) {
+    const code = course.course.toUpperCase().trim()
+    const existing = categoryGroups.find((g) => g.code === code)
+    if (existing) {
+      existing.courses.push(course)
+    } else {
+      const sortOrder =
+        course.category_sort_order ||
+        MEP_CATEGORY_ORDER[code] ||
+        (course.course_order || 50) * 10
+      categoryGroups.push({
+        code,
+        label: getCategoryLabel(course.course, categories),
+        sortOrder,
+        courses: [course],
+      })
+    }
+  }
+  categoryGroups.sort((a, b) => a.sortOrder - b.sortOrder)
+
+  // Build flat list of render items (category header + courses)
+  type RenderItem =
+    | { type: 'category_header'; label: string }
+    | { type: 'course'; course: Course }
+
+  const renderItems: RenderItem[] = []
+  for (const group of categoryGroups) {
+    renderItems.push({ type: 'category_header', label: group.label })
+    for (const course of group.courses) {
+      renderItems.push({ type: 'course', course })
+    }
+  }
+
+  // Distribute render items across columns
+  const columns: RenderItem[][] = Array.from({ length: numCols }, () => [])
+  renderItems.forEach((item, i) => {
+    columns[i % numCols].push(item)
+  })
+
+  // Calculate VAT breakdown for footer
+  const vatFood = totals.total_food_cost * 0.12
+  const totalInclVat = totals.total_food_cost + vatFood
 
   return (
     <Document>
@@ -367,7 +523,7 @@ export function MepPdfDocument({ data }: { data: MepData }) {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Text style={styles.eventName}>{event.name}</Text>
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={styles.headerRight}>
               <Text style={styles.headerDate}>{formatDate(event.event_date)}</Text>
               {event.location && (
                 <Text style={[styles.headerDate, { marginTop: 2 }]}>{event.location}</Text>
@@ -382,9 +538,7 @@ export function MepPdfDocument({ data }: { data: MepData }) {
             {totals.food_cost_per_person > 0 && (
               <View style={styles.costBadge}>
                 <Text style={styles.metaLabel}>Food Cost</Text>
-                <Text style={styles.costValue}>
-                  {formatEur(totals.food_cost_per_person)}/p
-                </Text>
+                <Text style={styles.costValue}>{formatEur(totals.food_cost_per_person)}/p</Text>
               </View>
             )}
             {totals.food_cost_percentage > 0 && (
@@ -393,6 +547,10 @@ export function MepPdfDocument({ data }: { data: MepData }) {
                 <Text style={styles.costValue}>{totals.food_cost_percentage.toFixed(1)}%</Text>
               </View>
             )}
+            <View style={styles.metaBadge}>
+              <Text style={styles.metaLabel}>Kolommen</Text>
+              <Text style={styles.metaValue}>{numCols}</Text>
+            </View>
           </View>
         </View>
 
@@ -400,9 +558,23 @@ export function MepPdfDocument({ data }: { data: MepData }) {
         <View style={styles.columnContainer}>
           {columns.map((col, colIdx) => (
             <View key={colIdx} style={styles.column}>
-              {col.map((course, courseIdx) => (
-                <CourseCard key={courseIdx} course={course} />
-              ))}
+              {col.map((item, itemIdx) => {
+                if (item.type === 'category_header') {
+                  return (
+                    <View key={itemIdx} style={styles.categorySeparator}>
+                      <View style={styles.categoryLine} />
+                      <Text style={styles.categoryLabel}>{item.label}</Text>
+                      <View style={styles.categoryLine} />
+                    </View>
+                  )
+                }
+                return (
+                  <View key={itemIdx}>
+                    <CourseCard course={item.course} />
+                    <View style={styles.dishSpacer} />
+                  </View>
+                )
+              })}
             </View>
           ))}
         </View>
@@ -410,24 +582,52 @@ export function MepPdfDocument({ data }: { data: MepData }) {
         {/* ── Footer ── */}
         {totals.total_food_cost > 0 && (
           <View style={styles.footer}>
-            <View>
-              <Text style={styles.footerLabel}>Totale voedselkost</Text>
+            <View style={styles.footerLeft}>
+              <Text style={styles.footerLabel}>Totale food cost</Text>
               <Text style={styles.footerValue}>{formatEur(totals.total_food_cost)}</Text>
-              {totals.food_cost_percentage > 0 && (
-                <Text style={styles.footerPct}>
-                  Food cost %: {totals.food_cost_percentage.toFixed(1)}%
+              <View style={styles.vatRow}>
+                <Text style={styles.vatLabel}>excl. BTW (12%): </Text>
+                <Text style={styles.vatValue}>{formatEur(totals.total_food_cost)}</Text>
+              </View>
+              <View style={styles.vatRow}>
+                <Text style={styles.vatLabel}>incl. BTW (12%): </Text>
+                <Text style={styles.vatValue}>{formatEur(totalInclVat)}</Text>
+              </View>
+              <Text style={[styles.footerSubValue, { marginTop: 3 }]}>
+                {formatEur(totals.food_cost_per_person)} per persoon — {event.num_persons} pax
+              </Text>
+            </View>
+            {totals.food_cost_percentage > 0 && (
+              <View style={styles.footerRight}>
+                <Text style={styles.footerLabel}>Food Cost %</Text>
+                <Text
+                  style={[
+                    styles.footerPct,
+                    {
+                      color:
+                        totals.food_cost_percentage < 30
+                          ? '#10b981'
+                          : totals.food_cost_percentage <= 35
+                          ? colors.amber
+                          : '#ef4444',
+                    },
+                  ]}
+                >
+                  {totals.food_cost_percentage.toFixed(1)}%
                 </Text>
-              )}
-            </View>
-            <View style={styles.footerRight}>
-              <Text style={styles.footerLabel}>Per persoon</Text>
-              <Text style={styles.footerValue}>{formatEur(totals.food_cost_per_person)}</Text>
-            </View>
+              </View>
+            )}
           </View>
         )}
 
         <Text style={styles.generatedAt}>
-          Gegenereerd op {new Date().toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })} — My AI Sous Chef
+          Gegenereerd op{' '}
+          {new Date().toLocaleDateString('nl-BE', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}{' '}
+          — My AI Sous Chef
         </Text>
       </Page>
     </Document>
