@@ -169,12 +169,12 @@ export default function NewEventPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/events" className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all">
+        <Link href="/events" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Nieuw Event</h1>
-          <p className="text-stone-400 mt-0.5 text-sm">Plan een event en genereer automatisch je MEP</p>
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Nieuw Event</h1>
+          <p className="text-[#9E7E60] mt-0.5 text-sm">Plan een event en genereer automatisch je MEP</p>
         </div>
       </div>
 
@@ -185,9 +185,9 @@ export default function NewEventPage() {
       )}
 
       {/* PDF Upload Section */}
-      <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-4">
+      <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-stone-400 uppercase tracking-wider flex items-center gap-2">
+          <h2 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider flex items-center gap-2">
             <Sparkles className="w-4 h-4" /> Menu Importeren
           </h2>
           {!showParser && parsedDishes.length > 0 && (
@@ -203,7 +203,7 @@ export default function NewEventPage() {
 
         {showParser ? (
           <>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-[#B8997A]">
               Upload een menu PDF of foto. AI analyseert het document en vult automatisch het formulier in.
             </p>
             <MenuPdfParser
@@ -217,7 +217,7 @@ export default function NewEventPage() {
             <Sparkles className="w-4 h-4" />
             <span>{parsedDishes.length} gerechten geïmporteerd uit menu</span>
             {parsedDishes.filter(d => d.matched_recipe_id).length > 0 && (
-              <span className="text-stone-500">
+              <span className="text-[#B8997A]">
                 ({parsedDishes.filter(d => d.matched_recipe_id).length} gekoppeld aan recepten)
               </span>
             )}
@@ -227,40 +227,40 @@ export default function NewEventPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-sm font-medium text-stone-400 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-4">
+          <h2 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider flex items-center gap-2">
             <CalendarDays className="w-4 h-4" /> Basis Info
           </h2>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-300">Event Naam *</label>
+            <label className="text-sm font-medium text-[#5C4730]">Event Naam *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
               placeholder="bv. Huwelijk De Smedt - Van Hoeck"
-              className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+              className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300">Datum *</label>
+              <label className="text-sm font-medium text-[#5C4730]">Datum *</label>
               <input
                 type="date"
                 value={form.event_date}
                 onChange={(e) => updateField('event_date', e.target.value)}
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 required
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300">Type</label>
+              <label className="text-sm font-medium text-[#5C4730]">Type</label>
               <select
                 value={form.event_type}
                 onChange={(e) => updateField('event_type', e.target.value)}
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               >
                 {eventTypes.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -271,7 +271,7 @@ export default function NewEventPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300 flex items-center gap-1.5">
+              <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" /> Aantal Personen
               </label>
               <input
@@ -279,12 +279,12 @@ export default function NewEventPage() {
                 value={form.num_persons}
                 onChange={(e) => updateField('num_persons', e.target.value)}
                 placeholder="bv. 80"
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 min={1}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300 flex items-center gap-1.5">
+              <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
                 <Euro className="w-3.5 h-3.5" /> Prijs per Persoon
               </label>
               <input
@@ -292,7 +292,7 @@ export default function NewEventPage() {
                 value={form.price_per_person}
                 onChange={(e) => updateField('price_per_person', e.target.value)}
                 placeholder="bv. 85"
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 min={0}
                 step="0.01"
               />
@@ -301,83 +301,83 @@ export default function NewEventPage() {
         </div>
 
         {/* Location & Contact */}
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-sm font-medium text-stone-400 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-4">
+          <h2 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider flex items-center gap-2">
             <MapPin className="w-4 h-4" /> Locatie & Contact
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300">Locatie</label>
+              <label className="text-sm font-medium text-[#5C4730]">Locatie</label>
               <input
                 type="text"
                 value={form.location}
                 onChange={(e) => updateField('location', e.target.value)}
                 placeholder="bv. Kasteel van Laarne"
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300">Contactpersoon</label>
+              <label className="text-sm font-medium text-[#5C4730]">Contactpersoon</label>
               <input
                 type="text"
                 value={form.contact_person}
                 onChange={(e) => updateField('contact_person', e.target.value)}
                 placeholder="bv. Marie De Smedt"
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300 flex items-center gap-1.5">
+              <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" /> Vertrektijd
               </label>
               <input
                 type="time"
                 value={form.departure_time}
                 onChange={(e) => updateField('departure_time', e.target.value)}
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-300 flex items-center gap-1.5">
+              <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" /> Aankomsttijd
               </label>
               <input
                 type="time"
                 value={form.arrival_time}
                 onChange={(e) => updateField('arrival_time', e.target.value)}
-                className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
               />
             </div>
           </div>
         </div>
 
         {/* Notes */}
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-sm font-medium text-stone-400 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-4">
+          <h2 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider flex items-center gap-2">
             <FileText className="w-4 h-4" /> Extra
           </h2>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-300">Notities</label>
+            <label className="text-sm font-medium text-[#5C4730]">Notities</label>
             <textarea
               value={form.notes}
               onChange={(e) => updateField('notes', e.target.value)}
               placeholder="Dieetwensen, allergieën, speciale verzoeken..."
               rows={3}
-              className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm resize-none"
+              className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm resize-none"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-300">Status</label>
+            <label className="text-sm font-medium text-[#5C4730]">Status</label>
             <select
               value={form.status}
               onChange={(e) => updateField('status', e.target.value)}
-              className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-xl text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+              className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
             >
               <option value="draft">Concept</option>
               <option value="confirmed">Bevestigd</option>
@@ -387,24 +387,24 @@ export default function NewEventPage() {
 
         {/* Imported Dishes Summary */}
         {parsedDishes.length > 0 && (
-          <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 space-y-3">
-            <h2 className="text-sm font-medium text-stone-400 uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 space-y-3">
+            <h2 className="text-sm font-medium text-[#9E7E60] uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4" /> Geïmporteerde Gerechten
             </h2>
             <div className="space-y-1.5">
               {parsedDishes.map((dish, i) => (
                 <div key={i} className="flex items-center gap-3 text-sm">
-                  <span className="text-xs text-stone-500 font-mono w-24 shrink-0">
+                  <span className="text-xs text-[#B8997A] font-mono w-24 shrink-0">
                     {dish.category}
                   </span>
-                  <span className="text-stone-300">{dish.name}</span>
+                  <span className="text-[#5C4730]">{dish.name}</span>
                   {dish.matched_recipe_name && (
                     <span className="text-xs text-emerald-400/80 ml-auto shrink-0">
                       &rarr; {dish.matched_recipe_name}
                     </span>
                   )}
                   {!dish.matched_recipe_id && (
-                    <span className="text-xs text-stone-600 ml-auto shrink-0">
+                    <span className="text-xs text-[#5C4730] ml-auto shrink-0">
                       nieuw gerecht
                     </span>
                   )}
@@ -424,7 +424,7 @@ export default function NewEventPage() {
             <Save className="w-4 h-4" />
             {saving ? 'Opslaan...' : 'Event Aanmaken'}
           </button>
-          <Link href="/events" className="px-6 py-3 text-stone-400 hover:text-white text-sm transition-colors">
+          <Link href="/events" className="px-6 py-3 text-[#9E7E60] hover:text-white text-sm transition-colors">
             Annuleren
           </Link>
         </div>

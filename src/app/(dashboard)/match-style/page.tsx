@@ -35,7 +35,7 @@ interface AIAnalysis {
 function ScoreBadge({ score }: { score: number }) {
   const bg = score >= 70 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
     : score >= 40 ? 'bg-amber-50 text-amber-700 border-amber-200'
-    : 'bg-stone-50 text-stone-500 border-stone-200'
+    : 'bg-stone-50 text-[#B8997A] border-stone-200'
   return (
     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${bg}`}>
       {score}%
@@ -58,7 +58,7 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
   return (
     <div className="space-y-4 mt-4">
       {/* Meta info */}
-      <div className="flex items-center gap-3 text-xs text-stone-400">
+      <div className="flex items-center gap-3 text-xs text-[#9E7E60]">
         <span>Doorzocht: {meta.classical_count} klassieke recepten voor &ldquo;{meta.main_ingredient}&rdquo;</span>
         <span>·</span>
         <span>{meta.preps_count} halffabricaten gecontroleerd</span>
@@ -69,7 +69,7 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
         <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
             <Utensils className="w-3.5 h-3.5 text-brand-600" />
-            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Eigen recepten die matchen</span>
+            <span className="text-xs font-semibold text-[#5C4730] uppercase tracking-wider">Eigen recepten die matchen</span>
           </div>
           <div className="divide-y divide-stone-50">
             {analysis.eigen_recepten_match.map((m, i) => (
@@ -78,7 +78,7 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
                   <ScoreBadge score={m.score} />
                   <span className="text-sm font-medium text-stone-800">{m.naam}</span>
                 </div>
-                <p className="text-xs text-stone-500 leading-relaxed">{m.overeenkomst}</p>
+                <p className="text-xs text-[#B8997A] leading-relaxed">{m.overeenkomst}</p>
                 {m.transfereerbare_elementen?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {m.transfereerbare_elementen.map((el, j) => (
@@ -97,17 +97,17 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
         <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
             <BookOpen className="w-3.5 h-3.5 text-violet-600" />
-            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Klassieke variaties uit de kennisbank</span>
+            <span className="text-xs font-semibold text-[#5C4730] uppercase tracking-wider">Klassieke variaties uit de kennisbank</span>
           </div>
           <div className="divide-y divide-stone-50">
             {analysis.klassieke_variaties.map((v, i) => (
               <div key={i} className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-stone-800">{v.naam}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">{v.bron}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-[#B8997A]">{v.bron}</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-600 border border-violet-100">{v.techniek}</span>
                 </div>
-                <p className="text-xs text-stone-500 leading-relaxed italic">&ldquo;{v.hertaling}&rdquo;</p>
+                <p className="text-xs text-[#B8997A] leading-relaxed italic">&ldquo;{v.hertaling}&rdquo;</p>
               </div>
             ))}
           </div>
@@ -119,13 +119,13 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
         <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
             <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Toe te passen halffabricaten</span>
+            <span className="text-xs font-semibold text-[#5C4730] uppercase tracking-wider">Toe te passen halffabricaten</span>
           </div>
           <div className="divide-y divide-stone-50">
             {analysis.toe_te_passen_halffabricaten.map((h, i) => (
               <div key={i} className="px-4 py-3">
                 <span className="text-sm font-medium text-stone-800">{h.naam}</span>
-                <p className="text-xs text-stone-500 mt-0.5">{h.toepassing}</p>
+                <p className="text-xs text-[#B8997A] mt-0.5">{h.toepassing}</p>
               </div>
             ))}
           </div>
@@ -141,11 +141,11 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
           </div>
           <div className="px-4 py-3 space-y-3">
             <div>
-              <span className="text-[10px] text-stone-400 uppercase tracking-wider">Klassiek concept</span>
+              <span className="text-[10px] text-[#9E7E60] uppercase tracking-wider">Klassiek concept</span>
               <p className="text-sm text-stone-700 font-medium mt-0.5">{analysis.stijl_aanpassing.klassiek_concept}</p>
             </div>
             <div>
-              <span className="text-[10px] text-stone-400 uppercase tracking-wider">Moderne hertaling</span>
+              <span className="text-[10px] text-[#9E7E60] uppercase tracking-wider">Moderne hertaling</span>
               <p className="text-sm text-stone-800 font-medium mt-0.5">{analysis.stijl_aanpassing.moderne_uitvoering}</p>
             </div>
             {analysis.stijl_aanpassing.stappen?.length > 0 && (
@@ -153,15 +153,15 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
                 {analysis.stijl_aanpassing.stappen.map((stap, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                    <span className="text-xs text-stone-600">{stap}</span>
+                    <span className="text-xs text-[#5C4730]">{stap}</span>
                   </div>
                 ))}
               </div>
             )}
             {analysis.stijl_aanpassing.mise_en_place_tip && (
               <div className="mt-2 p-2 bg-white/60 rounded-lg border border-brand-100/30">
-                <span className="text-[10px] text-stone-400 uppercase tracking-wider">MEP tip</span>
-                <p className="text-xs text-stone-600 mt-0.5">{analysis.stijl_aanpassing.mise_en_place_tip}</p>
+                <span className="text-[10px] text-[#9E7E60] uppercase tracking-wider">MEP tip</span>
+                <p className="text-xs text-[#5C4730] mt-0.5">{analysis.stijl_aanpassing.mise_en_place_tip}</p>
               </div>
             )}
           </div>
@@ -173,19 +173,19 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
         <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-50 bg-stone-50/50">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="text-xs font-semibold text-stone-600 uppercase tracking-wider">Geschatte food cost</span>
+            <span className="text-xs font-semibold text-[#5C4730] uppercase tracking-wider">Geschatte food cost</span>
           </div>
           <div className="px-4 py-3 flex items-center gap-6">
             <div>
               <div className="text-xl font-display font-bold text-stone-900">{analysis.food_cost_inschatting.range}</div>
-              <div className="text-xs text-stone-400">per persoon</div>
+              <div className="text-xs text-[#9E7E60]">per persoon</div>
             </div>
             <div>
               <div className="text-xl font-display font-bold text-emerald-600">{analysis.food_cost_inschatting.food_cost_pct}</div>
-              <div className="text-xs text-stone-400">food cost %</div>
+              <div className="text-xs text-[#9E7E60]">food cost %</div>
             </div>
             {analysis.food_cost_inschatting.toelichting && (
-              <p className="text-xs text-stone-500 flex-1">{analysis.food_cost_inschatting.toelichting}</p>
+              <p className="text-xs text-[#B8997A] flex-1">{analysis.food_cost_inschatting.toelichting}</p>
             )}
           </div>
         </div>
@@ -311,7 +311,7 @@ export default function MatchMyStylePage() {
         </div>
         <div>
           <h1 className="text-3xl font-display font-bold text-stone-900">Match My Style</h1>
-          <p className="text-stone-400 text-sm mt-1">LEGENDE gerechten gematcht met jouw recepten en kookstijl</p>
+          <p className="text-[#9E7E60] text-sm mt-1">LEGENDE gerechten gematcht met jouw recepten en kookstijl</p>
         </div>
       </div>
 
@@ -325,7 +325,7 @@ export default function MatchMyStylePage() {
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-2xl border border-stone-100 p-5">
             <div className={`text-2xl font-display font-bold ${s.color}`}>{s.val}</div>
-            <div className="text-xs text-stone-400">{s.label}</div>
+            <div className="text-xs text-[#9E7E60]">{s.label}</div>
           </div>
         ))}
       </div>
@@ -335,16 +335,16 @@ export default function MatchMyStylePage() {
         <div className="flex rounded-lg border border-stone-200 overflow-hidden text-sm">
           {(['all', 'matched', 'unmatched'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-2 font-medium transition-colors ${filter === f ? 'bg-brand-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}>
+              className={`px-4 py-2 font-medium transition-colors ${filter === f ? 'bg-brand-600 text-white' : 'bg-white text-[#5C4730] hover:bg-stone-50'}`}>
               {f === 'all' ? 'Alles' : f === 'matched' ? 'Gematcht' : 'Geen match'}
             </button>
           ))}
         </div>
         <button onClick={() => setSortBy(s => s === 'score' ? 'name' : 'score')}
-          className="px-4 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">
+          className="px-4 py-2 text-sm font-medium text-[#5C4730] bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">
           Sorteer: {sortBy === 'score' ? 'Score' : 'Naam'}
         </button>
-        <span className="text-xs text-stone-400 ml-auto">{filteredDishes.length} gerechten</span>
+        <span className="text-xs text-[#9E7E60] ml-auto">{filteredDishes.length} gerechten</span>
       </div>
 
       {/* Dish list */}
@@ -359,17 +359,17 @@ export default function MatchMyStylePage() {
                     <div className="flex items-center gap-2">
                       {dish.best_score > 0 && <ScoreBadge score={dish.best_score} />}
                       <span className="font-medium text-stone-900 text-sm truncate">{dish.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 uppercase tracking-wider shrink-0">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-[#B8997A] uppercase tracking-wider shrink-0">
                         {dish.category_name}
                       </span>
                     </div>
                     {dish.matches.length > 0 ? (
-                      <p className="text-xs text-stone-400 mt-0.5">
+                      <p className="text-xs text-[#9E7E60] mt-0.5">
                         {dish.matches.length} match{dish.matches.length !== 1 ? 'es' : ''} —{' '}
-                        Best: <span className="text-stone-600 font-medium">{dish.matches[0].recipe_name}</span>
+                        Best: <span className="text-[#5C4730] font-medium">{dish.matches[0].recipe_name}</span>
                       </p>
                     ) : (
-                      <p className="text-xs text-stone-400 mt-0.5 truncate">
+                      <p className="text-xs text-[#9E7E60] mt-0.5 truncate">
                         {dish.elements.slice(0, 5).map(e => e.name).join(' · ')}
                       </p>
                     )}
@@ -391,8 +391,8 @@ export default function MatchMyStylePage() {
                     </button>
                     {dish.matches.length > 0 && (
                       expandedDish === dish.id
-                        ? <ChevronUp className="w-4 h-4 text-stone-400" />
-                        : <ChevronDown className="w-4 h-4 text-stone-400" />
+                        ? <ChevronUp className="w-4 h-4 text-[#9E7E60]" />
+                        : <ChevronDown className="w-4 h-4 text-[#9E7E60]" />
                     )}
                   </div>
                 </div>
@@ -413,7 +413,7 @@ export default function MatchMyStylePage() {
                           Bekijk <ArrowUpRight className="w-3 h-3" />
                         </a>
                       </div>
-                      {match.suggestion && <p className="text-xs text-stone-600 leading-relaxed">{match.suggestion}</p>}
+                      {match.suggestion && <p className="text-xs text-[#5C4730] leading-relaxed">{match.suggestion}</p>}
                       {match.shared_ingredients.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {match.shared_ingredients.map((ing, j) => (
@@ -439,11 +439,11 @@ export default function MatchMyStylePage() {
                   <div className="p-4 bg-stone-50 rounded-xl border border-stone-100 flex items-center gap-3">
                     <div className="w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
                     <div className="space-y-1">
-                      <span className="text-sm text-stone-600">Klassieke recepten doorzoeken...</span>
+                      <span className="text-sm text-[#5C4730]">Klassieke recepten doorzoeken...</span>
                       <div className="w-48 h-1 bg-stone-100 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-500 rounded-full animate-[progress_3s_ease-in-out_infinite]" style={{width: '60%'}} />
                       </div>
-                      <span className="text-xs text-stone-400">Duurt 5–10 seconden — resultaten worden bewaard</span>
+                      <span className="text-xs text-[#9E7E60]">Duurt 5–10 seconden — resultaten worden bewaard</span>
                     </div>
                   </div>
                 </div>

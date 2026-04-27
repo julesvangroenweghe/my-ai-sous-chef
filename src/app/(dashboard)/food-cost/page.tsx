@@ -67,7 +67,7 @@ export default function FoodCostPage() {
   }, [recipes])
 
   function getCostColor(pct: number | null) {
-    if (!pct || pct === 0) return 'text-stone-300'
+    if (!pct || pct === 0) return 'text-[#5C4730]'
     if (pct <= targets.excellent) return 'text-emerald-600'
     if (pct <= targets.good) return 'text-emerald-500'
     if (pct <= targets.warning) return 'text-amber-500'
@@ -92,7 +92,7 @@ export default function FoodCostPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Food Cost</h1>
-            <p className="text-stone-500 text-sm">Overzicht kostprijzen en marges per recept</p>
+            <p className="text-[#B8997A] text-sm">Overzicht kostprijzen en marges per recept</p>
           </div>
         </div>
       </div>
@@ -100,36 +100,36 @@ export default function FoodCostPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="card p-4">
-          <div className="text-xs text-stone-400 mb-1">Gemiddelde food cost</div>
+          <div className="text-xs text-[#9E7E60] mb-1">Gemiddelde food cost</div>
           <div className={`font-mono text-2xl font-bold ${getCostColor(stats.avgCost)}`}>
             {stats.avgCost > 0 ? `${stats.avgCost.toFixed(1)}%` : '\u2014'}
           </div>
-          <div className="text-[10px] text-stone-400 mt-1">Target: {targets.excellent}-{targets.good}%</div>
+          <div className="text-[10px] text-[#9E7E60] mt-1">Target: {targets.excellent}-{targets.good}%</div>
         </div>
         <div className="card p-4">
-          <div className="text-xs text-stone-400 mb-1">Recepten met prijs</div>
+          <div className="text-xs text-[#9E7E60] mb-1">Recepten met prijs</div>
           <div className="font-mono text-2xl font-bold text-stone-900">{stats.withCost}/{stats.total}</div>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-1 text-xs text-stone-400 mb-1">
+          <div className="flex items-center gap-1 text-xs text-[#9E7E60] mb-1">
             <CheckCircle className="w-3 h-3 text-emerald-500" /> Uitstekend
           </div>
           <div className="font-mono text-2xl font-bold text-emerald-600">{stats.excellent}</div>
-          <div className="text-[10px] text-stone-400 mt-1">Onder {targets.excellent}%</div>
+          <div className="text-[10px] text-[#9E7E60] mt-1">Onder {targets.excellent}%</div>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-1 text-xs text-stone-400 mb-1">
+          <div className="flex items-center gap-1 text-xs text-[#9E7E60] mb-1">
             <AlertTriangle className="w-3 h-3 text-amber-500" /> Boven target
           </div>
           <div className="font-mono text-2xl font-bold text-amber-600">{stats.overTarget}</div>
-          <div className="text-[10px] text-stone-400 mt-1">Boven {targets.good}%</div>
+          <div className="text-[10px] text-[#9E7E60] mt-1">Boven {targets.good}%</div>
         </div>
       </div>
 
       {/* Search + Sort */}
       <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek recept..."
@@ -148,7 +148,7 @@ export default function FoodCostPage() {
               key={s.key}
               onClick={() => setSortBy(s.key)}
               className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                sortBy === s.key ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+                sortBy === s.key ? 'bg-white text-white' : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
               }`}
             >
               {s.label}
@@ -167,10 +167,10 @@ export default function FoodCostPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-100">
-                <th className="text-left text-xs font-semibold text-stone-500 py-3 px-4">Recept</th>
-                <th className="text-right text-xs font-semibold text-stone-500 py-3 px-4">Kostprijs/portie</th>
-                <th className="text-right text-xs font-semibold text-stone-500 py-3 px-4">Verkoopprijs</th>
-                <th className="text-right text-xs font-semibold text-stone-500 py-3 px-4 min-w-[120px]">Food Cost %</th>
+                <th className="text-left text-xs font-semibold text-[#B8997A] py-3 px-4">Recept</th>
+                <th className="text-right text-xs font-semibold text-[#B8997A] py-3 px-4">Kostprijs/portie</th>
+                <th className="text-right text-xs font-semibold text-[#B8997A] py-3 px-4">Verkoopprijs</th>
+                <th className="text-right text-xs font-semibold text-[#B8997A] py-3 px-4 min-w-[120px]">Food Cost %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -184,14 +184,14 @@ export default function FoodCostPage() {
                           {recipe.name}
                         </div>
                         {recipe.category && (
-                          <div className="text-xs text-stone-400 mt-0.5">{(recipe.category as any).name}</div>
+                          <div className="text-xs text-[#9E7E60] mt-0.5">{(recipe.category as any).name}</div>
                         )}
                       </Link>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-sm text-stone-600">
+                    <td className="py-3 px-4 text-right font-mono text-sm text-[#5C4730]">
                       {recipe.total_cost_per_serving ? formatCurrency(recipe.total_cost_per_serving) : '\u2014'}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-sm text-stone-600">
+                    <td className="py-3 px-4 text-right font-mono text-sm text-[#5C4730]">
                       {recipe.selling_price ? formatCurrency(Number(recipe.selling_price)) : '\u2014'}
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -217,7 +217,7 @@ export default function FoodCostPage() {
                           ) : null}
                         </div>
                       ) : (
-                        <span className="text-xs text-stone-300 font-mono">&mdash;</span>
+                        <span className="text-xs text-[#5C4730] font-mono">&mdash;</span>
                       )}
                     </td>
                   </tr>
@@ -226,7 +226,7 @@ export default function FoodCostPage() {
             </tbody>
           </table>
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-stone-400">
+            <div className="text-center py-12 text-[#9E7E60]">
               Geen recepten gevonden
             </div>
           )}

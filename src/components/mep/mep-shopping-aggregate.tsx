@@ -171,7 +171,7 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
 
  if (items.length === 0) {
  return (
- <div className="text-center py-8 text-stone-500">
+ <div className="text-center py-8 text-[#B8997A]">
  <ShoppingCart className="w-10 h-10 mx-auto mb-3 opacity-30" />
  <p className="text-sm">Genereer eerst een MEP plan</p>
  </div>
@@ -184,17 +184,17 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <ShoppingCart className="w-5 h-5 text-brand-400" />
- <h3 className="text-lg font-display font-semibold text-stone-100">
+ <h3 className="text-lg font-display font-semibold text-[#2C1810]">
  Boodschappenlijst
  </h3>
- <span className="text-xs text-stone-500">
+ <span className="text-xs text-[#B8997A]">
  {items.length} producten · {checkedCount} afgevinkt
  </span>
  </div>
  <div className="flex items-center gap-3">
  {grandTotal > 0 && (
  <div className="text-right">
- <div className="text-xs text-stone-500">Geschatte kost</div>
+ <div className="text-xs text-[#B8997A]">Geschatte kost</div>
  <div className="text-lg font-mono font-bold text-brand-400">
  €{grandTotal.toFixed(2)}
  </div>
@@ -202,7 +202,7 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  )}
  <button
  onClick={() => window.print()}
- className="p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all print:hidden"
+ className="p-2 rounded-lg bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all print:hidden"
  >
  <Printer className="w-4 h-4" />
  </button>
@@ -213,20 +213,20 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  {Object.entries(categories).map(([category, categoryItems]) => {
  const catTotal = categoryItems.reduce((s, i) => s + (i.estimated_cost || 0), 0)
  return (
- <div key={category} className="bg-stone-900/50 border border-stone-800 rounded-xl overflow-hidden">
- <div className="px-4 py-2.5 bg-stone-800/30 border-b border-stone-800 flex items-center justify-between">
- <span className="text-xs font-semibold text-stone-300 uppercase tracking-wider">{category}</span>
+ <div key={category} className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl overflow-hidden">
+ <div className="px-4 py-2.5 bg-white/30 border-b border-[#E8D5B5] flex items-center justify-between">
+ <span className="text-xs font-semibold text-[#5C4730] uppercase tracking-wider">{category}</span>
  {catTotal > 0 && (
- <span className="text-xs font-mono text-stone-400">€{catTotal.toFixed(2)}</span>
+ <span className="text-xs font-mono text-[#9E7E60]">€{catTotal.toFixed(2)}</span>
  )}
  </div>
- <div className="divide-y divide-stone-800/30">
+ <div className="divide-y divide-[#E8D5B5]/30">
  {categoryItems.map((item, idx) => {
  const globalIdx = items.indexOf(item)
  return (
  <div
  key={idx}
- className={`px-4 py-2 flex items-center gap-3 transition-all cursor-pointer hover:bg-stone-800/20 ${
+ className={`px-4 py-2 flex items-center gap-3 transition-all cursor-pointer hover:bg-white/20 ${
  item.checked ? 'opacity-50' : ''
  }`}
  onClick={() => toggleCheck(globalIdx)}
@@ -234,18 +234,18 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all ${
  item.checked
  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
- : 'border-stone-600'
+ : 'border-[#D4B896]'
  }`}>
  {item.checked && <Check className="w-3 h-3" />}
  </div>
- <span className={`flex-1 text-sm ${item.checked ? 'line-through text-stone-500' : 'text-stone-200'}`}>
+ <span className={`flex-1 text-sm ${item.checked ? 'line-through text-[#B8997A]' : 'text-[#3D2810]'}`}>
  {item.ingredient_name}
  </span>
- <span className="text-sm font-mono font-semibold text-stone-100 w-28 text-right">
+ <span className="text-sm font-mono font-semibold text-[#2C1810] w-28 text-right">
  {item.total_quantity} {item.unit}
  </span>
  {item.estimated_cost !== null && (
- <span className="text-xs font-mono text-stone-400 w-16 text-right">
+ <span className="text-xs font-mono text-[#9E7E60] w-16 text-right">
  €{item.estimated_cost.toFixed(2)}
  </span>
  )}
@@ -260,7 +260,7 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  {/* Cost per person */}
  {grandTotal > 0 && numPersons > 0 && (
  <div className="bg-brand-600/10 border border-brand-500/20 rounded-xl p-4 flex items-center justify-between">
- <span className="text-sm text-stone-300">Geschatte food cost per persoon</span>
+ <span className="text-sm text-[#5C4730]">Geschatte food cost per persoon</span>
  <span className="text-lg font-mono font-bold text-brand-400">
  €{(grandTotal / numPersons).toFixed(2)}
  </span>

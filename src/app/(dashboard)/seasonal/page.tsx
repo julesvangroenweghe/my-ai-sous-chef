@@ -35,7 +35,7 @@ const categoryColors: Record<string, { bar: string; peak: string; dot: string; h
   vis: { bar: 'bg-sky-200', peak: 'bg-sky-500', dot: 'bg-sky-400', header: 'bg-sky-50 border-sky-200', text: 'text-sky-800' },
   wild: { bar: 'bg-amber-200', peak: 'bg-amber-600', dot: 'bg-amber-400', header: 'bg-amber-50 border-amber-200', text: 'text-amber-800' },
   kruiden: { bar: 'bg-lime-200', peak: 'bg-lime-500', dot: 'bg-lime-400', header: 'bg-lime-50 border-lime-200', text: 'text-lime-800' },
-  paddenstoelen: { bar: 'bg-stone-300', peak: 'bg-stone-600', dot: 'bg-stone-400', header: 'bg-stone-100 border-stone-300', text: 'text-stone-700' },
+  paddenstoelen: { bar: 'bg-stone-300', peak: 'bg-[#F5ECD8]', dot: 'bg-stone-400', header: 'bg-stone-100 border-stone-300', text: 'text-stone-700' },
 }
 
 export default function SeasonalPage() {
@@ -102,11 +102,11 @@ export default function SeasonalPage() {
             <h1 className="font-display text-2xl font-bold text-stone-900 tracking-tight">
               Seizoenskalender
             </h1>
-            <p className="text-stone-400 text-sm mt-0.5">
+            <p className="text-[#9E7E60] text-sm mt-0.5">
               Belgie  ·  {monthsFull[currentMonth]} {new Date().getFullYear()}  ·  {availableCount} beschikbaar, {peakCount} piekseizoen
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs text-stone-500">
+          <div className="flex items-center gap-4 text-xs text-[#B8997A]">
             <span className="flex items-center gap-1.5">
               <span className="w-4 h-2.5 rounded-sm bg-emerald-500 inline-block" />
               Piekseizoen
@@ -126,7 +126,7 @@ export default function SeasonalPage() {
       {/* Search + Category filter */}
       <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '80ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek product..."
@@ -139,7 +139,7 @@ export default function SeasonalPage() {
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === 'all' ? 'bg-stone-900 text-white' : 'bg-white text-stone-500 border border-stone-200 hover:bg-stone-50'
+              selectedCategory === 'all' ? 'bg-white text-white' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
             }`}
           >
             Alles ({items.length})
@@ -149,7 +149,7 @@ export default function SeasonalPage() {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                selectedCategory === cat ? 'bg-stone-900 text-white' : 'bg-white text-stone-500 border border-stone-200 hover:bg-stone-50'
+                selectedCategory === cat ? 'bg-white text-white' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
               }`}
             >
               {categoryLabels[cat] || cat} ({items.filter(i => i.category === cat).length})
@@ -170,7 +170,7 @@ export default function SeasonalPage() {
               {/* Month header */}
               <thead>
                 <tr>
-                  <th className="text-left text-[11px] font-semibold text-stone-500 py-2 px-3 bg-stone-50 border-b border-stone-200 sticky left-0 z-10 min-w-[160px]">
+                  <th className="text-left text-[11px] font-semibold text-[#B8997A] py-2 px-3 bg-stone-50 border-b border-stone-200 sticky left-0 z-10 min-w-[160px]">
                     Product
                   </th>
                   {months.map((m, i) => (
@@ -178,8 +178,8 @@ export default function SeasonalPage() {
                       key={i}
                       className={`text-center text-[11px] font-semibold py-2 px-0 border-b min-w-[38px] ${
                         i === currentMonth
-                          ? 'bg-stone-900 text-white border-stone-900'
-                          : 'text-stone-400 bg-stone-50 border-stone-200'
+                          ? 'bg-white text-white border-[#D4B896]'
+                          : 'text-[#9E7E60] bg-stone-50 border-stone-200'
                       }`}
                     >
                       {m}
@@ -244,7 +244,7 @@ export default function SeasonalPage() {
           </div>
 
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-stone-400 text-sm">
+            <div className="text-center py-12 text-[#9E7E60] text-sm">
               Geen producten gevonden
             </div>
           )}

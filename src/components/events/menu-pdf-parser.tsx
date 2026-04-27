@@ -163,23 +163,23 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
           className={`border-2 border-dashed rounded-2xl transition-all ${
             file
               ? 'border-brand-500/50 bg-brand-500/5'
-              : 'border-stone-700 bg-stone-900/30 hover:border-stone-600 hover:bg-stone-900/50'
+              : 'border-[#E8D5B5] bg-[#FDF8F2]/60 hover:border-[#D4B896] hover:bg-[#FDFAF6]/80'
           } ${compact ? 'p-4' : 'p-8'}`}
         >
           <div className="text-center">
             {!file ? (
               <>
-                <Upload className={`mx-auto text-stone-500 mb-3 ${compact ? 'w-8 h-8' : 'w-12 h-12'}`} />
-                <p className="text-stone-300 font-medium text-sm mb-1">
+                <Upload className={`mx-auto text-[#B8997A] mb-3 ${compact ? 'w-8 h-8' : 'w-12 h-12'}`} />
+                <p className="text-[#5C4730] font-medium text-sm mb-1">
                   Upload menu PDF of foto
                 </p>
-                <p className="text-stone-500 text-xs mb-4">
+                <p className="text-[#B8997A] text-xs mb-4">
                   Sleep een bestand hierheen of klik om te kiezen
                 </p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 bg-stone-800 border border-stone-700 text-stone-300 hover:text-white rounded-xl text-sm transition-all hover:bg-stone-700"
+                  className="px-4 py-2 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-white rounded-xl text-sm transition-all hover:bg-[#FDF8F2]"
                 >
                   <FileUp className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
                   Bestand Kiezen
@@ -189,8 +189,8 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
               <div className="flex items-center justify-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <FileUp className="w-4 h-4 text-brand-400" />
-                  <span className="text-stone-300 font-medium">{file.name}</span>
-                  <span className="text-stone-500 font-mono text-xs">
+                  <span className="text-[#5C4730] font-medium">{file.name}</span>
+                  <span className="text-[#B8997A] font-mono text-xs">
                     ({(file.size / 1024).toFixed(0)} KB)
                   </span>
                 </div>
@@ -215,7 +215,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                 <button
                   type="button"
                   onClick={reset}
-                  className="p-1.5 text-stone-500 hover:text-stone-300 transition-colors"
+                  className="p-1.5 text-[#B8997A] hover:text-[#5C4730] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -245,14 +245,14 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
 
       {/* Parsed Results */}
       {result && dishes.length > 0 && (
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-brand-400" />
-              <h3 className="text-sm font-display font-semibold text-stone-100">
+              <h3 className="text-sm font-display font-semibold text-[#2C1810]">
                 Geparsed Menu
               </h3>
-              <span className="text-xs text-stone-500 font-mono">
+              <span className="text-xs text-[#B8997A] font-mono">
                 {dishes.length} gerechten gevonden
               </span>
             </div>
@@ -260,7 +260,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
               <button
                 type="button"
                 onClick={reset}
-                className="px-3 py-1.5 text-stone-400 hover:text-white text-xs transition-colors"
+                className="px-3 py-1.5 text-[#9E7E60] hover:text-white text-xs transition-colors"
               >
                 Opnieuw
               </button>
@@ -277,11 +277,11 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
             </div>
           </div>
 
-          <div className="divide-y divide-stone-800/50">
+          <div className="divide-y divide-[#E8D5B5]/50">
             {Object.entries(dishesByCategory).map(([category, catDishes]) => (
               <div key={category}>
-                <div className="px-6 py-2 bg-stone-800/30">
-                  <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+                <div className="px-6 py-2 bg-white/30">
+                  <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
                     {COURSE_LABELS[category] || category}
                   </span>
                 </div>
@@ -291,7 +291,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                     <div
                       key={globalIndex}
                       className={`px-6 py-3 flex items-center gap-4 transition-colors ${
-                        dish.approved ? 'bg-stone-900/20' : 'bg-stone-900/5 opacity-60'
+                        dish.approved ? 'bg-white/20' : 'bg-white/5 opacity-60'
                       }`}
                     >
                       {/* Approval toggle */}
@@ -301,7 +301,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                         className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all ${
                           dish.approved
                             ? 'bg-brand-600 border-brand-500 text-white'
-                            : 'border-stone-600 text-transparent hover:border-stone-500'
+                            : 'border-[#D4B896] text-transparent hover:border-stone-500'
                         }`}
                       >
                         <Check className="w-3 h-3" />
@@ -310,7 +310,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                       {/* Dish info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-stone-200 truncate">
+                          <span className="text-sm font-medium text-[#3D2810] truncate">
                             {dish.name}
                           </span>
                           {dish.confidence >= 0.7 && (
@@ -325,7 +325,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                           )}
                         </div>
                         {dish.description && (
-                          <p className="text-xs text-stone-500 mt-0.5 truncate">{dish.description}</p>
+                          <p className="text-xs text-[#B8997A] mt-0.5 truncate">{dish.description}</p>
                         )}
                       </div>
 
@@ -334,21 +334,21 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                         {dish.matched_recipe_name ? (
                           <div className="flex items-center gap-1.5">
                             <ChefHat className="w-3.5 h-3.5 text-brand-400" />
-                            <span className="text-xs text-stone-400 max-w-[160px] truncate">
+                            <span className="text-xs text-[#9E7E60] max-w-[160px] truncate">
                               {dish.matched_recipe_name}
                             </span>
                           </div>
                         ) : dish.matched_legende_name ? (
                           <div className="flex items-center gap-1.5">
                             <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-                            <span className="text-xs text-stone-400 max-w-[160px] truncate">
+                            <span className="text-xs text-[#9E7E60] max-w-[160px] truncate">
                               {dish.matched_legende_name}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-stone-600">Geen match</span>
+                          <span className="text-xs text-[#5C4730]">Geen match</span>
                         )}
-                        <span className="text-[10px] font-mono text-stone-600">
+                        <span className="text-[10px] font-mono text-[#5C4730]">
                           {(dish.confidence * 100).toFixed(0)}%
                         </span>
                       </div>
@@ -357,7 +357,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                       <button
                         type="button"
                         onClick={() => removeDish(globalIndex)}
-                        className="p-1 text-stone-600 hover:text-red-400 transition-colors shrink-0"
+                        className="p-1 text-[#5C4730] hover:text-red-400 transition-colors shrink-0"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

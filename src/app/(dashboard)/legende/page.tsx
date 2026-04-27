@@ -137,7 +137,7 @@ export default function LegendePage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Gerechtenbibliotheek</h1>
-            <p className="text-stone-400 text-sm mt-0.5">LEGENDE collectie - {dishes.length} gerechten</p>
+            <p className="text-[#9E7E60] text-sm mt-0.5">LEGENDE collectie - {dishes.length} gerechten</p>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function LegendePage() {
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek gerecht..."
@@ -161,7 +161,7 @@ export default function LegendePage() {
         <button
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-            !activeCategory ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
+            !activeCategory ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
           }`}
         >
           Alles ({dishes.length})
@@ -171,7 +171,7 @@ export default function LegendePage() {
             key={cat.id}
             onClick={() => setActiveCategory(activeCategory === cat.name ? null : cat.name)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-              activeCategory === cat.name ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
+              activeCategory === cat.name ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
             }`}
           >
             {cat.name} ({cat.dish_count})
@@ -184,10 +184,10 @@ export default function LegendePage() {
         {filtered.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <BookMarked className="w-8 h-8 text-stone-300" />
+              <BookMarked className="w-8 h-8 text-[#5C4730]" />
             </div>
             <p className="font-display font-semibold text-stone-900">Geen gerechten gevonden</p>
-            <p className="text-sm text-stone-400 mt-1">Pas je zoekopdracht aan</p>
+            <p className="text-sm text-[#9E7E60] mt-1">Pas je zoekopdracht aan</p>
           </div>
         ) : (
           filtered.map(dish => (
@@ -198,25 +198,25 @@ export default function LegendePage() {
               >
                 <div className="flex items-center gap-3">
                   {dish.expanded ? (
-                    <ChevronDown className="w-4 h-4 text-stone-400" />
+                    <ChevronDown className="w-4 h-4 text-[#9E7E60]" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-stone-400" />
+                    <ChevronRight className="w-4 h-4 text-[#9E7E60]" />
                   )}
                   <div className="text-left">
                     <p className="font-display font-semibold text-stone-900">{dish.name}</p>
                     {dish.description && (
-                      <p className="text-xs text-stone-400 mt-0.5">{dish.description}</p>
+                      <p className="text-xs text-[#9E7E60] mt-0.5">{dish.description}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {dish.category_name && (
-                    <span className="flex items-center gap-1 text-[10px] font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-[#B8997A] bg-stone-100 px-2 py-0.5 rounded-full">
                       <Tag className="w-3 h-3" />
                       {dish.category_name}
                     </span>
                   )}
-                  <span className="text-xs text-stone-400">{dish.elements.length} elementen</span>
+                  <span className="text-xs text-[#9E7E60]">{dish.elements.length} elementen</span>
                 </div>
               </button>
 
@@ -225,17 +225,17 @@ export default function LegendePage() {
                   <table className="w-full text-sm mt-3">
                     <thead>
                       <tr className="border-b border-stone-100">
-                        <th className="text-left py-1.5 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Element</th>
-                        <th className="text-right py-1.5 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Hoeveelheid</th>
-                        <th className="text-left py-1.5 pl-2 text-[11px] text-stone-400 uppercase tracking-wider font-semibold">Eenheid</th>
+                        <th className="text-left py-1.5 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Element</th>
+                        <th className="text-right py-1.5 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Hoeveelheid</th>
+                        <th className="text-left py-1.5 pl-2 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Eenheid</th>
                       </tr>
                     </thead>
                     <tbody>
                       {dish.elements.map(el => (
                         <tr key={el.id} className="border-b border-stone-50">
                           <td className="py-1.5 text-stone-700">{el.name}</td>
-                          <td className="py-1.5 text-right font-mono text-stone-600">{el.quantity_grams || '-'}</td>
-                          <td className="py-1.5 pl-2 text-stone-500">{el.quantity_text || ''}</td>
+                          <td className="py-1.5 text-right font-mono text-[#5C4730]">{el.quantity_grams || '-'}</td>
+                          <td className="py-1.5 pl-2 text-[#B8997A]">{el.quantity_text || ''}</td>
                         </tr>
                       ))}
                     </tbody>

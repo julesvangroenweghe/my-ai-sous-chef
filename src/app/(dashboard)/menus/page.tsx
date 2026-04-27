@@ -32,7 +32,7 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-zinc-700 text-zinc-300',
+  draft: 'bg-[#FDF8F2] text-[#9E7E60]',
   confirmed: 'bg-emerald-500/15 text-emerald-400',
   in_progress: 'bg-amber-500/15 text-amber-400',
   completed: 'bg-blue-500/15 text-blue-400',
@@ -117,7 +117,7 @@ export default function MenusPage() {
 
       {/* Create dialog */}
       {dialogOpen && (
-        <Card className="bg-zinc-800/80 border-amber-500/30">
+        <Card className="bg-white/80 border-amber-500/30">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Nieuw menu aanmaken</CardTitle>
             <Button variant="ghost" size="icon" onClick={() => setDialogOpen(false)}>
@@ -127,22 +127,22 @@ export default function MenusPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-zinc-300">Naam *</Label>
+                <Label htmlFor="title" className="text-[#9E7E60]">Naam *</Label>
                 <Input 
                   id="title" 
                   value={title} 
                   onChange={(e) => setTitle(e.target.value)} 
                   placeholder="bv. Bruiloft Van den Berg"
-                  className="bg-zinc-900 border-zinc-700 text-white" 
+                  className="bg-white border-[#E8D5B5] text-white" 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type" className="text-zinc-300">Type</Label>
+                <Label htmlFor="type" className="text-[#9E7E60]">Type</Label>
                 <select
                   id="type"
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white px-3 py-2 text-sm"
+                  className="w-full rounded-md bg-white border border-[#E8D5B5] text-white px-3 py-2 text-sm"
                 >
                   <option value="walking_dinner">Walking Dinner</option>
                   <option value="buffet">Buffet</option>
@@ -152,29 +152,29 @@ export default function MenusPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="gasten" className="text-zinc-300">Aantal gasten</Label>
+                <Label htmlFor="gasten" className="text-[#9E7E60]">Aantal gasten</Label>
                 <Input 
                   id="gasten" 
                   type="number"
                   value={guestCount} 
                   onChange={(e) => setGuestCount(e.target.value)} 
                   placeholder="bv. 80"
-                  className="bg-zinc-900 border-zinc-700 text-white" 
+                  className="bg-white border-[#E8D5B5] text-white" 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-zinc-300">Notities</Label>
+                <Label htmlFor="notes" className="text-[#9E7E60]">Notities</Label>
                 <Textarea 
                   id="notes" 
                   value={notes} 
                   onChange={(e) => setNotes(e.target.value)} 
                   placeholder="Allergieën, wensen, etc."
-                  className="bg-zinc-900 border-zinc-700 text-white" 
+                  className="bg-white border-[#E8D5B5] text-white" 
                 />
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-zinc-700 text-zinc-300">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-[#E8D5B5] text-[#9E7E60]">
                 Annuleren
               </Button>
               <Button 
@@ -197,10 +197,10 @@ export default function MenusPage() {
         </div>
       ) : menus.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-4">
             <UtensilsCrossed className="w-8 h-8 text-zinc-600" />
           </div>
-          <p className="text-zinc-400 mb-4">Nog geen menu&apos;s aangemaakt</p>
+          <p className="text-[#9E7E60] mb-4">Nog geen menu&apos;s aangemaakt</p>
           <Button onClick={() => setDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-black">
             <Plus className="mr-2 h-4 w-4" /> Eerste menu aanmaken
           </Button>
@@ -209,7 +209,7 @@ export default function MenusPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {menus.map((menu) => (
             <Link href={`/events/${menu.id}`} key={menu.id}>
-              <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg hover:border-amber-500/30 transition-all hover:bg-zinc-800/80 cursor-pointer h-full">
+              <div className="bg-white/50 border border-[#E8D5B5]/50 rounded-lg hover:border-amber-500/30 transition-all hover:bg-white/80 cursor-pointer h-full">
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between">
                     <h3 className="font-display font-semibold text-white text-lg leading-tight">
@@ -230,13 +230,13 @@ export default function MenusPage() {
                       {statusLabels[menu.status] || menu.status}
                     </span>
                     {menu.event_type && (
-                      <span className="px-2 py-1 rounded-full bg-zinc-700 text-zinc-300">
+                      <span className="px-2 py-1 rounded-full bg-[#FDF8F2] text-[#9E7E60]">
                         {typeLabels[menu.event_type] || menu.event_type}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-zinc-400">
+                  <div className="flex items-center gap-4 text-sm text-[#9E7E60]">
                     {menu.guest_count && (
                       <span className="flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5" />

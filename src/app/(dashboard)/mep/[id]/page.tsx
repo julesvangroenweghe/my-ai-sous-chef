@@ -120,7 +120,7 @@ const eventTypeLabels: Record<string, string> = {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  draft: { label: 'Concept', className: 'bg-stone-700 text-stone-300' },
+  draft: { label: 'Concept', className: 'bg-[#FDF8F2] text-[#5C4730]' },
   confirmed: { label: 'Bevestigd', className: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
   in_prep: { label: 'In voorbereiding', className: 'bg-amber-500/20 text-[#E8A040] border border-[#E8A040]/30' },
   approved: { label: 'Goedgekeurd', className: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' },
@@ -184,15 +184,15 @@ function EditScopeModal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div className="relative bg-white border border-[#E8D5B5] rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-display font-bold text-stone-100">Aanpassing scope</h3>
-            <p className="text-xs text-stone-400 mt-0.5 truncate">{recipeName}</p>
+            <h3 className="font-display font-bold text-[#2C1810]">Aanpassing scope</h3>
+            <p className="text-xs text-[#9E7E60] mt-0.5 truncate">{recipeName}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-all"
+            className="p-1.5 rounded-lg text-[#9E7E60] hover:text-white hover:bg-white transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -209,17 +209,17 @@ function EditScopeModal({
                   })
                   onClose()
                 }}
-                className="w-full text-left p-4 rounded-xl border border-stone-700 hover:border-[#E8A040]/50 hover:bg-stone-800/50 transition-all group"
+                className="w-full text-left p-4 rounded-xl border border-[#E8D5B5] hover:border-[#E8A040]/50 hover:bg-[#FDF8F2]/80 transition-all group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center shrink-0 group-hover:bg-[#E8A040]/10 transition-colors">
-                    <Icon className="w-4 h-4 text-stone-400 group-hover:text-[#E8A040] transition-colors" />
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 group-hover:bg-[#E8A040]/10 transition-colors">
+                    <Icon className="w-4 h-4 text-[#9E7E60] group-hover:text-[#E8A040] transition-colors" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-stone-200 group-hover:text-white transition-colors">
+                    <div className="text-sm font-medium text-[#3D2810] group-hover:text-white transition-colors">
                       {opt.title}
                     </div>
-                    <div className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                    <div className="text-xs text-[#B8997A] mt-0.5 leading-relaxed">
                       {opt.description}
                     </div>
                   </div>
@@ -338,13 +338,13 @@ function FinancialsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white border border-[#E8D5B5] rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-display font-bold text-stone-100 flex items-center gap-2">
+          <h3 className="font-display font-bold text-[#2C1810] flex items-center gap-2">
             <Euro className="w-5 h-5 text-[#E8A040]" />
             Financiën beheren
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-all">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[#9E7E60] hover:text-white hover:bg-white transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -354,9 +354,9 @@ function FinancialsModal({
           {fields.map((f) => (
             <div key={f.key} className="flex items-center gap-3">
               <div className="flex-1">
-                <div className="text-xs text-stone-400 mb-1">{f.label}</div>
+                <div className="text-xs text-[#9E7E60] mb-1">{f.label}</div>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">€</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E7E60] text-sm">€</span>
                   <input
                     type="number"
                     step="0.01"
@@ -365,21 +365,21 @@ function FinancialsModal({
                     onChange={(e) =>
                       setFinancials((prev) => ({ ...prev, [f.key]: parseFloat(e.target.value) || 0 }))
                     }
-                    className="w-full pl-7 pr-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:border-[#E8A040]/50 focus:outline-none"
+                    className="w-full pl-7 pr-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#3D2810] focus:border-[#E8A040]/50 focus:outline-none"
                     placeholder="0,00"
                   />
                 </div>
               </div>
-              <div className="text-xs text-stone-500 w-12 text-center mt-5">BTW {f.vat}</div>
+              <div className="text-xs text-[#B8997A] w-12 text-center mt-5">BTW {f.vat}</div>
             </div>
           ))}
         </div>
 
         {/* Revenue */}
         <div className="mb-4">
-          <div className="text-xs text-stone-400 mb-1">Totale omzet (excl. BTW)</div>
+          <div className="text-xs text-[#9E7E60] mb-1">Totale omzet (excl. BTW)</div>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">€</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E7E60] text-sm">€</span>
             <input
               type="number"
               step="0.01"
@@ -388,29 +388,29 @@ function FinancialsModal({
               onChange={(e) =>
                 setFinancials((prev) => ({ ...prev, total_revenue: parseFloat(e.target.value) || 0 }))
               }
-              className="w-full pl-7 pr-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-sm text-stone-200 focus:border-[#E8A040]/50 focus:outline-none"
+              className="w-full pl-7 pr-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#3D2810] focus:border-[#E8A040]/50 focus:outline-none"
               placeholder="0,00"
             />
           </div>
         </div>
 
         {/* Summary */}
-        <div className="bg-stone-800/50 rounded-xl p-4 space-y-2 mb-5 border border-stone-700">
+        <div className="bg-[#FDF8F2]/80 rounded-xl p-4 space-y-2 mb-5 border border-[#E8D5B5]">
           <div className="flex justify-between text-sm">
-            <span className="text-stone-400">Totale kosten (excl. BTW)</span>
-            <span className="font-mono text-stone-200">{formatEur(totalCosts)}</span>
+            <span className="text-[#9E7E60]">Totale kosten (excl. BTW)</span>
+            <span className="font-mono text-[#3D2810]">{formatEur(totalCosts)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-stone-400">BTW totaal</span>
-            <span className="font-mono text-stone-400">{formatEur(vatFood + vatRest)}</span>
+            <span className="text-[#9E7E60]">BTW totaal</span>
+            <span className="font-mono text-[#9E7E60]">{formatEur(vatFood + vatRest)}</span>
           </div>
-          <div className="flex justify-between text-sm border-t border-stone-700 pt-2">
-            <span className="text-stone-300 font-medium">Totaal incl. BTW</span>
-            <span className="font-mono font-bold text-stone-100">{formatEur(totalInclVat)}</span>
+          <div className="flex justify-between text-sm border-t border-[#E8D5B5] pt-2">
+            <span className="text-[#5C4730] font-medium">Totaal incl. BTW</span>
+            <span className="font-mono font-bold text-[#2C1810]">{formatEur(totalInclVat)}</span>
           </div>
           {financials.total_revenue > 0 && (
-            <div className="flex justify-between text-sm border-t border-stone-700 pt-2">
-              <span className="text-stone-400">Marge</span>
+            <div className="flex justify-between text-sm border-t border-[#E8D5B5] pt-2">
+              <span className="text-[#9E7E60]">Marge</span>
               <span className={`font-mono font-bold ${margin >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {formatEur(margin)} ({marginPct.toFixed(1)}%)
               </span>
@@ -419,9 +419,9 @@ function FinancialsModal({
         </div>
 
         {/* Staffing reference */}
-        <div className="bg-stone-800/30 rounded-xl p-3 mb-5 border border-stone-700/50">
-          <div className="text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">Personeelstarieven</div>
-          <div className="grid grid-cols-2 gap-1 text-xs text-stone-400">
+        <div className="bg-white/30 rounded-xl p-3 mb-5 border border-[#E8D5B5]/60">
+          <div className="text-xs font-medium text-[#9E7E60] mb-2 uppercase tracking-wider">Personeelstarieven</div>
+          <div className="grid grid-cols-2 gap-1 text-xs text-[#9E7E60]">
             <span>Bediening: €45/u</span>
             <span>Maître: €60/u</span>
             <span>Chefs: €45/u</span>
@@ -430,7 +430,7 @@ function FinancialsModal({
         </div>
 
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all">
+          <button onClick={onClose} className="flex-1 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#5C4730] text-sm font-medium rounded-xl transition-all">
             Annuleren
           </button>
           <button
@@ -565,7 +565,7 @@ export default function MepDetailPage() {
     return (
       <div className="text-center py-20">
         <AlertTriangle className="w-10 h-10 text-[#E8A040] mx-auto mb-3" />
-        <p className="text-stone-400 mb-4">{error || 'MEP niet gevonden'}</p>
+        <p className="text-[#9E7E60] mb-4">{error || 'MEP niet gevonden'}</p>
         <Link href="/mep" className="text-[#E8A040] hover:text-[#d4922e] text-sm">
           Terug naar planning
         </Link>
@@ -579,18 +579,18 @@ export default function MepDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href={`/events/${eventId}`}
-            className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="font-display text-2xl font-bold text-stone-100">MEP — {data.event.name}</h1>
+          <h1 className="font-display text-2xl font-bold text-[#2C1810]">MEP — {data.event.name}</h1>
         </div>
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-12 text-center">
-          <ChefHat className="w-12 h-12 text-stone-600 mx-auto mb-4" />
-          <h3 className="text-lg font-display font-semibold text-stone-300 mb-2">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-12 text-center">
+          <ChefHat className="w-12 h-12 text-[#5C4730] mx-auto mb-4" />
+          <h3 className="text-lg font-display font-semibold text-[#5C4730] mb-2">
             Geen menu items gevonden
           </h3>
-          <p className="text-stone-500 text-sm mb-6 max-w-md mx-auto">
+          <p className="text-[#B8997A] text-sm mb-6 max-w-md mx-auto">
             Dit event heeft nog geen gerechten in het menu. Voeg eerst gerechten toe via de event
             pagina.
           </p>
@@ -682,16 +682,16 @@ export default function MepDetailPage() {
           <div className="flex items-center gap-3">
             <Link
               href={`/events/${eventId}`}
-              className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all"
+              className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-[#E8A040]" />
-                <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">MEP Plan</span>
+                <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">MEP Plan</span>
               </div>
-              <h1 className="font-display text-xl font-bold text-stone-100">{event.name}</h1>
+              <h1 className="font-display text-xl font-bold text-[#2C1810]">{event.name}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -715,7 +715,7 @@ export default function MepDetailPage() {
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#5C4730] text-sm font-medium rounded-xl transition-all"
             >
               <Printer className="w-4 h-4" />
               Afdrukken
@@ -732,11 +732,11 @@ export default function MepDetailPage() {
         </div>
 
         {/* ── Event Header ── */}
-        <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-5">
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
           <div className="flex flex-wrap gap-4 items-start justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold text-stone-100 mb-2">{event.name}</h2>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-stone-400">
+              <h2 className="font-display text-2xl font-bold text-[#2C1810] mb-2">{event.name}</h2>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="w-4 h-4" />
                   {formatDate(event.event_date)}
@@ -751,7 +751,7 @@ export default function MepDetailPage() {
                     {event.location}
                   </span>
                 )}
-                <span className="text-xs px-2 py-1 rounded-full bg-stone-800 text-stone-300">
+                <span className="text-xs px-2 py-1 rounded-full bg-white text-[#5C4730]">
                   {eventTypeLabels[event.event_type] || event.event_type}
                 </span>
               </div>
@@ -768,8 +768,8 @@ export default function MepDetailPage() {
                     </div>
                   </div>
                   {totals.food_cost_percentage > 0 && (
-                    <div className="bg-stone-800 border border-stone-700 rounded-xl px-4 py-2.5 text-center">
-                      <div className="text-xs text-stone-400 mb-0.5">FC%</div>
+                    <div className="bg-white border border-[#E8D5B5] rounded-xl px-4 py-2.5 text-center">
+                      <div className="text-xs text-[#9E7E60] mb-0.5">FC%</div>
                       <div
                         className={`text-base font-mono font-bold ${
                           totals.food_cost_percentage < 30
@@ -787,7 +787,7 @@ export default function MepDetailPage() {
               )}
               <button
                 onClick={() => setShowFinancials(true)}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-stone-800/50 hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-stone-200 text-xs font-medium rounded-xl transition-all"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#FDF8F2]/80 hover:bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#3D2810] text-xs font-medium rounded-xl transition-all"
               >
                 <Euro className="w-3.5 h-3.5" />
                 Financiën beheren
@@ -798,13 +798,13 @@ export default function MepDetailPage() {
           {/* Progress bar */}
           {totalIngredients > 0 && (
             <div className="mt-4 no-print" data-no-print>
-              <div className="flex items-center justify-between text-xs text-stone-500 mb-1.5">
+              <div className="flex items-center justify-between text-xs text-[#B8997A] mb-1.5">
                 <span>Voorbereiding</span>
                 <span>
                   {totalChecked}/{totalIngredients} klaar ({progressPct.toFixed(0)}%)
                 </span>
               </div>
-              <div className="w-full bg-stone-800 rounded-full h-2">
+              <div className="w-full bg-white rounded-full h-2">
                 <div
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
@@ -823,11 +823,11 @@ export default function MepDetailPage() {
             <div key={group.categoryCode}>
               {/* Category header */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-px flex-1 bg-stone-800" />
+                <div className="h-px flex-1 bg-white" />
                 <h2 className="text-xs font-bold text-[#E8A040] uppercase tracking-widest mep-amber whitespace-nowrap">
                   {group.categoryLabel}
                 </h2>
-                <div className="h-px flex-1 bg-stone-800" />
+                <div className="h-px flex-1 bg-white" />
               </div>
 
               {/* Courses in this category */}
@@ -838,24 +838,24 @@ export default function MepDetailPage() {
                   return (
                     <div
                       key={courseIdx}
-                      className="mep-course-block bg-stone-900/50 border border-stone-800 rounded-2xl overflow-hidden"
+                      className="mep-course-block bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden"
                     >
                       {/* Course header */}
-                      <div className="px-5 py-3.5 bg-stone-900 border-b border-stone-800 flex items-center justify-between">
+                      <div className="px-5 py-3.5 bg-white border-b border-[#E8D5B5] flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-display text-base font-bold text-stone-100">
+                          <h3 className="font-display text-base font-bold text-[#2C1810]">
                             {course.recipe_name}
                           </h3>
                           {/* Portiegrootte */}
                           {course.serving_size_grams > 0 && (
-                            <span className="text-xs text-stone-500 font-mono">
+                            <span className="text-xs text-[#B8997A] font-mono">
                               {course.serving_size_grams}g/p
                             </span>
                           )}
                           {/* Edit scope trigger */}
                           <button
                             onClick={() => setEditScopeRecipe(course.recipe_name)}
-                            className="p-1 rounded text-stone-600 hover:text-[#E8A040] transition-colors no-print"
+                            className="p-1 rounded text-[#5C4730] hover:text-[#E8A040] transition-colors no-print"
                             data-no-print
                             title="Aanpassing scope"
                           >
@@ -864,10 +864,10 @@ export default function MepDetailPage() {
                         </div>
                         {course.cost_per_person > 0 && (
                           <div className="text-right">
-                            <div className="font-mono text-sm font-bold text-stone-200">
+                            <div className="font-mono text-sm font-bold text-[#3D2810]">
                               {formatEur(course.cost_per_person)}/p
                             </div>
-                            <div className="font-mono text-xs text-stone-500">
+                            <div className="font-mono text-xs text-[#B8997A]">
                               {formatEur(course.total_cost)} totaal
                             </div>
                           </div>
@@ -875,9 +875,9 @@ export default function MepDetailPage() {
                       </div>
 
                       {/* Components & ingredients */}
-                      <div className="divide-y divide-stone-800/50">
+                      <div className="divide-y divide-[#E8D5B5]/50">
                         {course.components.length === 0 ? (
-                          <div className="px-5 py-3 text-stone-500 text-sm">
+                          <div className="px-5 py-3 text-[#B8997A] text-sm">
                             Geen componenten — voeg ingrediënten toe via het recept
                           </div>
                         ) : (
@@ -885,14 +885,14 @@ export default function MepDetailPage() {
                             return (
                               <div key={compIdx}>
                                 {/* Component subheader */}
-                                <div className="px-5 py-1.5 bg-stone-800/20">
+                                <div className="px-5 py-1.5 bg-white/20">
                                   <span className="text-xs font-semibold text-[#E8A040]/80 uppercase tracking-wide mep-amber">
                                     {comp.component_name}
                                   </span>
                                 </div>
 
                                 {/* Ingredient table header */}
-                                <div className="px-5 py-1.5 flex items-center gap-3 text-xs text-stone-500 font-medium bg-stone-800/10">
+                                <div className="px-5 py-1.5 flex items-center gap-3 text-xs text-[#B8997A] font-medium bg-white/10">
                                   <span className="w-6 shrink-0 no-print" data-no-print />
                                   <span className="flex-1">Ingrediënt</span>
                                   <span className="w-24 text-right">Per persoon</span>
@@ -909,14 +909,14 @@ export default function MepDetailPage() {
                                   return (
                                     <div
                                       key={ingIdx}
-                                      className={`px-5 py-2.5 flex items-center gap-3 border-b border-stone-800/30 transition-colors hover:bg-stone-800/20 ${
+                                      className={`px-5 py-2.5 flex items-center gap-3 border-b border-[#E8D5B5]/30 transition-colors hover:bg-white/20 ${
                                         isChecked ? 'opacity-50' : ''
                                       }`}
                                     >
                                       {/* Checkbox */}
                                       <button
                                         onClick={() => toggleChecked(checkKey)}
-                                        className="w-5 h-5 shrink-0 text-stone-600 hover:text-[#E8A040] transition-colors no-print"
+                                        className="w-5 h-5 shrink-0 text-[#5C4730] hover:text-[#E8A040] transition-colors no-print"
                                         data-no-print
                                         aria-label={isChecked ? 'Markeer als niet gedaan' : 'Markeer als gedaan'}
                                       >
@@ -930,7 +930,7 @@ export default function MepDetailPage() {
                                       {/* Name */}
                                       <span
                                         className={`flex-1 text-sm ${
-                                          isChecked ? 'line-through text-stone-500' : 'text-stone-200'
+                                          isChecked ? 'line-through text-[#B8997A]' : 'text-[#3D2810]'
                                         }`}
                                       >
                                         {ing.ingredient_name}
@@ -948,13 +948,13 @@ export default function MepDetailPage() {
                                       )}
 
                                       {/* Per person */}
-                                      <span className="w-24 text-right text-xs text-stone-400 font-mono">
+                                      <span className="w-24 text-right text-xs text-[#9E7E60] font-mono">
                                         {ing.quantity_per_person}
                                         {ing.unit}/p
                                       </span>
 
                                       {/* Total */}
-                                      <span className="w-28 text-right text-sm font-mono font-bold text-stone-100">
+                                      <span className="w-28 text-right text-sm font-mono font-bold text-[#2C1810]">
                                         {formatQty(ing.total_quantity, ing.unit)}
                                       </span>
                                     </div>
@@ -975,19 +975,19 @@ export default function MepDetailPage() {
 
         {/* ── Footer totals ── */}
         {totals.total_food_cost > 0 && (
-          <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Totale voedselkost</div>
-              <div className="font-mono text-2xl font-bold text-stone-100">
+              <div className="text-xs text-[#B8997A] uppercase tracking-wider mb-1">Totale voedselkost</div>
+              <div className="font-mono text-2xl font-bold text-[#2C1810]">
                 {formatEur(totals.total_food_cost)}
               </div>
-              <div className="text-sm text-stone-400 mt-1">
+              <div className="text-sm text-[#9E7E60] mt-1">
                 {formatEur(totals.food_cost_per_person)} per persoon
               </div>
             </div>
             {totals.food_cost_percentage > 0 && (
               <div className="text-right">
-                <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Food Cost %</div>
+                <div className="text-xs text-[#B8997A] uppercase tracking-wider mb-1">Food Cost %</div>
                 <div
                   className={`font-mono text-3xl font-bold ${
                     totals.food_cost_percentage < 30
@@ -1008,14 +1008,14 @@ export default function MepDetailPage() {
         <div className="flex gap-3 no-print flex-wrap" data-no-print>
           <Link
             href={`/events/${eventId}`}
-            className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#5C4730] text-sm font-medium rounded-xl transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Terug naar event
           </Link>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] text-[#5C4730] text-sm font-medium rounded-xl transition-all"
           >
             <Printer className="w-4 h-4" />
             Afdrukken

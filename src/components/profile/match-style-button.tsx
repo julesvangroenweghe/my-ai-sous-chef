@@ -112,7 +112,7 @@ export function MatchStyleButton() {
               <ChefHat className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-display font-semibold text-stone-900 mb-2">Jouw kookstijl</h4>
-                <p className="text-sm text-stone-600 leading-relaxed">{analysis.style_description}</p>
+                <p className="text-sm text-[#5C4730] leading-relaxed">{analysis.style_description}</p>
               </div>
             </div>
           </div>
@@ -138,7 +138,7 @@ export function MatchStyleButton() {
               </div>
               <div className="space-y-1.5">
                 {analysis.top_techniques.map(t => (
-                  <div key={t} className="text-sm text-stone-600 flex items-center gap-2">
+                  <div key={t} className="text-sm text-[#5C4730] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     {t}
                   </div>
@@ -150,7 +150,7 @@ export function MatchStyleButton() {
                 <Lightbulb className="w-4 h-4 text-amber-500" />
                 <h4 className="text-sm font-semibold text-stone-700">Smaakprofiel</h4>
               </div>
-              <p className="text-sm text-stone-600 leading-relaxed">{analysis.flavor_profile}</p>
+              <p className="text-sm text-[#5C4730] leading-relaxed">{analysis.flavor_profile}</p>
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export function MatchStyleButton() {
                 {analysis.suggested_classical_recipes.map((rec, i) => (
                   <div key={i} className="p-3 rounded-xl border border-stone-100 hover:border-amber-200 hover:bg-amber-50/30 transition-all">
                     <p className="font-medium text-stone-900 text-sm">{rec.name}</p>
-                    <p className="text-xs text-stone-500 mt-0.5">{rec.reason}</p>
+                    <p className="text-xs text-[#B8997A] mt-0.5">{rec.reason}</p>
                   </div>
                 ))}
               </div>

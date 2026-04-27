@@ -172,7 +172,7 @@ export default function ChecklistPage() {
   const totalFoodCost = recipes.reduce((sum, r) => sum + (r.total_cost_per_serving || 0), 0)
 
   const foodCostColor = (pct: number | null) => {
-    if (!pct) return 'text-stone-300'
+    if (!pct) return 'text-[#5C4730]'
     if (pct <= 30) return 'bg-emerald-50 text-emerald-700'
     if (pct <= 35) return 'bg-amber-50 text-amber-700'
     return 'bg-red-50 text-red-700'
@@ -213,10 +213,10 @@ export default function ChecklistPage() {
             </div>
             <div>
               <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Checklist</h1>
-              <p className="text-stone-400 text-sm mt-0.5">{recipes.length} recepten - spreadsheet overzicht</p>
+              <p className="text-[#9E7E60] text-sm mt-0.5">{recipes.length} recepten - spreadsheet overzicht</p>
             </div>
           </div>
-          <Link href="/recipes" className="text-sm text-stone-500 hover:text-stone-700 flex items-center gap-1 transition-colors">
+          <Link href="/recipes" className="text-sm text-[#B8997A] hover:text-stone-700 flex items-center gap-1 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Terug naar recepten
           </Link>
@@ -226,7 +226,7 @@ export default function ChecklistPage() {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek recept..."
@@ -241,7 +241,7 @@ export default function ChecklistPage() {
               key={key}
               onClick={() => setSortBy(key)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1 ${
-                sortBy === key ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
+                sortBy === key ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
               }`}
             >
               <ArrowUpDown className="w-3 h-3" />
@@ -258,14 +258,14 @@ export default function ChecklistPage() {
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="w-8 py-3 px-3" />
-                <th className="text-left py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Gerecht</th>
-                <th className="text-left py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Component</th>
-                <th className="text-left py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Ingrediënt</th>
-                <th className="text-right py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Qty/pp</th>
-                <th className="text-left py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Eenheid</th>
-                <th className="text-right py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Prijs/kg</th>
-                <th className="text-right py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Kost/pp</th>
-                <th className="text-center py-3 px-3 text-[11px] text-stone-500 uppercase tracking-wider font-semibold">Status</th>
+                <th className="text-left py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Gerecht</th>
+                <th className="text-left py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Component</th>
+                <th className="text-left py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Ingrediënt</th>
+                <th className="text-right py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Qty/pp</th>
+                <th className="text-left py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Eenheid</th>
+                <th className="text-right py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Prijs/kg</th>
+                <th className="text-right py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Kost/pp</th>
+                <th className="text-center py-3 px-3 text-[11px] text-[#B8997A] uppercase tracking-wider font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -278,13 +278,13 @@ export default function ChecklistPage() {
                     onClick={() => toggleRecipe(recipe.id)}
                   >
                     <td className="py-2.5 px-3">
-                      {recipe.expanded ? <ChevronDown className="w-4 h-4 text-stone-400" /> : <ChevronRight className="w-4 h-4 text-stone-400" />}
+                      {recipe.expanded ? <ChevronDown className="w-4 h-4 text-[#9E7E60]" /> : <ChevronRight className="w-4 h-4 text-[#9E7E60]" />}
                     </td>
                     <td className="py-2.5 px-3" colSpan={5}>
                       <div className="flex items-center gap-3">
                         <span className="font-display font-semibold text-stone-900">{recipe.name}</span>
                         {recipe.category_name && (
-                          <span className="text-[10px] font-medium text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-medium text-[#9E7E60] bg-stone-100 px-2 py-0.5 rounded-full">
                             {recipe.category_name}
                           </span>
                         )}
@@ -299,7 +299,7 @@ export default function ChecklistPage() {
                           {recipe.food_cost_percentage.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="text-stone-300 text-xs">-</span>
+                        <span className="text-[#5C4730] text-xs">-</span>
                       )}
                     </td>
                     <td />
@@ -312,10 +312,10 @@ export default function ChecklistPage() {
                       <tr key={`comp-${comp.id}`} className="border-b border-stone-50">
                         <td className="py-2 px-3" />
                         <td className="py-2 px-3" />
-                        <td className="py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider" colSpan={5}>
+                        <td className="py-2 px-3 text-xs font-semibold text-[#B8997A] uppercase tracking-wider" colSpan={5}>
                           {comp.name}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono text-xs text-stone-400">
+                        <td className="py-2 px-3 text-right font-mono text-xs text-[#9E7E60]">
                           {formatCurrency(comp.subtotal)}
                         </td>
                         <td />
@@ -335,7 +335,7 @@ export default function ChecklistPage() {
                               isSaving={saving === ing.id}
                             />
                           </td>
-                          <td className="py-1.5 px-3 text-stone-500">{ing.unit}</td>
+                          <td className="py-1.5 px-3 text-[#B8997A]">{ing.unit}</td>
                           <td className="py-1.5 px-3 text-right">
                             <InlineEdit
                               value={ing.current_price || 0}
@@ -344,7 +344,7 @@ export default function ChecklistPage() {
                               prefix="€"
                             />
                           </td>
-                          <td className="py-1.5 px-3 text-right font-mono text-xs text-stone-500">
+                          <td className="py-1.5 px-3 text-right font-mono text-xs text-[#B8997A]">
                             {formatCurrency(ing.cost_per_serving)}
                           </td>
                           <td className="py-1.5 px-3 text-center">
@@ -371,7 +371,7 @@ export default function ChecklistPage() {
 
         {/* Footer totals */}
         <div className="flex items-center justify-between px-4 py-3 bg-stone-50 border-t border-stone-200">
-          <span className="text-sm font-medium text-stone-600">Totaal food cost alle recepten</span>
+          <span className="text-sm font-medium text-[#5C4730]">Totaal food cost alle recepten</span>
           <span className="font-mono font-bold text-stone-900">{formatCurrency(totalFoodCost)}</span>
         </div>
       </div>
@@ -438,7 +438,7 @@ function InlineEdit({
   return (
     <button
       onClick={() => { setEditValue(value.toString()); setEditing(true) }}
-      className="font-mono text-xs text-stone-600 hover:text-amber-700 hover:bg-amber-50 px-1.5 py-0.5 rounded transition-colors cursor-text"
+      className="font-mono text-xs text-[#5C4730] hover:text-amber-700 hover:bg-amber-50 px-1.5 py-0.5 rounded transition-colors cursor-text"
     >
       {prefix}{value > 0 ? value.toFixed(2) : '-'}
     </button>

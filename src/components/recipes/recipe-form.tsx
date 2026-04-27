@@ -126,7 +126,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  }
 
  const getFoodCostColor = () => {
- if (foodCostPct <= 0) return 'text-gray-400'
+ if (foodCostPct <= 0) return 'text-[#9E7E60]'
  if (foodCostPct < 30) return 'text-green-600'
  if (foodCostPct <= 35) return 'text-yellow-600'
  return 'text-red-600'

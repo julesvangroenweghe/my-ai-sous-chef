@@ -95,7 +95,7 @@ export function SeasonWidget() {
  </div>
  <div>
  <h3 className="font-display font-semibold text-stone-900">{season.label} {monthNames[currentMonth]}</h3>
- <p className="text-xs text-stone-500 mt-0.5">
+ <p className="text-xs text-[#B8997A] mt-0.5">
  <Flame className="w-3 h-3 inline mr-1 text-brand-500" />
  {peak.length} op piekseizoen · {available.length} beschikbaar
  </p>
@@ -103,7 +103,7 @@ export function SeasonWidget() {
  </div>
  <Link 
  href="/seasonal" 
- className="text-xs font-medium text-stone-400 hover:text-brand-600 transition-colors flex items-center gap-1 group-hover:text-brand-500"
+ className="text-xs font-medium text-[#9E7E60] hover:text-brand-600 transition-colors flex items-center gap-1 group-hover:text-brand-500"
  >
  Volledig <ExternalLink className="w-3 h-3" />
  </Link>
@@ -116,7 +116,7 @@ export function SeasonWidget() {
  <div key={category}>
  <div className="flex items-center gap-2 mb-2">
  <span className="text-sm">{categoryEmojis[category] || ''}</span>
- <span className="text-xs font-semibold uppercase tracking-wider text-stone-400">{category}</span>
+ <span className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60]">{category}</span>
  <div className="flex-1 h-px bg-stone-100" />
  </div>
  <div className="flex flex-wrap gap-1.5">
@@ -134,7 +134,7 @@ export function SeasonWidget() {
  ))}
 
  {peak.length === 0 && (
- <p className="text-sm text-stone-400 text-center py-4">Geen piekseizoen items deze maand</p>
+ <p className="text-sm text-[#9E7E60] text-center py-4">Geen piekseizoen items deze maand</p>
  )}
  </div>
  </div>

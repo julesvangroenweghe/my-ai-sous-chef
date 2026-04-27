@@ -76,7 +76,7 @@ export function ClassicalSuggestions({ query, title = 'Klassieke Inspiratie', ma
  <div className="flex items-center gap-2">
  <Sparkles className="w-4 h-4 text-brand-500" />
  <h4 className="text-sm font-semibold text-stone-700">{title}</h4>
- <span className="text-xs text-stone-400 font-mono">{recipes.length} gevonden</span>
+ <span className="text-xs text-[#9E7E60] font-mono">{recipes.length} gevonden</span>
  </div>
  <div className="space-y-1.5">
  {recipes.map((recipe, i) => (
@@ -96,10 +96,10 @@ export function ClassicalSuggestions({ query, title = 'Klassieke Inspiratie', ma
  </span>
  </div>
  {recipe.description && (
- <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{recipe.description}</p>
+ <p className="text-xs text-[#9E7E60] mt-0.5 line-clamp-1">{recipe.description}</p>
  )}
  </div>
- <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-brand-400 shrink-0 mt-1 transition-colors" />
+ <ChevronRight className="w-4 h-4 text-[#5C4730] group-hover:text-brand-400 shrink-0 mt-1 transition-colors" />
  </div>
  ))}
  </div>

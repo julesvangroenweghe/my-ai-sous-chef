@@ -29,7 +29,7 @@ const LEVELS = [
 export default function PushLevelSelector({ value, onChange }: PushLevelSelectorProps) {
   return (
     <div className="space-y-2">
-      <label className="text-xs text-stone-400 font-medium">Ambitieniveau</label>
+      <label className="text-xs text-[#9E7E60] font-medium">Ambitieniveau</label>
       <div className="grid grid-cols-3 gap-3">
         {LEVELS.map((level) => {
           const isActive = value === level.value
@@ -56,7 +56,7 @@ export default function PushLevelSelector({ value, onChange }: PushLevelSelector
                   {level.label}
                 </span>
               </div>
-              <p className="text-xs text-stone-500 leading-relaxed">{level.description}</p>
+              <p className="text-xs text-[#B8997A] leading-relaxed">{level.description}</p>
             </button>
           )
         })}

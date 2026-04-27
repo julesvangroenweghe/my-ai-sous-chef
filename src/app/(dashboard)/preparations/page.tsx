@@ -165,7 +165,7 @@ export default function PreparationsPage() {
  </div>
  <div>
  <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Halffabricaten</h1>
- <p className="text-stone-400 text-sm mt-0.5">
+ <p className="text-[#9E7E60] text-sm mt-0.5">
  {preparations.length} templates · {categories.length} categorieën
  </p>
  </div>
@@ -184,7 +184,7 @@ export default function PreparationsPage() {
  {/* Search + Filter Bar */}
  <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
  <div className="relative flex-1">
- <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+ <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
  <input
  type="text"
  placeholder="Zoek halffabricaat..."
@@ -198,8 +198,8 @@ export default function PreparationsPage() {
  onClick={() => setSelectedCategory('all')}
  className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
  selectedCategory === 'all'
- ? 'bg-stone-900 text-white shadow-sm'
- : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+ ? 'bg-white text-white shadow-sm'
+ : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
  }`}
  >
  Alles ({filtered.length})
@@ -213,8 +213,8 @@ export default function PreparationsPage() {
  onClick={() => setSelectedCategory(cat)}
  className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
  selectedCategory === cat
- ? 'bg-stone-900 text-white shadow-sm'
- : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+ ? 'bg-white text-white shadow-sm'
+ : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
  }`}
  >
  <span>{config.emoji}</span> {config.label} <span className="text-xs opacity-60">({count})</span>
@@ -244,7 +244,7 @@ export default function PreparationsPage() {
  <Beaker className="w-8 h-8 text-violet-300" />
  </div>
  <h3 className="font-display text-lg font-semibold text-stone-900 mb-2">Geen halffabricaten gevonden</h3>
- <p className="text-sm text-stone-400">Probeer een andere zoekterm of categorie</p>
+ <p className="text-sm text-[#9E7E60]">Probeer een andere zoekterm of categorie</p>
  </div>
  ) : (
  <div className="space-y-6">
@@ -256,7 +256,7 @@ export default function PreparationsPage() {
  <div className="flex items-center gap-2 mb-3">
  <span className="text-lg">{config.emoji}</span>
  <h2 className="font-display font-semibold text-stone-800 text-sm uppercase tracking-wider">{config.label}</h2>
- <span className="text-xs text-stone-400 font-mono">{preps.length}</span>
+ <span className="text-xs text-[#9E7E60] font-mono">{preps.length}</span>
  <div className="flex-1 h-px bg-stone-200/60" />
  </div>
 
@@ -282,18 +282,18 @@ export default function PreparationsPage() {
  )}
  </div>
  {prep.description && (
- <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{prep.description}</p>
+ <p className="text-xs text-[#9E7E60] mt-0.5 line-clamp-1">{prep.description}</p>
  )}
  </div>
  {/* Quick info pills */}
  <div className="flex items-center gap-2 shrink-0">
  {prep.yield_amount && (
- <span className="text-xs font-mono text-stone-500 bg-stone-50 px-2 py-1 rounded-lg">
+ <span className="text-xs font-mono text-[#B8997A] bg-stone-50 px-2 py-1 rounded-lg">
  {prep.yield_amount}{prep.yield_unit || 'g'}
  </span>
  )}
  {prep.shelf_life_hours && (
- <span className="text-xs font-mono text-stone-500 bg-stone-50 px-2 py-1 rounded-lg flex items-center gap-1">
+ <span className="text-xs font-mono text-[#B8997A] bg-stone-50 px-2 py-1 rounded-lg flex items-center gap-1">
  <Clock className="w-3 h-3" />
  {formatShelfLife(prep.shelf_life_hours)}
  </span>
@@ -304,7 +304,7 @@ export default function PreparationsPage() {
  </span>
  )}
  </div>
- <ChevronDown className={`w-4 h-4 text-stone-300 transition-transform duration-200 ${expandedId === prep.id ? 'rotate-180' : ''}`} />
+ <ChevronDown className={`w-4 h-4 text-[#5C4730] transition-transform duration-200 ${expandedId === prep.id ? 'rotate-180' : ''}`} />
  </button>
 
  {/* Expanded Detail */}
@@ -313,7 +313,7 @@ export default function PreparationsPage() {
  {/* Info Grid */}
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
  <div className="bg-white rounded-xl p-3 border border-stone-100">
- <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+ <div className="flex items-center gap-1.5 text-xs text-[#9E7E60] mb-1">
  <Scale className="w-3 h-3" /> Opbrengst
  </div>
  <div className="font-mono text-sm font-semibold text-stone-900">
@@ -321,7 +321,7 @@ export default function PreparationsPage() {
  </div>
  </div>
  <div className="bg-white rounded-xl p-3 border border-stone-100">
- <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+ <div className="flex items-center gap-1.5 text-xs text-[#9E7E60] mb-1">
  <Timer className="w-3 h-3" /> Houdbaarheid
  </div>
  <div className="font-mono text-sm font-semibold text-stone-900">
@@ -329,7 +329,7 @@ export default function PreparationsPage() {
  </div>
  </div>
  <div className="bg-white rounded-xl p-3 border border-stone-100">
- <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+ <div className="flex items-center gap-1.5 text-xs text-[#9E7E60] mb-1">
  <Thermometer className="w-3 h-3" /> Bewaring
  </div>
  <div className="text-sm font-semibold text-stone-900">
@@ -337,7 +337,7 @@ export default function PreparationsPage() {
  </div>
  </div>
  <div className="bg-white rounded-xl p-3 border border-stone-100">
- <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-1">
+ <div className="flex items-center gap-1.5 text-xs text-[#9E7E60] mb-1">
  <Package className="w-3 h-3" /> Categorie
  </div>
  <div className="text-sm font-semibold text-stone-900 capitalize">
@@ -349,7 +349,7 @@ export default function PreparationsPage() {
  {/* Method */}
  {prep.method && (
  <div>
- <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+ <h4 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-2 flex items-center gap-1.5">
  <Flame className="w-3 h-3" /> Werkwijze
  </h4>
  <div className="bg-white rounded-xl p-4 border border-stone-100">
@@ -360,18 +360,18 @@ export default function PreparationsPage() {
 
  {/* Ingredients */}
  <div>
- <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
+ <h4 className="text-xs font-semibold uppercase tracking-wider text-[#9E7E60] mb-2 flex items-center gap-1.5">
  <Beaker className="w-3 h-3" /> Ingrediënten
  </h4>
  {prepIngredients[prep.id] && prepIngredients[prep.id].length > 0 ? (
  <div className="bg-white rounded-xl border border-stone-100 divide-y divide-stone-50">
  {prepIngredients[prep.id].map((ing, idx) => (
  <div key={ing.id} className="flex items-center gap-3 px-4 py-2.5">
- <span className="text-xs text-stone-300 font-mono w-5">{idx + 1}.</span>
+ <span className="text-xs text-[#5C4730] font-mono w-5">{idx + 1}.</span>
  <span className="text-sm text-stone-700 flex-1">
  {ing.ingredient?.name || ing.name_override || 'Onbekend'}
  </span>
- <span className="font-mono text-sm text-stone-500">
+ <span className="font-mono text-sm text-[#B8997A]">
  {ing.quantity} {ing.unit}
  </span>
  {ing.ingredient?.current_price && (
@@ -384,7 +384,7 @@ export default function PreparationsPage() {
  </div>
  ) : (
  <div className="bg-white rounded-xl border border-stone-100 p-4 text-center">
- <p className="text-sm text-stone-400">Ingrediënten laden...</p>
+ <p className="text-sm text-[#9E7E60]">Ingrediënten laden...</p>
  </div>
  )}
  </div>

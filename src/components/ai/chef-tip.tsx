@@ -39,7 +39,7 @@ export function ChefTip({ tip, source, actionLabel, actionHref, variant = 'defau
  <div className="flex-1 min-w-0">
  <p className="text-sm text-stone-700 leading-relaxed">{tip}</p>
  {source && (
- <p className="text-[11px] text-stone-400 mt-1 font-medium">{source}</p>
+ <p className="text-[11px] text-[#9E7E60] mt-1 font-medium">{source}</p>
  )}
  </div>
  {actionHref && actionLabel && (
@@ -52,7 +52,7 @@ export function ChefTip({ tip, source, actionLabel, actionHref, variant = 'defau
  )}
  <button 
  onClick={() => setDismissed(true)} 
- className="shrink-0 text-stone-300 hover:text-stone-500 transition-colors mt-0.5"
+ className="shrink-0 text-[#5C4730] hover:text-[#B8997A] transition-colors mt-0.5"
  >
  <X className="w-3.5 h-3.5" />
  </button>

@@ -44,7 +44,7 @@ function categorizeEmail(msg: GmailMessage): { label: string; color: string; ico
     return { label: 'Event', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30', icon: Star }
   }
   
-  return { label: 'Algemeen', color: 'bg-stone-500/15 text-stone-400 border-stone-500/30', icon: Mail }
+  return { label: 'Algemeen', color: 'bg-[#ECD9BE]/15 text-[#9E7E60] border-stone-500/30', icon: Mail }
 }
 
 function formatEmailDate(dateStr: string): string {
@@ -108,7 +108,7 @@ export default function InboxPage() {
   if (integrationLoading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-6 h-6 animate-spin text-stone-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-[#9E7E60]" />
       </div>
     )
   }
@@ -117,11 +117,11 @@ export default function InboxPage() {
     return (
       <div className="p-8 max-w-2xl mx-auto">
         <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-stone-800 flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-8 h-8 text-stone-400" />
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-8 h-8 text-[#9E7E60]" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-3 font-outfit">Inbox</h1>
-          <p className="text-stone-400 mb-8 max-w-md mx-auto">
+          <p className="text-[#9E7E60] mb-8 max-w-md mx-auto">
             Koppel je Google account om mails van leveranciers te bekijken, 
             prijslijsten te detecteren en facturen te verwerken.
           </p>
@@ -140,7 +140,7 @@ export default function InboxPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-outfit">Inbox</h1>
-          <p className="text-stone-400 text-sm mt-1">
+          <p className="text-[#9E7E60] text-sm mt-1">
             {messages.length} berichten van leveranciers en klanten
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function InboxPage() {
           size="sm"
           onClick={fetchMessages}
           disabled={loading}
-          className="border-stone-700 text-stone-300 hover:bg-stone-800"
+          className="border-[#E8D5B5] text-[#5C4730] hover:bg-white"
         >
           <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Laden...' : 'Vernieuwen'}
@@ -159,14 +159,14 @@ export default function InboxPage() {
       {/* Search + Filters */}
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8997A]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchMessages()}
             placeholder="Zoek in berichten..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-800 border border-stone-700 text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E8D5B5] text-white text-sm placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500/50"
           />
         </div>
         <div className="flex gap-1.5">
@@ -177,7 +177,7 @@ export default function InboxPage() {
               className={`px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
                 filter === f
                   ? 'bg-brand-500/15 text-brand-400 border border-brand-500/30'
-                  : 'bg-stone-800 text-stone-400 border border-stone-700 hover:bg-stone-700'
+                  : 'bg-white text-[#9E7E60] border border-[#E8D5B5] hover:bg-[#FDF8F2]'
               }`}
             >
               {f === 'all' ? 'Alles' : f}
@@ -198,8 +198,8 @@ export default function InboxPage() {
       <div className="space-y-1">
         {filteredMessages.length === 0 && !loading && (
           <div className="text-center py-12">
-            <Inbox className="w-12 h-12 text-stone-600 mx-auto mb-4" />
-            <p className="text-stone-400">
+            <Inbox className="w-12 h-12 text-[#5C4730] mx-auto mb-4" />
+            <p className="text-[#9E7E60]">
               {search ? 'Geen berichten gevonden' : 'Je inbox is leeg'}
             </p>
           </div>
@@ -220,8 +220,8 @@ export default function InboxPage() {
               <div
                 className={`px-4 py-3 rounded-xl border transition-all duration-200 ${
                   isExpanded
-                    ? 'bg-stone-800/80 border-stone-600'
-                    : 'bg-stone-800/40 border-stone-800 hover:bg-stone-800/60 hover:border-stone-700'
+                    ? 'bg-white/90 border-[#D4B896]'
+                    : 'bg-[#FDF8F2]/60 border-[#E8D5B5] hover:bg-white/80 hover:border-[#E8D5B5]'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -237,22 +237,22 @@ export default function InboxPage() {
                         {cat.label}
                       </Badge>
                     </div>
-                    <p className="text-sm text-stone-300 truncate">{msg.subject || '(geen onderwerp)'}</p>
+                    <p className="text-sm text-[#5C4730] truncate">{msg.subject || '(geen onderwerp)'}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-stone-500">{formatEmailDate(msg.date)}</span>
+                    <span className="text-xs text-[#B8997A]">{formatEmailDate(msg.date)}</span>
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-stone-500" />
+                      <ChevronUp className="w-4 h-4 text-[#B8997A]" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-stone-500" />
+                      <ChevronDown className="w-4 h-4 text-[#B8997A]" />
                     )}
                   </div>
                 </div>
 
                 {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-stone-700/50">
-                    <p className="text-xs text-stone-500 mb-1">Van: {msg.from}</p>
-                    <p className="text-sm text-stone-300 leading-relaxed">{msg.snippet}</p>
+                  <div className="mt-3 pt-3 border-t border-[#E8D5B5]/60">
+                    <p className="text-xs text-[#B8997A] mb-1">Van: {msg.from}</p>
+                    <p className="text-sm text-[#5C4730] leading-relaxed">{msg.snippet}</p>
                     {msg.labels?.includes('IMPORTANT') && (
                       <Badge variant="outline" className="mt-2 text-[10px] border-amber-500/30 text-amber-400">
                         <Star className="w-3 h-3 mr-1" />

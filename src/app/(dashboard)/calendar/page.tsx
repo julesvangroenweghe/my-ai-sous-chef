@@ -60,16 +60,16 @@ function getEventTypeLabel(event: CalendarEventRow): string | null {
 function ConnectCTA({ onConnect }: { onConnect: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="bg-stone-900/50 border-stone-800 max-w-md w-full">
+      <Card className="bg-[#FDFAF6]/80 border-[#E8D5B5] max-w-md w-full">
         <CardContent className="p-8 text-center space-y-6">
-          <div className="w-16 h-16 rounded-2xl bg-stone-800 flex items-center justify-center mx-auto">
-            <CalendarDays className="w-8 h-8 text-stone-400" />
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto">
+            <CalendarDays className="w-8 h-8 text-[#9E7E60]" />
           </div>
           <div>
-            <h2 className="text-xl font-display font-bold text-stone-100 mb-2">
+            <h2 className="text-xl font-display font-bold text-[#2C1810] mb-2">
               Google Calendar koppelen
             </h2>
-            <p className="text-stone-400 text-sm leading-relaxed">
+            <p className="text-[#9E7E60] text-sm leading-relaxed">
               Synchroniseer je Google Calendar om al je events, boekingen en afspraken
               rechtstreeks in je keukenplanning te zien.
             </p>
@@ -86,7 +86,7 @@ function ConnectCTA({ onConnect }: { onConnect: () => void }) {
             </svg>
             Koppel Google Account
           </Button>
-          <p className="text-stone-500 text-xs">
+          <p className="text-[#B8997A] text-xs">
             We vragen enkel leestoegang tot je agenda. Je gegevens blijven privaat.
           </p>
         </CardContent>
@@ -100,25 +100,25 @@ function EventDetail({ event, onClose }: { event: CalendarEventRow; onClose: () 
   const typeLabel = getEventTypeLabel(event)
   
   return (
-    <Card className="bg-stone-900/70 border-stone-700 backdrop-blur">
+    <Card className="bg-white/70 border-[#E8D5B5] backdrop-blur">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-stone-100 text-lg leading-tight">{event.title}</CardTitle>
+            <CardTitle className="text-[#2C1810] text-lg leading-tight">{event.title}</CardTitle>
             {typeLabel && (
               <Badge className={`mt-2 ${colors.bg} ${colors.text} border ${colors.border}`}>
                 {typeLabel}
               </Badge>
             )}
           </div>
-          <button onClick={onClose} className="text-stone-500 hover:text-stone-300 p-1 -mt-1 -mr-1">
+          <button onClick={onClose} className="text-[#B8997A] hover:text-[#5C4730] p-1 -mt-1 -mr-1">
             <X className="w-4 h-4" />
           </button>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         {event.start_time && (
-          <div className="flex items-center gap-2 text-stone-400">
+          <div className="flex items-center gap-2 text-[#9E7E60]">
             <Clock className="w-4 h-4 shrink-0" />
             <span>
               {event.is_all_day
@@ -129,25 +129,25 @@ function EventDetail({ event, onClose }: { event: CalendarEventRow; onClose: () 
           </div>
         )}
         {event.location && (
-          <div className="flex items-center gap-2 text-stone-400">
+          <div className="flex items-center gap-2 text-[#9E7E60]">
             <MapPin className="w-4 h-4 shrink-0" />
             <span className="truncate">{event.location}</span>
           </div>
         )}
         {event.guest_count && event.guest_count > 0 && (
-          <div className="flex items-center gap-2 text-stone-400">
+          <div className="flex items-center gap-2 text-[#9E7E60]">
             <Users className="w-4 h-4 shrink-0" />
             <span>{event.guest_count} personen</span>
           </div>
         )}
         {event.description && (
-          <div className="pt-2 border-t border-stone-800">
-            <p className="text-stone-400 text-xs whitespace-pre-wrap line-clamp-4">{event.description}</p>
+          <div className="pt-2 border-t border-[#E8D5B5]">
+            <p className="text-[#9E7E60] text-xs whitespace-pre-wrap line-clamp-4">{event.description}</p>
           </div>
         )}
         {event.calendar_name && (
-          <div className="pt-2 border-t border-stone-800">
-            <span className="text-stone-500 text-xs">Agenda: {event.calendar_name}</span>
+          <div className="pt-2 border-t border-[#E8D5B5]">
+            <span className="text-[#B8997A] text-xs">Agenda: {event.calendar_name}</span>
           </div>
         )}
         <div className="flex items-center gap-2 pt-1">
@@ -237,8 +237,8 @@ export default function CalendarPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Kalender</h1>
-          <p className="text-stone-400 mt-1">Laden...</p>
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <p className="text-[#9E7E60] mt-1">Laden...</p>
         </div>
       </div>
     )
@@ -248,8 +248,8 @@ export default function CalendarPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Kalender</h1>
-          <p className="text-stone-400 mt-1">Synchroniseer je Google Calendar met je keukenplanning</p>
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <p className="text-[#9E7E60] mt-1">Synchroniseer je Google Calendar met je keukenplanning</p>
         </div>
         <ConnectCTA onConnect={connect} />
       </div>
@@ -261,8 +261,8 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-stone-100">Kalender</h1>
-          <p className="text-stone-400 mt-1">
+          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <p className="text-[#9E7E60] mt-1">
             {format(currentMonth, 'MMMM yyyy', { locale: nl })}
           </p>
         </div>
@@ -272,7 +272,7 @@ export default function CalendarPage() {
             size="sm"
             onClick={handleSync}
             disabled={syncing}
-            className="border-stone-700 text-stone-300 hover:bg-stone-800"
+            className="border-[#E8D5B5] text-[#5C4730] hover:bg-white"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Synchroniseren...' : 'Sync'}
@@ -284,19 +284,19 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => setCurrentMonth(m => subMonths(m, 1))}
-          className="p-2 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition-colors"
+          className="p-2 text-[#9E7E60] hover:text-[#3D2810] hover:bg-white rounded-lg transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={() => setCurrentMonth(new Date())}
-          className="text-sm text-stone-400 hover:text-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-800 transition-colors"
+          className="text-sm text-[#9E7E60] hover:text-[#3D2810] px-3 py-1.5 rounded-lg hover:bg-white transition-colors"
         >
           Vandaag
         </button>
         <button
           onClick={() => setCurrentMonth(m => addMonths(m, 1))}
-          className="p-2 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition-colors"
+          className="p-2 text-[#9E7E60] hover:text-[#3D2810] hover:bg-white rounded-lg transition-colors"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -308,14 +308,14 @@ export default function CalendarPage() {
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map(day => (
-              <div key={day} className="text-center text-xs font-medium text-stone-500 py-2">
+              <div key={day} className="text-center text-xs font-medium text-[#B8997A] py-2">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Day cells */}
-          <div className="grid grid-cols-7 gap-px bg-stone-800/50 rounded-xl overflow-hidden border border-stone-800">
+          <div className="grid grid-cols-7 gap-px bg-[#FDF8F2]/80 rounded-xl overflow-hidden border border-[#E8D5B5]">
             {calendarDays.map(day => {
               const dayKey = format(day, 'yyyy-MM-dd')
               const dayEvents = eventsByDay[dayKey] || []
@@ -326,14 +326,14 @@ export default function CalendarPage() {
                 <div
                   key={dayKey}
                   className={`
-                    min-h-[100px] p-1.5 bg-stone-900/80 transition-colors
+                    min-h-[100px] p-1.5 bg-white/90 transition-colors
                     ${!inMonth ? 'opacity-30' : ''}
                     ${today ? 'ring-1 ring-inset ring-brand-500/40' : ''}
                   `}
                 >
                   <div className={`
                     text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full
-                    ${today ? 'bg-brand-600 text-white' : 'text-stone-400'}
+                    ${today ? 'bg-brand-600 text-white' : 'text-[#9E7E60]'}
                   `}>
                     {format(day, 'd')}
                   </div>
@@ -361,7 +361,7 @@ export default function CalendarPage() {
                       )
                     })}
                     {dayEvents.length > 3 && (
-                      <div className="text-[10px] text-stone-500 px-1">
+                      <div className="text-[10px] text-[#B8997A] px-1">
                         +{dayEvents.length - 3} meer
                       </div>
                     )}
@@ -382,7 +382,7 @@ export default function CalendarPage() {
 
       {/* Loading overlay */}
       {loadingEvents && (
-        <div className="text-center text-stone-500 text-sm py-4">
+        <div className="text-center text-[#B8997A] text-sm py-4">
           Events laden...
         </div>
       )}

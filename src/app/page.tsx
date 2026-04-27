@@ -49,7 +49,7 @@ export default function LandingPage() {
       <div className="flex items-center gap-4">
        <Link
         href="/login"
-        className="text-stone-300 hover:text-white text-sm font-medium transition-colors"
+        className="text-[#5C4730] hover:text-white text-sm font-medium transition-colors"
        >
         Inloggen
        </Link>
@@ -72,7 +72,7 @@ export default function LandingPage() {
        Kook slimmer,{' '}
        <span className="text-brand-400">niet harder</span>
       </h1>
-      <p className="text-xl text-stone-400 mb-10 leading-relaxed max-w-2xl mx-auto">
+      <p className="text-xl text-[#9E7E60] mb-10 leading-relaxed max-w-2xl mx-auto">
        Het AI-platform dat je recepten beheert, kosten real-time bijhoudt 
        en productieplannen genereert — zodat jij je kunt focussen op wat je het beste doet.
       </p>
@@ -99,7 +99,7 @@ export default function LandingPage() {
     <h2 className="text-3xl font-bold text-stone-900 font-outfit text-center mb-4">
      Alles wat je keuken nodig heeft
     </h2>
-    <p className="text-stone-600 text-center mb-16 max-w-2xl mx-auto">
+    <p className="text-[#5C4730] text-center mb-16 max-w-2xl mx-auto">
      Van receptenbeheer tot kostenbewaking, van factuurscanning tot productieplannen.
     </p>
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -112,19 +112,19 @@ export default function LandingPage() {
         <feature.icon className="w-6 h-6 text-brand-600" />
        </div>
        <h3 className="font-semibold text-stone-900 mb-2">{feature.title}</h3>
-       <p className="text-sm text-stone-600 leading-relaxed">{feature.description}</p>
+       <p className="text-sm text-[#5C4730] leading-relaxed">{feature.description}</p>
       </div>
      ))}
     </div>
    </section>
 
    {/* CTA */}
-   <section className="bg-stone-900 py-20">
+   <section className="bg-white py-20">
     <div className="max-w-4xl mx-auto px-6 text-center">
      <h2 className="text-3xl font-bold text-white font-outfit mb-4">
       Klaar om je keuken te transformeren?
      </h2>
-     <p className="text-stone-400 mb-8 text-lg">
+     <p className="text-[#9E7E60] mb-8 text-lg">
       Sluit je aan bij chefs die hun kosten beheersen en slimmer werken.
      </p>
      <Link
@@ -141,9 +141,9 @@ export default function LandingPage() {
     <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
      <div className="flex items-center gap-2">
       <Image src="/logo-icon.png" alt="My AI Sous Chef" width={24} height={24} className="rounded" />
-      <span className="text-sm text-stone-600">My AI Sous Chef</span>
+      <span className="text-sm text-[#5C4730]">My AI Sous Chef</span>
      </div>
-     <p className="text-sm text-stone-400">&copy; 2026 My AI Sous Chef. Alle rechten voorbehouden.</p>
+     <p className="text-sm text-[#9E7E60]">&copy; 2026 My AI Sous Chef. Alle rechten voorbehouden.</p>
     </div>
    </footer>
   </div>

@@ -65,12 +65,12 @@ export function KnowledgeStatsWidget() {
  return (
  <div className="card p-6">
  <div className="flex items-center gap-2 mb-5">
- <div className="w-8 h-8 rounded-xl bg-stone-900 flex items-center justify-center">
+ <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center">
  <BookOpen className="w-4 h-4 text-white" />
  </div>
  <div>
  <h3 className="font-display font-semibold text-stone-900 text-sm">Culinaire Kennisbank</h3>
- <p className="text-[11px] text-stone-400">Escoffier · Artusi · Hirtzler · Soyer · Filippini</p>
+ <p className="text-[11px] text-[#9E7E60]">Escoffier · Artusi · Hirtzler · Soyer · Filippini</p>
  </div>
  </div>
  <div className="grid grid-cols-3 gap-2.5">
@@ -82,7 +82,7 @@ export function KnowledgeStatsWidget() {
  <div className="font-mono text-lg font-bold text-stone-900 tabular-nums leading-none">
  {(stats[key] as number).toLocaleString('nl-BE')}
  </div>
- <div className="text-[10px] text-stone-400 mt-1 leading-tight">{label}</div>
+ <div className="text-[10px] text-[#9E7E60] mt-1 leading-tight">{label}</div>
  </div>
  ))}
  </div>

@@ -102,16 +102,16 @@ export default function LeveranciersPage() {
     return (
       <div className="space-y-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-zinc-800 animate-pulse" />
+          <div className="w-10 h-10 rounded-2xl bg-white animate-pulse" />
           <div className="space-y-2">
-            <div className="w-48 h-6 bg-zinc-800 rounded animate-pulse" />
-            <div className="w-32 h-4 bg-zinc-800 rounded animate-pulse" />
+            <div className="w-48 h-6 bg-white rounded animate-pulse" />
+            <div className="w-32 h-4 bg-white rounded animate-pulse" />
           </div>
         </div>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-5 animate-pulse">
-            <div className="h-6 bg-zinc-800 rounded w-48 mb-2" />
-            <div className="h-4 bg-zinc-800/50 rounded w-32" />
+          <div key={i} className="bg-white/50 border border-[#E8D5B5]/50 rounded-lg p-5 animate-pulse">
+            <div className="h-6 bg-white rounded w-48 mb-2" />
+            <div className="h-4 bg-white/50 rounded w-32" />
           </div>
         ))}
       </div>
@@ -162,14 +162,14 @@ export default function LeveranciersPage() {
       {/* Cross-supplier product search results */}
       {allProducts.length > 0 && (
         <div className="card overflow-hidden animate-slide-up">
-          <div className="px-4 py-3 bg-zinc-900/60 border-b border-zinc-700/50">
-            <h3 className="text-sm font-semibold text-zinc-300">
+          <div className="px-4 py-3 bg-white/60 border-b border-[#E8D5B5]/50">
+            <h3 className="text-sm font-semibold text-[#9E7E60]">
               Prijsvergelijking: &ldquo;{productSearch}&rdquo; ({allProducts.length} resultaten)
             </h3>
           </div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-700/50">
+              <tr className="border-b border-[#E8D5B5]/50">
                 <th className="text-left py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Product</th>
                 <th className="text-left py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Leverancier</th>
                 <th className="text-right py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Prijs</th>
@@ -178,9 +178,9 @@ export default function LeveranciersPage() {
             </thead>
             <tbody>
               {allProducts.map((p, i) => (
-                <tr key={p.id} className={`border-b border-zinc-800 ${i === 0 ? 'bg-emerald-900/20' : ''}`}>
+                <tr key={p.id} className={`border-b border-[#E8D5B5] ${i === 0 ? 'bg-emerald-900/20' : ''}`}>
                   <td className="py-2 px-4 font-medium text-white">{p.product_name}</td>
-                  <td className="py-2 px-4 text-zinc-400">{p.supplier_name}</td>
+                  <td className="py-2 px-4 text-[#9E7E60]">{p.supplier_name}</td>
                   <td className="py-2 px-4 text-right font-mono font-semibold text-white">
                     {p.price != null ? formatCurrency(p.price) : '-'}
                   </td>
@@ -203,7 +203,7 @@ export default function LeveranciersPage() {
           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
             hideEmpty
               ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-              : 'border-zinc-700 text-zinc-500 hover:text-zinc-300'
+              : 'border-[#E8D5B5] text-zinc-500 hover:text-[#9E7E60]'
           }`}
         >
           {hideEmpty ? 'Alle leveranciers tonen' : 'Lege leveranciers verbergen'}
@@ -213,19 +213,19 @@ export default function LeveranciersPage() {
       {/* Leveranciers List */}
       <div className="space-y-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         {filtered.length === 0 ? (
-          <div className="bg-zinc-900/80 border border-zinc-700/50 rounded-lg p-12 text-center">
+          <div className="bg-white/80 border border-[#E8D5B5]/50 rounded-lg p-12 text-center">
             <Truck className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
             <p className="font-display font-semibold text-white">Geen leveranciers gevonden</p>
           </div>
         ) : (
           filtered.map(supplier => (
-            <div key={supplier.id} className="bg-zinc-900/80 border border-zinc-700/50 rounded-lg overflow-hidden">
+            <div key={supplier.id} className="bg-white/80 border border-[#E8D5B5]/50 rounded-lg overflow-hidden">
               <button
                 onClick={() => toggleLeverancier(supplier.id)}
-                className="w-full flex items-center justify-between p-5 hover:bg-zinc-800/50/50 transition-colors"
+                className="w-full flex items-center justify-between p-5 hover:bg-white/50/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0">
                     <Truck className="w-5 h-5 text-zinc-500" />
                   </div>
                   <div className="text-left">
@@ -233,7 +233,7 @@ export default function LeveranciersPage() {
                     <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
                       {supplier.category && (
                         <span className={`px-2 py-0.5 rounded-full font-medium ${
-                          categoryColors[supplier.category.toLowerCase()] || 'bg-zinc-800 text-zinc-400'
+                          categoryColors[supplier.category.toLowerCase()] || 'bg-white text-[#9E7E60]'
                         }`}>
                           {supplier.category}
                         </span>
@@ -259,9 +259,9 @@ export default function LeveranciersPage() {
               </button>
 
               {supplier.expanded && (
-                <div className="border-t border-zinc-700/50">
+                <div className="border-t border-[#E8D5B5]/50">
                   {/* Contact Info */}
-                  <div className="px-5 py-3 bg-zinc-800/50/50 flex flex-wrap gap-4 text-xs text-zinc-500">
+                  <div className="px-5 py-3 bg-white/50/50 flex flex-wrap gap-4 text-xs text-zinc-500">
                     {supplier.contact_email && (
                       <span className="flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5" />
@@ -292,7 +292,7 @@ export default function LeveranciersPage() {
                   {supplier.products.length > 0 && (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-zinc-700/50">
+                        <tr className="border-b border-[#E8D5B5]/50">
                           <th className="text-left py-2 px-5 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Product</th>
                           <th className="text-left py-2 px-3 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Categorie</th>
                           <th className="text-right py-2 px-3 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Prijs</th>
@@ -301,8 +301,8 @@ export default function LeveranciersPage() {
                       </thead>
                       <tbody>
                         {supplier.products.map(p => (
-                          <tr key={p.id} className="border-b border-zinc-800 hover:bg-zinc-800/50/50">
-                            <td className="py-2 px-5 font-medium text-zinc-300">{p.product_name}</td>
+                          <tr key={p.id} className="border-b border-[#E8D5B5] hover:bg-white/50/50">
+                            <td className="py-2 px-5 font-medium text-[#9E7E60]">{p.product_name}</td>
                             <td className="py-2 px-3 text-zinc-500">{p.category || '-'}</td>
                             <td className="py-2 px-3 text-right font-mono text-white">
                               {p.price != null ? formatCurrency(p.price) : '-'}

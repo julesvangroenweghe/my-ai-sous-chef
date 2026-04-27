@@ -200,7 +200,7 @@ export default function JulesPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Jules</h1>
-            <p className="text-stone-500 text-sm">Jouw culinaire intelligence partner</p>
+            <p className="text-[#B8997A] text-sm">Jouw culinaire intelligence partner</p>
           </div>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function JulesPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-white text-stone-900 shadow-sm'
-                : 'text-stone-500 hover:text-stone-700'
+                : 'text-[#B8997A] hover:text-stone-700'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function JulesPage() {
                     <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
                       Wat kan ik voor je doen?
                     </h3>
-                    <p className="text-sm text-stone-500 leading-relaxed mb-8">
+                    <p className="text-sm text-[#B8997A] leading-relaxed mb-8">
                       Ik ken je recepten, je kosten en je stijl. Vraag me alles over je keuken.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -251,9 +251,9 @@ export default function JulesPage() {
                         <button
                           key={suggestion}
                           onClick={() => sendMessage(suggestion)}
-                          className="flex items-center gap-2 p-3 bg-stone-50 hover:bg-brand-50 text-left rounded-xl text-sm text-stone-600 hover:text-brand-700 transition-colors group"
+                          className="flex items-center gap-2 p-3 bg-stone-50 hover:bg-brand-50 text-left rounded-xl text-sm text-[#5C4730] hover:text-brand-700 transition-colors group"
                         >
-                          <Lightbulb className="w-4 h-4 text-stone-400 group-hover:text-brand-500 shrink-0" />
+                          <Lightbulb className="w-4 h-4 text-[#9E7E60] group-hover:text-brand-500 shrink-0" />
                           <span className="line-clamp-1">{suggestion}</span>
                         </button>
                       ))}
@@ -275,7 +275,7 @@ export default function JulesPage() {
                         }`}
                       >
                         {msg.role === 'assistant' && !msg.content && isStreaming ? (
-                          <div className="flex items-center gap-2 text-stone-400">
+                          <div className="flex items-center gap-2 text-[#9E7E60]">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             <span className="text-sm">Jules denkt na...</span>
                           </div>
@@ -353,10 +353,10 @@ export default function JulesPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-display font-semibold text-stone-900 text-sm">{alert.title}</h4>
-                <p className="text-sm text-stone-500 mt-1 leading-relaxed">{alert.description}</p>
-                <span className="text-xs text-stone-400 mt-2 block">{alert.time}</span>
+                <p className="text-sm text-[#B8997A] mt-1 leading-relaxed">{alert.description}</p>
+                <span className="text-xs text-[#9E7E60] mt-2 block">{alert.time}</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-stone-300 shrink-0 mt-1" />
+              <ChevronRight className="w-4 h-4 text-[#5C4730] shrink-0 mt-1" />
             </div>
           ))}
         </div>
@@ -369,7 +369,7 @@ export default function JulesPage() {
             <Brain className="w-8 h-8 text-violet-400" />
           </div>
           <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">Jules leert jouw stijl</h3>
-          <p className="text-sm text-stone-500 max-w-[45ch] mx-auto leading-relaxed">
+          <p className="text-sm text-[#B8997A] max-w-[45ch] mx-auto leading-relaxed">
             Naarmate je werkt met recepten, evenementen plant en chat met Jules, wordt je persoonlijke kookstijl-profiel hier opgebouwd. Hoe meer je het gebruikt, hoe slimmer Jules wordt.
           </p>
         </div>
