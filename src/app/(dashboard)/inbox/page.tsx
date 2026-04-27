@@ -11,7 +11,7 @@ import {
   ExternalLink, Link2, Inbox, ChevronDown, ChevronUp,
   FileText, Truck, AlertCircle,
 } from 'lucide-react'
-import { format, parseISO, isVandaag, isYesterday, isThisWeek } from 'date-fns'
+import { format, parseISO, isToday, isYesterday, isThisWeek } from 'date-fns'
 import { nl } from 'date-fns/locale'
 
 interface GmailMessage {
@@ -50,7 +50,7 @@ function categorizeEmail(msg: GmailMessage): { label: string; color: string; ico
 function formatEmailDate(dateStr: string): string {
   try {
     const date = parseISO(dateStr)
-    if (isVandaag(date)) return format(date, 'HH:mm')
+    if (isToday(date)) return format(date, 'HH:mm')
     if (isYesterday(date)) return 'Gisteren'
     if (isThisWeek(date)) return format(date, 'EEEE', { locale: nl })
     return format(date, 'd MMM', { locale: nl })

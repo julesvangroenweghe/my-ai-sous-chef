@@ -11,7 +11,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, RefreshCw,
   MapPin, Users, Clock, ExternalLink, X,
 } from 'lucide-react'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isVandaag, addMonths, subMonths, startOfWeek, endOfWeek, parseISO } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import { nl } from 'date-fns/locale'
 
 interface CalendarEventRow {
@@ -320,7 +320,7 @@ export default function CalendarPage() {
               const dayKey = format(day, 'yyyy-MM-dd')
               const dayEvents = eventsByDay[dayKey] || []
               const inMonth = isSameMonth(day, currentMonth)
-              const today = isVandaag(day)
+              const today = isToday(day)
               
               return (
                 <div
