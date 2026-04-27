@@ -17,6 +17,7 @@ import {
   ChevronDown, Trash2, Loader2, Scale, BookOpen
 } from 'lucide-react'
 import type { Recipe } from '@/types/database'
+import { RecipeAllergenSection } from '@/components/allergens/recipe-allergen-section'
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -346,6 +347,10 @@ export default function RecipeDetailPage() {
           </Card>
         )}
       </div>
+
+
+      {/* Allergen section */}
+      <RecipeAllergenSection recipeId={id} />
 
       {/* Recipe notes */}
       {(recipe as any).notes && (
