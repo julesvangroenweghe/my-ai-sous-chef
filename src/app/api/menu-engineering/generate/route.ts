@@ -525,6 +525,7 @@ SERVICE TIMING VUISTREGELS (STRIKT RESPECTEREN):
 - Ontvangst/aankomst: altijd 15 min — gasten settelen, eerste drankje
 - Per hapje staand/walking: 15 min per ronde — fingerbites (1 hap, geen potje) mogen 2 tegelijk worden doorgegeven; hapjes MET potje of schaal altijd 1 tegelijk (te druk voor gast + bediening)
 - Walking dinner per gerecht: 30 min — tijd om te eten EN te bewegen tussen courses
+- Walking dinner: MAXIMUM 4 gerechten totaal — na 4 gerechten wordt de klant het beu, ongeacht hoe lang het event duurt; genereer nooit meer dan 4 walking dinner courses
 - Zittend diner (≤50 pax): 45 min per gang
 - Zittend diner (>50 pax): 60 min per gang — logistiek trager bij grote groepen
 → Gebruik deze timing om het TOTAAL aantal gangen/hapjes te berekenen op basis van de event-duur.
