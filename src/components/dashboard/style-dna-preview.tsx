@@ -26,7 +26,7 @@ export function StyleDnaPreview() {
             .from('chef_profiles')
             .select('style_keywords, onboarding_completed')
             .eq('auth_user_id', user.id)
-            .single(),
+            .maybeSingle(),
           supabase
             .from('legende_recipe_matches')
             .select('id', { count: 'exact', head: true }),

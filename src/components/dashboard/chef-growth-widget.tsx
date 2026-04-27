@@ -50,10 +50,10 @@ export function ChefGrowthWidget() {
           supabase.from('ingredients').select('id', { count: 'exact', head: true }).eq('kitchen_id', kitchenId).gt('current_price', 0),
           supabase.from('preparations').select('id', { count: 'exact', head: true }).eq('kitchen_id', kitchenId),
           supabase.from('events').select('id', { count: 'exact', head: true }).eq('kitchen_id', kitchenId),
-          supabase.from('chef_profiles').select('onboarding_completed, style_keywords').eq('auth_user_id', user.id).single(),
+          supabase.from('chef_profiles').select('onboarding_completed, style_keywords').eq('auth_user_id', user.id).maybeSingle(),
           supabase.from('legende_recipe_matches').select('id', { count: 'exact', head: true }),
           supabase.from('suppliers').select('id', { count: 'exact', head: true }).eq('kitchen_id', kitchenId),
-          supabase.from('audit_rulesets').select('total_audits').eq('kitchen_id', kitchenId).limit(1).single(),
+          supabase.from('audit_rulesets').select('total_audits').eq('kitchen_id', kitchenId).limit(1).maybeSingle(),
         ])
 
         const recipes = recipesRes.count || 0

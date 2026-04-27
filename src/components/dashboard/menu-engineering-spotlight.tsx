@@ -35,7 +35,7 @@ export function MenuEngineeringSpotlight() {
             .select('avg_score, total_audits')
             .eq('kitchen_id', kitchenId)
             .limit(1)
-            .single(),
+            .maybeSingle(),
         ])
 
         const latestMenu = menusRes.data?.[0]
