@@ -206,7 +206,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
         ].map(({ n, label }) => (
           <div key={n} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              step === n ? 'text-white' : step > n ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white text-[#B8997A]'
+              step === n ? 'text-[#2C1810]' : step > n ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white text-[#B8997A]'
             }`} style={step === n ? { backgroundColor: '#E8A040' } : {}}>
               {step > n ? <Check className="w-4 h-4" /> : n}
             </div>
@@ -316,7 +316,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
             <div className="flex justify-end">
               <button
                 onClick={() => setStep(2)}
-                className="flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-xl transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 text-[#2C1810] font-medium rounded-xl transition-all"
                 style={{ backgroundColor: '#E8A040' }}
               >
                 Volgende
@@ -357,7 +357,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
                     <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                       selectedCourses.includes(c.value) ? 'border-amber-400' : 'border-[#D4B896]'
                     }`} style={selectedCourses.includes(c.value) ? { backgroundColor: '#E8A040' } : {}}>
-                      {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-white" />}
+                      {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-[#2C1810]" />}
                     </div>
                     {c.label}
                   </button>
@@ -444,7 +444,7 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
               <button
                 onClick={generate}
                 disabled={selectedCourses.length === 0 || generating}
-                className="flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-xl transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 text-[#2C1810] font-medium rounded-xl transition-all disabled:opacity-50"
                 style={{ backgroundColor: '#E8A040' }}
               >
                 {generating ? (

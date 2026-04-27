@@ -143,7 +143,7 @@ export default function SettingsPage() {
  return (
  <div className="space-y-8">
  <div>
- <h1 className="text-2xl font-display font-bold text-[#2C1810]">Instellingen</h1>
+ <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Instellingen</h1>
  <p className="text-[#9E7E60] mt-1">Beheer je keuken, team en abonnement</p>
  </div>
 
@@ -181,11 +181,11 @@ export default function SettingsPage() {
  <Check className="w-4 h-4 text-brand-400" />
  </div>
  )}
- <div className={`${isSelected ? 'text-white' : 'text-[#9E7E60]'}`}>
+ <div className={`${isSelected ? 'text-[#2C1810]' : 'text-[#9E7E60]'}`}>
  {mode.icon}
  </div>
  <div>
- <div className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-[#5C4730]'}`}>
+ <div className={`font-semibold text-sm ${isSelected ? 'text-[#2C1810]' : 'text-[#5C4730]'}`}>
  {mode.label}
  </div>
  <div className="text-xs text-[#B8997A] mt-0.5">{mode.description}</div>
@@ -253,7 +253,7 @@ export default function SettingsPage() {
  <Button 
  onClick={handleSave} 
  disabled={saving}
- className="bg-brand-600 hover:bg-brand-700 text-white"
+ className="bg-brand-600 hover:bg-brand-700 text-[#2C1810]"
  >
  {saving ? 'Opslaan...' : saved ? ' Opgeslagen!' : 'Opslaan'}
  </Button>
@@ -293,7 +293,7 @@ export default function SettingsPage() {
  <span className="font-medium text-[#5C4730]">Huidig plan:</span>
  <Badge className="bg-[#FDF8F2] text-[#5C4730]">Free</Badge>
  </div>
- <Button className="bg-brand-600 hover:bg-brand-700 text-white">
+ <Button className="bg-brand-600 hover:bg-brand-700 text-[#2C1810]">
  Upgrade Plan
  </Button>
  </CardContent>
@@ -397,7 +397,7 @@ function GoogleIntegrationCard() {
                 <Button
                   size="sm"
                   onClick={connect}
-                  className="bg-orange-600 hover:bg-orange-700 text-white h-8 text-xs"
+                  className="bg-orange-600 hover:bg-orange-700 text-[#2C1810] h-8 text-xs"
                 >
                   <AlertCircle className="w-3 h-3 mr-1" />
                   Herconnecteer
@@ -407,7 +407,7 @@ function GoogleIntegrationCard() {
                 <Button
                   size="sm"
                   onClick={connect}
-                  className="bg-brand-600 hover:bg-brand-700 text-white h-8 text-xs"
+                  className="bg-brand-600 hover:bg-brand-700 text-[#2C1810] h-8 text-xs"
                 >
                   Koppel Google
                 </Button>

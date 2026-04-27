@@ -52,7 +52,7 @@ export function UnitToggle({ compact = false }: UnitToggleProps) {
           onClick={() => setPreferences({ ...preferences, weight: 'g' })}
           className={`px-3 py-1 text-sm rounded transition-colors ${
             preferences.weight === 'g'
-              ? 'bg-white text-white font-medium'
+              ? 'bg-white text-[#2C1810] font-medium'
               : 'text-[#B8997A] hover:text-stone-700'
           }`}
         >
@@ -62,7 +62,7 @@ export function UnitToggle({ compact = false }: UnitToggleProps) {
           onClick={() => setPreferences({ ...preferences, weight: 'kg' })}
           className={`px-3 py-1 text-sm rounded transition-colors ${
             preferences.weight === 'kg'
-              ? 'bg-white text-white font-medium'
+              ? 'bg-white text-[#2C1810] font-medium'
               : 'text-[#B8997A] hover:text-stone-700'
           }`}
         >
@@ -75,7 +75,7 @@ export function UnitToggle({ compact = false }: UnitToggleProps) {
           onClick={() => setPreferences({ ...preferences, volume: 'ml' })}
           className={`px-3 py-1 text-sm rounded transition-colors ${
             preferences.volume === 'ml'
-              ? 'bg-white text-white font-medium'
+              ? 'bg-white text-[#2C1810] font-medium'
               : 'text-[#B8997A] hover:text-stone-700'
           }`}
         >
@@ -85,7 +85,7 @@ export function UnitToggle({ compact = false }: UnitToggleProps) {
           onClick={() => setPreferences({ ...preferences, volume: 'l' })}
           className={`px-3 py-1 text-sm rounded transition-colors ${
             preferences.volume === 'l'
-              ? 'bg-white text-white font-medium'
+              ? 'bg-white text-[#2C1810] font-medium'
               : 'text-[#B8997A] hover:text-stone-700'
           }`}
         >

@@ -42,20 +42,20 @@ export default function LandingPage() {
         height={40}
         className="rounded-lg"
        />
-       <span className="text-white font-outfit font-semibold text-lg">
+       <span className="text-[#2C1810] font-outfit font-semibold text-lg">
         My AI Sous Chef
        </span>
       </div>
       <div className="flex items-center gap-4">
        <Link
         href="/login"
-        className="text-[#5C4730] hover:text-white text-sm font-medium transition-colors"
+        className="text-[#5C4730] hover:text-[#2C1810] text-sm font-medium transition-colors"
        >
         Inloggen
        </Link>
        <Link
         href="/signup"
-        className="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+        className="bg-brand-500 hover:bg-brand-600 text-[#2C1810] px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
        >
         Aan de slag
        </Link>
@@ -68,7 +68,7 @@ export default function LandingPage() {
        <Sparkles className="w-4 h-4" />
        Jouw intelligente keukenpartner
       </div>
-      <h1 className="text-5xl md:text-6xl font-bold text-white font-outfit leading-tight mb-6">
+      <h1 className="text-5xl md:text-6xl font-bold text-[#2C1810] font-outfit leading-tight mb-6">
        Kook slimmer,{' '}
        <span className="text-brand-400">niet harder</span>
       </h1>
@@ -79,13 +79,13 @@ export default function LandingPage() {
       <div className="flex items-center justify-center gap-4">
        <Link
         href="/signup"
-        className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+        className="bg-brand-500 hover:bg-brand-600 text-[#2C1810] px-8 py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
        >
         Gratis starten <ArrowRight className="w-4 h-4" />
        </Link>
        <Link
         href="/login"
-        className="bg-white/10 hover:bg-white/15 text-white px-8 py-3.5 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border border-white/10"
+        className="bg-white/10 hover:bg-white/15 text-[#2C1810] px-8 py-3.5 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border border-white/10"
        >
         Inloggen
        </Link>
@@ -96,7 +96,7 @@ export default function LandingPage() {
 
    {/* Features */}
    <section className="max-w-6xl mx-auto px-6 py-24">
-    <h2 className="text-3xl font-bold text-stone-900 font-outfit text-center mb-4">
+    <h2 className="text-3xl font-extrabold text-stone-900 font-outfit text-center mb-4">
      Alles wat je keuken nodig heeft
     </h2>
     <p className="text-[#5C4730] text-center mb-16 max-w-2xl mx-auto">
@@ -121,7 +121,7 @@ export default function LandingPage() {
    {/* CTA */}
    <section className="bg-white py-20">
     <div className="max-w-4xl mx-auto px-6 text-center">
-     <h2 className="text-3xl font-bold text-white font-outfit mb-4">
+     <h2 className="text-3xl font-extrabold text-[#2C1810] font-outfit mb-4">
       Klaar om je keuken te transformeren?
      </h2>
      <p className="text-[#9E7E60] mb-8 text-lg">
@@ -129,7 +129,7 @@ export default function LandingPage() {
      </p>
      <Link
       href="/signup"
-      className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+      className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-[#2C1810] px-8 py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
      >
       Begin vandaag <ArrowRight className="w-4 h-4" />
      </Link>

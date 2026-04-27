@@ -116,7 +116,7 @@ export default function MepPrintPage() {
         </Link>
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors text-sm font-medium shadow-lg"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] rounded-lg transition-colors text-sm font-medium shadow-lg"
         >
           <Printer className="w-4 h-4" /> Afdrukken / PDF
         </button>
@@ -132,7 +132,7 @@ export default function MepPrintPage() {
               <p className="text-sm text-stone-600 mt-1">{formatDate(event.event_date)}</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-stone-900 print:text-black">{numPersons} pax</div>
+              <div className="text-2xl font-extrabold text-stone-900 print:text-black">{numPersons} pax</div>
               {event.location && <p className="text-xs text-stone-500">{event.location}</p>}
               {event.departure_time && <p className="text-xs text-stone-500">Vertrek: {event.departure_time}</p>}
             </div>
@@ -158,7 +158,7 @@ export default function MepPrintPage() {
 
             return (
               <div key={day} className="break-inside-avoid">
-                <div className="bg-stone-900 text-white px-3 py-1.5 rounded-t print:bg-black print:rounded-none">
+                <div className="bg-stone-900 text-[#2C1810] px-3 py-1.5 rounded-t print:bg-black print:rounded-none">
                   <span className="text-sm font-bold uppercase tracking-wider">{dayLabel}</span>
                   <span className="text-xs ml-2 opacity-70">{dayItems.length} items</span>
                 </div>

@@ -220,7 +220,7 @@ function StepWelkom({
       <div className="space-y-3">
         <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center mb-6">
           <svg
-            className="w-6 h-6 text-white"
+            className="w-6 h-6 text-[#2C1810]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -233,7 +233,7 @@ function StepWelkom({
             />
           </svg>
         </div>
-        <h1 className="text-3xl font-bold text-stone-800 tracking-tight">
+        <h1 className="text-3xl font-extrabold text-stone-800 tracking-tight">
           Welkom bij My AI Sous Chef
         </h1>
         <p className="text-[#B8997A] leading-relaxed">
@@ -295,7 +295,7 @@ function StepWelkom({
           type="button"
           onClick={onNext}
           disabled={!displayName.trim() || !currentRole}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-[#2C1810] px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -335,7 +335,7 @@ function StepKeukenFilosofie({
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">
           Jouw keuken
         </h2>
         <p className="text-[#B8997A] text-sm mt-1">
@@ -420,7 +420,7 @@ function StepKeukenFilosofie({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-[#2C1810] px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -456,7 +456,7 @@ function StepCulinaire({
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">
           Culinaire invloeden
         </h2>
         <p className="text-[#B8997A] text-sm mt-1">
@@ -507,7 +507,7 @@ function StepCulinaire({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-[#2C1810] px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Volgende
           <svg
@@ -551,7 +551,7 @@ function StepIngredientenTechnieken({
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">
           Jouw signatuur
         </h2>
         <p className="text-[#B8997A] text-sm mt-1">
@@ -611,7 +611,7 @@ function StepIngredientenTechnieken({
         <button
           type="button"
           onClick={onNext}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-[#2C1810] px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           Bijna klaar
           <svg
@@ -665,7 +665,7 @@ function StepKlaar({
       <div className="text-center space-y-2">
         <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <svg
-            className="w-6 h-6 text-white"
+            className="w-6 h-6 text-[#2C1810]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -678,7 +678,7 @@ function StepKlaar({
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-stone-800 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">
           Jouw profiel is klaar.
         </h2>
         <p className="text-[#B8997A] text-sm">
@@ -814,7 +814,7 @@ function StepKlaar({
           type="button"
           onClick={onFinish}
           disabled={loading}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-[#2C1810] px-6 py-2.5 rounded-xl font-semibold transition-colors shadow-md shadow-amber-500/20"
         >
           {loading ? (
             <>

@@ -66,7 +66,7 @@ export function KnowledgeStatsWidget() {
  <div className="card p-6">
  <div className="flex items-center gap-2 mb-5">
  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center">
- <BookOpen className="w-4 h-4 text-white" />
+ <BookOpen className="w-4 h-4 text-[#2C1810]" />
  </div>
  <div>
  <h3 className="font-display font-semibold text-stone-900 text-sm">Culinaire Kennisbank</h3>

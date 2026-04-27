@@ -127,7 +127,7 @@ export default function IngredientsPage() {
                 <Apple className="w-5 h-5 text-lime-600" />
               </div>
               <div>
-                <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Ingredienten</h1>
+                <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Ingredienten</h1>
                 <p className="text-[#9E7E60] text-sm mt-0.5">{ingredients.length} ingredienten · {variants.length} chef-level varianten</p>
               </div>
             </div>
@@ -141,23 +141,23 @@ export default function IngredientsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="card p-4">
-          <div className="font-mono text-2xl font-bold text-stone-900">{ingredients.length}</div>
+          <div className="font-mono text-2xl font-extrabold text-stone-900">{ingredients.length}</div>
           <div className="text-xs text-[#9E7E60]">Totaal</div>
         </div>
         <div className="card p-4">
-          <div className="font-mono text-2xl font-bold text-emerald-600">{withPrice.length}</div>
+          <div className="font-mono text-2xl font-extrabold text-emerald-600">{withPrice.length}</div>
           <div className="text-xs text-[#9E7E60]">Met prijs</div>
         </div>
         <div className="card p-4">
-          <div className="font-mono text-2xl font-bold text-violet-600">{variants.length}</div>
+          <div className="font-mono text-2xl font-extrabold text-violet-600">{variants.length}</div>
           <div className="text-xs text-[#9E7E60]">Varianten</div>
         </div>
         <div className="card p-4">
-          <div className="font-mono text-2xl font-bold text-stone-900">{categories.length}</div>
+          <div className="font-mono text-2xl font-extrabold text-stone-900">{categories.length}</div>
           <div className="text-xs text-[#9E7E60]">Categorieen</div>
         </div>
         <div className="card p-4">
-          <div className="font-mono text-2xl font-bold text-amber-600">{totalAllergenLinks}</div>
+          <div className="font-mono text-2xl font-extrabold text-amber-600">{totalAllergenLinks}</div>
           <div className="text-xs text-[#9E7E60]">Allergeen-links</div>
         </div>
       </div>
@@ -175,14 +175,14 @@ export default function IngredientsPage() {
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          <button onClick={() => setCatFilter(null)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${!catFilter ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}>
+          <button onClick={() => setCatFilter(null)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${!catFilter ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}>
             Alles
           </button>
           {categories.slice(0, 10).map(cat => (
             <button
               key={cat}
               onClick={() => setCatFilter(catFilter === cat ? null : cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${catFilter === cat ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 ${catFilter === cat ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'}`}
             >
               {categoryEmoji[cat] || ''} {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
@@ -201,7 +201,7 @@ export default function IngredientsPage() {
           <button
             key={s.key}
             onClick={() => setSortBy(s.key)}
-            className={`px-2 py-0.5 rounded ${sortBy === s.key ? 'bg-white text-white' : 'hover:bg-stone-100'}`}
+            className={`px-2 py-0.5 rounded ${sortBy === s.key ? 'bg-white text-[#2C1810]' : 'hover:bg-stone-100'}`}
           >
             {s.label}
           </button>

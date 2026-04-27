@@ -124,11 +124,11 @@ export default function LeveranciersPage() {
       <div className="animate-fade-in">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-amber-600/20 flex items-center justify-center">
-            <Truck className="w-5 h-5 text-amber-400" />
+            <Truck className="w-5 h-5 text-amber-700" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-white tracking-tight">Leveranciers</h1>
-            <p className="text-zinc-500 text-sm mt-0.5">
+            <h1 className="font-display text-3xl font-extrabold text-[#2C1810] tracking-tight">Leveranciers</h1>
+            <p className="text-[#9E7E60] text-sm mt-0.5">
               {suppliers.filter(s => s.products.length > 0).length} van {suppliers.length} leveranciers met producten
             </p>
           </div>
@@ -138,7 +138,7 @@ export default function LeveranciersPage() {
       {/* Search */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek leverancier..."
@@ -148,7 +148,7 @@ export default function LeveranciersPage() {
           />
         </div>
         <div className="relative">
-          <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek product over alle leveranciers..."
@@ -170,21 +170,21 @@ export default function LeveranciersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#E8D5B5]/50">
-                <th className="text-left py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Product</th>
-                <th className="text-left py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Leverancier</th>
-                <th className="text-right py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Prijs</th>
-                <th className="text-left py-2 px-4 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Eenheid</th>
+                <th className="text-left py-2 px-4 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Product</th>
+                <th className="text-left py-2 px-4 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Leverancier</th>
+                <th className="text-right py-2 px-4 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Prijs</th>
+                <th className="text-left py-2 px-4 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Eenheid</th>
               </tr>
             </thead>
             <tbody>
               {allProducts.map((p, i) => (
                 <tr key={p.id} className={`border-b border-[#E8D5B5] ${i === 0 ? 'bg-emerald-900/20' : ''}`}>
-                  <td className="py-2 px-4 font-medium text-white">{p.product_name}</td>
+                  <td className="py-2 px-4 font-medium text-[#2C1810]">{p.product_name}</td>
                   <td className="py-2 px-4 text-[#9E7E60]">{p.supplier_name}</td>
-                  <td className="py-2 px-4 text-right font-mono font-semibold text-white">
+                  <td className="py-2 px-4 text-right font-mono font-semibold text-[#2C1810]">
                     {p.price != null ? formatCurrency(p.price) : '-'}
                   </td>
-                  <td className="py-2 px-4 text-zinc-500">{p.unit || '-'}</td>
+                  <td className="py-2 px-4 text-[#9E7E60]">{p.unit || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -195,15 +195,15 @@ export default function LeveranciersPage() {
 
       {/* Toggle lege leveranciers */}
       <div className="flex items-center justify-between animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-[#9E7E60]">
           {filtered.length} leveranciers{hideEmpty ? ' (met producten)' : ''}
         </p>
         <button
           onClick={() => setHideEmpty(!hideEmpty)}
           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
             hideEmpty
-              ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-              : 'border-[#E8D5B5] text-zinc-500 hover:text-[#9E7E60]'
+              ? 'border-amber-500/50 bg-amber-500/10 text-amber-700'
+              : 'border-[#E8D5B5] text-[#9E7E60] hover:text-[#9E7E60]'
           }`}
         >
           {hideEmpty ? 'Alle leveranciers tonen' : 'Lege leveranciers verbergen'}
@@ -215,7 +215,7 @@ export default function LeveranciersPage() {
         {filtered.length === 0 ? (
           <div className="bg-white/80 border border-[#E8D5B5]/50 rounded-lg p-12 text-center">
             <Truck className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-            <p className="font-display font-semibold text-white">Geen leveranciers gevonden</p>
+            <p className="font-display font-semibold text-[#2C1810]">Geen leveranciers gevonden</p>
           </div>
         ) : (
           filtered.map(supplier => (
@@ -226,11 +226,11 @@ export default function LeveranciersPage() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0">
-                    <Truck className="w-5 h-5 text-zinc-500" />
+                    <Truck className="w-5 h-5 text-[#9E7E60]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-display font-semibold text-white">{supplier.name}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
+                    <p className="font-display font-semibold text-[#2C1810]">{supplier.name}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-[#9E7E60]">
                       {supplier.category && (
                         <span className={`px-2 py-0.5 rounded-full font-medium ${
                           categoryColors[supplier.category.toLowerCase()] || 'bg-white text-[#9E7E60]'
@@ -254,14 +254,14 @@ export default function LeveranciersPage() {
                   <span className="text-[10px] text-zinc-600">
                     {formatDate(supplier.updated_at)}
                   </span>
-                  {supplier.expanded ? <ChevronDown className="w-4 h-4 text-zinc-500" /> : <ChevronRight className="w-4 h-4 text-zinc-500" />}
+                  {supplier.expanded ? <ChevronDown className="w-4 h-4 text-[#9E7E60]" /> : <ChevronRight className="w-4 h-4 text-[#9E7E60]" />}
                 </div>
               </button>
 
               {supplier.expanded && (
                 <div className="border-t border-[#E8D5B5]/50">
                   {/* Contact Info */}
-                  <div className="px-5 py-3 bg-white/50/50 flex flex-wrap gap-4 text-xs text-zinc-500">
+                  <div className="px-5 py-3 bg-white/50/50 flex flex-wrap gap-4 text-xs text-[#9E7E60]">
                     {supplier.contact_email && (
                       <span className="flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export default function LeveranciersPage() {
                   {/* Products table */}
                   {supplier.products.length === 0 && (
                     <div className="px-5 py-6 text-center">
-                      <p className="text-sm text-zinc-500 mb-1">Geen producten geïmporteerd</p>
+                      <p className="text-sm text-[#9E7E60] mb-1">Geen producten geïmporteerd</p>
                       <p className="text-xs text-zinc-600">Scan een prijslijst via OCR om producten toe te voegen</p>
                     </div>
                   )}
@@ -293,21 +293,21 @@ export default function LeveranciersPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[#E8D5B5]/50">
-                          <th className="text-left py-2 px-5 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Product</th>
-                          <th className="text-left py-2 px-3 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Categorie</th>
-                          <th className="text-right py-2 px-3 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Prijs</th>
-                          <th className="text-left py-2 px-3 text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Eenheid</th>
+                          <th className="text-left py-2 px-5 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Product</th>
+                          <th className="text-left py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Categorie</th>
+                          <th className="text-right py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Prijs</th>
+                          <th className="text-left py-2 px-3 text-[11px] text-[#9E7E60] uppercase tracking-wider font-semibold">Eenheid</th>
                         </tr>
                       </thead>
                       <tbody>
                         {supplier.products.map(p => (
                           <tr key={p.id} className="border-b border-[#E8D5B5] hover:bg-white/50/50">
                             <td className="py-2 px-5 font-medium text-[#9E7E60]">{p.product_name}</td>
-                            <td className="py-2 px-3 text-zinc-500">{p.category || '-'}</td>
-                            <td className="py-2 px-3 text-right font-mono text-white">
+                            <td className="py-2 px-3 text-[#9E7E60]">{p.category || '-'}</td>
+                            <td className="py-2 px-3 text-right font-mono text-[#2C1810]">
                               {p.price != null ? formatCurrency(p.price) : '-'}
                             </td>
-                            <td className="py-2 px-3 text-zinc-500">{p.unit || '-'}</td>
+                            <td className="py-2 px-3 text-[#9E7E60]">{p.unit || '-'}</td>
                           </tr>
                         ))}
                       </tbody>

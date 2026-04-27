@@ -169,11 +169,11 @@ export default function NewEventPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/events" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all">
+        <Link href="/events" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Nieuw Event</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Nieuw Event</h1>
           <p className="text-[#9E7E60] mt-0.5 text-sm">Plan een event en genereer automatisch je MEP</p>
         </div>
       </div>
@@ -419,12 +419,12 @@ export default function NewEventPage() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 text-sm"
+            className="flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-medium rounded-xl transition-all disabled:opacity-50 text-sm"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Opslaan...' : 'Event Aanmaken'}
           </button>
-          <Link href="/events" className="px-6 py-3 text-[#9E7E60] hover:text-white text-sm transition-colors">
+          <Link href="/events" className="px-6 py-3 text-[#9E7E60] hover:text-[#2C1810] text-sm transition-colors">
             Annuleren
           </Link>
         </div>

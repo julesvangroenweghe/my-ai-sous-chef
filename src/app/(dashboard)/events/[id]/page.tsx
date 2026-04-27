@@ -76,7 +76,7 @@ const courseLabels: Record<number, string> = {
 const statusColors: Record<string, string> = {
  draft: 'bg-stone-700 text-stone-300',
  confirmed: 'bg-emerald-500/20 text-emerald-400',
- in_prep: 'bg-amber-500/20 text-amber-400',
+ in_prep: 'bg-amber-500/20 text-amber-700',
  completed: 'bg-sky-500/20 text-sky-400',
  cancelled: 'bg-red-500/20 text-red-400',
 }
@@ -214,12 +214,12 @@ export default function EventDetailPage() {
  <div className="space-y-6">
  {/* Header */}
  <div className="flex items-start gap-4">
- <Link href="/events" className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-white transition-all mt-1">
+ <Link href="/events" className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-[#2C1810] transition-all mt-1">
  <ArrowLeft className="w-5 h-5" />
  </Link>
  <div className="flex-1">
  <div className="flex items-center gap-3 mb-1">
- <h1 className="text-2xl font-display font-bold text-stone-100">{event.name}</h1>
+ <h1 className="text-2xl font-display font-extrabold text-stone-100">{event.name}</h1>
  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
  {event.status}
  </span>
@@ -262,7 +262,7 @@ export default function EventDetailPage() {
  <div className={`text-lg font-mono font-bold ${
  foodCostPct === 0 ? 'text-stone-500' :
  foodCostPct < 30 ? 'text-green-400' :
- foodCostPct <= 35 ? 'text-amber-400' : 'text-red-400'
+ foodCostPct <= 35 ? 'text-amber-700' : 'text-red-400'
  }`}>
  {foodCostPct > 0 ? `${foodCostPct.toFixed(1)}%` : '—'}
  </div>
@@ -277,7 +277,7 @@ export default function EventDetailPage() {
  onClick={() => setActiveTab(tab.id)}
  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
  activeTab === tab.id
- ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20'
+ ? 'bg-brand-600 text-[#2C1810] shadow-lg shadow-brand-500/20'
  : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
  }`}
  >
@@ -303,7 +303,7 @@ export default function EventDetailPage() {
  </h2>
  <button
  onClick={() => setShowAddRecipe(true)}
- className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-all"
+ className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-xs font-medium rounded-lg transition-all"
  >
  <Plus className="w-3.5 h-3.5" /> Gerecht Toevoegen
  </button>
@@ -328,10 +328,10 @@ export default function EventDetailPage() {
  </select>
  </div>
  <button onClick={addRecipeToEvent} disabled={!selectedRecipeId || addingRecipe}
- className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm rounded-lg transition-all disabled:opacity-50">
+ className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm rounded-lg transition-all disabled:opacity-50">
  {addingRecipe ? '...' : 'Toevoegen'}
  </button>
- <button onClick={() => setShowAddRecipe(false)} className="p-2 text-stone-500 hover:text-white transition-colors">
+ <button onClick={() => setShowAddRecipe(false)} className="p-2 text-stone-500 hover:text-[#2C1810] transition-colors">
  <X className="w-4 h-4" />
  </button>
  </div>
@@ -396,7 +396,7 @@ export default function EventDetailPage() {
 
  {activeTab === 'mep' && !event.num_persons && (
  <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
- <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-3" />
+ <AlertTriangle className="w-8 h-8 text-amber-700 mx-auto mb-3" />
  <p className="text-amber-300 font-medium">Vul eerst het aantal personen in</p>
  <p className="text-stone-500 text-sm mt-1">Het MEP plan heeft het aantal gasten nodig om hoeveelheden te berekenen.</p>
  </div>

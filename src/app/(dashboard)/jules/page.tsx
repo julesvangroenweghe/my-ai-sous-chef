@@ -196,10 +196,10 @@ export default function JulesPage() {
       <div className="animate-fade-in">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
+            <Sparkles className="w-5 h-5 text-[#2C1810]" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Jules</h1>
+            <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Jules</h1>
             <p className="text-[#B8997A] text-sm">Jouw culinaire intelligence partner</p>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function JulesPage() {
             <tab.icon className="w-4 h-4" />
             {tab.label}
             {tab.badge && (
-              <span className="w-5 h-5 bg-brand-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="w-5 h-5 bg-brand-600 text-[#2C1810] text-xs font-bold rounded-full flex items-center justify-center">
                 {tab.badge}
               </span>
             )}
@@ -240,7 +240,7 @@ export default function JulesPage() {
                     <div className="w-16 h-16 bg-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
                       <Sparkles className="w-8 h-8 text-brand-400" />
                     </div>
-                    <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
+                    <h3 className="font-display text-xl font-bold text-stone-900 mb-2">
                       Wat kan ik voor je doen?
                     </h3>
                     <p className="text-sm text-[#B8997A] leading-relaxed mb-8">
@@ -270,7 +270,7 @@ export default function JulesPage() {
                       <div
                         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                           msg.role === 'user'
-                            ? 'bg-brand-600 text-white'
+                            ? 'bg-brand-600 text-[#2C1810]'
                             : 'bg-stone-100 text-stone-800'
                         }`}
                       >
@@ -368,7 +368,7 @@ export default function JulesPage() {
           <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Brain className="w-8 h-8 text-violet-400" />
           </div>
-          <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">Jules leert jouw stijl</h3>
+          <h3 className="font-display text-xl font-bold text-stone-900 mb-2">Jules leert jouw stijl</h3>
           <p className="text-sm text-[#B8997A] max-w-[45ch] mx-auto leading-relaxed">
             Naarmate je werkt met recepten, evenementen plant en chat met Jules, wordt je persoonlijke kookstijl-profiel hier opgebouwd. Hoe meer je het gebruikt, hoe slimmer Jules wordt.
           </p>

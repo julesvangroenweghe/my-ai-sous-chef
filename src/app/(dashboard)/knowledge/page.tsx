@@ -82,7 +82,7 @@ export default function KnowledgePage() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Culinaire Kennisbank</h1>
+        <h1 className="text-2xl font-extrabold text-[#2C1810]">Culinaire Kennisbank</h1>
         <p className="text-sm text-[#9E7E60] mt-1">
           {stats.recipes.toLocaleString('nl-BE')} klassieke recepten, {stats.techniques} technieken, {stats.ratios} ratio&apos;s, {stats.parameters} parameters
         </p>
@@ -99,7 +99,7 @@ export default function KnowledgePage() {
               onClick={() => setTab(t.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                  ? 'bg-amber-600/20 text-amber-700 border border-amber-600/30'
                   : 'bg-white text-[#9E7E60] border border-[#E8D5B5] hover:bg-[#FDF8F2]'
               }`}
             >
@@ -113,20 +113,20 @@ export default function KnowledgePage() {
       {/* Search + Filter */}
       <div className="flex gap-3 flex-col sm:flex-row">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E7E60]" />
           <input
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Zoek op naam, ingrediënt of beschrijving..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-600/50"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] placeholder:text-[#9E7E60] focus:outline-none focus:border-amber-600/50"
           />
         </div>
         {tab === 'recipes' && (
           <select
             value={source}
             onChange={e => setSource(e.target.value)}
-            className="px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-white focus:outline-none"
+            className="px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:outline-none"
           >
             <option value="">Alle bronnen</option>
             <option value="Escoffier">Escoffier</option>
@@ -145,7 +145,7 @@ export default function KnowledgePage() {
           <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : data.length === 0 ? (
-        <p className="text-center text-zinc-500 py-12">Geen resultaten gevonden</p>
+        <p className="text-center text-[#9E7E60] py-12">Geen resultaten gevonden</p>
       ) : (
         <>
           {tab === 'recipes' && <RecipeResults data={data} />}
@@ -158,7 +158,7 @@ export default function KnowledgePage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-[#E8D5B5]">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-[#9E7E60]">
             {total.toLocaleString('nl-BE')} resultaten — pagina {page + 1} van {totalPages}
           </p>
           <div className="flex gap-2">
@@ -190,9 +190,9 @@ function RecipeResults({ data }: { data: any[] }) {
         <div key={r.id} className="p-4 bg-white/50 border border-[#E8D5B5]/50 rounded-lg hover:border-[#D4B896] transition-colors">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h3 className="font-medium text-white truncate">{cleanRecipeName(r.name_original)}</h3>
+              <h3 className="font-medium text-[#2C1810] truncate">{cleanRecipeName(r.name_original)}</h3>
               {r.name_french && r.name_french !== r.name_original && (
-                <p className="text-sm text-amber-400/80 mt-0.5">{r.name_french}</p>
+                <p className="text-sm text-amber-700/80 mt-0.5">{r.name_french}</p>
               )}
               {r.description && (
                 <p className="text-sm text-[#9E7E60] mt-1 line-clamp-2">{r.description}</p>
@@ -202,7 +202,7 @@ function RecipeResults({ data }: { data: any[] }) {
                   <span className="text-xs px-2 py-0.5 rounded bg-[#FDF8F2] text-[#9E7E60]">{r.source}</span>
                 )}
                 {r.category && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-amber-900/30 text-amber-400">{r.category}</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700">{r.category}</span>
                 )}
                 {r.chapter_title && (
                   <span className="text-xs px-2 py-0.5 rounded bg-[#FDF8F2]/50 text-[#9E7E60]">{r.chapter_title}</span>
@@ -210,7 +210,7 @@ function RecipeResults({ data }: { data: any[] }) {
               </div>
             </div>
             {r.source_year && (
-              <span className="text-xs text-zinc-500 shrink-0">{r.source_year}</span>
+              <span className="text-xs text-[#9E7E60] shrink-0">{r.source_year}</span>
             )}
           </div>
         </div>
@@ -224,12 +224,12 @@ function TechniqueResults({ data }: { data: any[] }) {
     <div className="grid gap-3 md:grid-cols-2">
       {data.map((t: any) => (
         <div key={t.id} className="p-4 bg-white/50 border border-[#E8D5B5]/50 rounded-lg">
-          <h3 className="font-medium text-white">{t.name}</h3>
-          {t.name_fr && <p className="text-sm text-amber-400/80">{t.name_fr}</p>}
+          <h3 className="font-medium text-[#2C1810]">{t.name}</h3>
+          {t.name_fr && <p className="text-sm text-amber-700/80">{t.name_fr}</p>}
           {t.description && <p className="text-sm text-[#9E7E60] mt-1 line-clamp-3">{t.description}</p>}
           <div className="flex gap-2 mt-2">
             {t.category && <span className="text-xs px-2 py-0.5 rounded bg-[#FDF8F2] text-[#9E7E60]">{t.category}</span>}
-            {t.difficulty && <span className="text-xs px-2 py-0.5 rounded bg-amber-900/30 text-amber-400">{t.difficulty}</span>}
+            {t.difficulty && <span className="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700">{t.difficulty}</span>}
           </div>
         </div>
       ))}
@@ -243,12 +243,12 @@ function RatioResults({ data }: { data: any[] }) {
       {data.map((r: any) => (
         <div key={r.id} className="p-4 bg-white/50 border border-[#E8D5B5]/50 rounded-lg">
           <div className="flex items-center justify-between">
-            <h3 className="font-medium text-white">{r.name}</h3>
-            <span className="text-lg font-mono text-amber-400">{r.ratio}</span>
+            <h3 className="font-medium text-[#2C1810]">{r.name}</h3>
+            <span className="text-lg font-mono text-amber-700">{r.ratio}</span>
           </div>
           {r.description && <p className="text-sm text-[#9E7E60] mt-1">{r.description}</p>}
           {r.components && (
-            <p className="text-xs text-zinc-500 mt-2">Componenten: {typeof r.components === 'string' ? r.components : JSON.stringify(r.components)}</p>
+            <p className="text-xs text-[#9E7E60] mt-2">Componenten: {typeof r.components === 'string' ? r.components : JSON.stringify(r.components)}</p>
           )}
           <div className="flex gap-2 mt-2">
             {r.category && <span className="text-xs px-2 py-0.5 rounded bg-[#FDF8F2] text-[#9E7E60]">{r.category}</span>}
@@ -277,14 +277,14 @@ function ParameterResults({ data }: { data: any[] }) {
         <tbody>
           {data.map((p: any) => (
             <tr key={p.id} className="border-b border-[#E8D5B5] hover:bg-white/50">
-              <td className="py-2 pr-4 text-white capitalize">{p.ingredient_category}</td>
+              <td className="py-2 pr-4 text-[#2C1810] capitalize">{p.ingredient_category}</td>
               <td className="py-2 pr-4 text-[#9E7E60]">{p.ingredient_specific}</td>
               <td className="py-2 pr-4 text-[#9E7E60] capitalize">{p.parameter_type}</td>
-              <td className="py-2 pr-4 text-amber-400 font-mono whitespace-nowrap">
+              <td className="py-2 pr-4 text-amber-700 font-mono whitespace-nowrap">
                 {p.value_min}{p.value_max && p.value_max !== p.value_min ? `–${p.value_max}` : ''} {p.value_unit}
               </td>
               <td className="py-2 pr-4 text-[#5C4730] capitalize">{p.result_description}</td>
-              <td className="py-2 text-zinc-500 text-xs max-w-[200px] truncate">{p.notes}</td>
+              <td className="py-2 text-[#9E7E60] text-xs max-w-[200px] truncate">{p.notes}</td>
             </tr>
           ))}
         </tbody>

@@ -179,7 +179,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-white rounded-xl text-sm transition-all hover:bg-[#FDF8F2]"
+                  className="px-4 py-2 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-[#2C1810] rounded-xl text-sm transition-all hover:bg-[#FDF8F2]"
                 >
                   <FileUp className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
                   Bestand Kiezen
@@ -198,7 +198,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                   type="button"
                   onClick={handleParse}
                   disabled={parsing}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm font-medium rounded-xl transition-all disabled:opacity-50"
                 >
                   {parsing ? (
                     <>
@@ -260,7 +260,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
               <button
                 type="button"
                 onClick={reset}
-                className="px-3 py-1.5 text-[#9E7E60] hover:text-white text-xs transition-colors"
+                className="px-3 py-1.5 text-[#9E7E60] hover:text-[#2C1810] text-xs transition-colors"
               >
                 Opnieuw
               </button>
@@ -268,7 +268,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                 type="button"
                 onClick={handleApproveAll}
                 disabled={approvedCount === 0}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-xs font-medium rounded-lg transition-all disabled:opacity-50"
               >
                 <Check className="w-3.5 h-3.5" />
                 {approvedCount} gerechten overnemen
@@ -300,7 +300,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                         onClick={() => toggleDishApproval(globalIndex)}
                         className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all ${
                           dish.approved
-                            ? 'bg-brand-600 border-brand-500 text-white'
+                            ? 'bg-brand-600 border-brand-500 text-[#2C1810]'
                             : 'border-[#D4B896] text-transparent hover:border-stone-500'
                         }`}
                       >
@@ -319,7 +319,7 @@ export function MenuPdfParser({ onEventInfoParsed, onDishesApproved, compact = f
                             </span>
                           )}
                           {dish.confidence > 0.4 && dish.confidence < 0.7 && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/20 text-amber-400 rounded">
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/20 text-amber-700 rounded">
                               mogelijk
                             </span>
                           )}

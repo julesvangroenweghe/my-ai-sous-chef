@@ -109,7 +109,7 @@ export default function MenuResult({
         </div>
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-xl p-4">
           <div className="text-xs text-[#B8997A] mb-1">Food Cost %</div>
-          <div className={`text-lg font-mono font-bold ${totalFoodCostPct <= foodCostTarget ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <div className={`text-lg font-mono font-bold ${totalFoodCostPct <= foodCostTarget ? 'text-emerald-400' : 'text-amber-700'}`}>
             {totalFoodCostPct.toFixed(1)}%
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function MenuResult({
       {/* Chef note */}
       {menu.chef_note && (
         <div className="flex gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-          <svg className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/>
             <line x1="6" y1="17" x2="18" y2="17"/>
           </svg>
@@ -218,7 +218,7 @@ export default function MenuResult({
                             </span>
                           )}
                           {dishFeedback && (
-                            <span className={`px-1.5 py-0.5 text-xs rounded font-mono ${dishFeedback.score >= 7 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            <span className={`px-1.5 py-0.5 text-xs rounded font-mono ${dishFeedback.score >= 7 ? 'text-emerald-400' : 'text-amber-700'}`}>
                               {dishFeedback.score}/10
                             </span>
                           )}
@@ -264,7 +264,7 @@ export default function MenuResult({
                       <div className="mt-2 p-3 bg-[#FDF8F2]/80 border border-[#E8D5B5] rounded-xl space-y-1.5">
                         <p className="text-xs text-[#5C4730]">{dishFeedback.feedback}</p>
                         {dishFeedback.improvement && (
-                          <p className="text-xs text-amber-400">
+                          <p className="text-xs text-amber-700">
                             <span className="font-medium">Suggestie:</span> {dishFeedback.improvement}
                           </p>
                         )}
@@ -316,7 +316,7 @@ export default function MenuResult({
         <button
           onClick={onAccept}
           disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-xl transition-all ml-auto disabled:opacity-50"
+          className="flex items-center gap-2 px-5 py-2.5 text-[#2C1810] font-medium rounded-xl transition-all ml-auto disabled:opacity-50"
           style={{ backgroundColor: '#E8A040' }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

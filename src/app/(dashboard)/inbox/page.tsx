@@ -36,7 +36,7 @@ function categorizeEmail(msg: GmailMessage): { label: string; color: string; ico
   
   // Price list detection
   if (subjectLower.includes('prijs') || subjectLower.includes('tarief') || subjectLower.includes('price')) {
-    return { label: 'Prijslijst', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30', icon: FileText }
+    return { label: 'Prijslijst', color: 'bg-amber-500/15 text-amber-700 border-amber-500/30', icon: FileText }
   }
   
   // Event/booking detection
@@ -120,12 +120,12 @@ export default function InboxPage() {
           <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6">
             <Mail className="w-8 h-8 text-[#9E7E60]" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-3 font-outfit">Inbox</h1>
+          <h1 className="text-2xl font-extrabold text-[#2C1810] mb-3 font-outfit">Inbox</h1>
           <p className="text-[#9E7E60] mb-8 max-w-md mx-auto">
             Koppel je Google account om mails van leveranciers te bekijken, 
             prijslijsten te detecteren en facturen te verwerken.
           </p>
-          <Button onClick={connect} className="bg-brand-500 hover:bg-brand-600 text-white">
+          <Button onClick={connect} className="bg-brand-500 hover:bg-brand-600 text-[#2C1810]">
             <Link2 className="w-4 h-4 mr-2" />
             Google Account koppelen
           </Button>
@@ -139,7 +139,7 @@ export default function InboxPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white font-outfit">Inbox</h1>
+          <h1 className="text-2xl font-extrabold text-[#2C1810] font-outfit">Inbox</h1>
           <p className="text-[#9E7E60] text-sm mt-1">
             {messages.length} berichten van leveranciers en klanten
           </p>
@@ -166,7 +166,7 @@ export default function InboxPage() {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchMessages()}
             placeholder="Zoek in berichten..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E8D5B5] text-white text-sm placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E8D5B5] text-[#2C1810] text-sm placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500/50"
           />
         </div>
         <div className="flex gap-1.5">
@@ -230,7 +230,7 @@ export default function InboxPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white truncate">
+                      <span className="text-sm font-medium text-[#2C1810] truncate">
                         {senderName}
                       </span>
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${cat.color}`}>
@@ -254,7 +254,7 @@ export default function InboxPage() {
                     <p className="text-xs text-[#B8997A] mb-1">Van: {msg.from}</p>
                     <p className="text-sm text-[#5C4730] leading-relaxed">{msg.snippet}</p>
                     {msg.labels?.includes('IMPORTANT') && (
-                      <Badge variant="outline" className="mt-2 text-[10px] border-amber-500/30 text-amber-400">
+                      <Badge variant="outline" className="mt-2 text-[10px] border-amber-500/30 text-amber-700">
                         <Star className="w-3 h-3 mr-1" />
                         Belangrijk
                       </Badge>

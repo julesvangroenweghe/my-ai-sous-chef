@@ -16,7 +16,7 @@ export function QuickActions() {
  {actions.map((action) => (
  <Link key={action.href} href={action.href}>
  <Button variant="outline" className="gap-2 h-11">
- <div className={`p-1 rounded ${action.color} text-white`}>
+ <div className={`p-1 rounded ${action.color} text-[#2C1810]`}>
  <Plus className="h-3 w-3" />
  </div>
  {action.label}

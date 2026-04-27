@@ -43,7 +43,7 @@ export default function SignupPage() {
  <div className="inline-flex p-3 bg-brand-500/20 rounded-2xl mb-4">
  <ChefHat className="h-8 w-8 text-brand-400" />
  </div>
- <h1 className="text-2xl font-display font-bold text-white">Word lid van de keuken</h1>
+ <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Word lid van de keuken</h1>
  <p className="text-[#9E7E60] mt-1">Maak je chef-profiel aan</p>
  </div>
 

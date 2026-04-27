@@ -202,7 +202,7 @@ export function MepShoppingAggregate({ eventId, numPersons }: Props) {
  )}
  <button
  onClick={() => window.print()}
- className="p-2 rounded-lg bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all print:hidden"
+ className="p-2 rounded-lg bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all print:hidden"
  >
  <Printer className="w-4 h-4" />
  </button>

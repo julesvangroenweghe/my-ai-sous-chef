@@ -114,7 +114,7 @@ export default function JulesAI() {
         }`}
         title="Jules AI"
       >
-        {open ? <X className="w-5 h-5 text-white" /> : <ChefHat className="w-5 h-5 text-white" />}
+        {open ? <X className="w-5 h-5 text-[#2C1810]" /> : <ChefHat className="w-5 h-5 text-[#2C1810]" />}
       </button>
 
       {/* Chat panel */}
@@ -123,7 +123,7 @@ export default function JulesAI() {
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E8D5B5] bg-white/90">
             <div className="w-7 h-7 rounded-lg bg-brand-700 flex items-center justify-center shrink-0">
-              <ChefHat className="w-4 h-4 text-white" />
+              <ChefHat className="w-4 h-4 text-[#2C1810]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold text-[#2C1810]">Jules AI</div>
@@ -157,7 +157,7 @@ export default function JulesAI() {
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
-                    ? 'bg-brand-700 text-white rounded-br-md'
+                    ? 'bg-brand-700 text-[#2C1810] rounded-br-md'
                     : 'bg-white border border-[#E8D5B5] text-[#3D2810] rounded-bl-md'
                 }`}>
                   {m.content}
@@ -204,7 +204,7 @@ export default function JulesAI() {
                 disabled={!input.trim() || loading}
                 className="w-7 h-7 rounded-lg bg-brand-700 disabled:bg-white flex items-center justify-center transition-colors hover:bg-brand-600 disabled:opacity-40"
               >
-                <Send className="w-3.5 h-3.5 text-white" />
+                <Send className="w-3.5 h-3.5 text-[#2C1810]" />
               </button>
             </div>
           </div>

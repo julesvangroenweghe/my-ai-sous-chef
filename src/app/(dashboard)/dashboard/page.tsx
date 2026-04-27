@@ -133,7 +133,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-brand-600 mb-1">{greeting}</p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
+            <h1 className="font-display text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight">
               {userName || 'Dashboard'}
             </h1>
             <p className="text-[#9E7E60] mt-2 text-sm italic max-w-lg">"{motivation}"</p>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                       className="flex items-center gap-4 px-6 py-3.5 hover:bg-stone-50/80 transition-all group"
                     >
                       {/* Date block */}
-                      <div className="w-12 h-12 rounded-xl bg-white text-white flex flex-col items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-white text-[#2C1810] flex flex-col items-center justify-center shrink-0">
                         <span className="text-[10px] uppercase tracking-wide text-[#9E7E60] leading-none">{monthShort}</span>
                         <span className="font-mono text-lg font-bold leading-none mt-0.5">{dayNum}</span>
                       </div>

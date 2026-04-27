@@ -76,7 +76,7 @@ function ConnectCTA({ onConnect }: { onConnect: () => void }) {
           </div>
           <Button
             onClick={onConnect}
-            className="bg-brand-600 hover:bg-brand-700 text-white w-full"
+            className="bg-brand-600 hover:bg-brand-700 text-[#2C1810] w-full"
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -237,7 +237,7 @@ export default function CalendarPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Kalender</h1>
           <p className="text-[#9E7E60] mt-1">Laden...</p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function CalendarPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Kalender</h1>
           <p className="text-[#9E7E60] mt-1">Synchroniseer je Google Calendar met je keukenplanning</p>
         </div>
         <ConnectCTA onConnect={connect} />
@@ -261,7 +261,7 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Kalender</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Kalender</h1>
           <p className="text-[#9E7E60] mt-1">
             {format(currentMonth, 'MMMM yyyy', { locale: nl })}
           </p>
@@ -333,7 +333,7 @@ export default function CalendarPage() {
                 >
                   <div className={`
                     text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full
-                    ${today ? 'bg-brand-600 text-white' : 'text-[#9E7E60]'}
+                    ${today ? 'bg-brand-600 text-[#2C1810]' : 'text-[#9E7E60]'}
                   `}>
                     {format(day, 'd')}
                   </div>

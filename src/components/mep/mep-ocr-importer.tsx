@@ -297,7 +297,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                           : 'border-[#D4B896] hover:border-stone-500'
                       }`}
                     >
-                      {dish.selected && <Check className="w-3 h-3 text-white" />}
+                      {dish.selected && <Check className="w-3 h-3 text-[#2C1810]" />}
                     </button>
 
                     <span className="text-sm font-medium text-[#3D2810] flex-1">{dish.name}</span>
@@ -355,7 +355,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
               <button
                 onClick={saveToEvent}
                 disabled={saving || selectedCount === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-medium rounded-xl transition-all disabled:opacity-50"
               >
                 {saving ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Opslaan...</>

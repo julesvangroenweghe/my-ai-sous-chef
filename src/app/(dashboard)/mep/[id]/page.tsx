@@ -192,7 +192,7 @@ function EditScopeModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#9E7E60] hover:text-white hover:bg-white transition-all"
+            className="p-1.5 rounded-lg text-[#9E7E60] hover:text-[#2C1810] hover:bg-white transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -216,7 +216,7 @@ function EditScopeModal({
                     <Icon className="w-4 h-4 text-[#9E7E60] group-hover:text-[#E8A040] transition-colors" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-[#3D2810] group-hover:text-white transition-colors">
+                    <div className="text-sm font-medium text-[#3D2810] group-hover:text-[#2C1810] transition-colors">
                       {opt.title}
                     </div>
                     <div className="text-xs text-[#B8997A] mt-0.5 leading-relaxed">
@@ -344,7 +344,7 @@ function FinancialsModal({
             <Euro className="w-5 h-5 text-[#E8A040]" />
             Financiën beheren
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#9E7E60] hover:text-white hover:bg-white transition-all">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[#9E7E60] hover:text-[#2C1810] hover:bg-white transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -579,11 +579,11 @@ export default function MepDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href={`/events/${eventId}`}
-            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="font-display text-2xl font-bold text-[#2C1810]">MEP — {data.event.name}</h1>
+          <h1 className="font-display text-2xl font-extrabold text-[#2C1810]">MEP — {data.event.name}</h1>
         </div>
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-12 text-center">
           <ChefHat className="w-12 h-12 text-[#5C4730] mx-auto mb-4" />
@@ -682,7 +682,7 @@ export default function MepDetailPage() {
           <div className="flex items-center gap-3">
             <Link
               href={`/events/${eventId}`}
-              className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
+              className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -735,7 +735,7 @@ export default function MepDetailPage() {
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
           <div className="flex flex-wrap gap-4 items-start justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold text-[#2C1810] mb-2">{event.name}</h2>
+              <h2 className="font-display text-2xl font-extrabold text-[#2C1810] mb-2">{event.name}</h2>
               <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="w-4 h-4" />
@@ -978,7 +978,7 @@ export default function MepDetailPage() {
           <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="text-xs text-[#B8997A] uppercase tracking-wider mb-1">Totale voedselkost</div>
-              <div className="font-mono text-2xl font-bold text-[#2C1810]">
+              <div className="font-mono text-2xl font-extrabold text-[#2C1810]">
                 {formatEur(totals.total_food_cost)}
               </div>
               <div className="text-sm text-[#9E7E60] mt-1">
@@ -989,7 +989,7 @@ export default function MepDetailPage() {
               <div className="text-right">
                 <div className="text-xs text-[#B8997A] uppercase tracking-wider mb-1">Food Cost %</div>
                 <div
-                  className={`font-mono text-3xl font-bold ${
+                  className={`font-mono text-3xl font-extrabold ${
                     totals.food_cost_percentage < 30
                       ? 'text-emerald-400'
                       : totals.food_cost_percentage <= 35

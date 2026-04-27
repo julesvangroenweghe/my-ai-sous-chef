@@ -99,7 +99,7 @@ export default function SeasonalPage() {
       <div className="animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold text-stone-900 tracking-tight">
+            <h1 className="font-display text-2xl font-extrabold text-stone-900 tracking-tight">
               Seizoenskalender
             </h1>
             <p className="text-[#9E7E60] text-sm mt-0.5">
@@ -139,7 +139,7 @@ export default function SeasonalPage() {
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === 'all' ? 'bg-white text-white' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
+              selectedCategory === 'all' ? 'bg-white text-[#2C1810]' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
             }`}
           >
             Alles ({items.length})
@@ -149,7 +149,7 @@ export default function SeasonalPage() {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                selectedCategory === cat ? 'bg-white text-white' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
+                selectedCategory === cat ? 'bg-white text-[#2C1810]' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
               }`}
             >
               {categoryLabels[cat] || cat} ({items.filter(i => i.category === cat).length})
@@ -178,7 +178,7 @@ export default function SeasonalPage() {
                       key={i}
                       className={`text-center text-[11px] font-semibold py-2 px-0 border-b min-w-[38px] ${
                         i === currentMonth
-                          ? 'bg-white text-white border-[#D4B896]'
+                          ? 'bg-white text-[#2C1810] border-[#D4B896]'
                           : 'text-[#9E7E60] bg-stone-50 border-stone-200'
                       }`}
                     >

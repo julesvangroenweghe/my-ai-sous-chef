@@ -45,7 +45,7 @@ const prepDayOptions = [
 
 const statusOptions = [
  { value: 'pending', label: '⏳ Te doen', color: 'text-[#9E7E60]' },
- { value: 'in_progress', label: ' Bezig', color: 'text-amber-400' },
+ { value: 'in_progress', label: ' Bezig', color: 'text-amber-700' },
  { value: 'done', label: ' Klaar', color: 'text-emerald-400' },
 ]
 
@@ -296,7 +296,7 @@ export function MepInlineEditor({ eventId, eventName, numPersons, onMepGenerated
  <button
  onClick={generateMep}
  disabled={generating}
- className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+ className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm font-medium rounded-xl transition-all disabled:opacity-50"
  >
  {generating ? (
  <Loader2 className="w-4 h-4 animate-spin" />

@@ -88,7 +88,7 @@ export default function MenuEngineeringPage() {
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">Menu Engineering</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Menu Engineering</h1>
           <p className="text-[#9E7E60] text-sm">AI-gestuurd menuontwerp met culinaire audit</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export default function MenuEngineeringPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'text-white'
+                ? 'text-[#2C1810]'
                 : 'text-[#9E7E60] hover:text-[#5C4730]'
             }`}
             style={activeTab === tab.id ? { backgroundColor: 'rgba(232,160,64,0.15)', color: '#E8A040' } : {}}

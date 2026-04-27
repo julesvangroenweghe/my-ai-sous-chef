@@ -70,7 +70,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   }, [onDone])
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 bg-white text-white px-4 py-3 rounded-xl shadow-xl text-sm font-medium animate-slide-up">
+    <div className="fixed bottom-6 right-6 z-50 bg-white text-[#2C1810] px-4 py-3 rounded-xl shadow-xl text-sm font-medium animate-slide-up">
       <div className="flex items-center gap-2">
         <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -253,7 +253,7 @@ export default function ProfilePage() {
 
       {/* Page heading */}
       <div className="animate-fade-in">
-        <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">
+        <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">
           Mijn Profiel
         </h1>
         <p className="text-[#B8997A] mt-1">Jouw culinaire identiteit en stijl-DNA.</p>
@@ -295,7 +295,7 @@ export default function ProfilePage() {
           { label: 'Stijl-events', value: events.length },
         ].map(({ label, value }) => (
           <div key={label} className="card p-4 text-center">
-            <div className="text-2xl font-bold font-mono text-stone-900">{value}</div>
+            <div className="text-2xl font-extrabold font-mono text-stone-900">{value}</div>
             <div className="text-xs text-[#B8997A] mt-0.5">{label}</div>
           </div>
         ))}

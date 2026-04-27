@@ -136,7 +136,7 @@ export default function LegendePage() {
             <BookMarked className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Gerechtenbibliotheek</h1>
+            <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Gerechtenbibliotheek</h1>
             <p className="text-[#9E7E60] text-sm mt-0.5">LEGENDE collectie - {dishes.length} gerechten</p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function LegendePage() {
         <button
           onClick={() => setActiveCategory(null)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-            !activeCategory ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
+            !activeCategory ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
           }`}
         >
           Alles ({dishes.length})
@@ -171,7 +171,7 @@ export default function LegendePage() {
             key={cat.id}
             onClick={() => setActiveCategory(activeCategory === cat.name ? null : cat.name)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-              activeCategory === cat.name ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
+              activeCategory === cat.name ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
             }`}
           >
             {cat.name} ({cat.dish_count})

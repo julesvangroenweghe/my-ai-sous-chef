@@ -246,7 +246,7 @@ export default function MepWeekPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810] tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810] tracking-tight flex items-center gap-2">
             <ClipboardList className="w-6 h-6 text-[#E8A040]" />
             MEP Planning
           </h1>
@@ -266,7 +266,7 @@ export default function MepWeekPage() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigateWeek(-1)}
-            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -287,7 +287,7 @@ export default function MepWeekPage() {
           </div>
           <button
             onClick={() => navigateWeek(1)}
-            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -505,7 +505,7 @@ export default function MepWeekPage() {
                     >
                       <CalendarDays className="w-4 h-4 text-[#E8A040]" />
                       <div className="flex-1">
-                        <div className="text-sm text-[#5C4730] group-hover:text-white transition-colors">
+                        <div className="text-sm text-[#5C4730] group-hover:text-[#2C1810] transition-colors">
                           {ue.name}
                         </div>
                         <div className="text-xs text-[#B8997A]">

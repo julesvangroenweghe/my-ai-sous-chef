@@ -131,7 +131,7 @@ export default function ScanPage() {
             <ScanLine className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Scanner</h1>
+            <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Scanner</h1>
             <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, MEP-lijsten of recepten met AI-herkenning</p>
           </div>
         </div>
@@ -369,7 +369,7 @@ export default function ScanPage() {
             {/* Recipe Results */}
             {result.type === 'recipe' && (
               <div className="space-y-4">
-                <h3 className="font-display text-xl font-semibold text-stone-900">{result.data.name as string}</h3>
+                <h3 className="font-display text-xl font-bold text-stone-900">{result.data.name as string}</h3>
                 <div className="flex gap-4 text-sm text-[#B8997A]">
                   {result.data.servings && <span>{result.data.servings as number} personen</span>}
                   {result.data.prep_time_minutes && <span>{result.data.prep_time_minutes as number} min</span>}

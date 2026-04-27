@@ -71,7 +71,7 @@ export function EventAllergenSection({ eventId }: { eventId: string }) {
   return (
     <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6">
       <div className="flex items-center gap-2 mb-3">
-        <ShieldAlert className="w-4 h-4 text-amber-400" />
+        <ShieldAlert className="w-4 h-4 text-amber-700" />
         <h3 className="text-sm font-semibold text-[#3D2810]">
           Allergenen in dit menu ({uniqueLinks.length})
         </h3>

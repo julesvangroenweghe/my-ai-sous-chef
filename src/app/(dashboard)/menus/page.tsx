@@ -34,7 +34,7 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   draft: 'bg-[#FDF8F2] text-[#9E7E60]',
   confirmed: 'bg-emerald-500/15 text-emerald-400',
-  in_progress: 'bg-amber-500/15 text-amber-400',
+  in_progress: 'bg-amber-500/15 text-amber-700',
   completed: 'bg-blue-500/15 text-blue-400',
   cancelled: 'bg-red-500/15 text-red-400',
 }
@@ -100,11 +100,11 @@ export default function MenusPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-amber-600/20 flex items-center justify-center">
-            <UtensilsCrossed className="w-5 h-5 text-amber-400" />
+            <UtensilsCrossed className="w-5 h-5 text-amber-700" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-white tracking-tight">Menu&apos;s</h1>
-            <p className="text-zinc-500 text-sm mt-0.5">{menus.length} menu&apos;s aangemaakt</p>
+            <h1 className="font-display text-3xl font-extrabold text-[#2C1810] tracking-tight">Menu&apos;s</h1>
+            <p className="text-[#9E7E60] text-sm mt-0.5">{menus.length} menu&apos;s aangemaakt</p>
           </div>
         </div>
         <Button
@@ -119,7 +119,7 @@ export default function MenusPage() {
       {dialogOpen && (
         <Card className="bg-white/80 border-amber-500/30">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white">Nieuw menu aanmaken</CardTitle>
+            <CardTitle className="text-[#2C1810]">Nieuw menu aanmaken</CardTitle>
             <Button variant="ghost" size="icon" onClick={() => setDialogOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
@@ -133,7 +133,7 @@ export default function MenusPage() {
                   value={title} 
                   onChange={(e) => setTitle(e.target.value)} 
                   placeholder="bv. Bruiloft Van den Berg"
-                  className="bg-white border-[#E8D5B5] text-white" 
+                  className="bg-white border-[#E8D5B5] text-[#2C1810]" 
                 />
               </div>
               <div className="space-y-2">
@@ -142,7 +142,7 @@ export default function MenusPage() {
                   id="type"
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
-                  className="w-full rounded-md bg-white border border-[#E8D5B5] text-white px-3 py-2 text-sm"
+                  className="w-full rounded-md bg-white border border-[#E8D5B5] text-[#2C1810] px-3 py-2 text-sm"
                 >
                   <option value="walking_dinner">Walking Dinner</option>
                   <option value="buffet">Buffet</option>
@@ -159,7 +159,7 @@ export default function MenusPage() {
                   value={guestCount} 
                   onChange={(e) => setGuestCount(e.target.value)} 
                   placeholder="bv. 80"
-                  className="bg-white border-[#E8D5B5] text-white" 
+                  className="bg-white border-[#E8D5B5] text-[#2C1810]" 
                 />
               </div>
               <div className="space-y-2">
@@ -169,7 +169,7 @@ export default function MenusPage() {
                   value={notes} 
                   onChange={(e) => setNotes(e.target.value)} 
                   placeholder="Allergieën, wensen, etc."
-                  className="bg-white border-[#E8D5B5] text-white" 
+                  className="bg-white border-[#E8D5B5] text-[#2C1810]" 
                 />
               </div>
             </div>
@@ -212,13 +212,13 @@ export default function MenusPage() {
               <div className="bg-white/50 border border-[#E8D5B5]/50 rounded-lg hover:border-amber-500/30 transition-all hover:bg-white/80 cursor-pointer h-full">
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-display font-semibold text-white text-lg leading-tight">
+                    <h3 className="font-display font-semibold text-[#2C1810] text-lg leading-tight">
                       {menu.name}
                     </h3>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-zinc-500 hover:text-red-400 shrink-0"
+                      className="h-8 w-8 text-[#9E7E60] hover:text-red-400 shrink-0"
                       onClick={(e) => { e.preventDefault(); handleDelete(menu.id) }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -252,13 +252,13 @@ export default function MenusPage() {
                   </div>
 
                   {menu.menu_items && menu.menu_items.length > 0 && (
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-[#9E7E60]">
                       {menu.menu_items.length} gerechten
                     </p>
                   )}
                   
                   {menu.notes && (
-                    <p className="text-sm text-zinc-500 truncate">{menu.notes}</p>
+                    <p className="text-sm text-[#9E7E60] truncate">{menu.notes}</p>
                   )}
                 </div>
               </div>

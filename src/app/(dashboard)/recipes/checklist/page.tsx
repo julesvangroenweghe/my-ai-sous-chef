@@ -212,7 +212,7 @@ export default function ChecklistPage() {
               <ClipboardCheck className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Checklist</h1>
+              <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Checklist</h1>
               <p className="text-[#9E7E60] text-sm mt-0.5">{recipes.length} recepten - spreadsheet overzicht</p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function ChecklistPage() {
               key={key}
               onClick={() => setSortBy(key)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1 ${
-                sortBy === key ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
+                sortBy === key ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
               }`}
             >
               <ArrowUpDown className="w-3 h-3" />
@@ -352,7 +352,7 @@ export default function ChecklistPage() {
                               onClick={() => toggleCheck(recipe.id, ing.id)}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                                 ing.checked
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  ? 'bg-emerald-500 border-emerald-500 text-[#2C1810]'
                                   : 'border-stone-200 hover:border-stone-400'
                               }`}
                             >

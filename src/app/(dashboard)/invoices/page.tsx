@@ -404,7 +404,7 @@ function ReviewPanel({
                   ) : (
                     <button
                       onClick={() => startEdit(`${idx}-product_name`, item.product_name)}
-                      className="text-left text-[#3D2810] hover:text-amber-400 transition-colors flex items-center gap-1.5 group/edit"
+                      className="text-left text-[#3D2810] hover:text-amber-700 transition-colors flex items-center gap-1.5 group/edit"
                     >
                       <span>{item.product_name}</span>
                       <Pencil className="w-3 h-3 text-[#5C4730] opacity-0 group-hover/edit:opacity-100 transition-opacity" />
@@ -428,7 +428,7 @@ function ReviewPanel({
                   ) : (
                     <button
                       onClick={() => startEdit(`${idx}-quantity`, item.quantity)}
-                      className="font-mono text-[#3D2810] hover:text-amber-400 transition-colors"
+                      className="font-mono text-[#3D2810] hover:text-amber-700 transition-colors"
                     >
                       {item.quantity}
                     </button>
@@ -457,7 +457,7 @@ function ReviewPanel({
                     ) : (
                       <button
                         onClick={() => startEdit(`${idx}-unit_price`, item.unit_price)}
-                        className="font-mono text-[#3D2810] hover:text-amber-400 transition-colors"
+                        className="font-mono text-[#3D2810] hover:text-amber-700 transition-colors"
                       >
                         &euro;{item.unit_price.toFixed(2)}
                       </button>
@@ -486,7 +486,7 @@ function ReviewPanel({
                     className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full border transition-colors ${
                       item.matched_ingredient_id
                         ? 'bg-emerald-900/30 text-emerald-300 border-emerald-700/40 hover:border-emerald-600'
-                        : 'bg-amber-900/30 text-amber-300 border-amber-700/40 hover:border-amber-600'
+                        : 'bg-amber-50 text-amber-300 border-amber-700/40 hover:border-amber-600'
                     }`}
                   >
                     {item.matched_ingredient_id ? (
@@ -526,7 +526,7 @@ function ReviewPanel({
             onConfirm(updatedFactuur, lineItems)
           }}
           disabled={confirming || matchedCount === 0}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-[#FDF8F2] disabled:text-[#B8997A] text-white font-medium text-sm rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-[#FDF8F2] disabled:text-[#B8997A] text-[#2C1810] font-medium text-sm rounded-xl transition-colors"
         >
           {confirming ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -753,7 +753,7 @@ export default function FactuursPage() {
             <X className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="font-display text-2xl font-bold text-[#2C1810] tracking-tight">Factuur controleren</h1>
+            <h1 className="font-display text-2xl font-extrabold text-[#2C1810] tracking-tight">Factuur controleren</h1>
             <p className="text-[#B8997A] text-sm mt-0.5">Controleer de gescande gegevens en bevestig de prijzen</p>
           </div>
         </div>
@@ -790,7 +790,7 @@ export default function FactuursPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold text-[#2C1810] tracking-tight">Facturen</h1>
+          <h1 className="font-display text-3xl font-extrabold text-[#2C1810] tracking-tight">Facturen</h1>
           <p className="text-[#B8997A] mt-1">Scan facturen om ingrediëntprijzen automatisch bij te werken</p>
         </div>
         <div className="flex gap-3">
@@ -812,7 +812,7 @@ export default function FactuursPage() {
             <Camera className="w-4 h-4" />
             Scannen
           </button>
-          <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-medium text-sm rounded-xl transition-colors cursor-pointer">
+          <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-[#2C1810] font-medium text-sm rounded-xl transition-colors cursor-pointer">
             <Upload className="w-4 h-4" />
             Uploaden
             <input
@@ -831,7 +831,7 @@ export default function FactuursPage() {
       {/* Upload / Processing states */}
       {(pageState === 'uploading' || pageState === 'processing') && (
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-8 text-center animate-fade-in">
-          <div className="w-16 h-16 bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-700/30">
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-700/30">
             <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
           </div>
           <h3 className="font-display text-lg font-semibold text-[#3D2810] mb-1">
@@ -966,7 +966,7 @@ export default function FactuursPage() {
                         setReviewFactuur(inv)
                         setPageState('review')
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-[#2C1810] text-xs font-medium rounded-lg transition-colors"
                     >
                       <Eye className="w-3 h-3" />
                       Controleren
@@ -976,7 +976,7 @@ export default function FactuursPage() {
                       <CheckCircle2 className="w-3.5 h-3.5" />
                     </span>
                   ) : inv.ocr_status === 'processing' ? (
-                    <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-amber-700 animate-spin" />
                   ) : (
                     <div className="w-20" />
                   )}

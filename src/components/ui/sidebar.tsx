@@ -47,8 +47,8 @@ function SidebarItem({ className, href, icon, active, children, ...props }: Side
  className={cn(
  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
  active
- ? 'bg-brand-600 text-white'
- : 'text-stone-400 hover:bg-white/5 hover:text-white',
+ ? 'bg-brand-600 text-[#2C1810]'
+ : 'text-stone-400 hover:bg-white/5 hover:text-[#2C1810]',
  className
  )}
  {...props}

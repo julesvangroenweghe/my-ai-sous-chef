@@ -131,7 +131,7 @@ export default function IntegrationsContent() {
       )}
 
       <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-white">Integraties</h1>
+        <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Integraties</h1>
         <p className="text-stone-400 mt-1">Koppel externe diensten aan je keuken voor automatische synchronisatie.</p>
       </div>
 
@@ -147,7 +147,7 @@ export default function IntegrationsContent() {
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-white">Google Workspace</h3>
+              <h3 className="font-semibold text-[#2C1810]">Google Workspace</h3>
               <p className="text-xs text-stone-400">Calendar, Gmail &amp; Drive</p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function IntegrationsContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Account</div>
-                  <div className="text-sm text-white">{googleStatus.email}</div>
+                  <div className="text-sm text-[#2C1810]">{googleStatus.email}</div>
                 </div>
                 <div>
                   <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Gekoppeld op</div>
@@ -192,7 +192,7 @@ export default function IntegrationsContent() {
                 </div>
               )}
               <div className="flex items-center gap-3 pt-2">
-                <button onClick={handleConnect} className="px-4 py-2 rounded-xl text-sm font-medium bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white transition-all border border-stone-700">
+                <button onClick={handleConnect} className="px-4 py-2 rounded-xl text-sm font-medium bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-[#2C1810] transition-all border border-stone-700">
                   Opnieuw koppelen
                 </button>
                 <button onClick={handleDisconnect} disabled={disconnecting} className="px-4 py-2 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50">

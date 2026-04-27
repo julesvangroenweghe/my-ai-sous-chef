@@ -88,10 +88,10 @@ export default function FoodCostPage() {
       <div className="animate-fade-in">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-white" />
+            <BarChart3 className="w-5 h-5 text-[#2C1810]" />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Food Cost</h1>
+            <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Food Cost</h1>
             <p className="text-[#B8997A] text-sm">Overzicht kostprijzen en marges per recept</p>
           </div>
         </div>
@@ -101,27 +101,27 @@ export default function FoodCostPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <div className="card p-4">
           <div className="text-xs text-[#9E7E60] mb-1">Gemiddelde food cost</div>
-          <div className={`font-mono text-2xl font-bold ${getCostColor(stats.avgCost)}`}>
+          <div className={`font-mono text-2xl font-extrabold ${getCostColor(stats.avgCost)}`}>
             {stats.avgCost > 0 ? `${stats.avgCost.toFixed(1)}%` : '\u2014'}
           </div>
           <div className="text-[10px] text-[#9E7E60] mt-1">Target: {targets.excellent}-{targets.good}%</div>
         </div>
         <div className="card p-4">
           <div className="text-xs text-[#9E7E60] mb-1">Recepten met prijs</div>
-          <div className="font-mono text-2xl font-bold text-stone-900">{stats.withCost}/{stats.total}</div>
+          <div className="font-mono text-2xl font-extrabold text-stone-900">{stats.withCost}/{stats.total}</div>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-1 text-xs text-[#9E7E60] mb-1">
             <CheckCircle className="w-3 h-3 text-emerald-500" /> Uitstekend
           </div>
-          <div className="font-mono text-2xl font-bold text-emerald-600">{stats.excellent}</div>
+          <div className="font-mono text-2xl font-extrabold text-emerald-600">{stats.excellent}</div>
           <div className="text-[10px] text-[#9E7E60] mt-1">Onder {targets.excellent}%</div>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-1 text-xs text-[#9E7E60] mb-1">
             <AlertTriangle className="w-3 h-3 text-amber-500" /> Boven target
           </div>
-          <div className="font-mono text-2xl font-bold text-amber-600">{stats.overTarget}</div>
+          <div className="font-mono text-2xl font-extrabold text-amber-600">{stats.overTarget}</div>
           <div className="text-[10px] text-[#9E7E60] mt-1">Boven {targets.good}%</div>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function FoodCostPage() {
               key={s.key}
               onClick={() => setSortBy(s.key)}
               className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                sortBy === s.key ? 'bg-white text-white' : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
+                sortBy === s.key ? 'bg-white text-[#2C1810]' : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
               }`}
             >
               {s.label}

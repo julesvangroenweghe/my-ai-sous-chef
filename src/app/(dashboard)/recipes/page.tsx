@@ -104,7 +104,7 @@ export default function RecipesPage() {
                 <UtensilsCrossed className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Recepten</h1>
+                <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Recepten</h1>
                 <p className="text-[#9E7E60] text-sm mt-0.5">{recipes.length} {recipes.length === 1 ? 'recept' : 'recepten'} · Componentniveau kostenberekening</p>
               </div>
             </div>
@@ -119,21 +119,21 @@ export default function RecipesPage() {
       {recipes.length > 0 && (
         <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StaggerItem><div className="card p-4">
-            <div className="font-mono text-2xl font-bold text-stone-900">{recipes.length}</div>
+            <div className="font-mono text-2xl font-extrabold text-stone-900">{recipes.length}</div>
             <div className="text-xs text-[#9E7E60]">Recepten</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
-            <div className="font-mono text-2xl font-bold text-stone-900">{categories.length}</div>
+            <div className="font-mono text-2xl font-extrabold text-stone-900">{categories.length}</div>
             <div className="text-xs text-[#9E7E60]">Categorieën</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
-            <div className={`font-mono text-2xl font-bold ${avgFoodCost <= 30 ? 'text-emerald-600' : avgFoodCost <= 35 ? 'text-amber-600' : 'text-red-600'}`}>
+            <div className={`font-mono text-2xl font-extrabold ${avgFoodCost <= 30 ? 'text-emerald-600' : avgFoodCost <= 35 ? 'text-amber-600' : 'text-red-600'}`}>
               {avgFoodCost > 0 ? `${avgFoodCost.toFixed(1)}%` : '\u2014'}
             </div>
             <div className="text-xs text-[#9E7E60]">Gem. food cost</div>
           </div></StaggerItem>
           <StaggerItem><div className="card p-4">
-            <div className={`font-mono text-2xl font-bold ${highCostRecipes.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+            <div className={`font-mono text-2xl font-extrabold ${highCostRecipes.length === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
               {highCostRecipes.length}
             </div>
             <div className="text-xs text-[#9E7E60]">Boven target</div>
@@ -166,7 +166,7 @@ export default function RecipesPage() {
             <button
               onClick={() => setCatFilter(null)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                !catFilter ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
+                !catFilter ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
               }`}
             >
               Alles
@@ -178,7 +178,7 @@ export default function RecipesPage() {
                   key={cat}
                   onClick={() => setCatFilter(catFilter === cat ? null : cat)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                    catFilter === cat ? 'bg-white text-white border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
+                    catFilter === cat ? 'bg-white text-[#2C1810] border-[#D4B896]' : 'bg-white text-[#5C4730] border-stone-200 hover:border-stone-300'
                   }`}
                 >
                   {cat}
@@ -205,7 +205,7 @@ export default function RecipesPage() {
           <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <ChefHat className="w-10 h-10 text-amber-300" />
           </div>
-          <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
+          <h3 className="font-display text-xl font-bold text-stone-900 mb-2">
             {recipes.length > 0 ? 'Geen recepten gevonden' : 'Begin je receptenboek'}
           </h3>
           <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">

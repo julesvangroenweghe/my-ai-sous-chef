@@ -51,7 +51,7 @@ export function MepView({ event, mepPlan }: MepViewProps) {
  <CardContent className="p-6">
  <div className="flex items-start justify-between">
  <div>
- <h1 className="text-2xl font-bold">{event.name}</h1>
+ <h1 className="text-2xl font-extrabold">{event.name}</h1>
  <p className="text-sm text-muted-foreground mt-1">
  Mise en Place — Generated {new Date(mepPlan.generated_at).toLocaleString('nl-BE')}
  </p>

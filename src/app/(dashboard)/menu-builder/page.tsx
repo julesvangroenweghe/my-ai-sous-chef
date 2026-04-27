@@ -320,10 +320,10 @@ export default function MenuBuilderPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-          <Sparkles className="w-5 h-5 text-white" />
+          <Sparkles className="w-5 h-5 text-[#2C1810]" />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold text-[#2C1810]">AI Menu Builder</h1>
+          <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">AI Menu Builder</h1>
           <p className="text-[#9E7E60] text-sm">Stel een gepersonaliseerd menu samen met AI</p>
         </div>
       </div>
@@ -337,7 +337,7 @@ export default function MenuBuilderPage() {
         ].map(({ n, label }) => (
           <div key={n} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              step === n ? 'bg-brand-600 text-white'
+              step === n ? 'bg-brand-600 text-[#2C1810]'
               : step > n ? 'bg-emerald-500/20 text-emerald-400'
               : 'bg-white text-[#B8997A]'
             }`}>
@@ -466,7 +466,7 @@ export default function MenuBuilderPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setStep(2)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-medium rounded-xl transition-all"
             >
               Volgende <ChevronRight className="w-4 h-4" />
             </button>
@@ -497,7 +497,7 @@ export default function MenuBuilderPage() {
                       ? 'bg-brand-500 border-brand-400'
                       : 'border-[#D4B896]'
                   }`}>
-                    {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-white" />}
+                    {selectedCourses.includes(c.value) && <Check className="w-2.5 h-2.5 text-[#2C1810]" />}
                   </div>
                   {c.label}
                 </button>
@@ -549,7 +549,7 @@ export default function MenuBuilderPage() {
             <button
               onClick={generateMenu}
               disabled={selectedCourses.length === 0 || generating}
-              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-medium rounded-xl transition-all disabled:opacity-50"
             >
               {generating ? (
                 <>
@@ -587,7 +587,7 @@ export default function MenuBuilderPage() {
               <div className="text-xs text-[#B8997A] mb-1">Food cost %</div>
               <div className={`text-lg font-mono font-bold ${
                 (generatedMenu.total_food_cost_pct || 0) <= generatedMenu.food_cost_target
-                  ? 'text-emerald-400' : 'text-amber-400'
+                  ? 'text-emerald-400' : 'text-amber-700'
               }`}>
                 {generatedMenu.total_food_cost_pct?.toFixed(1) || '—'}%
               </div>
@@ -777,7 +777,7 @@ export default function MenuBuilderPage() {
             <button
               onClick={saveAsEvent}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-all ml-auto disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-medium rounded-xl transition-all ml-auto disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Opslaan als Event

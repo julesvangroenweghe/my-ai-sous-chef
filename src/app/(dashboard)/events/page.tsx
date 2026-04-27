@@ -101,7 +101,7 @@ export default function EventsPage() {
                 <CalendarDays className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">
+                <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">
                   Events & MEP
                 </h1>
                 <p className="text-[#9E7E60] text-sm mt-0.5">
@@ -149,21 +149,21 @@ export default function EventsPage() {
           style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}
         >
           <div className="card p-4 text-center">
-            <div className="font-mono text-2xl font-bold text-stone-900">{upcoming.length}</div>
+            <div className="font-mono text-2xl font-extrabold text-stone-900">{upcoming.length}</div>
             <div className="text-xs text-[#9E7E60]">Komende events</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="font-mono text-2xl font-bold text-stone-900">{totalPersons}</div>
+            <div className="font-mono text-2xl font-extrabold text-stone-900">{totalPersons}</div>
             <div className="text-xs text-[#9E7E60]">Totaal personen</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="font-mono text-2xl font-bold text-emerald-600">
+            <div className="font-mono text-2xl font-extrabold text-emerald-600">
               €{totalRevenue.toLocaleString('nl-BE')}
             </div>
             <div className="text-xs text-[#9E7E60]">Verwachte omzet</div>
           </div>
           <Link href="/mep" className="card-hover p-4 text-center group">
-            <div className="font-mono text-2xl font-bold text-brand-600">
+            <div className="font-mono text-2xl font-extrabold text-brand-600">
               <ClipboardList className="w-6 h-6 mx-auto" />
             </div>
             <div className="text-xs text-[#9E7E60] group-hover:text-brand-600 transition-colors">
@@ -200,7 +200,7 @@ export default function EventsPage() {
           <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <CalendarDays className="w-10 h-10 text-emerald-300" />
           </div>
-          <h3 className="font-display text-xl font-semibold text-stone-900 mb-2">
+          <h3 className="font-display text-xl font-bold text-stone-900 mb-2">
             Nog geen events gepland
           </h3>
           <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
@@ -253,13 +253,13 @@ export default function EventsPage() {
                       {/* Date Block */}
                       <div
                         className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 ${
-                          relative.urgent ? 'bg-brand-600 text-white' : 'bg-white text-white'
+                          relative.urgent ? 'bg-brand-600 text-[#2C1810]' : 'bg-white text-[#2C1810]'
                         }`}
                       >
                         <span className="text-[10px] uppercase tracking-wide opacity-70">
                           {monthShort}
                         </span>
-                        <span className="font-mono text-2xl font-bold leading-none">{dayNum}</span>
+                        <span className="font-mono text-2xl font-extrabold leading-none">{dayNum}</span>
                       </div>
 
                       {/* Info */}

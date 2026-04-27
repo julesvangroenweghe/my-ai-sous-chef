@@ -152,7 +152,7 @@ function AIResultCards({ analysis, meta }: { analysis: AIAnalysis; meta: { class
               <div className="space-y-1">
                 {analysis.stijl_aanpassing.stappen.map((stap, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <span className="w-4 h-4 rounded-full bg-brand-600 text-[#2C1810] text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
                     <span className="text-xs text-[#5C4730]">{stap}</span>
                   </div>
                 ))}
@@ -310,7 +310,7 @@ export default function MatchMyStylePage() {
           <Sparkles className="w-6 h-6 text-brand-600" />
         </div>
         <div>
-          <h1 className="text-3xl font-display font-bold text-stone-900">Match My Style</h1>
+          <h1 className="text-3xl font-display font-extrabold text-stone-900">Match My Style</h1>
           <p className="text-[#9E7E60] text-sm mt-1">LEGENDE gerechten gematcht met jouw recepten en kookstijl</p>
         </div>
       </div>
@@ -324,7 +324,7 @@ export default function MatchMyStylePage() {
           { val: totalMatchCount, label: 'Totaal koppelingen', color: 'text-brand-600' },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-2xl border border-stone-100 p-5">
-            <div className={`text-2xl font-display font-bold ${s.color}`}>{s.val}</div>
+            <div className={`text-2xl font-display font-extrabold ${s.color}`}>{s.val}</div>
             <div className="text-xs text-[#9E7E60]">{s.label}</div>
           </div>
         ))}
@@ -335,7 +335,7 @@ export default function MatchMyStylePage() {
         <div className="flex rounded-lg border border-stone-200 overflow-hidden text-sm">
           {(['all', 'matched', 'unmatched'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-2 font-medium transition-colors ${filter === f ? 'bg-brand-600 text-white' : 'bg-white text-[#5C4730] hover:bg-stone-50'}`}>
+              className={`px-4 py-2 font-medium transition-colors ${filter === f ? 'bg-brand-600 text-[#2C1810]' : 'bg-white text-[#5C4730] hover:bg-stone-50'}`}>
               {f === 'all' ? 'Alles' : f === 'matched' ? 'Gematcht' : 'Geen match'}
             </button>
           ))}
@@ -378,7 +378,7 @@ export default function MatchMyStylePage() {
                     <button
                       onClick={(e) => { e.stopPropagation(); matchDishAI(dish) }}
                       disabled={aiLoading && aiDish === dish.id}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-[#2C1810] hover:bg-brand-700 transition-colors disabled:opacity-50"
                     >
                       {aiLoading && aiDish === dish.id ? (
                         <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />

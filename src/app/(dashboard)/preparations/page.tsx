@@ -164,7 +164,7 @@ export default function PreparationsPage() {
  <Beaker className="w-5 h-5 text-violet-600" />
  </div>
  <div>
- <h1 className="font-display text-3xl font-bold text-stone-900 tracking-tight">Halffabricaten</h1>
+ <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Halffabricaten</h1>
  <p className="text-[#9E7E60] text-sm mt-0.5">
  {preparations.length} templates · {categories.length} categorieën
  </p>
@@ -198,7 +198,7 @@ export default function PreparationsPage() {
  onClick={() => setSelectedCategory('all')}
  className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
  selectedCategory === 'all'
- ? 'bg-white text-white shadow-sm'
+ ? 'bg-white text-[#2C1810] shadow-sm'
  : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
  }`}
  >
@@ -213,7 +213,7 @@ export default function PreparationsPage() {
  onClick={() => setSelectedCategory(cat)}
  className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
  selectedCategory === cat
- ? 'bg-white text-white shadow-sm'
+ ? 'bg-white text-[#2C1810] shadow-sm'
  : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
  }`}
  >

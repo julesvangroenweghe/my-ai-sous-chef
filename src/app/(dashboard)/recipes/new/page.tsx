@@ -15,7 +15,7 @@ export default function NewRecipePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Nieuw Recept</h1>
+          <h1 className="text-2xl font-extrabold">Nieuw Recept</h1>
           <p className="text-muted-foreground text-sm mt-1">Maak een nieuw recept met componenten en ingredienten</p>
         </div>
       </div>

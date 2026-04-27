@@ -107,7 +107,7 @@ export default function RecipeDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Bewerk: {recipe.name}</h1>
+            <h1 className="text-2xl font-extrabold">Bewerk: {recipe.name}</h1>
             <p className="text-muted-foreground text-sm mt-1">Bewerk receptdetails en componenten</p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function RecipeDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="font-display text-2xl font-bold text-stone-900">{recipe.name}</h1>
+          <h1 className="font-display text-2xl font-extrabold text-stone-900">{recipe.name}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {recipe.category && <Badge variant="secondary">{(recipe.category as any).name}</Badge>}
             {recipe.subcategory && <Badge variant="outline">{(recipe.subcategory as any).name}</Badge>}
