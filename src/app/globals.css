@@ -5,27 +5,29 @@
 
 @layer base {
   :root {
-    /* Slate Pro — content palette */
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --muted: #64748b;
-    --muted-bg: #f1f5f9;
-    --border: #e2e8f0;
-    --card: #ffffff;
-    --card-border: #e2e8f0;
+    /* Perkament & Koper — content palette */
+    --background: #FDF8F2;
+    --foreground: #2C1810;
+    --muted: #9E7E60;
+    --muted-bg: #F5EBDB;
+    --border: #E8DCC8;
+    --card: #FFFFFF;
+    --card-border: #EDE0CC;
 
-    /* Gronda — sidebar palette */
-    --sidebar-bg: #0D0C0A;
-    --sidebar-border: rgba(255,255,255,0.06);
-    --sidebar-text: #6B6560;
-    --sidebar-text-active: #F5F0EB;
-    --sidebar-accent: #E8A040;
-    --sidebar-active-bg: rgba(232,160,64,0.08);
+    /* Sidebar — warm parchment (light!) */
+    --sidebar-bg: #F2E8D5;
+    --sidebar-border: #DDD0B8;
+    --sidebar-text: #5C4730;
+    --sidebar-text-sub: #9C8060;
+    --sidebar-text-active: #B5631A;
+    --sidebar-active-bg: #FEF3E2;
+    --sidebar-hover-bg: #F5EBDB;
 
     /* Brand */
     --amber: #E8A040;
     --amber-light: rgba(232,160,64,0.15);
-    --amber-dark: #C4862A;
+    --amber-dark: #C4791A;
+    --copper: #C4703A;
   }
 
   * {
@@ -54,11 +56,11 @@
     line-height: 1.2;
   }
 
-  /* Scrollbars */
+  /* Scrollbars — warm sand */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+  ::-webkit-scrollbar-thumb { background: #DDD0B8; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #C8BAA0; }
 
   /* Selection */
   ::selection { background: rgba(232,160,64,0.2); color: inherit; }
@@ -113,7 +115,7 @@
   }
   .btn-secondary:hover {
     background: var(--muted-bg);
-    border-color: #cbd5e1;
+    border-color: #C8BAA0;
   }
 
   /* Badge */
@@ -129,7 +131,7 @@
   }
   .badge-amber {
     background: rgba(232,160,64,0.12);
-    color: #C4862A;
+    color: #C4791A;
   }
 
   /* Input */

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useKitchen } from '@/providers/kitchen-provider'
 import { createClient } from '@/lib/supabase/client'
@@ -18,14 +19,11 @@ const navItems = [
   { href: '/suppliers', label: 'Leveranciers', icon: 'truck', sub: null },
   { href: '/legende', label: 'LEGENDE', icon: 'star', sub: 'Jouw signatuurgerechten' },
   { href: '/match-style', label: 'Match My Style', icon: 'sparkles', sub: 'AI stijlmatch' },
-  { href: '/checklist', label: 'Checklist', icon: 'check-square', sub: null },
-  { href: '/mep-plans', label: 'MEP Plans', icon: 'clipboard', sub: 'Productieplanning' },
   { href: '/food-cost', label: 'Food Cost', icon: 'chart', sub: null },
   { href: '/invoices', label: 'Facturen', icon: 'receipt', sub: null },
-  { href: '/jules-ai', label: 'Jules AI', icon: 'chef', sub: null },
   { href: '/calendar', label: 'Kalender', icon: 'cal', sub: null },
-  { href: '/integrations', label: 'Integraties', icon: 'plug', sub: null },
   { href: '/inbox', label: 'Inbox', icon: 'mail', sub: null },
+  { href: '/integrations', label: 'Integraties', icon: 'plug', sub: null },
   { href: '/knowledge', label: 'Kennisbank', icon: 'archive', sub: 'Escoffier & klassiekers' },
 ]
 
@@ -35,7 +33,7 @@ const bottomItems = [
 ]
 
 function NavIcon({ type, active }: { type: string; active: boolean }) {
-  const color = active ? '#E8A040' : '#6B6560'
+  const color = active ? '#E8A040' : '#8B7050'
   const s = 16
 
   const icons: Record<string, JSX.Element> = {
@@ -84,8 +82,8 @@ export default function Sidebar() {
         width: 232,
         minWidth: 232,
         height: '100vh',
-        backgroundColor: '#0D0C0A',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        backgroundColor: '#F2E8D5',
+        borderRight: '1px solid #DDD0B8',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -97,39 +95,34 @@ export default function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
-          {/* Amber chef hat icon */}
+      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0' }}>
+        {/* Real logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Image
+            src="/logo-icon.png"
+            alt="My AI Sous Chef"
+            width={36}
+            height={36}
+            style={{ objectFit: 'contain' }}
+          />
           <div style={{
-            width: 32, height: 32, borderRadius: 6,
-            backgroundColor: 'rgba(232,160,64,0.15)',
-            border: '1px solid rgba(232,160,64,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#E8A040',
+            letterSpacing: '0.01em',
+            lineHeight: 1.3,
           }}>
-            <svg width="16" height="16" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/>
-              <line x1="6" y1="17" x2="18" y2="17"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 13,
-              fontWeight: 700,
-              color: '#F5F0EB',
-              letterSpacing: '0.01em',
-              lineHeight: 1.2,
-            }}>
-              My AI Sous Chef
-            </div>
+            My AI<br/>
+            <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
           </div>
         </div>
+
         {/* Kitchen name */}
         <div style={{
-          marginTop: 8,
-          paddingTop: 8,
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          marginTop: 10,
+          paddingTop: 10,
+          borderTop: '1px solid #E5D8C0',
           display: 'flex',
           alignItems: 'center',
           gap: 6,
@@ -142,16 +135,16 @@ export default function Sidebar() {
           <span style={{
             fontSize: 11,
             fontFamily: 'Georgia, serif',
-            color: '#E8A040',
-            letterSpacing: '0.08em',
+            color: '#B5631A',
+            letterSpacing: '0.06em',
             textTransform: 'uppercase' as const,
-            fontWeight: 400,
+            fontWeight: 500,
           }}>
             {kitchen?.name || 'Mijn Keuken'}
           </span>
           <span style={{
             fontSize: 10,
-            color: '#4A4540',
+            color: '#9C8060',
             marginLeft: 2,
           }}>
             · {kitchen?.kitchen_type || 'Catering'}
@@ -160,7 +153,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
         {navItems.map((item) => {
           const active = isActive(item.href)
           return (
@@ -171,13 +164,13 @@ export default function Sidebar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '7px 20px',
-                margin: '1px 8px',
+                padding: '6px 18px',
+                margin: '1px 6px',
                 borderRadius: 6,
                 textDecoration: 'none',
                 position: 'relative',
                 transition: 'all 0.15s ease',
-                backgroundColor: active ? 'rgba(232,160,64,0.08)' : 'transparent',
+                backgroundColor: active ? '#FEF3E2' : 'transparent',
                 borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
               }}
             >
@@ -185,7 +178,7 @@ export default function Sidebar() {
               <span style={{
                 fontSize: 13,
                 fontWeight: active ? 500 : 400,
-                color: active ? '#F5F0EB' : '#6B6560',
+                color: active ? '#B5631A' : '#5C4730',
                 letterSpacing: '0.01em',
                 transition: 'color 0.15s ease',
               }}>
@@ -194,7 +187,7 @@ export default function Sidebar() {
                   <span style={{
                     display: 'block',
                     fontSize: 9,
-                    color: active ? '#8B6A3E' : '#4A4540',
+                    color: active ? '#C4791A' : '#9C8060',
                     lineHeight: 1.2,
                     marginTop: 1,
                     fontWeight: 400,
@@ -209,7 +202,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Divider */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0 16px' }} />
+      <div style={{ borderTop: '1px solid #E5D8C0', margin: '0 14px' }} />
 
       {/* Bottom items */}
       <div style={{ padding: '8px 0 4px' }}>
@@ -223,11 +216,11 @@ export default function Sidebar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '7px 20px',
-                margin: '1px 8px',
+                padding: '6px 18px',
+                margin: '1px 6px',
                 borderRadius: 6,
                 textDecoration: 'none',
-                backgroundColor: active ? 'rgba(232,160,64,0.08)' : 'transparent',
+                backgroundColor: active ? '#FEF3E2' : 'transparent',
                 borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
               }}
             >
@@ -235,7 +228,7 @@ export default function Sidebar() {
               <span style={{
                 fontSize: 13,
                 fontWeight: active ? 500 : 400,
-                color: active ? '#F5F0EB' : '#6B6560',
+                color: active ? '#B5631A' : '#5C4730',
               }}>
                 {item.label}
               </span>
@@ -250,26 +243,26 @@ export default function Sidebar() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '7px 20px',
-            margin: '1px 8px',
+            padding: '6px 18px',
+            margin: '1px 6px',
             borderRadius: 6,
             background: 'none',
             border: 'none',
-            cursor: 'pointer',
-            width: 'calc(100% - 16px)',
             borderLeft: '2px solid transparent',
+            cursor: 'pointer',
+            width: 'calc(100% - 12px)',
           }}
         >
-          <svg width="16" height="16" fill="none" stroke="#4A4540" strokeWidth="1.5" viewBox="0 0 24 24">
+          <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          <span style={{ fontSize: 13, color: '#4A4540' }}>Afmelden</span>
+          <span style={{ fontSize: 13, color: '#9C8060' }}>Afmelden</span>
         </button>
       </div>
 
-      {/* ⌘K Command Palette trigger */}
+      {/* Search / Command Palette */}
       <button
         onClick={() => {
           const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
@@ -280,19 +273,19 @@ export default function Sidebar() {
           alignItems: 'center',
           gap: 8,
           margin: '4px 12px 0',
-          padding: '8px 10px',
+          padding: '7px 10px',
           borderRadius: 6,
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(255,255,255,0.6)',
+          border: '1px solid #E5D8C0',
           cursor: 'pointer',
           width: 'calc(100% - 24px)',
         }}
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4A4540" strokeWidth="2" strokeLinecap="round">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <span style={{ fontSize: 12, color: '#4A4540', flex: 1, textAlign: 'left' }}>Zoeken...</span>
-        <kbd style={{ fontSize: 10, color: '#3A3530', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
+        <span style={{ fontSize: 12, color: '#9C8060', flex: 1, textAlign: 'left' }}>Zoeken...</span>
+        <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
       </button>
 
       {/* Food cost target */}
@@ -300,17 +293,17 @@ export default function Sidebar() {
         margin: '8px 12px 16px',
         padding: '10px 12px',
         borderRadius: 6,
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        backgroundColor: 'rgba(255,255,255,0.5)',
+        border: '1px solid #E5D8C0',
       }}>
-        <div style={{ fontSize: 9, color: '#4A4540', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
           Food Cost Target
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ flex: 1, height: 3, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
-            <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2, opacity: 0.8 }} />
+          <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
+            <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
           </div>
-          <span style={{ fontSize: 11, color: '#6B6560', whiteSpace: 'nowrap' }}>25–30%</span>
+          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25–30%</span>
         </div>
       </div>
     </aside>
