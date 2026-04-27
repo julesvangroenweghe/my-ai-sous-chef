@@ -24,28 +24,42 @@ interface BriefIntakeProps {
 }
 
 type InputMode = 'text' | 'upload'
+type Step = 'input' | 'preview'
+
+const COURSE_OPTIONS = [
+  { id: 'amuse', label: 'Amuse' },
+  { id: 'voorgerecht', label: 'Voorgerecht' },
+  { id: 'tussengerecht', label: 'Tussengerecht' },
+  { id: 'hoofdgerecht', label: 'Hoofdgerecht' },
+  { id: 'dessert', label: 'Dessert' },
+  { id: 'fingerfood', label: 'Fingerfood' },
+  { id: 'fingerbites', label: 'Fingerbites' },
+  { id: 'hapjes', label: 'Hapjes' },
+  { id: 'kaas', label: 'Kaas' },
+  { id: 'mignardises', label: 'Mignardises' },
+]
+
+const COMMON_RESTRICTIONS = ['Glutenvrij', 'Lactosevrij', 'Vegetarisch', 'Vegan', 'Halal', 'Kosher', 'Notenallergie', 'Schaaldierenallergie']
 
 export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
   const [mode, setMode] = useState<InputMode>('text')
+  const [step, setStep] = useState<Step>('input')
   const [text, setText] = useState('')
-  const [dragOver, setDragOver] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadPreview, setUploadPreview] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rawInput, setRawInput] = useState('')
+
+  // Editable parsed brief state
+  const [parsed, setParsed] = useState<ParsedBrief | null>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      setError('Enkel afbeeldingen (JPG, PNG, WebP) of PDF zijn toegestaan')
-      return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Bestand mag maximaal 10 MB zijn')
-      return
-    }
-    setError(null)
     setUploadFile(file)
+    setError(null)
     if (file.type.startsWith('image/')) {
       const reader = new FileReader()
       reader.onload = (e) => setUploadPreview(e.target?.result as string)
@@ -63,41 +77,24 @@ export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
   }, [handleFile])
 
   const handleParse = async () => {
-    if (mode === 'text' && !text.trim()) {
-      setError('Voer een tekst in')
-      return
-    }
-    if (mode === 'upload' && !uploadFile) {
-      setError('Upload een bestand')
-      return
-    }
-
     setParsing(true)
     setError(null)
-
     try {
-      let body: Record<string, string> = {}
-
+      const body: Record<string, string> = {}
       if (mode === 'text') {
-        body = { text }
+        body.text = text
       } else if (uploadFile) {
-        if (uploadFile.type.startsWith('image/')) {
+        await new Promise<void>((resolve, reject) => {
           const reader = new FileReader()
-          const base64 = await new Promise<string>((resolve, reject) => {
-            reader.onload = (e) => {
-              const result = e.target?.result as string
-              resolve(result.split(',')[1])
-            }
-            reader.onerror = reject
-            reader.readAsDataURL(uploadFile)
-          })
-          body = { imageBase64: base64, imageMimeType: uploadFile.type, text: text || '' }
-        } else {
-          // PDF — extract text via browser FileReader as text fallback
-          setError('PDF-verwerking komt binnenkort. Gebruik voorlopig een screenshot of plak de tekst.')
-          setParsing(false)
-          return
-        }
+          reader.onload = (e) => {
+            const result = e.target?.result as string
+            body.imageBase64 = result.split(',')[1]
+            body.imageMimeType = uploadFile.type
+            resolve()
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(uploadFile)
+        })
       }
 
       const res = await fetch('/api/menu-engineering/parse-brief', {
@@ -112,7 +109,10 @@ export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
         return
       }
 
-      onParsed(data.brief, text || `[Afbeelding: ${uploadFile?.name}]`)
+      const raw = mode === 'text' ? text : `[Afbeelding: ${uploadFile?.name}]`
+      setRawInput(raw)
+      setParsed(data.brief)
+      setStep('preview')
     } catch {
       setError('Verbindingsfout — probeer opnieuw')
     } finally {
@@ -120,6 +120,238 @@ export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
     }
   }
 
+  const handleConfirm = () => {
+    if (parsed) onParsed(parsed, rawInput)
+  }
+
+  // ─── EDITABLE PREVIEW STEP ───────────────────────────────────────
+  if (step === 'preview' && parsed) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-display font-bold text-[#2C1810]">Brief geanalyseerd</h2>
+            <p className="text-sm text-[#9E7E60] mt-0.5">
+              Controleer en pas aan waar nodig — daarna wordt de wizard voor je ingevuld
+            </p>
+          </div>
+          <button
+            onClick={() => { setStep('input'); setParsed(null) }}
+            className="text-sm text-[#9E7E60] hover:text-[#5C4730] transition-colors flex items-center gap-1"
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            Opnieuw analyseren
+          </button>
+        </div>
+
+        {/* Summary badge */}
+        {parsed.summary && (
+          <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/60 text-sm text-[#5C4730] italic">
+            &ldquo;{parsed.summary}&rdquo;
+          </div>
+        )}
+
+        {/* Editable fields grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Event naam */}
+          <EditField
+            label="Evenementnaam"
+            value={parsed.event_name || ''}
+            onChange={v => setParsed(p => p ? { ...p, event_name: v || null } : p)}
+            placeholder="Bv. Zomerfeest De Smet"
+          />
+
+          {/* Datum */}
+          <EditField
+            label="Datum"
+            value={parsed.date_hint || ''}
+            onChange={v => setParsed(p => p ? { ...p, date_hint: v || null } : p)}
+            placeholder="Bv. 14 juni 2026"
+          />
+
+          {/* Personen */}
+          <EditField
+            label="Aantal personen"
+            type="number"
+            value={parsed.num_persons?.toString() || ''}
+            onChange={v => setParsed(p => p ? { ...p, num_persons: v ? parseInt(v) : null } : p)}
+            placeholder="Bv. 80"
+          />
+
+          {/* Locatie */}
+          <EditField
+            label="Locatie"
+            value={parsed.location || ''}
+            onChange={v => setParsed(p => p ? { ...p, location: v || null } : p)}
+            placeholder="Bv. Feestzaal Ter Linden"
+          />
+
+          {/* Budget pp */}
+          <EditField
+            label="Budget per persoon (€)"
+            type="number"
+            value={parsed.budget_pp?.toString() || ''}
+            onChange={v => setParsed(p => p ? { ...p, budget_pp: v ? parseFloat(v) : null } : p)}
+            placeholder="Bv. 55"
+          />
+
+          {/* Budget totaal */}
+          <EditField
+            label="Totaalbudget (€)"
+            type="number"
+            value={parsed.budget_total?.toString() || ''}
+            onChange={v => setParsed(p => p ? { ...p, budget_total: v ? parseFloat(v) : null } : p)}
+            placeholder="Bv. 4400"
+          />
+
+          {/* Stijl */}
+          <EditField
+            label="Stijl / sfeer"
+            value={parsed.style || ''}
+            onChange={v => setParsed(p => p ? { ...p, style: v || null } : p)}
+            placeholder="Bv. Elegant, zomers, informeel"
+            className="sm:col-span-2"
+          />
+
+          {/* Menu type */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#9E7E60] mb-2">Menu type</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'event', label: 'Event' },
+                { id: 'a_la_carte', label: 'À la carte' },
+                { id: 'tasting', label: 'Degustatie' },
+                { id: 'fixed', label: 'Vast menu' },
+                { id: 'daily', label: 'Dagmenu' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setParsed(p => p ? { ...p, menu_type: opt.id } : p)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                    parsed.menu_type === opt.id
+                      ? 'bg-amber-500 text-white border-amber-500'
+                      : 'bg-white text-[#5C4730] border-[#E8D5B5] hover:border-amber-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gangen */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#9E7E60] mb-2">Gangen</label>
+            <div className="flex flex-wrap gap-2">
+              {COURSE_OPTIONS.map(opt => {
+                const active = parsed.courses.includes(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setParsed(p => {
+                      if (!p) return p
+                      const courses = active
+                        ? p.courses.filter(c => c !== opt.id)
+                        : [...p.courses, opt.id]
+                      return { ...p, courses }
+                    })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                      active
+                        ? 'bg-[#2C1810] text-white border-[#2C1810]'
+                        : 'bg-white text-[#5C4730] border-[#E8D5B5] hover:border-[#9E7E60]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Dieetwensen */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#9E7E60] mb-2">Dieetwensen / allergenen</label>
+            <div className="flex flex-wrap gap-2">
+              {COMMON_RESTRICTIONS.map(r => {
+                const active = parsed.restrictions.includes(r)
+                return (
+                  <button
+                    key={r}
+                    onClick={() => setParsed(p => {
+                      if (!p) return p
+                      const restrictions = active
+                        ? p.restrictions.filter(x => x !== r)
+                        : [...p.restrictions, r]
+                      return { ...p, restrictions }
+                    })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                      active
+                        ? 'bg-red-100 text-red-700 border-red-200'
+                        : 'bg-white text-[#5C4730] border-[#E8D5B5] hover:border-red-200'
+                    }`}
+                  >
+                    {active ? '✕ ' : ''}{r}
+                  </button>
+                )
+              })}
+            </div>
+            {/* Custom restriction */}
+            <input
+              type="text"
+              placeholder="Andere wens toevoegen + Enter"
+              className="mt-2 w-full px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm placeholder-[#B8997A] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  const val = (e.target as HTMLInputElement).value.trim()
+                  if (val) {
+                    setParsed(p => p ? { ...p, restrictions: [...p.restrictions, val] } : p)
+                    ;(e.target as HTMLInputElement).value = ''
+                  }
+                }
+              }}
+            />
+          </div>
+
+          {/* Speciale wensen */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#9E7E60] mb-1.5">Speciale wensen / opmerkingen</label>
+            <textarea
+              value={parsed.special_requests || ''}
+              onChange={e => setParsed(p => p ? { ...p, special_requests: e.target.value || null } : p)}
+              placeholder="Bv. geen varkensvlees, dessertbuffet ipv bord, ..."
+              rows={3}
+              className="w-full px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm placeholder-[#B8997A] resize-none focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60"
+            />
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            onClick={handleConfirm}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all text-white"
+            style={{ backgroundColor: '#E8A040' }}
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Bevestigen &amp; wizard starten
+          </button>
+          <button
+            onClick={() => { setStep('input'); setParsed(null) }}
+            className="px-4 py-3 rounded-xl text-sm font-medium text-[#9E7E60] hover:text-[#5C4730] transition-colors"
+          >
+            Terug
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── INPUT STEP ──────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -263,32 +495,31 @@ export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'rgba(232,160,64,0.12)', border: '1px solid rgba(232,160,64,0.25)' }}>
-                    <svg width="24" height="24" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-[#F2E8D5] flex items-center justify-center">
+                    <svg width="22" height="22" fill="none" stroke="#9E7E60" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="text-[#2C1810] font-medium text-sm">Sleep een bestand hierheen</p>
-                    <p className="text-[#9E7E60] text-xs mt-1">of klik om te uploaden · JPG, PNG, WebP, PDF · max 10 MB</p>
-                  </div>
+                  <p className="text-sm font-medium text-[#5C4730]">Sleep een afbeelding of PDF hierheen</p>
+                  <p className="text-xs text-[#9E7E60]">of klik om een bestand te kiezen</p>
                 </div>
               )}
             </div>
 
-            {/* Optional extra context */}
-            <div>
-              <label className="block text-xs font-medium text-[#9E7E60] mb-1.5">Extra context (optioneel)</label>
-              <input
-                type="text"
-                value={text}
-                onChange={e => setText(e.target.value)}
-                placeholder="Bijv. 'Dit is een offerte die ik ontvangen heb, budget is exclusief dranken'"
-                className="w-full px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm placeholder-[#B8997A] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60 transition-all"
-              />
-            </div>
+            {uploadFile && (
+              <div>
+                <label className="block text-xs font-medium text-[#9E7E60] mb-1.5">Extra context (optioneel)</label>
+                <input
+                  type="text"
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  placeholder="Bijv. 'Dit is een offerte die ik ontvangen heb, budget is exclusief dranken'"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm placeholder-[#B8997A] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60 transition-all"
+                />
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -336,6 +567,36 @@ export default function BriefIntake({ onParsed, onSkip }: BriefIntakeProps) {
           Leeg starten
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── REUSABLE EDIT FIELD ──────────────────────────────────────────
+function EditField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  className = '',
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  type?: 'text' | 'number'
+  className?: string
+}) {
+  return (
+    <div className={className}>
+      <label className="block text-xs font-medium text-[#9E7E60] mb-1.5">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm placeholder-[#B8997A] focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60 transition-all"
+      />
     </div>
   )
 }

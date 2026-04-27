@@ -47,12 +47,27 @@ function callAnthropic(systemPrompt: string, userPrompt: string, maxTokens = 409
 
 function extractJSON(text: string) {
   let raw = text.trim()
-  if (raw.startsWith('```')) {
-    raw = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+
+  // Strip markdown code fences
+  if (raw.includes('```')) {
+    raw = raw.replace(/```(?:json)?\s*/g, '').replace(/```\s*/g, '').trim()
   }
-  const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('No JSON found in response')
-  return JSON.parse(match[0])
+
+  // Find the outermost { ... } — use last } to capture full object
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start === -1 || end === -1 || end <= start) {
+    console.error('[extractJSON] No JSON object found. Raw text (first 500):', raw.slice(0, 500))
+    throw new Error('No JSON found in response')
+  }
+
+  const jsonStr = raw.slice(start, end + 1)
+  try {
+    return JSON.parse(jsonStr)
+  } catch (e) {
+    console.error('[extractJSON] JSON.parse failed. Extracted string (first 500):', jsonStr.slice(0, 500))
+    throw e
+  }
 }
 
 export async function POST(request: NextRequest) {
