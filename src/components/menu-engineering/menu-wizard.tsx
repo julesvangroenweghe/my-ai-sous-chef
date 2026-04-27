@@ -109,11 +109,28 @@ const LOADING_PHASES = [
   'Arbiter verfijnt het resultaat...',
 ]
 
-interface MenuWizardProps {
-  onMenuSaved?: (menuId: string) => void
+interface ParsedBrief {
+  menu_type?: string
+  num_persons?: number | null
+  budget_total?: number | null
+  budget_pp?: number | null
+  date_hint?: string | null
+  location?: string | null
+  event_name?: string | null
+  style?: string | null
+  courses?: string[]
+  restrictions?: string[]
+  special_requests?: string | null
+  summary?: string
 }
 
-export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
+interface MenuWizardProps {
+  onMenuSaved?: (menuId: string) => void
+  initialBrief?: ParsedBrief
+  onBack?: () => void
+}
+
+export default function MenuWizard({ onMenuSaved, initialBrief, onBack }: MenuWizardProps) {
   const { kitchenType } = useKitchen()
   const [step, setStep] = useState(1)
   const [loadingPhase, setLoadingPhase] = useState(0)
@@ -122,19 +139,33 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
   const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null)
   const [showPricingBreakdown, setShowPricingBreakdown] = useState(false)
 
+  // Derive defaults from brief
+  const briefPersons = initialBrief?.num_persons ?? 50
+  const briefPricePp = initialBrief?.budget_pp ?? (
+    initialBrief?.budget_total && initialBrief?.num_persons
+      ? Math.round(initialBrief.budget_total / initialBrief.num_persons)
+      : 65
+  )
+  const briefFoodCost = briefPricePp > 0 ? 30 : 30
+  const briefCourses = initialBrief?.courses?.length ? initialBrief.courses : ['AMUSE', 'HOOFDGERECHT', 'DESSERT']
+  const briefStyle = initialBrief?.style && ['Modern', 'Klassiek', 'Seizoensgebonden', 'Fusion'].includes(initialBrief.style)
+    ? initialBrief.style : 'Modern'
+  const briefRestrictions = initialBrief?.restrictions ?? []
+  const briefMenuType = initialBrief?.menu_type ?? 'event'
+
   // Step 1
-  const [menuType, setMenuType] = useState('event')
-  const [numPersons, setNumPersons] = useState(50)
-  const [pricePerPerson, setPricePerPerson] = useState(65)
-  const [foodCostTarget, setFoodCostTarget] = useState(30)
+  const [menuType, setMenuType] = useState(briefMenuType)
+  const [numPersons, setNumPersons] = useState(briefPersons)
+  const [pricePerPerson, setPricePerPerson] = useState(briefPricePp)
+  const [foodCostTarget, setFoodCostTarget] = useState(briefFoodCost)
   const [season, setSeason] = useState('auto')
 
   // Step 2
-  const [selectedCourses, setSelectedCourses] = useState<string[]>(['AMUSE', 'HOOFDGERECHT', 'DESSERT'])
-  const [style, setStyle] = useState('Modern')
+  const [selectedCourses, setSelectedCourses] = useState<string[]>(briefCourses)
+  const [style, setStyle] = useState(briefStyle)
   const [pushLevel, setPushLevel] = useState('balanced')
-  const [restrictions, setRestrictions] = useState<string[]>([])
-  const [customPrompt, setCustomPrompt] = useState('')
+  const [restrictions, setRestrictions] = useState<string[]>(briefRestrictions)
+  const [customPrompt, setCustomPrompt] = useState(initialBrief?.special_requests ?? '')
 
   // Step 3
   const [generating, setGenerating] = useState(false)
@@ -255,6 +286,31 @@ export default function MenuWizard({ onMenuSaved }: MenuWizardProps) {
 
   return (
     <div className="space-y-6">
+      {/* Back + Brief badge */}
+      {(onBack || initialBrief) && (
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 text-sm text-[#9E7E60] hover:text-[#5C4730] transition-colors"
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Terug
+            </button>
+          )}
+          {initialBrief?.summary && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(232,160,64,0.12)', border: '1px solid rgba(232,160,64,0.25)', color: '#9E7E60' }}>
+              <svg width="12" height="12" fill="none" stroke="#E8A040" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span className="text-amber-700 truncate max-w-xs">{initialBrief.summary}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Step indicators */}
       <div className="flex items-center gap-3">
         {[

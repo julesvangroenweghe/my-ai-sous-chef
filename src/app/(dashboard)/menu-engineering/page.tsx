@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import MenuWizard from '@/components/menu-engineering/menu-wizard'
+import MenuStartScreen from '@/components/menu-engineering/menu-start-screen'
 import MenuCard from '@/components/menu-engineering/menu-card'
 
 type TabId = 'nieuw' | 'menus' | 'analyse'
@@ -113,7 +113,7 @@ export default function MenuEngineeringPage() {
 
       {/* Tab Content */}
       {activeTab === 'nieuw' && (
-        <MenuWizard onMenuSaved={handleMenuSaved} />
+        <MenuStartScreen onMenuSaved={handleMenuSaved} />
       )}
 
       {activeTab === 'menus' && (
