@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Outfit, JetBrains_Mono } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
@@ -7,12 +7,14 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  weight: ['400', '500', '600'],
 })
 
-const outfit = Outfit({ 
+const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
-  variable: '--font-outfit',
+  variable: '--font-display',
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -52,7 +54,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="nl">
-      <body className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable} font-sans`}>
+      <body className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} font-sans`}>
         {children}
         <ServiceWorkerRegistration />
       </body>

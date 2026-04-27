@@ -61,7 +61,7 @@ const config: Config = {
       fontFamily: {
         sans:  ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         serif: ['Georgia', '"Times New Roman"', 'serif'],
-        display: ['var(--font-outfit)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4' }],
