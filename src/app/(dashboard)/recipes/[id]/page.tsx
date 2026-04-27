@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RecipeForm } from '@/components/recipes/recipe-form'
 import { useRecipes } from '@/hooks/use-recipes'
 import { useUnitPreferences } from '@/hooks/use-unit-preferences'
-import { formatHoeveelheid, calculateIngredientCost } from '@/lib/units'
+import { formatHoeveelheid, calculateIngredientCost, calcComponentCost } from '@/lib/units'
 import { UnitToggle } from '@/components/UnitToggle'
 import { cn, formatCurrency } from '@/lib/utils'
 import {
@@ -217,13 +217,13 @@ export default function RecipeDetailPage() {
           const compCost = (component.ingredients || []).reduce((sum, ci) => {
             const storedCpu = (ci as any).cost_per_unit
             const qty = (ci as any).quantity_per_person || (ci as any).quantity || 0
+            const recipeUnit = (ci as any).unit || 'g'
             let costPerPerson: number
             if (storedCpu != null && storedCpu > 0) {
-              // cost_per_unit is per 1 recipe-unit (per gram when unit='g')
-              costPerPerson = qty * storedCpu
+              // calcComponentCost handles kg/l ÷1000 and g/ml/stuks direct
+              costPerPerson = calcComponentCost(recipeUnit, storedCpu, qty)
             } else {
               const fallbackPrice = (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
-              const recipeUnit = (ci as any).unit || 'g'
               const ingredientUnit = (ci as any).ingredient?.unit || undefined
               const weightPerPiece = (ci as any).ingredient?.weight_per_piece_g || undefined
               costPerPerson = calculateIngredientCost(qty, recipeUnit, fallbackPrice, ingredientUnit, weightPerPiece)
@@ -277,10 +277,11 @@ export default function RecipeDetailPage() {
                         let displayPrice: number
                         let displayUnit: string
                         if (storedCpu2 != null && storedCpu2 > 0) {
-                          costPerPerson2 = qtyPP * storedCpu2
-                          // Normalize to per-kg/l for display
-                          displayPrice = ['g', 'ml'].includes(unit) ? storedCpu2 * 1000 : storedCpu2
-                          displayUnit = ['g', 'kg'].includes(unit) ? 'kg' : ['ml', 'l'].includes(unit) ? 'l' : unit
+                          costPerPerson2 = calcComponentCost(unit, storedCpu2, qtyPP)
+                          // Normalize display price to per-kg/l
+                          const u = unit.toLowerCase()
+                          displayPrice = (u === 'g' || u === 'ml') ? storedCpu2 * 1000 : storedCpu2
+                          displayUnit = (u === 'g' || u === 'kg') ? 'kg' : (u === 'ml' || u === 'l' || u === 'liter') ? 'l' : unit
                         } else {
                           const fbPrice = (ci as any).ingredient?.current_price || (ci as any).ingredient?.default_unit_price || 0
                           const ingUnit = (ci as any).ingredient?.unit || 'kg'

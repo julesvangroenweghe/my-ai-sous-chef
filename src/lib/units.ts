@@ -243,3 +243,31 @@ export function calculateIngredientCost(
 
 // NL alias for formatQuantity — used in recipe detail page
 export const formatHoeveelheid = formatQuantity
+
+/**
+ * Calculate the cost of a recipe component ingredient.
+ * 
+ * The DB stores cost_per_unit as:
+ *   - 'g'  / 'ml' unit → price per gram / ml   (already divided by 1000)
+ *   - 'kg' / 'l'  unit → price per kg  / liter  (NOT per gram — needs /1000)
+ *   - 'stuks' and others → price per piece      (multiply directly)
+ * 
+ * quantity is always the raw number from quantity_per_person (grams or ml or pieces).
+ * 
+ * Examples:
+ *   calcComponentCost('kg', 48.00, 180)  → (180/1000) * 48    = 8.64  ✓
+ *   calcComponentCost('g',  0.048, 150)  → 150 * 0.048        = 7.20  ✓
+ *   calcComponentCost('l',  4.20,  50)   → (50/1000)  * 4.20  = 0.21  ✓
+ *   calcComponentCost('ml', 0.0042, 50)  → 50 * 0.0042        = 0.21  ✓
+ *   calcComponentCost('stuks', 0.35, 2)  → 2 * 0.35           = 0.70  ✓
+ */
+export function calcComponentCost(unit: string, costPerUnit: number, quantity: number): number {
+  if (!costPerUnit || !quantity) return 0
+  const u = (unit || '').toLowerCase()
+  if (u === 'kg' || u === 'l' || u === 'liter') {
+    // cost_per_unit is price/kg or price/l, quantity is in grams or ml
+    return (quantity / 1000) * costPerUnit
+  }
+  // 'g', 'ml', 'stuks', 'el', 'tl', etc. — direct multiplication
+  return quantity * costPerUnit
+}

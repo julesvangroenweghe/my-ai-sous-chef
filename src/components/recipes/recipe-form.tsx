@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { calcComponentCost } from '@/lib/units'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -78,7 +79,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
 
  // Cost calculations
  const totalCost = components.reduce((sum, comp) =>
- sum + comp.ingredients.reduce((s, ing) => s + (ing.cost_per_unit || 0) * ing.quantity, 0), 0
+ sum + comp.ingredients.reduce((s, ing) => s + calcComponentCost(ing.unit || 'g', ing.cost_per_unit || 0, ing.quantity), 0), 0
  )
  const numServings = Number(servings) || 1
  const costPerServing = totalCost / numServings
@@ -322,7 +323,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
 
  {/* Components breakdown */}
  {components.filter((c) => c.name.trim()).map((comp, ci) => {
- const compCost = comp.ingredients.reduce((s, ing) => s + (ing.cost_per_unit || 0) * ing.quantity, 0)
+ const compCost = comp.ingredients.reduce((s, ing) => s + calcComponentCost(ing.unit || 'g', ing.cost_per_unit || 0, ing.quantity), 0)
  return (
  <Card key={ci}>
  <CardHeader className="pb-2">
@@ -347,7 +348,7 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
  <td className="py-1.5 font-medium">{ing.ingredient_name || '—'}</td>
  <td className="py-1.5 text-right">{ing.quantity}</td>
  <td className="py-1.5 text-right">{ing.unit}</td>
- <td className="py-1.5 text-right font-medium">{formatCurrency((ing.cost_per_unit || 0) * ing.quantity)}</td>
+ <td className="py-1.5 text-right font-medium">{formatCurrency(calcComponentCost(ing.unit || 'g', ing.cost_per_unit || 0, ing.quantity))}</td>
  </tr>
  ))}
  </tbody>

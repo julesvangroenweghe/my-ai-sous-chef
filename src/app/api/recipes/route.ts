@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { calcComponentCost } from '@/lib/units'
 
 export async function GET(request: NextRequest) {
  const supabase = await createClient()
@@ -58,11 +59,11 @@ export async function POST(request: NextRequest) {
    .limit(1)
    .single()
 
- // Calculate costs
+ // Calculate costs (unit-aware: kg/l need ÷1000, g/ml/stuks direct)
  let totalCost = 0
  for (const comp of body.components || []) {
    for (const ing of comp.ingredients || []) {
-     totalCost += (ing.cost_per_unit || 0) * (ing.quantity || 0)
+     totalCost += calcComponentCost(ing.unit || 'g', ing.cost_per_unit || 0, ing.quantity || 0)
    }
  }
  const servings = body.servings || 1

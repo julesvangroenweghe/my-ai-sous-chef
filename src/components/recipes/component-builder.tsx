@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { IngredientSearch } from '@/components/recipes/ingredient-search'
+import { calcComponentCost } from '@/lib/units'
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn, formatCurrency } from '@/lib/utils'
 import { useIngredients } from '@/hooks/use-ingredients'
@@ -19,7 +20,7 @@ export interface ComponentIngredient {
   quantity: number
   unit: string
   notes: string
-  cost_per_unit: number  // cost per 1 unit (per gram if unit='g', per kg if unit='kg', etc.)
+  cost_per_unit: number  // price per kg (for 'kg'/'l' units) or price per gram (for 'g'/'ml' units)
   price_per_kg: number   // raw price per kg from DB — used to recalculate when unit changes
 }
 
@@ -172,7 +173,7 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
   }
 
   const getComponentCost = (comp: RecipeComponentData) => {
-    return comp.ingredients.reduce((sum, ing) => sum + (ing.cost_per_unit || 0) * ing.quantity, 0)
+    return comp.ingredients.reduce((sum, ing) => sum + calcComponentCost(ing.unit, ing.cost_per_unit || 0, ing.quantity), 0)
   }
 
   const totalCost = components.reduce((sum, comp) => sum + getComponentCost(comp), 0)
@@ -266,7 +267,7 @@ export function ComponentBuilder({ components, onChange }: ComponentBuilderProps
                           {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                         </Select>
                         <span className="text-sm font-medium text-right">
-                          {formatCurrency((ing.cost_per_unit || 0) * ing.quantity)}
+                          {formatCurrency(calcComponentCost(ing.unit, ing.cost_per_unit || 0, ing.quantity))}
                         </span>
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeIngredient(ci, ii)} className="h-9 w-9">
                           <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />

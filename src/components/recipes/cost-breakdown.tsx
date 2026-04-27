@@ -1,5 +1,6 @@
 'use client'
 
+import { calcComponentCost } from '@/lib/units'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn, formatCurrency } from '@/lib/utils'
 import { TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react'
@@ -18,7 +19,7 @@ function getFoodCostColor(pct: number) {
 
 function getComponentCost(component: RecipeComponent): number {
  return (component.ingredients || []).reduce((sum, ci) => {
- return sum + (ci.cost_per_unit || ci.ingredient?.current_price || 0) * ci.quantity
+ return sum + calcComponentCost((ci as any).unit || 'g', ci.cost_per_unit || ci.ingredient?.current_price || 0, ci.quantity)
  }, 0)
 }
 

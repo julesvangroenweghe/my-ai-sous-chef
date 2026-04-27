@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Recipe } from '@/types/database'
+import { calcComponentCost } from '@/lib/units'
 
 interface CreateRecipeData {
  name: string
@@ -329,9 +330,10 @@ export function useRecipes() {
        for (const ing of (comp.ingredients || [])) {
          const storedCpu = (ing as any).cost_per_unit
          const qty = (ing as any).quantity || 0
+         const recipeUnit = (ing as any).unit || 'g'
          if (storedCpu != null && storedCpu > 0) {
-           // cost_per_unit is per 1 recipe-unit (per gram if unit='g')
-           totalCost += qty * storedCpu
+           // unit-aware: kg/l ÷1000, g/ml/stuks direct
+           totalCost += calcComponentCost(recipeUnit, storedCpu, qty)
          } else {
            // Fallback: use ingredient current_price with unit conversion
            const fallbackPrice = (ing as any).ingredient?.current_price || (ing as any).ingredient?.default_unit_price || 0
