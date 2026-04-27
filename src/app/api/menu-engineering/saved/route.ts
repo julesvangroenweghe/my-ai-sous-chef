@@ -11,10 +11,19 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const menuType = searchParams.get('menu_type')
 
+    // Get chef profile first (kitchen_members.chef_id = chef_profiles.id)
+    const { data: chefProfile } = await supabase
+      .from('chef_profiles')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (!chefProfile) return NextResponse.json({ error: 'Geen profiel' }, { status: 404 })
+
     const { data: memberData } = await supabase
       .from('kitchen_members')
       .select('kitchen_id')
-      .eq('chef_id', user.id)
+      .eq('chef_id', chefProfile.id)
       .single()
 
     if (!memberData?.kitchen_id) return NextResponse.json({ error: 'Geen keuken' }, { status: 404 })

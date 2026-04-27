@@ -77,11 +77,20 @@ export async function POST(request: NextRequest) {
       style = 'Modern',
     } = body
 
-    // Get kitchen_id
+    // Get chef profile first (chef_id in kitchen_members = chef_profiles.id, NOT auth.users.id)
+    const { data: chefProfile } = await supabase
+      .from('chef_profiles')
+      .select('id, style_analysis, taste_preferences, cooking_techniques, specializations, kitchen_type')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (!chefProfile) return NextResponse.json({ error: 'Geen chef profiel gevonden' }, { status: 404 })
+
+    // Get kitchen_id using chef_profiles.id
     const { data: memberData } = await supabase
       .from('kitchen_members')
       .select('kitchen_id, kitchens(id, name, type, settings)')
-      .eq('chef_id', user.id)
+      .eq('chef_id', chefProfile.id)
       .single()
 
     const kitchenId = memberData?.kitchen_id
@@ -102,7 +111,7 @@ export async function POST(request: NextRequest) {
       auditRulesetResult,
       techniqueResult,
     ] = await Promise.all([
-      supabase.from('chef_profiles').select('*').eq('auth_user_id', user.id).single(),
+      Promise.resolve({ data: chefProfile, error: null }), // already fetched above
       supabase.from('recipes').select(`
         id, name, description, category_id, total_cost_per_serving, 
         number_of_servings, food_cost_percentage, selling_price, season_tags,
