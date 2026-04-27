@@ -45,15 +45,46 @@ function buildScenarioContext(scenario: any): string {
   const rules = scenario.service_rules as string[]
   const tempRules = scenario.temperature_rules as string[]
   const satiation = scenario.satiation_curve as any[]
+  const experienceArc = scenario.experience_arc as any[]
+  const liveElements = scenario.live_elements as string[]
+  const hybridTransitions = scenario.hybrid_transitions as string[]
 
-  let ctx = `\n## CATERING SCENARIO: ${scenario.format_label_nl}\n`
+  const label = scenario.modern_label || scenario.format_label_nl
+  let ctx = `\n## CATERING SCENARIO: ${label}\n`
   ctx += `Duratie: ${scenario.typical_duration_min}-${scenario.typical_duration_max} min\n`
 
   if (scenario.items_per_person_min) {
     ctx += `Portienorm: ${scenario.items_per_person_min}-${scenario.items_per_person_max} ${scenario.items_unit} per persoon\n`
   }
 
-  if (satiation?.length > 0) {
+  // NIEUW: Culinaire filosofie — de kern van het format
+  if (scenario.culinaire_filosofie) {
+    ctx += `\nCULINAIRE FILOSOFIE (volg dit principe altijd):\n${scenario.culinaire_filosofie}\n`
+  }
+
+  // NIEUW: Appetite rhythm — verzadigingscurve in woorden
+  if (scenario.appetite_rhythm) {
+    ctx += `\nEETRITME & VERZADIGING:\n${scenario.appetite_rhythm}\n`
+  }
+
+  // NIEUW: Signature moment — het ene memorabele moment
+  if (scenario.signature_moment) {
+    ctx += `\nSIGNATURE MOMENT (ontwerp hier naartoe):\n${scenario.signature_moment}\n`
+  }
+
+  // NIEUW: Experience Arc — de dramaturgische opbouw
+  if (experienceArc?.length > 0) {
+    ctx += `\nEXPERIENCE ARC (culinaire dramaturgie — volg dit als rode draad):\n`
+    experienceArc.forEach((phase: any) => {
+      ctx += `- ${phase.phase.toUpperCase()} (${phase.duration_min} min): ${phase.description}\n`
+      if (phase.examples?.length > 0) {
+        ctx += `  Voorbeelden: ${phase.examples.join(', ')}\n`
+      }
+    })
+  }
+
+  // Fallback: klassieke satiation curve
+  if (!experienceArc?.length && satiation?.length > 0) {
     ctx += `\nVerzadigingscurve (richtlijn per uur):\n`
     satiation.forEach((s: any) => {
       if (s.hour) ctx += `- Uur ${s.hour}: ca. ${s.items} items\n`
@@ -62,27 +93,40 @@ function buildScenarioContext(scenario: any): string {
   }
 
   if (courses?.length > 0) {
-    ctx += `\nGangstructuur (VERPLICHT volgen):\n`
+    ctx += `\nGANGSTRUCTUUR (VERPLICHT volgen):\n`
     courses.forEach((c: any) => {
-      const min = c.items_pp_min !== undefined ? c.items_pp_min : (c.weight_pp_min_g ? `${c.weight_pp_min_g}g` : '?')
-      const max = c.items_pp_max !== undefined ? c.items_pp_max : (c.weight_pp_max_g ? `${c.weight_pp_max_g}g` : '?')
-      ctx += `- ${c.name_nl}: ${min}-${max} pp | ${c.hot_cold} | ${c.passing_plated}\n`
+      const min = c.items_pp_min !== undefined ? c.items_pp_min : (c.weight_pp_min_g ? `${c.weight_pp_min_g}g` : c.min_items || '?')
+      const max = c.items_pp_max !== undefined ? c.items_pp_max : (c.weight_pp_max_g ? `${c.weight_pp_max_g}g` : c.max_items || '?')
+      const style = c.passing_plated || c.style || ''
+      ctx += `- ${c.name_nl || c.name}: ${min}-${max} pp | ${c.hot_cold || 'mix'} | ${style}\n`
       if (c.notes) ctx += `  > ${c.notes}\n`
     })
   }
 
   if (rules?.length > 0) {
-    ctx += `\nService regels (ALTIJD respecteren):\n`
+    ctx += `\nSERVICE REGELS (ALTIJD respecteren):\n`
     rules.forEach(r => ctx += `- ${r}\n`)
   }
 
   if (tempRules?.length > 0) {
-    ctx += `\nTemperatuurregels:\n`
+    ctx += `\nTEMPERATUURREGELS:\n`
     tempRules.forEach(r => ctx += `- ${r}\n`)
   }
 
+  // NIEUW: Live elementen — interactieve momenten
+  if (liveElements?.length > 0) {
+    ctx += `\nLIVE ELEMENTEN (suggesties voor theater & beleving):\n`
+    liveElements.forEach(e => ctx += `- ${e}\n`)
+  }
+
+  // NIEUW: Hybride transities
+  if (hybridTransitions?.length > 0) {
+    ctx += `\nHYBRIDE TRANSITIES (naadloos te combineren met):\n`
+    ctx += hybridTransitions.join(', ') + '\n'
+  }
+
   const foodCostRange = scenario.food_cost_pp_min
-    ? `\u20ac${scenario.food_cost_pp_min}-${scenario.food_cost_pp_max} food cost pp (Belgische markt)`
+    ? `€${scenario.food_cost_pp_min}-${scenario.food_cost_pp_max} food cost pp (Belgische markt)`
     : null
   if (foodCostRange) ctx += `\nFood cost benchmark: ${foodCostRange}\n`
 
@@ -92,6 +136,8 @@ function buildScenarioContext(scenario: any): string {
   if (staffing) ctx += `Personeel richtlijn: ${staffing}\n`
 
   return ctx
+}
+
 }
 
 function callAnthropic(systemPrompt: string, userPrompt: string, maxTokens = 4096) {
@@ -686,3 +732,4 @@ Produceer het definitieve menu. Behoud de JSON structuur van het origineel.`
     return NextResponse.json({ error: 'Fout bij menu genereren' }, { status: 500 })
   }
 }
+
