@@ -119,6 +119,21 @@ function buildScenarioContext(scenario: any): string {
     liveElements.forEach(e => ctx += `- ${e}\n`)
   }
 
+  // NIEUW: Service pacing rules (Jules' professionele timing)
+  const pacingRules = scenario?.service_pacing_rules
+  if (pacingRules) {
+    ctx += `\nSERVICE TIMING (professionele vuistregels):\n`
+    if (pacingRules.ontvangst_min) ctx += `- Ontvangst/aankomst: ${pacingRules.ontvangst_min} min\n`
+    if (pacingRules.per_appetizer_min) ctx += `- Per hapje (staand/doorgegeven): ${pacingRules.per_appetizer_min} min — nooit 2 tegelijk\n`
+    if (pacingRules.per_gerecht_walking_min) ctx += `- Per gerecht (walking dinner): ${pacingRules.per_gerecht_walking_min} min\n`
+    if (pacingRules.per_gang_small_group_min) ctx += `- Per gang (≤50 pax, zittend): ${pacingRules.per_gang_small_group_min} min\n`
+    if (pacingRules.per_gang_large_group_min) ctx += `- Per gang (>50 pax, zittend): ${pacingRules.per_gang_large_group_min} min — logistiek vertraagt bij grote groepen\n`
+    if (pacingRules.per_passage_min) ctx += `- Per passage (cocktail dînatoire): ${pacingRules.per_passage_min} min\n`
+    if (pacingRules.service_cadence) ctx += `- Ritme: ${pacingRules.service_cadence}\n`
+    if (pacingRules.buffet_flow) ctx += `- Buffet flow: ${pacingRules.buffet_flow}\n`
+    if (pacingRules.late_night_timing) ctx += `- Late night: ${pacingRules.late_night_timing}\n`
+  }
+
   // NIEUW: Hybride transities
   if (hybridTransitions?.length > 0) {
     ctx += `\nHYBRIDE TRANSITIES (naadloos te combineren met):\n`
@@ -505,6 +520,15 @@ Geef voor elke gang MEERDERE opties (want buffet = keuze). Vlees = 2 opties, Vis
 - Dieet: ${dietary_restrictions.length > 0 ? dietary_restrictions.join(', ') : 'geen'}
 - Push level: ${push_level}
 - Extra wensen: ${custom_prompt || 'geen'}
+
+SERVICE TIMING VUISTREGELS (STRIKT RESPECTEREN):
+- Ontvangst/aankomst: altijd 15 min — gasten settelen, eerste drankje
+- Per hapje staand/walking: 15 min cadans — nooit 2 hapjes tegelijk serveren
+- Walking dinner per gerecht: 30 min — tijd om te eten EN te bewegen tussen courses
+- Zittend diner (≤50 pax): 45 min per gang
+- Zittend diner (>50 pax): 60 min per gang — logistiek trager bij grote groepen
+→ Gebruik deze timing om het TOTAAL aantal gangen/hapjes te berekenen op basis van de event-duur.
+→ Genereer NOOIT meer hapjes/gangen dan de timing toelaat.
 
 Genereer een compleet menu als JSON:
 {
