@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Search, X, GripVertical, Plus, Sparkles } from 'lucide-react'
+import { Loader2, Search, X, GripVertical, Plus, Sparkles, FileText, CheckCircle, AlertCircle } from 'lucide-react'
 
 // ─────────────── Types ───────────────
 interface LibraryDish {
@@ -17,18 +17,38 @@ interface LibraryDish {
 }
 
 interface PlacedDish {
-  uid: string // unique placement id (not recipe id)
+  uid: string
   dish_id: string
   name: string
-  source: 'own_recipe' | 'legende' | 'manual' | 'ai'
+  source: 'own_recipe' | 'legende' | 'manual' | 'ai' | 'brief'
   description?: string
   cost_pp?: number
   key_ingredients?: string[]
 }
 
+interface ParsedBrief {
+  event_name?: string | null
+  contact_person?: string | null
+  menu_type?: string | null
+  num_persons?: number | null
+  budget_pp?: number | null
+  budget_total?: number | null
+  date_hint?: string | null
+  location?: string | null
+  style?: string | null
+  courses?: string[]
+  dishes_per_course?: Record<string, Array<{ name: string; description?: string }>>
+  exclusions?: string[]
+  client_feedback?: string | null
+  special_requests?: string | null
+  summary?: string | null
+}
+
 const COURSE_OPTIONS = [
   { key: 'AMUSE', label: 'Amuse-bouche' },
   { key: 'FINGERFOOD', label: 'Fingerfood / Fingerbites' },
+  { key: 'HAPJES', label: 'Hapjes' },
+  { key: 'FINGERBITES', label: 'Fingerbites doorgegeven' },
   { key: 'VOORGERECHT', label: 'Voorgerecht' },
   { key: 'TUSSENGERECHT', label: 'Tussengerecht' },
   { key: 'HOOFDGERECHT', label: 'Hoofdgerecht' },
@@ -37,11 +57,25 @@ const COURSE_OPTIONS = [
   { key: 'MIGNARDISES', label: 'Mignardises' },
 ]
 
+const EVENT_TYPE_OPTIONS = [
+  { value: 'walking_dinner', label: 'Walking Dinner' },
+  { value: 'cocktail_dinatoire', label: 'Cocktail Dînatoire' },
+  { value: 'sit_down', label: 'Zitdiner' },
+  { value: 'bbq_buffet', label: 'BBQ Buffet' },
+  { value: 'aperitief', label: 'Aperitief' },
+  { value: 'cocktail', label: 'Cocktail (staand)' },
+  { value: 'gala', label: 'Galadineren' },
+  { value: 'brunch', label: 'Brunch' },
+  { value: 'high_tea', label: 'High Tea' },
+  { value: 'lunch_buffet', label: 'Lunch Buffet' },
+]
+
 const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
   own_recipe: { label: 'Eigen', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
   legende: { label: 'LEGENDE', cls: 'bg-violet-50 text-violet-800 border-violet-200' },
   ai: { label: 'AI voorstel', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
   manual: { label: 'Handmatig', cls: 'bg-[#FDFAF6] text-[#9E7E60] border-[#E8D5B5]' },
+  brief: { label: 'Uit brief', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
 }
 
 // ─────────────── Main Component ───────────────
@@ -65,11 +99,15 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
   const [pricePerPerson, setPricePerPerson] = useState(65)
   const [foodCostTarget, setFoodCostTarget] = useState(30)
   const [eventType, setEventType] = useState('walking_dinner')
+  const [eventName, setEventName] = useState('')
+  const [briefContext, setBriefContext] = useState<ParsedBrief | null>(null)
 
   // Brief
   const [showBrief, setShowBrief] = useState(false)
   const [briefText, setBriefText] = useState('')
   const [parsingBrief, setParsingBrief] = useState(false)
+  const [parsedResult, setParsedResult] = useState<ParsedBrief | null>(null)
+  const [briefStep, setBriefStep] = useState<'input' | 'confirm'>('input')
 
   // Manual add
   const [addingTo, setAddingTo] = useState<string | null>(null)
@@ -188,6 +226,11 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
           num_persons: numPersons,
           price_per_person: pricePerPerson,
           food_cost_target: foodCostTarget,
+          // Brief context for AI
+          exclusions: briefContext?.exclusions,
+          client_feedback: briefContext?.client_feedback,
+          special_requests: briefContext?.special_requests,
+          event_name: eventName || briefContext?.event_name,
         }),
       })
       if (res.ok) {
@@ -224,22 +267,66 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
       const res = await fetch('/api/menu-engineering/parse-brief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief: briefText }),
+        body: JSON.stringify({ text: briefText }),
       })
       if (res.ok) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { parsed } = await res.json() as { parsed?: any }
-        if (parsed) {
-          if (parsed.num_persons) setNumPersons(parsed.num_persons)
-          if (parsed.budget_pp) setPricePerPerson(parsed.budget_pp)
-          if (parsed.menu_type) setEventType(parsed.menu_type)
-          if (parsed.courses?.length) setSelectedCourses(parsed.courses)
+        const { brief } = await res.json() as { brief?: ParsedBrief }
+        if (brief) {
+          setParsedResult(brief)
+          setBriefStep('confirm')
         }
-        setShowBrief(false)
-        setBriefText('')
       }
     } catch { /* silent */ }
     setParsingBrief(false)
+  }
+
+  // ── Apply parsed brief to canvas ──
+  const applyBrief = (parsed: ParsedBrief) => {
+    // Update parameters
+    if (parsed.num_persons) setNumPersons(parsed.num_persons)
+    if (parsed.budget_pp) setPricePerPerson(parsed.budget_pp)
+    if (parsed.menu_type) setEventType(parsed.menu_type)
+    if (parsed.event_name) setEventName(parsed.event_name)
+
+    // Set courses from brief (or keep existing if none)
+    const briefCourses = parsed.courses?.length ? parsed.courses : selectedCourses
+    // Also add courses from dishes_per_course that might not be in courses array
+    const dishCourses = Object.keys(parsed.dishes_per_course || {})
+    const allCourses = [...new Set([...briefCourses, ...dishCourses])]
+    // Filter to valid course keys
+    const validCourses = allCourses.filter(k => COURSE_OPTIONS.some(c => c.key === k))
+    if (validCourses.length > 0) setSelectedCourses(validCourses)
+
+    // Populate canvas with dishes from brief
+    if (parsed.dishes_per_course && Object.keys(parsed.dishes_per_course).length > 0) {
+      const newPlaced: Record<string, PlacedDish[]> = { ...placed }
+      for (const [courseKey, dishes] of Object.entries(parsed.dishes_per_course)) {
+        if (!COURSE_OPTIONS.some(c => c.key === courseKey)) continue
+        const placed_dishes: PlacedDish[] = dishes.map((d, i) => ({
+          uid: `brief-${courseKey}-${i}-${Date.now()}`,
+          dish_id: '',
+          name: d.name,
+          source: 'brief' as const,
+          description: d.description || undefined,
+        }))
+        newPlaced[courseKey] = [...(newPlaced[courseKey] || []), ...placed_dishes]
+      }
+      setPlaced(newPlaced)
+    }
+
+    // Store brief context for AI
+    setBriefContext(parsed)
+
+    // Auto-name the menu
+    if (parsed.event_name && !menuName) {
+      setMenuName(parsed.event_name)
+    }
+
+    // Close brief panel
+    setShowBrief(false)
+    setBriefText('')
+    setParsedResult(null)
+    setBriefStep('input')
   }
 
   // ── Manual add ──
@@ -300,6 +387,10 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
   // ── Computed totals ──
   const totalCostPp = Object.values(placed).flat().reduce((s, d) => s + (d.cost_pp ?? 0), 0)
   const foodCostPct = pricePerPerson > 0 ? (totalCostPp / pricePerPerson) * 100 : 0
+  const totalDishes = Object.values(placed).flat().length
+
+  // Count dishes from brief
+  const briefDishCount = Object.values(placed).flat().filter(d => d.source === 'brief').length
 
   // ─────────────── Render ───────────────
   return (
@@ -337,6 +428,30 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
             />
           </div>
         </div>
+
+        {/* Brief context indicator */}
+        {briefContext && (
+          <div className="px-3 py-2 border-b border-[#E8D5B5] bg-emerald-50">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="text-[10px] text-emerald-700 font-medium">Brief ingeladen</span>
+            </div>
+            {briefContext.event_name && (
+              <p className="text-[10px] text-emerald-600 mt-0.5 truncate">{briefContext.event_name}</p>
+            )}
+            {briefContext.exclusions?.length ? (
+              <p className="text-[10px] text-emerald-600 mt-0.5">
+                Exc: {briefContext.exclusions.slice(0, 3).join(', ')}
+              </p>
+            ) : null}
+            <button
+              onClick={() => setBriefContext(null)}
+              className="text-[10px] text-emerald-500 hover:text-emerald-700 mt-0.5 underline"
+            >
+              Verwijderen
+            </button>
+          </div>
+        )}
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
@@ -388,10 +503,30 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
 
           {/* Top row: event config + actions */}
           <div className="flex items-center gap-3 flex-wrap">
+
+            {/* Event name */}
+            <input
+              value={eventName}
+              onChange={e => setEventName(e.target.value)}
+              placeholder="Evenementnaam..."
+              className="w-36 px-2 py-1 text-xs bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] focus:outline-none"
+            />
+
+            {/* Format */}
+            <select
+              value={eventType}
+              onChange={e => setEventType(e.target.value)}
+              className="px-2 py-1 text-xs bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] focus:outline-none"
+            >
+              {EVENT_TYPE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-[#9E7E60]">Personen</span>
+              <span className="text-xs text-[#9E7E60]">p</span>
               <input type="number" min={1} value={numPersons} onChange={e => setNumPersons(Number(e.target.value))}
-                className="w-16 px-2 py-1 text-xs bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] focus:outline-none" />
+                className="w-14 px-2 py-1 text-xs bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] focus:outline-none" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-[#9E7E60]">€/p</span>
@@ -407,20 +542,25 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
             <div className="flex-1" />
 
             {/* Cost summary */}
-            <div className="text-xs font-mono text-[#5C4730]">
-              FC: <span className={`font-bold ${foodCostPct <= foodCostTarget ? 'text-emerald-700' : 'text-amber-700'}`}>
-                €{totalCostPp.toFixed(2)}/p ({foodCostPct.toFixed(1)}%)
-              </span>
-            </div>
+            {totalDishes > 0 && (
+              <div className="text-xs font-mono text-[#5C4730]">
+                FC: <span className={`font-bold ${foodCostPct <= foodCostTarget ? 'text-emerald-700' : 'text-amber-700'}`}>
+                  €{totalCostPp.toFixed(2)}/p ({foodCostPct.toFixed(1)}%)
+                </span>
+              </div>
+            )}
 
-            {/* Brief button */}
-            <button onClick={() => setShowBrief(s => !s)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white border border-[#E8D5B5] hover:border-amber-300 text-[#5C4730] rounded-lg transition-all"
+            {/* Brief button — prominenter */}
+            <button
+              onClick={() => { setShowBrief(s => !s); setBriefStep('input') }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
+                briefContext
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  : 'bg-white border-[#E8D5B5] hover:border-amber-300 text-[#5C4730]'
+              }`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-              </svg>
-              Brief plakken
+              <FileText className="w-3.5 h-3.5" />
+              {briefContext ? 'Brief actief' : 'Brief inladen'}
             </button>
 
             {/* AI aanvullen */}
@@ -445,26 +585,151 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
             </button>
           </div>
 
-          {/* Brief paste panel */}
+          {/* Brief panel */}
           <AnimatePresence>
             {showBrief && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
-                  <div className="text-xs font-medium text-amber-800">Klantbrief plakken — AI parseert automatisch</div>
-                  <textarea value={briefText} onChange={e => setBriefText(e.target.value)} rows={4}
-                    placeholder="Plak hier de klantvraag, offerte-aanvraag of event omschrijving..."
-                    className="w-full px-3 py-2 text-xs bg-white border border-amber-200 rounded-lg text-[#2C1810] focus:outline-none resize-none"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => setShowBrief(false)} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#5C4730]">Annuleren</button>
-                    <button onClick={parseBrief} disabled={parsingBrief || !briefText.trim()}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg disabled:opacity-50"
-                    >
-                      {parsingBrief && <Loader2 className="w-3 h-3 animate-spin" />}
-                      Verwerken
-                    </button>
+
+                {briefStep === 'input' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <FileText className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-amber-900">Brief inladen</div>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          Plak een klantbrief, offerte, voorstel of event-omschrijving. De AI extraheert alle info én de gerechten — die verschijnen direct op het canvas.
+                        </p>
+                      </div>
+                    </div>
+                    <textarea
+                      value={briefText}
+                      onChange={e => setBriefText(e.target.value)}
+                      rows={6}
+                      placeholder="Bijv: Walking dinner voor 80 personen op 15 juni. Budget €95/p. Geen schaaldieren. Concept: modern Belgisch-Japans. Menu: Fingerbite: tarbot tataki met yuzu / Hapje: knolselder velouté met forelkaviaar / Hoofdgerecht: lam met dashi-jus en groene asperges / Dessert: pavlova met seizoensfruit..."
+                      className="w-full px-3 py-2.5 text-xs bg-white border border-amber-200 rounded-lg text-[#2C1810] focus:outline-none resize-none leading-relaxed"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setShowBrief(false)} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#5C4730]">Annuleren</button>
+                      <button
+                        onClick={parseBrief}
+                        disabled={parsingBrief || !briefText.trim()}
+                        className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-[#2C1810] bg-amber-400 hover:bg-amber-500 rounded-lg disabled:opacity-50 transition-all"
+                      >
+                        {parsingBrief ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        {parsingBrief ? 'Verwerken...' : 'Analyseren & inladen'}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {briefStep === 'confirm' && parsedResult && (
+                  <div className="bg-white border border-[#E8D5B5] rounded-xl p-4 space-y-4">
+                    {/* Summary */}
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-[#2C1810]">Brief geanalyseerd</div>
+                        {parsedResult.summary && (
+                          <p className="text-xs text-[#9E7E60] mt-0.5">{parsedResult.summary}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Parsed data grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { label: 'Evenement', value: parsedResult.event_name },
+                        { label: 'Contact', value: parsedResult.contact_person },
+                        { label: 'Personen', value: parsedResult.num_persons ? `${parsedResult.num_persons}p` : null },
+                        { label: 'Budget', value: parsedResult.budget_pp ? `€${parsedResult.budget_pp}/p` : null },
+                        { label: 'Format', value: parsedResult.menu_type },
+                        { label: 'Datum', value: parsedResult.date_hint },
+                        { label: 'Locatie', value: parsedResult.location },
+                        { label: 'Stijl', value: parsedResult.style },
+                      ].filter(f => f.value).map(f => (
+                        <div key={f.label} className="bg-[#FDFAF6] border border-[#E8D5B5] rounded-lg p-2">
+                          <div className="text-[10px] text-[#B8997A]">{f.label}</div>
+                          <div className="text-xs font-medium text-[#2C1810] truncate">{f.value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Exclusions */}
+                    {parsedResult.exclusions?.length ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="text-xs text-amber-700 font-medium">Exclusies:</span>
+                        {parsedResult.exclusions.map(e => (
+                          <span key={e} className="px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-full">{e}</span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {/* Client feedback */}
+                    {parsedResult.client_feedback && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
+                        <div className="text-[10px] text-blue-700 font-medium mb-1">Klantfeedback gevonden</div>
+                        <p className="text-xs text-blue-800">{parsedResult.client_feedback}</p>
+                      </div>
+                    )}
+
+                    {/* Dishes preview */}
+                    {parsedResult.dishes_per_course && Object.keys(parsedResult.dishes_per_course).length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-[#2C1810]">
+                          Gerechten gevonden ({Object.values(parsedResult.dishes_per_course).flat().length} stuks — worden op canvas geplaatst)
+                        </div>
+                        <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                          {Object.entries(parsedResult.dishes_per_course).map(([courseKey, dishes]) => (
+                            <div key={courseKey} className="flex gap-2 items-baseline">
+                              <span className="text-[10px] text-[#9E7E60] font-medium uppercase tracking-wide w-24 shrink-0">
+                                {COURSE_OPTIONS.find(c => c.key === courseKey)?.label || courseKey}
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                {dishes.map((d, i) => (
+                                  <span key={i} className="px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] rounded">
+                                    {d.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!parsedResult.dishes_per_course || Object.keys(parsedResult.dishes_per_course).length === 0 ? (
+                      <p className="text-xs text-[#9E7E60] italic">
+                        Geen concrete gerechten gevonden in de brief. Parameters worden wel ingeladen. 
+                        Gebruik daarna &ldquo;AI aanvullen&rdquo; om het canvas te vullen.
+                      </p>
+                    ) : null}
+
+                    <div className="flex justify-between items-center pt-1">
+                      <button
+                        onClick={() => { setBriefStep('input'); setParsedResult(null) }}
+                        className="text-xs text-[#9E7E60] hover:text-[#5C4730]"
+                      >
+                        Terug
+                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setShowBrief(false); setParsedResult(null); setBriefStep('input') }}
+                          className="px-3 py-1.5 text-xs text-[#9E7E60] border border-[#E8D5B5] rounded-lg hover:bg-[#F5EDD8]"
+                        >
+                          Annuleren
+                        </button>
+                        <button
+                          onClick={() => applyBrief(parsedResult)}
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-[#2C1810] rounded-lg"
+                          style={{ backgroundColor: '#E8A040' }}
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Inladen op canvas
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -493,6 +758,18 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Brief context banner */}
+          {briefContext && briefDishCount > 0 && !showBrief && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <p className="text-xs text-emerald-700">
+                <span className="font-medium">{briefDishCount} gerechten</span> uit brief op canvas geladen.
+                {briefContext.exclusions?.length ? ` Exclusies actief: ${briefContext.exclusions.join(', ')}.` : ''}
+                {briefContext.client_feedback ? ' Klantfeedback opgeslagen voor AI.' : ''}
+              </p>
+            </div>
+          )}
 
           {/* Course selector */}
           <div className="flex flex-wrap gap-1.5 items-center">
@@ -586,7 +863,7 @@ export default function MenuBoard({ onSave }: { onSave?: (menuId: string) => voi
                           )}
                         </div>
                         {dish.description && (
-                          <p className="text-[10px] text-[#9E7E60] mt-0.5 line-clamp-1">{dish.description}</p>
+                          <p className="text-[10px] text-[#9E7E60] mt-0.5 line-clamp-2">{dish.description}</p>
                         )}
                         {dish.key_ingredients?.length ? (
                           <p className="text-[10px] text-[#B8997A] mt-0.5">{dish.key_ingredients.slice(0, 4).join(' · ')}</p>

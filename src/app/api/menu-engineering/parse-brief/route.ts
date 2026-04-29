@@ -12,32 +12,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Geen inhoud opgegeven' }, { status: 400 })
     }
 
-    const systemPrompt = `Je bent een culinaire assistent die klantbriefings en event-opdrachten analyseert voor professionele cateraars en chefs.
-Extraheer de relevante informatie uit de tekst of afbeelding en geef een gestructureerd JSON-antwoord.
+    const systemPrompt = `Je bent een culinaire assistent die klantbriefings, event-opdrachten en menu-voorstellen analyseert voor professionele cateraars en chefs.
+Extraheer ALLE relevante informatie, inclusief concrete gerechten en klantfeedback.
 
 Retourneer ALTIJD geldig JSON in dit exacte formaat:
 {
-  "menu_type": "event" | "tasting" | "fixed" | "a_la_carte" | "daily",
+  "event_name": string | null,
+  "contact_person": string | null,
+  "menu_type": "walking_dinner" | "cocktail_dinatoire" | "sit_down" | "bbq_buffet" | "aperitief" | "cocktail" | "gala" | "brunch" | "high_tea" | "lunch_buffet" | "event",
   "num_persons": number | null,
   "budget_total": number | null,
   "budget_pp": number | null,
-  "date_hint": "string beschrijving van datum/periode" | null,
+  "date_hint": string | null,
   "location": string | null,
-  "event_name": string | null,
   "style": "Modern" | "Klassiek" | "Seizoensgebonden" | "Fusion" | null,
-  "courses": ["AMUSE", "FINGERFOOD", "HAPJES", "FINGERBITES", "VOORGERECHT", "TUSSENGERECHT", "HOOFDGERECHT", "KAAS", "DESSERT", "MIGNARDISES"],
-  "restrictions": ["glutenvrij", "lactosevrij", "vegetarisch", "vegan", "noten", "schaaldieren"],
+  "courses": ["AMUSE","FINGERFOOD","HAPJES","FINGERBITES","VOORGERECHT","TUSSENGERECHT","HOOFDGERECHT","KAAS","DESSERT","MIGNARDISES"],
+  "dishes_per_course": {
+    "COURSE_KEY": [
+      { "name": "string — exacte gerechtnaam", "description": "string — omschrijving of subcomponenten indien aanwezig" }
+    ]
+  },
+  "exclusions": ["lijst van uitgesloten ingrediënten of allergieën"],
+  "client_feedback": "string — als er feedback van de klant in de tekst staat, letterlijk of samengevat" | null,
   "special_requests": string | null,
   "summary": "Korte samenvatting van de opdracht in 1-2 zinnen"
 }
 
-Regels:
-- courses: kies de meest logische gangen op basis van de context (bijv. "walking dinner" → FINGERFOOD + HAPJES + FINGERBITES; "3-gang" → VOORGERECHT + HOOFDGERECHT + DESSERT; "gala" → AMUSE + VOORGERECHT + TUSSENGERECHT + HOOFDGERECHT + DESSERT + MIGNARDISES)
-- budget: als totaalbudget gegeven, bereken budget_pp op basis van num_persons; als "pp" staat berekeningen andersom
-- menu_type: "event" voor catering/feest, "tasting" voor walking dinner/degustatie, "fixed" voor buffet
-- style: probeer af te leiden uit beschrijving (luxueus=Klassiek, seizoens=Seizoensgebonden, trendy=Modern, internationaal=Fusion)
-- special_requests: vat specifieke wensen samen (thema, ingrediënten, sfeer)
-- Geef ALLEEN JSON terug, geen andere tekst`
+Regels voor dishes_per_course:
+- COURSE_KEY moet een van deze zijn: AMUSE, FINGERFOOD, HAPJES, FINGERBITES, VOORGERECHT, TUSSENGERECHT, HOOFDGERECHT, KAAS, DESSERT, MIGNARDISES
+- Als de brief een volledig menu bevat, extraheer elk gerecht per gang
+- Maak de namen zo precies mogelijk — niet "vis" maar "tarbot met beurre blanc"
+- Als er geen gerechten vermeld worden voor een gang, laat die gang weg uit dishes_per_course
+- Als de brief een "walking dinner" formaat heeft, gebruik dan FINGERBITES of HAPJES per service
+
+Regels voor menu_type mapping:
+- "walking dinner" → walking_dinner
+- "cocktail dînatoire" of "dînatoire" → cocktail_dinatoire
+- "galadineren" of "gala" → gala
+- "zitdiner" of "zittend" of "sit-down" → sit_down
+- "BBQ" of "barbecue" → bbq_buffet
+- "aperitief" of "vin d'honneur" → aperitief
+- "brunch" → brunch
+- "high tea" → high_tea
+
+Geef ALLEEN JSON terug, geen andere tekst.`
 
     const messages: Anthropic.MessageParam[] = []
 
@@ -57,27 +75,26 @@ Regels:
             type: 'text',
             text: text
               ? `Analyseer deze afbeelding en de volgende tekst:\n\n${text}`
-              : 'Analyseer deze afbeelding en extraheer de event/menu informatie.',
+              : 'Analyseer deze afbeelding en extraheer de event/menu informatie inclusief alle gerechten.',
           },
         ],
       })
     } else {
       messages.push({
         role: 'user',
-        content: `Analyseer de volgende klantbriefing:\n\n${text}`,
+        content: `Analyseer de volgende klantbriefing en extraheer alle informatie inclusief gerechten:\n\n${text}`,
       })
     }
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: systemPrompt,
       messages,
     })
 
     const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
 
-    // Extract JSON from response
     const jsonMatch = rawText.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Kon geen gegevens extraheren uit de briefing' }, { status: 422 })
