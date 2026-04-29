@@ -1,11 +1,10 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createClient()
   const body = await req.json()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -15,69 +14,56 @@ export async function POST(req: NextRequest) {
     menuType = 'walking_dinner',
     numPersons = 20,
     pricePerPerson = 65,
-    exclusions = [],
+    exclusions = [] as string[],
     concept = '',
     specialRequests = '',
-    preferences = {},
+    preferences = {} as Record<string, string>,
     season = 'current',
   } = body
 
-  // Get chef profile for style DNA
   const { data: profile } = await supabase
     .from('chef_profiles')
     .select('style_analysis, preferred_ingredients, cuisine_styles')
     .eq('auth_user_id', user.id)
     .single()
 
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  })
-
-  const exclusionsText = exclusions.length > 0 ? `\nExclusies/allergieën: ${exclusions.join(', ')}` : ''
+  const exclusionsText = exclusions.length > 0 ? `\nExclusies/allergie\u00ebn: ${exclusions.join(', ')}` : ''
   const conceptText = concept ? `\nConcept/stijl: ${concept}` : ''
-  const prefsText = Object.keys(preferences).length > 0 
-    ? `\nVoorkeuren per gang:\n${Object.entries(preferences).map(([k,v]) => `- ${k}: ${v}`).join('\n')}` 
+  const prefsText = Object.keys(preferences).length > 0
+    ? `\nVoorkeuren per gang:\n${Object.entries(preferences).map(([k, v]) => `- ${k}: ${v}`).join('\n')}`
     : ''
-  const styleText = profile?.style_analysis 
-    ? `\nChef stijl DNA: ${typeof profile.style_analysis === 'string' ? profile.style_analysis : JSON.stringify(profile.style_analysis)}` 
+  const styleText = profile?.style_analysis
+    ? `\nChef stijl DNA: ${typeof profile.style_analysis === 'string' ? profile.style_analysis : JSON.stringify(profile.style_analysis)}`
     : ''
 
-  const prompt = `Je bent een Michelin-niveau sous chef AI. Genereer een menu voor een ${menuType.replace(/_/g, ' ')} event.
-
-Parameters:
-- ${numPersons} personen
-- Budget: €${pricePerPerson}/persoon (food cost 28-32%)
-- Seizoen: ${season}${exclusionsText}${conceptText}${prefsText}${styleText}${specialRequests ? `\nBijzondere wensen: ${specialRequests}` : ''}
-
-Genereer een menu met de juiste gangstructuur voor dit format. Elk gerecht moet in Jules' stijl zijn: hedendaags Belgisch-Frans met Japanse umami-accenten.
-
-Geef je antwoord als JSON:
-{
-  "courses": [
-    {
-      "name": "Amuse",
-      "dishes": [
-        { "name": "Gerechtnaam", "description": "Korte beschrijving", "cost_per_person": 4.50 }
-      ]
-    }
-  ]
-}`
+  const prompt = `Je bent een Michelin-niveau culinaire AI. Genereer een menu voor een ${menuType.replace(/_/g, ' ')} event.\n\nParameters:\n- ${numPersons} personen\n- Budget: \u20ac${pricePerPerson}/persoon (food cost 28-32%)\n- Seizoen: ${season}${exclusionsText}${conceptText}${prefsText}${styleText}${specialRequests ? `\nBijzondere wensen: ${specialRequests}` : ''}\n\nGenereer een menu met de juiste gangstructuur. Hedendaags Belgisch-Frans met Japanse umami-accenten.\n\nAntwoord ALLEEN als JSON:\n{\n  "courses": [\n    {\n      "name": "Amuse",\n      "dishes": [\n        { "name": "Naam", "description": "Beschrijving", "cost_per_person": 4.50 }\n      ]\n    }\n  ]\n}`
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ error: 'AI returned no valid JSON' }, { status: 500 })
-    
-    const parsed = JSON.parse(jsonMatch[0])
-    return NextResponse.json(parsed)
-  } catch (error: any) {
-    console.error('Menu builder error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!response.ok) return NextResponse.json({ error: 'AI call failed' }, { status: 500 })
+
+    const aiResult = await response.json()
+    const text: string = aiResult.content?.[0]?.text || ''
+    const cleaned = text.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (!match) return NextResponse.json({ error: 'No valid JSON in AI response' }, { status: 500 })
+
+    return NextResponse.json(JSON.parse(match[0]))
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

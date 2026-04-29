@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const maxDuration = 60
@@ -6,7 +6,7 @@ export const maxDuration = 60
 // GET /api/proposals?event_id=xxx — list proposals for event
 // POST /api/proposals — create new proposal
 export async function GET(req: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createClient()
   const { searchParams } = new URL(req.url)
   const eventId = searchParams.get('event_id')
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createClient()
   const body = await req.json()
 
   const { data: { user } } = await supabase.auth.getUser()
