@@ -111,7 +111,7 @@ export default function MepPrintPage() {
     <>
       {/* Print button - hidden when printing */}
       <div className="print:hidden fixed top-4 right-4 z-50 flex items-center gap-2">
-        <Link href={`/events/${eventId}`} className="flex items-center gap-1.5 px-3 py-2 bg-stone-800 text-stone-300 rounded-lg hover:bg-stone-700 transition-colors text-sm">
+        <Link href={`/events/${eventId}`} className="flex items-center gap-1.5 px-3 py-2 bg-[#FAF6EF] text-[#2C1810] rounded-lg hover:bg-[#F2E8D5] transition-colors text-sm">
           <ArrowLeft className="w-4 h-4" /> Terug
         </Link>
         <button
@@ -125,7 +125,7 @@ export default function MepPrintPage() {
       {/* Print-optimized layout */}
       <div className="mep-print-layout p-4 sm:p-8 print:p-0 max-w-[210mm] mx-auto">
         {/* Header */}
-        <div className="border-b-2 border-stone-900 pb-3 mb-4 print:pb-2 print:mb-3">
+        <div className="border-b-2 border-[#2C1810] pb-3 mb-4 print:pb-2 print:mb-3">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-bold text-stone-900 print:text-black">{event.name}</h1>
@@ -158,7 +158,7 @@ export default function MepPrintPage() {
 
             return (
               <div key={day} className="break-inside-avoid">
-                <div className="bg-stone-900 text-[#2C1810] px-3 py-1.5 rounded-t print:bg-black print:rounded-none">
+                <div className="bg-[#2C1810] text-[#F2E8D5] px-3 py-1.5 rounded-t print:bg-black print:rounded-none">
                   <span className="text-sm font-bold uppercase tracking-wider">{dayLabel}</span>
                   <span className="text-xs ml-2 opacity-70">{dayItems.length} items</span>
                 </div>
