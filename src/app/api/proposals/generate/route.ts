@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
     preferences = {} as Record<string, string>,
     special_requests = '',
     contact_person = '',
+    previous_feedback = '',
+    previous_version = null,
   } = requirements
 
   // 1. Chef profiel ophalen
@@ -161,6 +163,9 @@ Experience Arc: ${scenario.experience_arc ? JSON.stringify(scenario.experience_a
     : ''
 
   const specialText = special_requests ? `\nBIJZONDERE WENSEN: ${special_requests}` : ''
+  const feedbackText = previous_feedback
+    ? `\nFEEDBACK VAN KLANT OP V${previous_version || 'vorige versie'} (VERPLICHT verwerken):\n"${previous_feedback}"\n→ Pas het menu AAN op basis van deze feedback. Niet hetzelfde menu opnieuw.`
+    : ''
 
   const contactText = contact_person ? `\nKLANT: ${contact_person}` : ''
 
@@ -193,7 +198,7 @@ VERBODEN:
 - Geen generieke sauzen (geen "bruine jus", "witte saus")
 - Zorg dat exclusies NERGENS terugkomen — ook niet in sauzen of bereidingen`
 
-  const userPrompt = `Maak een menu voorstel voor: ${eventName || 'catering event'}
+  const userPrompt = `${previous_feedback ? '⚠️ DIT IS EEN REVISIE — verwerk de feedback van de klant!\n\n' : ''}Maak een menu voorstel voor: ${eventName || 'catering event'}
 ${contactText}
 
 EVENT PARAMETERS:
@@ -210,6 +215,7 @@ ${scenarioText}
 ${formatInstruction}
 ${legendeText}
 ${seasonalText}
+${feedbackText}
 
 TAAK: Genereer een volledig menu voorstel. Gebruik Jules' DNA, handtekening-ingrediënten en hertaalfilosofie. Gebruik prioritair de seizoensgebonden ingrediënten. Gerechten moeten hedendaags zijn maar herkenbaar — "comfort-elegantie" is het juiste woord.
 

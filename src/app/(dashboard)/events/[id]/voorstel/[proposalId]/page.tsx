@@ -90,6 +90,7 @@ export default function ProposalEditorPage() {
   const [editingName, setEditingName] = useState(false)
   const [showConceptNote, setShowConceptNote] = useState(true)
   const [generatingFull, setGeneratingFull] = useState(false)
+  const [creatingNewVersion, setCreatingNewVersion] = useState(false)
 
   const loadProposal = useCallback(async () => {
     const res = await fetch(`/api/proposals/${proposalId}`)
@@ -154,6 +155,24 @@ export default function ProposalEditorPage() {
     setProposal(prev => prev ? { ...prev, client_feedback: feedbackText, proposal_status: 'feedback' } : null)
     setShowFeedbackModal(false)
     setFeedbackText('')
+  }
+
+  // Nieuwe versie aanmaken op basis van huidige + feedback
+  const createNewVersion = async () => {
+    setCreatingNewVersion(true)
+    try {
+      const res = await fetch(`/api/proposals/${proposalId}/new-version`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.id) {
+        router.push(`/events/${eventId}/voorstel/${data.id}`)
+      }
+    } catch (e) {
+      console.error('New version error', e)
+    }
+    setCreatingNewVersion(false)
   }
 
   // AI: volledig menu genereren
@@ -360,6 +379,15 @@ export default function ProposalEditorPage() {
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Nieuwe versie knop — altijd zichtbaar */}
+              <button
+                onClick={createNewVersion}
+                disabled={creatingNewVersion}
+                className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#9E7E60] text-xs font-medium rounded-xl transition-all disabled:opacity-50"
+              >
+                {creatingNewVersion ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                Nieuwe versie
+              </button>
               {proposal.proposal_status === 'draft' && (
                 <button
                   onClick={() => updateStatus('sent')}
