@@ -12,6 +12,64 @@ Mix van het vertrouwde en het verrassende. Eén element mag uitdagen — een onb
 Durf te provoceren. Onverwachte combinaties, nieuwe technieken, minder gangbare ingrediënten. Gasten worden uitgedaagd — maar het is nooit willekeurig, altijd culinair logisch.`,
 }
 
+// Gang-bewuste signatuuringrediënten
+// Sommige elementen van Jules zijn HARTIG — nooit in desserts injecteren
+function getSignatureIngredients(course: string): string {
+  const courseLower = course.toLowerCase()
+  const isDessert = courseLower.includes('dessert') || courseLower.includes('zoet') || 
+                    courseLower.includes('nagerecht') || courseLower.includes('mignardise') ||
+                    courseLower.includes('petit four')
+  const isFingerFood = courseLower.includes('hapje') || courseLower.includes('finger') || 
+                       courseLower.includes('amuse') || courseLower.includes('bite')
+  const isSavory = !isDessert
+
+  if (isDessert) {
+    // Voor desserts: alleen zuur-accenten en lichte aromatische elementen
+    return `Jules' stijl voor desserts: luchtigheid, zuur-contrast, verfijnd zoet. 
+Toegestane elementen: lavascrème (subtiel), citrusgel, gefermenteerde room, yuzu, seizoensfruit, krokante texturen.
+NOOIT voor desserts: dashi, gepekelde eidooier, XO, kimchi, miso, bonito, zeekraal, hamachi — dit zijn HARTIGE elementen.
+Desserts volgen: fruit + zuur + textuur + (optioneel) kruid-element.`
+  }
+
+  if (isSavory) {
+    return `Jules' handtekening hartige elementen (gebruik contextgevoelig, niet alles tegelijk):
+• Lavas — kruidig, selderij-achtig, aromaat
+• Dashi — umami basis, elegante bouillon
+• Forelkaviaar — finishing touch, zout-fris
+• Gepekelde eidooier — geraspt als afwerking op hartige gerechten
+• Hamachi / tonijn / zeevruchten — Japanse richting
+• Zwarte look — diep, zoet-umami
+• Miso — glazuur, bouillon, marinade
+• Kimchi — zuur-pittig contrast
+• XO — intensiteit
+• Zeekraal — zout-knapperig, maritiem
+
+Gebruik max 1-2 handtekening-elementen per gerecht. Niet stapelen.`
+  }
+
+  return `Jules' stijl: Belgisch-Frans, Japanse umami-accenten, comfort-elegantie.`
+}
+
+function getCourseContext(course: string): string {
+  const courseLower = course.toLowerCase()
+  if (courseLower.includes('dessert') || courseLower.includes('nagerecht')) {
+    return 'DESSERT — focus op luchtigheid, seizoensfruit, zuur-contrast, elegante zoetheid. Geen umami-elementen.'
+  }
+  if (courseLower.includes('hapje') || courseLower.includes('amuse') || courseLower.includes('finger')) {
+    return 'FINGERFOOD — één hap, maximale impact. Textuurcontrast, intense smaak in klein formaat.'
+  }
+  if (courseLower.includes('vis') || courseLower.includes('fish') || courseLower.includes('zee')) {
+    return 'VISGERECHT — delicaat, Japanse invloed welkom, dashi-beurre blanc, citrus-accenten.'
+  }
+  if (courseLower.includes('vlees') || courseLower.includes('meat') || courseLower.includes('hoofd')) {
+    return 'VLEESGERECHT — krachtig, hartig, miso-glazuur of rode wijnsaus mogelijk, umami-boost.'
+  }
+  if (courseLower.includes('groente') || courseLower.includes('veggie')) {
+    return 'GROENTEGERECHT — seizoensproduct centraal, miso-bouillon of dashi als basis, umami via fermentatie.'
+  }
+  return `Gang: ${course} — pas de stijl aan op het type gerecht.`
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -29,6 +87,7 @@ export async function POST(req: NextRequest) {
     push_level = 'balanced' as 'comfort' | 'balanced' | 'challenge',
     query = '',
     hertaalId = null as string | null,
+    openQuestion = '' as string,
   } = body
 
   // --- MODE: LEGENDE ---
@@ -89,6 +148,8 @@ export async function POST(req: NextRequest) {
 
     const seasonalText = seasonal?.map(s => s.name).join(', ') || ''
     const pushText = PUSH_LEVEL_PROMPTS[push_level as keyof typeof PUSH_LEVEL_PROMPTS] || PUSH_LEVEL_PROMPTS.balanced
+    const signatureText = getSignatureIngredients(course)
+    const courseContext = getCourseContext(course)
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -101,15 +162,26 @@ export async function POST(req: NextRequest) {
         model: 'claude-sonnet-4-6',
         max_tokens: 800,
         system: `Je bent de AI-partner van Jules Van Groenweghe — Belgische top-chef, SIR Catering / Food by Jules.
-Jules' stijl: Belgisch-Frans met Japanse umami-accenten. Comfort-elegantie. Handtekening-ingrediënten: lavas, dashi, forelkaviaar, gepekelde eidooier, hamachi, knolselder, zwarte look, miso, kimchi, XO.
 
-HERTAALFILOSOFIE (4 stappen):
+CULINAIRE LOGICA — KRITISCH:
+${signatureText}
+
+GANG CONTEXT:
+${courseContext}
+
+HERTAALFILOSOFIE (4 stappen — alleen toepassen als culinair logisch voor deze gang):
 1. UPGRADE hoofdingrediënt → premium variant
-2. TRANSFORMEER saus → moderne techniek (dashi-beurre blanc, miso-glaze, lavasemulsie)
-3. VOEG UMAMI-LAAG toe (dashi, miso, XO, bonito, gefermenteerde elementen)
-4. ZET EEN ZUUR-ACCENT (gepekeld, gefermenteerd, yuzu, citrusgel)
+2. TRANSFORMEER saus → moderne techniek (dashi-beurre blanc voor vis, miso-glaze voor vlees, citrusgel voor dessert)
+3. VOEG GEPASTE LAAG toe (umami voor hartig, zuur-contrast voor dessert, aromatisch voor neutraal)
+4. ZET EEN ACCENT (gepekeld/gefermenteerd voor hartig, citrus/verjus voor dessert)
 
 ${pushText}
+
+ABSOLUTE REGELS:
+- Nooit gepekelde eidooier, dashi, miso, XO, kimchi in een dessert
+- Nooit umami-elementen op zoet fruit
+- Elk gerecht moet culinair logisch zijn — een expert-chef moet het goedkeuren
+- Exclusies zijn heilig — nooit negeren
 
 Antwoord ALLEEN als JSON — geen tekst buiten JSON.`,
         messages: [{
@@ -176,6 +248,8 @@ Geef 2 varianten hertaald in Jules' DNA. JSON formaat:
   ).join('\n') || ''
 
   const pushText = PUSH_LEVEL_PROMPTS[push_level as keyof typeof PUSH_LEVEL_PROMPTS] || PUSH_LEVEL_PROMPTS.balanced
+  const signatureText = getSignatureIngredients(course)
+  const courseContext = getCourseContext(course)
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -188,15 +262,25 @@ Geef 2 varianten hertaald in Jules' DNA. JSON formaat:
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: `Je bent de AI-partner van Jules Van Groenweghe — Belgische top-chef, SIR Catering / Food by Jules.
-Jules' stijl: Belgisch-Frans + Japanse umami. Comfort-elegantie. Handtekening: lavas, dashi, forelkaviaar, gepekelde eidooier, hamachi, zwarte look, miso, kimchi, XO, zeekraal.
-HERTAALFILOSOFIE: upgrade ingredient → premium | saus → moderne techniek | umami-laag | zuur-accent.
+
+CULINAIRE LOGICA — KRITISCH:
+${signatureText}
+
+GANG CONTEXT:
+${courseContext}
 
 ${pushText}
+
+ABSOLUTE REGELS:
+- Nooit gepekelde eidooier, dashi, miso, XO, kimchi in een dessert
+- Elk gerecht moet culinair logisch zijn — een Michelin-chef moet het goedkeuren
+- Exclusies zijn heilig — nooit negeren
+- Gebruik max 1-2 handtekening-elementen per gerecht, nooit alles tegelijk
 
 Antwoord ALLEEN als JSON.`,
       messages: [{
         role: 'user',
-        content: `Geef 3 verschillende gerechtsuggesties voor gang: "${course}" (format: ${menuType.replace(/_/g, ' ')}, ${numPersons} personen).
+        content: `Geef 3 verschillende gerechtsuggesties voor gang: "${course}" (format: ${menuType.replace(/_/g, ' ')}, ${numPersons} personen).${openQuestion ? `\n\nOPEN VRAAG VAN CHEF: "${openQuestion}" — beantwoord dit specifiek.` : ''}
 
 CONTEXT:
 • Stijl: ${styleText || 'Belgisch-Frans, Japanse umami-accenten'}
@@ -209,9 +293,9 @@ LEGENDE REFERENTIE (Jules' signatuurgerechten — inspirieer hierop maar kopieer
 ${legendeText}
 
 3 VERSCHILLENDE INVALSHOEKEN:
-1. Pure Jules DNA (lavas/dashi/gepekeld/hamachi-richting)
+1. Pure Jules DNA (signatuur-elementen passend bij de gang)
 2. Seizoensgebonden (gebruik de seizoensproducten maximaal)
-3. Verrassende hoek (nieuwe techniek of onverwachte combinatie — maar herkenbaar)
+3. Verrassende hoek (nieuwe techniek of onverwachte combinatie — maar culinair logisch)
 
 JSON formaat:
 {
