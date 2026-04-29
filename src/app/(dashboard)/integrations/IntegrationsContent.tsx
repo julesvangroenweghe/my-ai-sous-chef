@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useKitchen } from '@/providers/kitchen-provider'
 import { useSearchParams } from 'next/navigation'
+import { CheckCircle, XCircle, RefreshCw, Link2Off, Calendar, Mail, FileText, Clock, User, Shield } from 'lucide-react'
 
 type GoogleStatus = {
   connected: boolean
@@ -96,7 +97,7 @@ export default function IntegrationsContent() {
 
   const scopeLabels: Record<string, string> = {
     'https://www.googleapis.com/auth/calendar.readonly': 'Agenda lezen',
-    'https://www.googleapis.com/auth/calendar.events': 'Agenda events beheren',
+    'https://www.googleapis.com/auth/calendar.events': 'Agenda events',
     'https://www.googleapis.com/auth/gmail.readonly': 'Gmail lezen',
     'https://www.googleapis.com/auth/userinfo.email': 'E-mailadres',
   }
@@ -105,40 +106,45 @@ export default function IntegrationsContent() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-stone-800 rounded w-48" />
-          <div className="h-4 bg-stone-800 rounded w-96" />
-          <div className="h-48 bg-stone-800 rounded-2xl" />
+          <div className="h-8 bg-[#E8D5B5] rounded w-48" />
+          <div className="h-4 bg-[#E8D5B5] rounded w-96" />
+          <div className="h-48 bg-[#E8D5B5] rounded-2xl" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      {/* Toast */}
       {toast && (
-        <div className={`mb-6 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
+        <div className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2.5 ${
           toast.type === 'success'
-            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+            : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
-          {toast.type === 'success' ? (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-          ) : (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          )}
+          {toast.type === 'success'
+            ? <CheckCircle className="w-4 h-4 shrink-0" />
+            : <XCircle className="w-4 h-4 shrink-0" />
+          }
           {toast.message}
         </div>
       )}
 
-      <div className="mb-8">
+      {/* Header */}
+      <div>
         <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">Integraties</h1>
-        <p className="text-stone-400 mt-1">Koppel externe diensten aan je keuken voor automatische synchronisatie.</p>
+        <p className="text-[#9E7E60] mt-1 text-sm">
+          Koppel externe diensten aan je keuken voor automatische synchronisatie.
+        </p>
       </div>
 
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-stone-800 flex items-center justify-between">
+      {/* Google Workspace card */}
+      <div className="bg-white border border-[#E8D5B5] rounded-2xl overflow-hidden shadow-sm">
+        {/* Card header */}
+        <div className="px-6 py-5 border-b border-[#E8D5B5] flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-white border border-[#E8D5B5] rounded-xl flex items-center justify-center shadow-sm">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -148,78 +154,115 @@ export default function IntegrationsContent() {
             </div>
             <div>
               <h3 className="font-semibold text-[#2C1810]">Google Workspace</h3>
-              <p className="text-xs text-stone-400">Calendar, Gmail &amp; Drive</p>
+              <p className="text-xs text-[#9E7E60]">Calendar, Gmail &amp; Drive</p>
             </div>
           </div>
           {googleStatus?.connected ? (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">Gekoppeld</span>
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Gekoppeld
+            </span>
           ) : (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-stone-700/50 text-stone-400 border border-stone-700">Niet gekoppeld</span>
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-stone-100 text-[#9E7E60] border border-[#E8D5B5]">
+              Niet gekoppeld
+            </span>
           )}
         </div>
 
+        {/* Card body */}
         <div className="px-6 py-5">
           {googleStatus?.connected ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Info grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Account</div>
-                  <div className="text-sm text-[#2C1810]">{googleStatus.email}</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#9E7E60] uppercase tracking-wider mb-1">
+                    <User className="w-3 h-3" /> Account
+                  </div>
+                  <div className="text-sm font-medium text-[#2C1810]">{googleStatus.email}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Gekoppeld op</div>
-                  <div className="text-sm text-stone-300">{googleStatus.connected_at ? formatDate(googleStatus.connected_at) : '-'}</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#9E7E60] uppercase tracking-wider mb-1">
+                    <Clock className="w-3 h-3" /> Gekoppeld op
+                  </div>
+                  <div className="text-sm text-[#5C4730]">
+                    {googleStatus.connected_at ? formatDate(googleStatus.connected_at) : '—'}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Laatste sync</div>
-                  <div className="text-sm text-stone-300">{googleStatus.last_synced ? formatDate(googleStatus.last_synced) : 'Nog niet gesynchroniseerd'}</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#9E7E60] uppercase tracking-wider mb-1">
+                    <RefreshCw className="w-3 h-3" /> Laatste sync
+                  </div>
+                  <div className="text-sm text-[#5C4730]">
+                    {googleStatus.last_synced ? formatDate(googleStatus.last_synced) : 'Nog niet gesynchroniseerd'}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Status</div>
-                  <div className="text-sm text-green-400">Actief</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#9E7E60] uppercase tracking-wider mb-1">
+                    <Shield className="w-3 h-3" /> Status
+                  </div>
+                  <div className="text-sm text-emerald-700 font-medium">Actief</div>
                 </div>
               </div>
+
+              {/* Scopes */}
               {googleStatus.scopes && googleStatus.scopes.length > 0 && (
                 <div>
-                  <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-2">Machtigingen</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="text-[10px] text-[#9E7E60] uppercase tracking-wider mb-2">Machtigingen</div>
+                  <div className="flex flex-wrap gap-1.5">
                     {googleStatus.scopes.map((scope) => (
-                      <span key={scope} className="px-2.5 py-1 rounded-lg text-xs bg-stone-800 text-stone-300 border border-stone-700">
+                      <span
+                        key={scope}
+                        className="px-2.5 py-1 rounded-lg text-xs bg-[#FAF6EF] text-[#5C4730] border border-[#E8D5B5]"
+                      >
                         {scopeLabels[scope] || scope.split('/').pop()}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="flex items-center gap-3 pt-2">
-                <button onClick={handleConnect} className="px-4 py-2 rounded-xl text-sm font-medium bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-[#2C1810] transition-all border border-stone-700">
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={handleConnect}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-[#FAF6EF] text-[#2C1810] hover:bg-[#F2E8D5] transition-all border border-[#E8D5B5]"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
                   Opnieuw koppelen
                 </button>
-                <button onClick={handleDisconnect} disabled={disconnecting} className="px-4 py-2 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50">
+                <button
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all disabled:opacity-50"
+                >
+                  <Link2Off className="w-3.5 h-3.5" />
                   {disconnecting ? 'Ontkoppelen...' : 'Ontkoppelen'}
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-stone-400">
+              <p className="text-sm text-[#9E7E60]">
                 Koppel je Google account om automatisch agenda-events te synchroniseren, e-mails van leveranciers te bekijken en documenten vanuit Drive te importeren.
               </p>
-              <div className="flex flex-wrap gap-3 text-xs text-stone-500">
+              <div className="flex flex-wrap gap-4 text-xs text-[#9E7E60]">
                 <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <Calendar className="w-3.5 h-3.5 text-[#C4703A]" />
                   Calendar sync
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  <Mail className="w-3.5 h-3.5 text-[#C4703A]" />
                   Gmail leveranciers
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                  <FileText className="w-3.5 h-3.5 text-[#C4703A]" />
                   Drive documenten
                 </span>
               </div>
-              <button onClick={handleConnect} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-white text-stone-900 hover:bg-stone-100 transition-all flex items-center gap-2 shadow-lg">
+              <button
+                onClick={handleConnect}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#2C1810] text-[#F2E8D5] hover:bg-[#3D2415] transition-all shadow-sm"
+              >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -233,18 +276,19 @@ export default function IntegrationsContent() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4">
-        <div className="bg-stone-900/50 border border-stone-800/50 rounded-2xl px-6 py-5 opacity-50">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-stone-800 rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-stone-400">Boekhoudpakket</h3>
-              <p className="text-xs text-stone-500">Exacte, Yuki, Octopus — binnenkort beschikbaar</p>
-            </div>
-            <span className="ml-auto px-3 py-1 rounded-full text-xs font-medium bg-stone-800 text-stone-500 border border-stone-700">Binnenkort</span>
+      {/* Coming soon integrations */}
+      <div className="bg-white border border-[#E8D5B5] rounded-2xl px-6 py-5 opacity-60">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-[#FAF6EF] rounded-xl flex items-center justify-center border border-[#E8D5B5]">
+            <FileText className="w-5 h-5 text-[#9E7E60]" />
           </div>
+          <div>
+            <h3 className="font-semibold text-[#2C1810]">Boekhoudpakket</h3>
+            <p className="text-xs text-[#9E7E60]">Exacte, Yuki, Octopus — binnenkort beschikbaar</p>
+          </div>
+          <span className="ml-auto px-3 py-1 rounded-full text-xs font-medium bg-[#FAF6EF] text-[#9E7E60] border border-[#E8D5B5]">
+            Binnenkort
+          </span>
         </div>
       </div>
     </div>

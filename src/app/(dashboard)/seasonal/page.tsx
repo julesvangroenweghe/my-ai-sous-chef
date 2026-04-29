@@ -3,7 +3,7 @@
 import React from 'react'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Leaf, Sun, Snowflake, CloudRain, Flame } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 interface SeasonalItem {
   id: string
@@ -14,11 +14,11 @@ interface SeasonalItem {
   jul: number; aug: number; sep: number; oct: number; nov: number; dec: number
 }
 
-const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
-const monthsFull = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
-const monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'] as const
+const MONTHS_SHORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+const MONTHS_FULL = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
+const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'] as const
 
-const categoryLabels: Record<string, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   groenten: 'Groenten',
   fruit: 'Fruit',
   vis: 'Vis & Schaaldieren',
@@ -27,15 +27,16 @@ const categoryLabels: Record<string, string> = {
   paddenstoelen: 'Paddenstoelen',
 }
 
-const categoryOrder = ['groenten', 'fruit', 'vis', 'wild', 'kruiden', 'paddenstoelen']
+const CATEGORY_ORDER = ['groenten', 'fruit', 'vis', 'wild', 'kruiden', 'paddenstoelen']
 
-const categoryColors: Record<string, { bar: string; peak: string; dot: string; header: string; text: string }> = {
-  groenten: { bar: 'bg-emerald-200', peak: 'bg-emerald-500', dot: 'bg-emerald-400', header: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-800' },
-  fruit: { bar: 'bg-rose-200', peak: 'bg-rose-500', dot: 'bg-rose-400', header: 'bg-rose-50 border-rose-200', text: 'text-rose-800' },
-  vis: { bar: 'bg-sky-200', peak: 'bg-sky-500', dot: 'bg-sky-400', header: 'bg-sky-50 border-sky-200', text: 'text-sky-800' },
-  wild: { bar: 'bg-amber-200', peak: 'bg-amber-600', dot: 'bg-amber-400', header: 'bg-amber-50 border-amber-200', text: 'text-amber-800' },
-  kruiden: { bar: 'bg-lime-200', peak: 'bg-lime-500', dot: 'bg-lime-400', header: 'bg-lime-50 border-lime-200', text: 'text-lime-800' },
-  paddenstoelen: { bar: 'bg-stone-300', peak: 'bg-[#F5ECD8]', dot: 'bg-stone-400', header: 'bg-stone-100 border-stone-300', text: 'text-stone-700' },
+// Velt-stijl: één accent per categorie, heel subtiel
+const CATEGORY_STYLE: Record<string, { dot: string; dotFull: string; header: string; border: string }> = {
+  groenten:     { dot: 'bg-emerald-300', dotFull: 'bg-emerald-600',  header: 'text-emerald-800', border: 'border-l-emerald-500' },
+  fruit:        { dot: 'bg-rose-300',    dotFull: 'bg-rose-600',     header: 'text-rose-800',    border: 'border-l-rose-500'    },
+  vis:          { dot: 'bg-sky-300',     dotFull: 'bg-sky-600',      header: 'text-sky-800',     border: 'border-l-sky-500'     },
+  wild:         { dot: 'bg-amber-300',   dotFull: 'bg-amber-700',    header: 'text-amber-900',   border: 'border-l-amber-600'   },
+  kruiden:      { dot: 'bg-lime-300',    dotFull: 'bg-lime-700',     header: 'text-lime-800',    border: 'border-l-lime-600'    },
+  paddenstoelen:{ dot: 'bg-stone-300',   dotFull: 'bg-stone-600',    header: 'text-stone-700',   border: 'border-l-stone-500'   },
 }
 
 export default function SeasonalPage() {
@@ -45,7 +46,7 @@ export default function SeasonalPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const supabase = createClient()
 
-  const currentMonth = new Date().getMonth()
+  const currentMonth = new Date().getMonth() // 0-indexed
 
   useEffect(() => {
     async function load() {
@@ -60,11 +61,6 @@ export default function SeasonalPage() {
     }
     load()
   }, [])
-
-  const categories = useMemo(() => {
-    const cats = [...new Set(items.map(i => i.category))]
-    return cats.sort((a, b) => categoryOrder.indexOf(a) - categoryOrder.indexOf(b))
-  }, [items])
 
   const filtered = useMemo(() => {
     return items.filter(item => {
@@ -83,153 +79,180 @@ export default function SeasonalPage() {
     return groups
   }, [filtered])
 
-  const peakCount = useMemo(() => {
-    const mk = monthKeys[currentMonth]
-    return items.filter(i => (i as any)[mk] === 2).length
-  }, [items, currentMonth])
-
-  const availableCount = useMemo(() => {
-    const mk = monthKeys[currentMonth]
-    return items.filter(i => (i as any)[mk] >= 1).length
-  }, [items, currentMonth])
+  const currentMonthKey = MONTH_KEYS[currentMonth]
+  const peakNow = items.filter(i => (i as any)[currentMonthKey] === 2).length
+  const availableNow = items.filter(i => (i as any)[currentMonthKey] >= 1).length
 
   return (
     <div className="space-y-6">
-      {/* Header — compact */}
-      <div className="animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-extrabold text-stone-900 tracking-tight">
-              Seizoenskalender
-            </h1>
-            <p className="text-[#9E7E60] text-sm mt-0.5">
-              Belgie  ·  {monthsFull[currentMonth]} {new Date().getFullYear()}  ·  {availableCount} beschikbaar, {peakCount} piekseizoen
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-[#B8997A]">
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-2.5 rounded-sm bg-emerald-500 inline-block" />
-              Piekseizoen
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-2.5 rounded-sm bg-emerald-200 inline-block" />
-              Beschikbaar
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-2.5 rounded-sm bg-stone-100 inline-block" />
-              Niet in seizoen
-            </span>
-          </div>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="font-display text-2xl font-extrabold text-[#2C1810] tracking-tight">
+          Seizoenskalender
+        </h1>
+        <p className="text-[#9E7E60] text-sm mt-1">
+          België &middot; {MONTHS_FULL[currentMonth]} {new Date().getFullYear()}
+          &nbsp;&middot;&nbsp;
+          <span className="font-medium text-[#2C1810]">{availableNow}</span> beschikbaar
+          &nbsp;&middot;&nbsp;
+          <span className="font-medium text-[#2C1810]">{peakNow}</span> piekseizoen
+        </p>
       </div>
 
-      {/* Search + Category filter */}
-      <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '80ms', animationFillMode: 'forwards' }}>
-        <div className="relative flex-1 max-w-xs">
+      {/* Search + filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
             type="text"
             placeholder="Zoek product..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input-premium pl-9 py-2 text-sm"
+            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-[#E8A040]/30 focus:border-[#E8A040]"
           />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto">
+        <div className="flex gap-1.5 flex-wrap">
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === 'all' ? 'bg-white text-[#2C1810]' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+              selectedCategory === 'all'
+                ? 'bg-[#E8A040] text-white border-[#E8A040]'
+                : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#C4A882]'
             }`}
           >
             Alles ({items.length})
           </button>
-          {categories.map(cat => (
+          {CATEGORY_ORDER.filter(cat => items.some(i => i.category === cat)).map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                selectedCategory === cat ? 'bg-white text-[#2C1810]' : 'bg-white text-[#B8997A] border border-stone-200 hover:bg-stone-50'
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                selectedCategory === cat
+                  ? 'bg-[#E8A040] text-white border-[#E8A040]'
+                  : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#C4A882]'
               }`}
             >
-              {categoryLabels[cat] || cat} ({items.filter(i => i.category === cat).length})
+              {CATEGORY_LABELS[cat] || cat}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Calendar Matrix */}
+      {/* Legend */}
+      <div className="flex items-center gap-5 text-xs text-[#9E7E60]">
+        <span className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 inline-block" />
+          Piekseizoen
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full bg-emerald-300 inline-block" />
+          Beschikbaar
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full bg-stone-100 border border-stone-200 inline-block" />
+          Niet in seizoen
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-[#E8A040] inline-block" />
+          Huidige maand
+        </span>
+      </div>
+
+      {/* Velt-stijl matrix */}
       {loading ? (
-        <div className="space-y-2">
-          {[...Array(15)].map((_, i) => <div key={i} className="skeleton h-8 rounded" />)}
+        <div className="space-y-1">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="h-8 rounded bg-stone-100 animate-pulse" style={{ opacity: 1 - i * 0.04 }} />
+          ))}
         </div>
       ) : (
-        <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
+        <div className="bg-white border border-[#E8D5B5] rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse" style={{ minWidth: '640px' }}>
+            <table className="w-full border-collapse" style={{ minWidth: '700px' }}>
               {/* Month header */}
               <thead>
                 <tr>
-                  <th className="text-left text-[11px] font-semibold text-[#B8997A] py-2 px-3 bg-stone-50 border-b border-stone-200 sticky left-0 z-10 min-w-[160px]">
-                    Product
+                  <th className="text-left py-3 px-4 bg-[#FAF6EF] border-b border-[#E8D5B5] sticky left-0 z-10 min-w-[180px]">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9E7E60]">Product</span>
                   </th>
-                  {months.map((m, i) => (
+                  {MONTHS_SHORT.map((m, i) => (
                     <th
                       key={i}
-                      className={`text-center text-[11px] font-semibold py-2 px-0 border-b min-w-[38px] ${
+                      className={`py-3 px-0 text-center border-b min-w-[42px] ${
                         i === currentMonth
-                          ? 'bg-white text-[#2C1810] border-[#D4B896]'
-                          : 'text-[#9E7E60] bg-stone-50 border-stone-200'
+                          ? 'bg-[#FEF3E2] border-[#E8A040]/40 border-b-2'
+                          : 'bg-[#FAF6EF] border-[#E8D5B5]'
                       }`}
                     >
-                      {m}
+                      <span className={`text-[11px] font-semibold uppercase tracking-wide ${
+                        i === currentMonth ? 'text-[#E8A040]' : 'text-[#9E7E60]'
+                      }`}>
+                        {m}
+                      </span>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {categoryOrder
-                  .filter(cat => grouped[cat] && grouped[cat].length > 0)
+                {CATEGORY_ORDER
+                  .filter(cat => grouped[cat]?.length > 0)
                   .map(cat => {
-                    const colors = categoryColors[cat] || categoryColors.groenten
+                    const style = CATEGORY_STYLE[cat] || CATEGORY_STYLE.groenten
                     return (
                       <React.Fragment key={cat}>
-                        {/* Category header row */}
+                        {/* Category separator row */}
                         <tr>
                           <td
                             colSpan={13}
-                            className={`text-[11px] font-bold uppercase tracking-wider py-1.5 px-3 ${colors.header} ${colors.text} border-b`}
+                            className={`py-2 px-4 bg-[#FAF6EF] border-y border-[#E8D5B5] border-l-4 ${style.border}`}
                           >
-                            {categoryLabels[cat] || cat}
+                            <span className={`text-[11px] font-bold uppercase tracking-widest ${style.header}`}>
+                              {CATEGORY_LABELS[cat] || cat}
+                            </span>
                           </td>
                         </tr>
-                        {/* Products */}
-                        {grouped[cat].map((item) => (
-                          <tr key={item.id} className="hover:bg-stone-50/60 transition-colors group">
-                            <td className="py-1 px-3 sticky left-0 bg-white group-hover:bg-stone-50/60 z-10 border-b border-stone-50">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[13px] text-stone-800">{item.ingredient_name}</span>
-                                {(item as any)[monthKeys[currentMonth]] === 2 && (
-                                  <Flame className="w-3 h-3 text-amber-500 shrink-0" />
-                                )}
-                              </div>
+                        {/* Ingredient rows */}
+                        {grouped[cat].map((item, rowIdx) => (
+                          <tr
+                            key={item.id}
+                            className={`group transition-colors hover:bg-[#FEF9F2] ${
+                              rowIdx % 2 === 0 ? 'bg-white' : 'bg-[#FDFAF6]'
+                            }`}
+                          >
+                            {/* Name cell */}
+                            <td className={`py-2 px-4 sticky left-0 z-10 border-b border-[#F0E8D8] ${
+                              rowIdx % 2 === 0 ? 'bg-white group-hover:bg-[#FEF9F2]' : 'bg-[#FDFAF6] group-hover:bg-[#FEF9F2]'
+                            }`}>
+                              <span className="text-[13px] text-[#2C1810] font-medium">
+                                {item.ingredient_name}
+                              </span>
                             </td>
-                            {monthKeys.map((mk, i) => {
+                            {/* Month cells */}
+                            {MONTH_KEYS.map((mk, i) => {
                               const val = (item as any)[mk] as number
-                              const isCurrentMonth = i === currentMonth
+                              const isCurrent = i === currentMonth
                               return (
                                 <td
                                   key={mk}
-                                  className={`text-center py-1 px-0.5 border-b border-stone-50 ${
-                                    isCurrentMonth ? 'bg-stone-50' : ''
+                                  className={`text-center py-2 border-b border-[#F0E8D8] ${
+                                    isCurrent ? 'bg-[#FEF3E2]/60' : ''
                                   }`}
                                 >
                                   {val === 2 ? (
-                                    <div className={`mx-auto w-full h-5 rounded-sm ${colors.peak}`} />
+                                    // Piekseizoen — grote gevulde cirkel
+                                    <span
+                                      className={`inline-block w-4 h-4 rounded-full ${style.dotFull} ${isCurrent ? 'ring-2 ring-offset-1 ring-[#E8A040]' : ''}`}
+                                      title="Piekseizoen"
+                                    />
                                   ) : val === 1 ? (
-                                    <div className={`mx-auto w-full h-5 rounded-sm ${colors.bar}`} />
+                                    // Beschikbaar — kleinere lichte cirkel
+                                    <span
+                                      className={`inline-block w-3 h-3 rounded-full ${style.dot}`}
+                                      title="Beschikbaar"
+                                    />
                                   ) : (
-                                    <div className="mx-auto w-full h-5" />
+                                    // Niet in seizoen — lege cel
+                                    <span className="inline-block w-3 h-3 rounded-full bg-stone-100" />
                                   )}
                                 </td>
                               )
@@ -244,8 +267,8 @@ export default function SeasonalPage() {
           </div>
 
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-[#9E7E60] text-sm">
-              Geen producten gevonden
+            <div className="text-center py-16 text-[#9E7E60] text-sm">
+              Geen producten gevonden voor &ldquo;{search}&rdquo;
             </div>
           )}
         </div>
@@ -253,4 +276,3 @@ export default function SeasonalPage() {
     </div>
   )
 }
-

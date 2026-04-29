@@ -74,7 +74,7 @@ const courseLabels: Record<number, string> = {
 }
 
 const statusColors: Record<string, string> = {
- draft: 'bg-stone-700 text-stone-300',
+ draft: 'bg-stone-100 text-[#9E7E60] border border-[#E8D5B5]',
  confirmed: 'bg-emerald-500/20 text-emerald-400',
  in_prep: 'bg-amber-500/20 text-amber-700',
  completed: 'bg-sky-500/20 text-sky-400',
@@ -184,7 +184,7 @@ export default function EventDetailPage() {
  if (!event) {
  return (
  <div className="text-center py-20">
- <p className="text-stone-400">Event niet gevonden</p>
+ <p className="text-[#9E7E60]">Event niet gevonden</p>
  <Link href="/events" className="text-brand-400 hover:text-brand-300 text-sm mt-2 inline-block">Terug naar events</Link>
  </div>
  )
@@ -214,17 +214,17 @@ export default function EventDetailPage() {
  <div className="space-y-6">
  {/* Header */}
  <div className="flex items-start gap-4">
- <Link href="/events" className="p-2 rounded-xl bg-stone-800 border border-stone-700 text-stone-400 hover:text-[#2C1810] transition-all mt-1">
+ <Link href="/events" className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-1">
  <ArrowLeft className="w-5 h-5" />
  </Link>
  <div className="flex-1">
  <div className="flex items-center gap-3 mb-1">
- <h1 className="text-2xl font-display font-extrabold text-stone-100">{event.name}</h1>
+ <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">{event.name}</h1>
  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
  {event.status}
  </span>
  </div>
- <div className="flex flex-wrap items-center gap-4 text-sm text-stone-400">
+ <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
  <span className="flex items-center gap-1.5">
  <CalendarDays className="w-4 h-4" />
  {event.event_date ? new Date(event.event_date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Geen datum'}
@@ -245,22 +245,22 @@ export default function EventDetailPage() {
 
  {/* Cost Summary Cards */}
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
- <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
- <div className="text-xs text-stone-500 mb-1">Kost/persoon</div>
- <div className="text-lg font-mono font-bold text-stone-200">€{totalMenuCost.toFixed(2)}</div>
+ <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+ <div className="text-xs text-[#9E7E60] mb-1">Kost/persoon</div>
+ <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalMenuCost.toFixed(2)}</div>
  </div>
- <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
- <div className="text-xs text-stone-500 mb-1">Totale kost</div>
- <div className="text-lg font-mono font-bold text-stone-200">€{totalEventCost.toFixed(2)}</div>
+ <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+ <div className="text-xs text-[#9E7E60] mb-1">Totale kost</div>
+ <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalEventCost.toFixed(2)}</div>
  </div>
- <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
- <div className="text-xs text-stone-500 mb-1">Omzet</div>
- <div className="text-lg font-mono font-bold text-stone-200">€{revenue.toFixed(2)}</div>
+ <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+ <div className="text-xs text-[#9E7E60] mb-1">Omzet</div>
+ <div className="text-lg font-mono font-bold text-[#2C1810]">€{revenue.toFixed(2)}</div>
  </div>
- <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-4">
- <div className="text-xs text-stone-500 mb-1">Food Cost</div>
+ <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+ <div className="text-xs text-[#9E7E60] mb-1">Food Cost</div>
  <div className={`text-lg font-mono font-bold ${
- foodCostPct === 0 ? 'text-stone-500' :
+ foodCostPct === 0 ? 'text-[#9E7E60]' :
  foodCostPct < 30 ? 'text-green-400' :
  foodCostPct <= 35 ? 'text-amber-700' : 'text-red-400'
  }`}>
@@ -270,7 +270,7 @@ export default function EventDetailPage() {
  </div>
 
  {/* Tab Navigation */}
- <div className="flex items-center gap-1 bg-stone-900/50 border border-stone-800 rounded-xl p-1">
+ <div className="flex items-center gap-1 bg-white border border-[#E8D5B5] rounded-xl p-1">
  {tabs.map(tab => (
  <button
  key={tab.id}
@@ -278,14 +278,14 @@ export default function EventDetailPage() {
  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
  activeTab === tab.id
  ? 'bg-brand-600 text-[#2C1810] shadow-lg shadow-brand-500/20'
- : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
+ : 'text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5]'
  }`}
  >
  <tab.icon className="w-4 h-4" />
  {tab.label}
  {tab.count !== undefined && (
  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
- activeTab === tab.id ? 'bg-white/20' : 'bg-stone-700'
+ activeTab === tab.id ? 'bg-white/20' : 'bg-stone-100'
  }`}>
  {tab.count}
  </span>
@@ -296,9 +296,9 @@ export default function EventDetailPage() {
 
  {/* Tab Content */}
  {activeTab === 'menu' && (
- <div className="bg-stone-900/50 border border-stone-800 rounded-2xl">
- <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between">
- <h2 className="text-lg font-display font-semibold text-stone-100 flex items-center gap-2">
+ <div className="bg-white border border-[#E8D5B5] rounded-2xl">
+ <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center justify-between">
+ <h2 className="text-lg font-display font-semibold text-[#2C1810] flex items-center gap-2">
  <ChefHat className="w-5 h-5 text-brand-400" /> Menu
  </h2>
  <button
@@ -310,20 +310,20 @@ export default function EventDetailPage() {
  </div>
 
  {showAddRecipe && (
- <div className="px-6 py-4 border-b border-stone-800 bg-stone-800/30">
+ <div className="px-6 py-4 border-b border-[#E8D5B5] bg-[#FAF6EF]">
  <div className="flex items-end gap-3">
  <div className="flex-1 space-y-1.5">
- <label className="text-xs text-stone-400">Recept</label>
+ <label className="text-xs text-[#9E7E60]">Recept</label>
  <select value={selectedRecipeId} onChange={(e) => setSelectedRecipeId(e.target.value)}
- className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+ className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
  <option value="">Kies een recept...</option>
  {recipes.map(r => (<option key={r.id} value={r.id}>{r.name}</option>))}
  </select>
  </div>
  <div className="w-44 space-y-1.5">
- <label className="text-xs text-stone-400">Gang</label>
+ <label className="text-xs text-[#9E7E60]">Gang</label>
  <select value={selectedCourse} onChange={(e) => setSelectedCourse(Number(e.target.value))}
- className="w-full px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+ className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
  {Object.entries(courseLabels).map(([num, label]) => (<option key={num} value={num}>{label}</option>))}
  </select>
  </div>
@@ -331,7 +331,7 @@ export default function EventDetailPage() {
  className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm rounded-lg transition-all disabled:opacity-50">
  {addingRecipe ? '...' : 'Toevoegen'}
  </button>
- <button onClick={() => setShowAddRecipe(false)} className="p-2 text-stone-500 hover:text-[#2C1810] transition-colors">
+ <button onClick={() => setShowAddRecipe(false)} className="p-2 text-[#9E7E60] hover:text-[#2C1810] transition-colors">
  <X className="w-4 h-4" />
  </button>
  </div>
@@ -340,39 +340,39 @@ export default function EventDetailPage() {
 
  {event.menu_items.length === 0 ? (
  <div className="px-6 py-12 text-center">
- <ChefHat className="w-10 h-10 text-stone-600 mx-auto mb-3" />
- <p className="text-stone-500 text-sm">Nog geen gerechten toegevoegd</p>
+ <ChefHat className="w-10 h-10 text-[#B8997A] mx-auto mb-3" />
+ <p className="text-[#9E7E60] text-sm">Nog geen gerechten toegevoegd</p>
  </div>
  ) : (
- <div className="divide-y divide-stone-800/50">
+ <div className="divide-y divide-[#F0E8D8]">
  {Object.entries(menuByCourse).sort(([, a], [, b]) => a.order - b.order).map(([courseLabel, { items }]) => (
  <div key={courseLabel}>
- <div className="px-6 py-2.5 bg-stone-800/20">
- <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+ <div className="px-6 py-2.5 bg-[#F5EDE0]">
+ <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
  {courseLabel}
  </span>
  </div>
  {items.map((item) => (
- <div key={item.id} className="px-6 py-3 flex items-center gap-4 hover:bg-stone-800/20 transition-colors">
+ <div key={item.id} className="px-6 py-3 flex items-center gap-4 hover:bg-[#F5EDE0] transition-colors">
  <div className="flex-1">
- <Link href={`/recipes/${item.recipe?.id}`} className="text-sm font-medium text-stone-200 hover:text-brand-400 transition-colors">
+ <Link href={`/recipes/${item.recipe?.id}`} className="text-sm font-medium text-[#2C1810] hover:text-brand-400 transition-colors">
  {item.recipe?.name || 'Onbekend recept'}
  </Link>
  {item.recipe?.components && (
  <div className="flex items-center gap-2 mt-1">
- <span className="text-xs text-stone-500">
+ <span className="text-xs text-[#9E7E60]">
  {item.recipe.components.length} componenten · {item.recipe.components.reduce((s, c) => s + (c.ingredients?.length || 0), 0)} ingrediënten
  </span>
  </div>
  )}
  {item.recipe?.total_cost_per_serving && (
- <span className="text-xs font-mono text-stone-500">
+ <span className="text-xs font-mono text-[#9E7E60]">
  €{Number(item.recipe.total_cost_per_serving).toFixed(2)}/p
  </span>
  )}
  </div>
  <button onClick={() => removeRecipeFromEvent(item.id)}
- className="p-1.5 text-stone-600 hover:text-red-400 transition-colors">
+ className="p-1.5 text-[#B8997A] hover:text-red-400 transition-colors">
  <Trash2 className="w-4 h-4" />
  </button>
  </div>
@@ -398,7 +398,7 @@ export default function EventDetailPage() {
  <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
  <AlertTriangle className="w-8 h-8 text-amber-700 mx-auto mb-3" />
  <p className="text-amber-300 font-medium">Vul eerst het aantal personen in</p>
- <p className="text-stone-500 text-sm mt-1">Het MEP plan heeft het aantal gasten nodig om hoeveelheden te berekenen.</p>
+ <p className="text-[#9E7E60] text-sm mt-1">Het MEP plan heeft het aantal gasten nodig om hoeveelheden te berekenen.</p>
  </div>
  )}
 
@@ -414,7 +414,7 @@ export default function EventDetailPage() {
    <div className="space-y-3">
      <button
        onClick={() => setShowMepImport(!showMepImport)}
-       className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl transition-all w-full"
+       className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF6EF] hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#2C1810] text-sm font-medium rounded-xl transition-all w-full"
      >
        <FileUp className="w-4 h-4 text-brand-400" />
        MEP importeren uit document
@@ -437,9 +437,9 @@ export default function EventDetailPage() {
 
  {/* Notes */}
  {event.notes && (
- <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
- <h3 className="text-sm font-medium text-stone-400 mb-2">Notities</h3>
- <p className="text-stone-300 text-sm whitespace-pre-wrap">{event.notes}</p>
+ <div className="bg-white border border-[#E8D5B5] rounded-2xl p-6">
+ <h3 className="text-sm font-medium text-[#9E7E60] mb-2">Notities</h3>
+ <p className="text-[#5C4730] text-sm whitespace-pre-wrap">{event.notes}</p>
  </div>
  )}
  </div>

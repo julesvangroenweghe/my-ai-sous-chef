@@ -81,11 +81,13 @@ export default function DashboardPage() {
 
         const { data: profile } = await supabase
           .from('chef_profiles')
-          .select('display_name, name')
+          .select('first_name, last_name')
           .eq('auth_user_id', user.id)
           .single()
         
-        if (profile?.display_name) { const dn = profile.display_name; setUserName(dn.startsWith('Chef ') ? dn : dn); } else if (profile?.name) { setUserName(profile.name); }
+        if (profile?.first_name || profile?.last_name) {
+          setUserName([profile.first_name, profile.last_name].filter(Boolean).join(' '))
+        }
 
         const [recipes, events, ingredients, invoices, preparations, upcoming, recent] = await Promise.all([
           supabase.from('recipes').select('id', { count: 'exact', head: true }),
