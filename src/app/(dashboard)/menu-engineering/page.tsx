@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import MenuStartScreen from '@/components/menu-engineering/menu-start-screen'
 import MenuCard from '@/components/menu-engineering/menu-card'
+import MenuBoard from '@/components/menu-engineering/menu-board'
 
-type TabId = 'nieuw' | 'menus' | 'analyse'
+type TabId = 'bord' | 'wizard' | 'menus' | 'analyse'
 
 interface SavedMenu {
   id: string
@@ -20,15 +20,15 @@ interface SavedMenu {
   saved_menu_items?: Array<{ id: string; custom_name: string | null; course: string }>
 }
 
-const TABS: Array<{ id: TabId; label: string }> = [
-  { id: 'nieuw', label: 'Nieuw Menu' },
-  { id: 'menus', label: 'Mijn Menu\'s' },
-  { id: 'analyse', label: 'Menu Analyse' },
+const TABS: Array<{ id: TabId; label: string; desc: string }> = [
+  { id: 'bord', label: 'Menu Bord', desc: 'Drag & drop + AI aanvullen' },
+  { id: 'wizard', label: 'AI Wizard', desc: 'Stap-voor-stap genereren' },
+  { id: 'menus', label: "Mijn Menu's", desc: 'Opgeslagen concepten' },
+  { id: 'analyse', label: 'Menu Analyse', desc: 'BCG-matrix & optimalisatie' },
 ]
 
 export default function MenuEngineeringPage() {
-  const supabase = createClient()
-  const [activeTab, setActiveTab] = useState<TabId>('nieuw')
+  const [activeTab, setActiveTab] = useState<TabId>('bord')
   const [menus, setMenus] = useState<SavedMenu[]>([])
   const [loadingMenus, setLoadingMenus] = useState(false)
   const [filterStatus, setFilterStatus] = useState<string>('')
@@ -65,18 +65,13 @@ export default function MenuEngineeringPage() {
     fetchMenus()
   }
 
-  const handleDuplicate = async (id: string) => {
-    // For now just refetch — full duplicate would copy menu items
-    fetchMenus()
-  }
-
-  const handleMenuSaved = (menuId: string) => {
+  const handleMenuSaved = (_menuId: string) => {
     setActiveTab('menus')
     fetchMenus()
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-screen-xl mx-auto space-y-6 pb-12 px-2">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div
@@ -99,20 +94,23 @@ export default function MenuEngineeringPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'text-[#2C1810]'
-                : 'text-[#9E7E60] hover:text-[#5C4730]'
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === tab.id ? 'text-[#2C1810]' : 'text-[#9E7E60] hover:text-[#5C4730]'
             }`}
             style={activeTab === tab.id ? { backgroundColor: 'rgba(232,160,64,0.15)', color: '#E8A040' } : {}}
           >
-            {tab.label}
+            <div>{tab.label}</div>
+            <div className="text-[10px] font-normal opacity-70 hidden sm:block">{tab.desc}</div>
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'nieuw' && (
+      {activeTab === 'bord' && (
+        <MenuBoard onSave={handleMenuSaved} />
+      )}
+
+      {activeTab === 'wizard' && (
         <MenuStartScreen onMenuSaved={handleMenuSaved} />
       )}
 
@@ -131,7 +129,7 @@ export default function MenuEngineeringPage() {
                 onClick={() => setFilterStatus(f.value)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   filterStatus === f.value
-                    ? 'border-amber-500/40 text-amber-300'
+                    ? 'border-amber-500/40 text-amber-700'
                     : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-[#D4B896]'
                 }`}
                 style={filterStatus === f.value ? { backgroundColor: 'rgba(232,160,64,0.12)' } : {}}
@@ -141,7 +139,6 @@ export default function MenuEngineeringPage() {
             ))}
           </div>
 
-          {/* Menu list */}
           {loadingMenus ? (
             <div className="flex items-center justify-center py-12 text-[#B8997A] text-sm">
               <svg className="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -156,7 +153,7 @@ export default function MenuEngineeringPage() {
               </svg>
               <p className="text-[#9E7E60] text-sm">Nog geen opgeslagen menus</p>
               <button
-                onClick={() => setActiveTab('nieuw')}
+                onClick={() => setActiveTab('bord')}
                 className="mt-3 px-4 py-2 text-sm font-medium rounded-xl transition-all"
                 style={{ backgroundColor: 'rgba(232,160,64,0.15)', color: '#E8A040' }}
               >
@@ -171,7 +168,7 @@ export default function MenuEngineeringPage() {
                   menu={menu}
                   onArchive={handleArchive}
                   onDelete={handleDelete}
-                  onDuplicate={handleDuplicate}
+                  onDuplicate={() => fetchMenus()}
                 />
               ))}
             </div>
