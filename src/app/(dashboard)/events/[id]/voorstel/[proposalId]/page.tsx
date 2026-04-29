@@ -6,9 +6,10 @@ import Link from 'next/link'
 import {
   ArrowLeft, Plus, Sparkles, Save, Send, MessageSquare,
   CheckCircle, X, Loader2, ChevronDown, ChevronUp,
-  GripVertical, Trash2, Edit2, Check, Clock, RefreshCw,
-  Info, ChefHat
+  GripVertical, Trash2, Edit2, Check, RefreshCw,
+  Info, ChefHat, Shuffle
 } from 'lucide-react'
+import { SwapDishModal } from '@/components/proposals/swap-dish-modal'
 
 interface EventRequirements {
   exclusions: string[]
@@ -92,6 +93,13 @@ export default function ProposalEditorPage() {
   const [generatingFull, setGeneratingFull] = useState(false)
   const [creatingNewVersion, setCreatingNewVersion] = useState(false)
 
+  // Swap modal state
+  const [swapModal, setSwapModal] = useState<{
+    itemId: string | null
+    course: string
+    mode: 'replace' | 'add'
+  } | null>(null)
+
   const loadProposal = useCallback(async () => {
     const res = await fetch(`/api/proposals/${proposalId}`)
     const data = await res.json()
@@ -109,7 +117,6 @@ export default function ProposalEditorPage() {
 
   useEffect(() => {
     loadProposal()
-    // Fetch event name
     fetch(`/api/events/${eventId}`)
       .then(r => r.json())
       .then(d => { if (d?.name) setEventName(d.name) })
@@ -157,7 +164,6 @@ export default function ProposalEditorPage() {
     setFeedbackText('')
   }
 
-  // Nieuwe versie aanmaken op basis van huidige + feedback
   const createNewVersion = async () => {
     setCreatingNewVersion(true)
     try {
@@ -175,14 +181,11 @@ export default function ProposalEditorPage() {
     setCreatingNewVersion(false)
   }
 
-  // AI: volledig menu genereren
   const aiGenerateFull = async () => {
     if (!proposal) return
     setGeneratingFull(true)
     try {
-      // Eerst huidige staat opslaan (requirements)
       await save({ silent: true })
-
       const res = await fetch('/api/proposals/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,13 +199,10 @@ export default function ProposalEditorPage() {
           eventName: eventName || proposalName,
         }),
       })
-
       if (!res.ok) {
         console.error('Generate failed', await res.text())
         return
       }
-
-      // Reload vanuit DB — de API heeft items al opgeslagen
       await loadProposal()
     } catch (e) {
       console.error('AI generate error', e)
@@ -210,7 +210,6 @@ export default function ProposalEditorPage() {
     setGeneratingFull(false)
   }
 
-  // AI: suggestie per gang
   const aiSuggestForCourse = async (course: string) => {
     setSuggestingFor(course)
     try {
@@ -245,6 +244,33 @@ export default function ProposalEditorPage() {
     setSuggestingFor(null)
   }
 
+  // Handle dish selection from swap modal
+  const handleSwapSelect = (dish: { name: string; description: string; cost_per_person?: number | null }) => {
+    if (!swapModal) return
+
+    if (swapModal.mode === 'replace' && swapModal.itemId) {
+      // Replace existing dish
+      setItems(prev => prev.map(item =>
+        item.id === swapModal.itemId
+          ? { ...item, dish_name: dish.name, dish_description: dish.description || '', cost_per_person: dish.cost_per_person ?? null, source_type: 'swap' }
+          : item
+      ))
+    } else {
+      // Add new dish to course
+      const newItem: MenuItem = {
+        id: `swap-${Date.now()}`,
+        course: swapModal.course,
+        dish_name: dish.name,
+        dish_description: dish.description || '',
+        source_type: 'swap',
+        cost_per_person: dish.cost_per_person ?? null,
+        sort_order: items.filter(i => i.course === swapModal.course).length,
+      }
+      setItems(prev => [...prev, newItem])
+    }
+    setSwapModal(null)
+  }
+
   const addExclusion = () => {
     if (!newExclusion.trim()) return
     setRequirements(prev => ({ ...prev, exclusions: [...(prev.exclusions || []), newExclusion.trim()] }))
@@ -255,7 +281,6 @@ export default function ProposalEditorPage() {
     setRequirements(prev => ({ ...prev, exclusions: prev.exclusions.filter((_, i) => i !== idx) }))
   }
 
-  // Courses gesorteerd
   const courses = [...new Set(items.map(i => i.course))].sort((a, b) => {
     const ai = COURSE_ORDER.indexOf(a)
     const bi = COURSE_ORDER.indexOf(b)
@@ -379,7 +404,6 @@ export default function ProposalEditorPage() {
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Nieuwe versie knop — altijd zichtbaar */}
               <button
                 onClick={createNewVersion}
                 disabled={creatingNewVersion}
@@ -496,7 +520,6 @@ export default function ProposalEditorPage() {
 
           {showIntake && (
             <div className="bg-white border border-[#E8D5B5] rounded-2xl p-5 space-y-5">
-              {/* Contactpersoon */}
               <div>
                 <label className="block text-xs font-semibold text-[#9E7E60] mb-1.5 uppercase tracking-wide">Contactpersoon</label>
                 <input
@@ -507,7 +530,6 @@ export default function ProposalEditorPage() {
                 />
               </div>
 
-              {/* Concept */}
               <div>
                 <label className="block text-xs font-semibold text-[#9E7E60] mb-1.5 uppercase tracking-wide">Concept / Stijl</label>
                 <textarea
@@ -519,7 +541,6 @@ export default function ProposalEditorPage() {
                 />
               </div>
 
-              {/* Exclusies */}
               <div>
                 <label className="block text-xs font-semibold text-[#9E7E60] mb-1.5 uppercase tracking-wide">Exclusies / Allergieën</label>
                 <div className="flex gap-2 mb-2">
@@ -552,7 +573,6 @@ export default function ProposalEditorPage() {
                 </div>
               </div>
 
-              {/* Voorkeuren per gang */}
               <div>
                 <label className="block text-xs font-semibold text-[#9E7E60] mb-1.5 uppercase tracking-wide">Voorkeuren per gang</label>
                 <div className="space-y-2">
@@ -573,7 +593,6 @@ export default function ProposalEditorPage() {
                 </div>
               </div>
 
-              {/* Bijzondere wensen */}
               <div>
                 <label className="block text-xs font-semibold text-[#9E7E60] mb-1.5 uppercase tracking-wide">Bijzondere wensen</label>
                 <textarea
@@ -587,7 +606,6 @@ export default function ProposalEditorPage() {
             </div>
           )}
 
-          {/* Event parameters */}
           <div className="bg-white border border-[#E8D5B5] rounded-2xl p-4">
             <p className="text-xs font-semibold text-[#9E7E60] mb-3 uppercase tracking-wide">Event Parameters</p>
             <div className="space-y-2 text-sm">
@@ -631,12 +649,11 @@ export default function ProposalEditorPage() {
             </div>
           </div>
 
-          {/* Tip */}
           <div className="bg-[#FEF3E2] border border-amber-200 rounded-xl p-3">
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-700">
-                Vul de briefing in en klik <strong>AI Voorstel</strong> — de AI gebruikt seizoensproducten, Jules' LEGENDE gerechten en stijl-DNA.
+                Klik op <strong>Shuffle</strong> bij een gerecht voor 3 alternatieven — AI, 9.492 klassieke recepten of jouw LEGENDE.
               </p>
             </div>
           </div>
@@ -644,7 +661,6 @@ export default function ProposalEditorPage() {
 
         {/* Rechts: Menu Canvas */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Gangen */}
           {courses.map(course => {
             const courseItems = items.filter(i => i.course === course).sort((a, b) => a.sort_order - b.sort_order)
             return (
@@ -653,18 +669,26 @@ export default function ProposalEditorPage() {
                   <span className="text-xs font-bold text-[#9E7E60] uppercase tracking-widest">{course}</span>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setSwapModal({ itemId: null, course, mode: 'add' })}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-[#FEF3E2] hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs rounded-lg transition-all"
+                      title="Gerecht kiezen — AI, Kennisbank of LEGENDE"
+                    >
+                      <Shuffle className="w-3 h-3" />
+                      Kies gerecht
+                    </button>
+                    <button
                       onClick={() => aiSuggestForCourse(course)}
                       disabled={suggestingFor === course}
-                      className="flex items-center gap-1 px-2.5 py-1 bg-[#FEF3E2] hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs rounded-lg transition-all disabled:opacity-50"
+                      className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg transition-all disabled:opacity-50"
                     >
                       {suggestingFor === course ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      AI
+                      Snel AI
                     </button>
                     <button
                       onClick={() => addDishToCourse(course)}
                       className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg transition-all"
                     >
-                      <Plus className="w-3 h-3" /> Voeg toe
+                      <Plus className="w-3 h-3" /> Handmatig
                     </button>
                     <button
                       onClick={() => removeCourse(course)}
@@ -704,9 +728,11 @@ export default function ProposalEditorPage() {
                             {item.source_type === 'ai' && (
                               <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">AI</span>
                             )}
+                            {item.source_type === 'swap' && (
+                              <span className="text-[10px] text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-full shrink-0">Gekozen</span>
+                            )}
                           </div>
                         )}
-                        {/* Beschrijving */}
                         {editingDesc === item.id ? (
                           <input
                             value={editDescValue}
@@ -738,11 +764,19 @@ export default function ProposalEditorPage() {
                           )
                         )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {item.cost_per_person && (
                           <span className="text-xs font-mono text-[#9E7E60]">€{Number(item.cost_per_person).toFixed(2)}</span>
                         )}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Swap/replace knop */}
+                          <button
+                            onClick={() => setSwapModal({ itemId: item.id, course: item.course, mode: 'replace' })}
+                            className="p-1 text-[#B8997A] hover:text-amber-500 transition-colors"
+                            title="Vervang dit gerecht"
+                          >
+                            <Shuffle className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             onClick={() => removeItem(item.id)}
                             className="p-1 text-[#B8997A] hover:text-red-400 transition-colors"
@@ -755,7 +789,7 @@ export default function ProposalEditorPage() {
                   ))}
                   {courseItems.length === 0 && (
                     <div className="px-5 py-4 text-center text-xs text-[#D4B896]">
-                      Leeg — klik AI of + om te vullen
+                      Leeg — klik "Kies gerecht" voor AI, Kennisbank of LEGENDE opties
                     </div>
                   )}
                 </div>
@@ -813,6 +847,20 @@ export default function ProposalEditorPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Swap Dish Modal */}
+      {swapModal && proposal && (
+        <SwapDishModal
+          course={swapModal.course}
+          menuType={proposal.menu_type}
+          exclusions={requirements.exclusions || []}
+          existingDishes={items.map(i => i.dish_name).filter(Boolean)}
+          concept={requirements.concept || ''}
+          numPersons={proposal.num_persons || 20}
+          onSelect={handleSwapSelect}
+          onClose={() => setSwapModal(null)}
+        />
       )}
     </div>
   )
