@@ -19,6 +19,22 @@ interface EventRequirements {
   contact_person: string
   concept_note?: string
   chef_note?: string
+  // Brief import fields
+  open_questions?: string[]
+  day_open_questions?: string[]
+  dietary_restrictions?: string[]
+  dietary_notes?: string
+  imported_from_brief?: boolean
+  day_label?: string
+  moments?: Array<{
+    time: string
+    type: string
+    format: string
+    courses: Array<{
+      course_name: string
+      dishes: Array<{ name: string; description?: string; is_open_question?: boolean }>
+    }>
+  }>
 }
 
 interface MenuItem {
@@ -92,12 +108,14 @@ export default function ProposalEditorPage() {
   const [showConceptNote, setShowConceptNote] = useState(true)
   const [generatingFull, setGeneratingFull] = useState(false)
   const [creatingNewVersion, setCreatingNewVersion] = useState(false)
+  const [showOpenQuestions, setShowOpenQuestions] = useState(true)
 
   // Swap modal state
   const [swapModal, setSwapModal] = useState<{
     itemId: string | null
     course: string
     mode: 'replace' | 'add'
+    aiContext?: string
   } | null>(null)
 
   const loadProposal = useCallback(async () => {
@@ -208,6 +226,27 @@ export default function ProposalEditorPage() {
       console.error('AI generate error', e)
     }
     setGeneratingFull(false)
+  }
+
+  const aiHelpWithQuestion = (question: string) => {
+    // Open swap modal with AI tab pre-focused and question as concept context
+    const course = detectCourseFromQuestion(question)
+    setSwapModal({
+      itemId: null,
+      course,
+      mode: 'add',
+      aiContext: question,
+    })
+  }
+
+  function detectCourseFromQuestion(q: string): string {
+    const lower = q.toLowerCase()
+    if (lower.includes('dessert') || lower.includes('rood fruit') || lower.includes('aardbeien')) return 'Dessert'
+    if (lower.includes('veggie') || lower.includes('vegetarisch')) return 'Hoofdgerecht'
+    if (lower.includes('hapje') || lower.includes('fingerfood') || lower.includes('toast') || lower.includes('avocado')) return 'Fingerfood'
+    if (lower.includes('voorgerecht') || lower.includes('amuse')) return 'Voorgerecht'
+    if (lower.includes('hoofd')) return 'Hoofdgerecht'
+    return 'Voorgerecht'
   }
 
   const aiSuggestForCourse = async (course: string) => {
@@ -606,6 +645,48 @@ export default function ProposalEditorPage() {
             </div>
           )}
 
+          {/* Open Vragen sectie — alleen bij brief imports */}
+          {requirements.imported_from_brief && (requirements.open_questions?.length || requirements.day_open_questions?.length) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setShowOpenQuestions(!showOpenQuestions)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-amber-100 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-white">
+                      {((requirements.open_questions?.length || 0) + (requirements.day_open_questions?.length || 0))}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-amber-800">Open vragen</span>
+                </div>
+                {showOpenQuestions
+                  ? <ChevronUp className="w-4 h-4 text-amber-600" />
+                  : <ChevronDown className="w-4 h-4 text-amber-600" />}
+              </button>
+              {showOpenQuestions && (
+                <div className="border-t border-amber-200 divide-y divide-amber-100">
+                  {[...(requirements.open_questions || []), ...(requirements.day_open_questions || [])].map((q, i) => (
+                    <div key={i} className="px-4 py-3 flex items-start gap-3">
+                      <span className="text-amber-500 mt-0.5 shrink-0">•</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-amber-800 leading-relaxed">{q}</p>
+                      </div>
+                      <button
+                        onClick={() => aiHelpWithQuestion(q)}
+                        className="shrink-0 flex items-center gap-1 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap"
+                        title="AI genereert gerecht voor deze vraag"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        AI hulp
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="bg-white border border-[#E8D5B5] rounded-2xl p-4">
             <p className="text-xs font-semibold text-[#9E7E60] mb-3 uppercase tracking-wide">Event Parameters</p>
             <div className="space-y-2 text-sm">
@@ -856,7 +937,7 @@ export default function ProposalEditorPage() {
           menuType={proposal.menu_type}
           exclusions={requirements.exclusions || []}
           existingDishes={items.map(i => i.dish_name).filter(Boolean)}
-          concept={requirements.concept || ''}
+          concept={swapModal.aiContext ? `${requirements.concept || ''} | Open vraag: ${swapModal.aiContext}` : (requirements.concept || '')}
           numPersons={proposal.num_persons || 20}
           onSelect={handleSwapSelect}
           onClose={() => setSwapModal(null)}

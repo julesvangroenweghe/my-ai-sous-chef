@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       : allFormats.includes('cocktail') ? 'cocktail'
       : 'sit_down'
 
-    // Build notes with dietary info + open questions
+    // Build notes with dietary info + global open questions
     const notesLines = []
     if (dietary_notes) notesLines.push(`Dieetwensen: ${dietary_notes}`)
     if (global_open_questions?.length) {
@@ -99,21 +99,38 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Combine day-specific + global open questions
+      const dayOpenQuestions = day.open_questions || []
+      const globalQuestions = global_open_questions || []
+
       // Build event_requirements with rich structure for proposal editor
       const eventRequirements = {
+        // Brief import marker
+        imported_from_brief: true,
+        // Day info
         day_label: day.day_label,
         date: day.date,
         moments: day.moments,
         budget_items: day.budget_items || [],
-        open_questions: day.open_questions || [],
+        // Open questions — day-specific + global combined
+        open_questions: dayOpenQuestions,
+        day_open_questions: dayOpenQuestions,
+        global_open_questions: globalQuestions,
+        // Dietary
         dietary_restrictions,
         dietary_notes,
+        // Contact
         contact: {
           name: eventData.contact_name,
-          email: eventData.contact_email,
-          phone: eventData.contact_phone,
+          email: eventData.contact_email || null,
+          phone: eventData.contact_phone || null,
         },
-        imported_from_brief: true,
+        // For proposal editor compatibility
+        exclusions: dietary_restrictions || [],
+        preferences: {},
+        concept: `${eventData.name} — ${day.day_label}`,
+        special_requests: dietary_notes || '',
+        contact_person: eventData.contact_name || '',
       }
 
       // Calculate total budget for this day
@@ -162,6 +179,7 @@ export async function POST(request: NextRequest) {
         id: proposal.id,
         day_label: day.day_label,
         dish_count: allDishes.length,
+        open_question_count: dayOpenQuestions.length,
       })
     }
 
@@ -170,6 +188,8 @@ export async function POST(request: NextRequest) {
       event_id: eventRecord.id,
       event_name: eventData.name,
       proposals: createdProposals,
+      total_open_questions: (global_open_questions || []).length + 
+        days.reduce((sum: number, d: any) => sum + (d.open_questions?.length || 0), 0),
     })
   } catch (error) {
     console.error('Create from brief error:', error)
