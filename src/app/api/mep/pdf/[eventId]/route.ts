@@ -132,8 +132,11 @@ export async function GET(
     }
 
     // Generate PDF
+    // Filter out null courses before rendering
+    mepData.courses = (mepData.courses as any[]).filter(Boolean)
+    
     const pdfBuffer = await renderToBuffer(
-      React.createElement(MepPdfDocument, { data: mepData })
+      React.createElement(MepPdfDocument, { data: mepData as any })
     )
 
     const eventNameSlug = event.name
@@ -142,7 +145,7 @@ export async function GET(
       .replace(/-+/g, '-')
       .slice(0, 40)
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="mep-${eventNameSlug}.pdf"`,

@@ -31,7 +31,7 @@ async function getGoogleTokens(supabase: any, userId: string) {
 
   const { data: integration } = await supabase
     .from('kitchen_integrations')
-    .select('id, access_token, refresh_token, token_expires_at, account_email')
+    .select('id, access_token, refresh_token, token_expires_at, provider_email')
     .eq('kitchen_id', membership.kitchen_id)
     .eq('provider', 'google')
     .single()
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     const messageIds = (listData.messages || []).slice(0, 20)
 
     if (messageIds.length === 0) {
-      return NextResponse.json({ connected: true, email: integration.account_email, messages: [] })
+      return NextResponse.json({ connected: true, email: integration.provider_email, messages: [] })
     }
 
     // 5. Fetch message details (metadata only for speed)
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       connected: true,
-      email: integration.account_email,
+      email: integration.provider_email,
       messages,
     })
   } catch (err) {

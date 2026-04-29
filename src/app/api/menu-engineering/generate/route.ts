@@ -153,8 +153,6 @@ function buildScenarioContext(scenario: any): string {
   return ctx
 }
 
-}
-
 function callAnthropic(systemPrompt: string, userPrompt: string, maxTokens = 4096) {
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -461,7 +459,7 @@ REGELS:
     const scenarioContext = buildScenarioContext(scenarioData)
 
     const generatorPrompt = `CHEF PROFIEL:
-- Naam: ${chef?.display_name || 'Chef'}
+- Naam: ${chef?.first_name ? `${chef.first_name} ${chef.last_name || ''}`.trim() : 'Chef'}
 - Keukentype: ${kitchenType}
 ${styleInfo}
 ${rulesetContext}
