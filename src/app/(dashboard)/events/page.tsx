@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, CalendarDays, MapPin, Users, ArrowRight, Euro, ClipboardList, AlertTriangle } from 'lucide-react'
+import { Plus, CalendarDays, MapPin, Users, ArrowRight, Euro, ClipboardList, AlertTriangle, FileText } from 'lucide-react'
 import { ChefTip } from '@/components/ai/chef-tip'
+import ImportBriefModal from '@/components/events/import-brief-modal'
 
 interface Event {
   id: string
@@ -54,6 +55,7 @@ function getRelativeDate(dateStr: string): { text: string; urgent: boolean } {
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [showImportModal, setShowImportModal] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -68,6 +70,17 @@ export default function EventsPage() {
     load()
   }, [])
 
+  // Reload events after modal closes (new event may have been created)
+  const handleModalClose = () => {
+    setShowImportModal(false)
+    // Reload events list
+    supabase
+      .from('events')
+      .select('*')
+      .order('event_date', { ascending: true })
+      .then(({ data }) => setEvents((data || []) as Event[]))
+  }
+
   const upcoming = events.filter(
     (e) => new Date(e.event_date) >= new Date() && e.status !== 'cancelled'
   )
@@ -80,7 +93,6 @@ export default function EventsPage() {
     0
   )
 
-  // MEP warning: events within 7 days without approved/generated MEP
   const now = new Date()
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
   const eventsNeedingMep = upcoming.filter((e) => {
@@ -92,6 +104,9 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Import Brief Modal */}
+      {showImportModal && <ImportBriefModal onClose={handleModalClose} />}
+
       {/* Header */}
       <div className="animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -110,9 +125,19 @@ export default function EventsPage() {
               </div>
             </div>
           </div>
-          <Link href="/events/new" className="btn-primary shrink-0">
-            <Plus className="w-4 h-4" /> Nieuw Event
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Import brief button */}
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] transition-all"
+            >
+              <FileText className="w-4 h-4 text-amber-600" />
+              Brief importeren
+            </button>
+            <Link href="/events/new" className="btn-primary">
+              <Plus className="w-4 h-4" /> Nieuw Event
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -204,12 +229,21 @@ export default function EventsPage() {
             Nog geen events gepland
           </h3>
           <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
-            Plan je eerste event en genereer automatisch een MEP productieplan met exacte hoeveelheden,
-            timing en preplijsten.
+            Plan je eerste event of importeer een bestaande aanvraagbrief — de AI herkent automatisch
+            de data, het verloop, de dieetwensen en het menu.
           </p>
-          <Link href="/events/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Plan je eerste event
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] transition-all"
+            >
+              <FileText className="w-4 h-4 text-amber-600" />
+              Brief importeren
+            </button>
+            <Link href="/events/new" className="btn-primary">
+              <Plus className="w-4 h-4" /> Plan je eerste event
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -273,7 +307,6 @@ export default function EventsPage() {
                           >
                             {typeConfig.label}
                           </span>
-                          {/* MEP warning indicator */}
                           {isUrgentWithoutMep && (
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
                               <AlertTriangle className="w-2.5 h-2.5" />
