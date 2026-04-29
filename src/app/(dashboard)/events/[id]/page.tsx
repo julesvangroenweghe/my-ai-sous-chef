@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {
  ArrowLeft, CalendarDays, MapPin, Users, Euro, Clock,
  Plus, Trash2, ClipboardList, ChefHat, Loader2,
- X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp
+ X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp, FileText
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
@@ -91,7 +91,7 @@ const eventTypeLabels: Record<string, string> = {
  daily_service: ' Dagdienst',
 }
 
-type TabId = 'menu' | 'mep' | 'shopping'
+type TabId = 'menu' | 'mep' | 'shopping' | 'voorstel'
 
 export default function EventDetailPage() {
  const params = useParams()
@@ -208,6 +208,7 @@ export default function EventDetailPage() {
  { id: 'menu' as TabId, label: 'Menu', icon: ChefHat, count: event.menu_items.length },
  { id: 'mep' as TabId, label: 'MEP Plan', icon: ClipboardList },
  { id: 'shopping' as TabId, label: 'Boodschappen', icon: ShoppingCart },
+ { id: 'voorstel' as TabId, label: 'Voorstellen', icon: FileText },
  ]
 
  return (
@@ -408,6 +409,16 @@ export default function EventDetailPage() {
  numPersons={event.num_persons}
  />
  )}
+      {activeTab === 'voorstel' && (
+        <div className="bg-white border border-[#E8D5B5] rounded-2xl p-8 text-center">
+          <FileText className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
+          <h3 className="text-lg font-display font-semibold text-[#2C1810] mb-2">Menu Voorstellen</h3>
+          <p className="text-[#9E7E60] text-sm mb-5">Maak en beheer menu voorstellen voor dit event. Volg revisies en klantfeedback op.</p>
+          <Link href={`/events/${eventId}/voorstel`} className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-semibold text-sm rounded-xl transition-all">
+            <FileText className="w-4 h-4" /> Voorstellen beheren
+          </Link>
+        </div>
+      )}
 
  {/* MEP OCR Import */}
  {activeTab === 'menu' && (
