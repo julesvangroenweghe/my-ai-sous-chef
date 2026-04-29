@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
+      max_tokens: 8000,
       messages: [
         {
           role: 'user',
@@ -39,7 +39,7 @@ Retourneer ALLEEN geldig JSON (geen markdown, geen uitleg) in dit exacte formaat
     "contact_phone": "telefoon of null"
   },
   "dietary_restrictions": ["veggie", "noten_allergie", "vis_allergie"],
-  "dietary_notes": "vrije tekst over wie welk dieet heeft — bv. bruid veggie, papa bruidegom vis+noten",
+  "dietary_notes": "vrije tekst over wie welk dieet heeft",
   "days": [
     {
       "day_label": "Vrijdag 18 juni",
@@ -49,41 +49,17 @@ Retourneer ALLEEN geldig JSON (geen markdown, geen uitleg) in dit exacte formaat
           "time": "18u00",
           "type": "Apero",
           "format": "cocktail",
-          "description": "korte beschrijving van het moment",
+          "description": "korte beschrijving",
           "courses": [
             {
               "course_name": "FINGERFOOD",
               "dishes": [
                 {
-                  "name": "Artisjok – vinaigrette salée – daslook olie",
+                  "name": "gerechtnaam",
                   "description": null,
                   "client_notes": null,
                   "is_open_question": false,
                   "dietary_flags": []
-                }
-              ]
-            },
-            {
-              "course_name": "APPETIZERS",
-              "dishes": [...]
-            }
-          ]
-        },
-        {
-          "time": "19u30",
-          "type": "Diner",
-          "format": "sit_down",
-          "description": "gezellig diner in losse sfeer",
-          "courses": [
-            {
-              "course_name": "HOOFDGERECHT",
-              "dishes": [
-                {
-                  "name": "Optie 1: Witte pens Dierendonck & gemarineerde Aradoa kip",
-                  "description": "Gegrilde padrons & gepofte zoete aardappel – Gegrilde courgette – pecorino - kappercrunch",
-                  "client_notes": "2 nieuwe VEGGIE opties uitwerken",
-                  "is_open_question": true,
-                  "dietary_flags": ["vlees_optie"]
                 }
               ]
             }
@@ -97,7 +73,7 @@ Retourneer ALLEEN geldig JSON (geen markdown, geen uitleg) in dit exacte formaat
           "notes": null
         }
       ],
-      "open_questions": ["2 nieuwe VEGGIE opties uitwerken voor het hoofdgerecht"]
+      "open_questions": ["lijst van open vragen voor dit dag"]
     }
   ],
   "budget_summary": "overzicht als vrije tekst",
@@ -106,12 +82,12 @@ Retourneer ALLEEN geldig JSON (geen markdown, geen uitleg) in dit exacte formaat
 
 REGELS:
 - is_open_question = true als er een "@Jules:" notitie bij staat of als er iets nog TBC/te bepalen is
-- client_notes = de exacte noot van de klant bij een gerecht (bv. "graag iets luchtig met rood fruit")
+- client_notes = de exacte noot van de klant bij een gerecht
 - dietary_flags: gebruik ["veggie"], ["vis"], ["noten"], ["vlees_optie"] waar van toepassing
-- Extraheer ALLE gerechten, ook drinks zijn niet nodig (focus op food)
+- Extraheer ALLE gerechten uit de brief, elke dag volledig
 - format waarden: "cocktail", "sit_down", "walking_dinner", "buffet", "brunch", "fingerfood_only"
-- Als een gerecht meerdere opties heeft, maak dan aparte dishes met "Optie 1:" en "Optie 2:" prefix
-- Extraheer ook buffet-items (ontbijt/brunch items tellen ook mee)`,
+- Als een gerecht meerdere opties heeft, maak aparte dishes met "Optie 1:" en "Optie 2:" prefix
+- BELANGRIJK: Sluit de JSON volledig af — zorg dat alle arrays en objecten correct gesloten zijn`,
         },
       ],
     })
@@ -121,14 +97,36 @@ REGELS:
       throw new Error('Unexpected response type')
     }
 
-    // Extract JSON from response (handles cases where Claude adds extra text)
+    // Robust JSON extraction
     let jsonText = content.text.trim()
+    
+    // Remove markdown code blocks if present
+    jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+    
+    // Extract JSON object
     const jsonMatch = jsonText.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       jsonText = jsonMatch[0]
     }
 
-    const parsed = JSON.parse(jsonText)
+    // Try to parse — if it fails, attempt auto-repair
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(jsonText)
+    } catch (parseError) {
+      // Attempt repair: find last complete day entry and close the JSON
+      console.error('Initial parse failed, attempting repair...', parseError)
+      
+      // Try to find a valid JSON prefix by progressively truncating
+      // Strategy: close any open arrays/objects to make valid JSON
+      const repaired = attemptJsonRepair(jsonText)
+      if (repaired) {
+        parsed = repaired
+      } else {
+        throw new Error('JSON parsing failed: ' + (parseError instanceof Error ? parseError.message : String(parseError)))
+      }
+    }
+
     return NextResponse.json(parsed)
   } catch (error) {
     console.error('Parse brief error:', error)
@@ -136,5 +134,60 @@ REGELS:
       { error: 'Parsing mislukt: ' + (error instanceof Error ? error.message : 'Onbekende fout') },
       { status: 500 }
     )
+  }
+}
+
+// Attempt to repair truncated JSON by closing open structures
+function attemptJsonRepair(jsonText: string): unknown | null {
+  try {
+    // Count open braces/brackets to determine what needs closing
+    const stack: string[] = []
+    let inString = false
+    let escaped = false
+    let lastGoodPos = 0
+
+    for (let i = 0; i < jsonText.length; i++) {
+      const char = jsonText[i]
+      
+      if (escaped) {
+        escaped = false
+        continue
+      }
+      
+      if (char === '\\' && inString) {
+        escaped = true
+        continue
+      }
+      
+      if (char === '"') {
+        inString = !inString
+        continue
+      }
+      
+      if (inString) continue
+      
+      if (char === '{' || char === '[') {
+        stack.push(char === '{' ? '}' : ']')
+      } else if (char === '}' || char === ']') {
+        if (stack.length > 0 && stack[stack.length - 1] === char) {
+          stack.pop()
+          lastGoodPos = i
+        }
+      }
+    }
+
+    // If stack is empty, JSON was complete
+    if (stack.length === 0) {
+      return JSON.parse(jsonText)
+    }
+
+    // Try to close the JSON at the last good position
+    const truncated = jsonText.substring(0, lastGoodPos + 1)
+    const closing = stack.reverse().join('')
+    const repaired = truncated + closing
+
+    return JSON.parse(repaired)
+  } catch {
+    return null
   }
 }

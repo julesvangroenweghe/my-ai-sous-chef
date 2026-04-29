@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const maxDuration = 60
 
+const PUSH_LEVEL_PROMPTS = {
+  comfort: `NIVEAU: Comfort (90% vertrouwd)
+Kies ingrediënten en technieken die chefs kennen. Klassieke combinaties, vertrouwde smaakprofielen. Verrass subtiel — via kwaliteit en afwerking, niet via wildheid.`,
+  balanced: `NIVEAU: Gebalanceerd (70% vertrouwd, 30% nieuw)
+Mix van het vertrouwde en het verrassende. Eén element mag uitdagen — een onbekende techniek, een onverwacht ingredient. De rest is herkenbaar.`,
+  challenge: `NIVEAU: Uitdagend (50% vertrouwd, 50% nieuw)
+Durf te provoceren. Onverwachte combinaties, nieuwe technieken, minder gangbare ingrediënten. Gasten worden uitgedaagd — maar het is nooit willekeurig, altijd culinair logisch.`,
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -10,15 +19,16 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const {
-    mode = 'ai', // 'ai' | 'kennisbank' | 'legende'
+    mode = 'ai',
     course = '',
     menuType = 'walking_dinner',
     exclusions = [] as string[],
     existingDishes = [] as string[],
     concept = '',
     numPersons = 20,
-    query = '', // for kennisbank search
-    hertaalId = null as string | null, // classical_recipe id to hertaal
+    push_level = 'balanced' as 'comfort' | 'balanced' | 'challenge',
+    query = '',
+    hertaalId = null as string | null,
   } = body
 
   // --- MODE: LEGENDE ---
@@ -46,7 +56,6 @@ export async function POST(req: NextRequest) {
     if (searchQuery) {
       dbQuery = dbQuery.ilike('name_original', `%${searchQuery}%`)
     } else {
-      // Default: show varied selection by category
       dbQuery = dbQuery.order('id')
     }
 
@@ -79,6 +88,7 @@ export async function POST(req: NextRequest) {
       .limit(20)
 
     const seasonalText = seasonal?.map(s => s.name).join(', ') || ''
+    const pushText = PUSH_LEVEL_PROMPTS[push_level as keyof typeof PUSH_LEVEL_PROMPTS] || PUSH_LEVEL_PROMPTS.balanced
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -99,6 +109,8 @@ HERTAALFILOSOFIE (4 stappen):
 3. VOEG UMAMI-LAAG toe (dashi, miso, XO, bonito, gefermenteerde elementen)
 4. ZET EEN ZUUR-ACCENT (gepekeld, gefermenteerd, yuzu, citrusgel)
 
+${pushText}
+
 Antwoord ALLEEN als JSON — geen tekst buiten JSON.`,
         messages: [{
           role: 'user',
@@ -109,9 +121,9 @@ Beschrijving: ${recipe.description || '—'}
 Bron: ${recipe.source || '—'}
 
 Seizoensproducten nu: ${seasonalText}
-Exclusies: ${exclusions.join(', ') || 'geen'}
+Exclusies/allergenen (VERPLICHT vermijden): ${exclusions.join(', ') || 'geen'}
 
-Geef 2 varianten van dit gerecht hertaald in Jules' DNA. JSON formaat:
+Geef 2 varianten hertaald in Jules' DNA. JSON formaat:
 {
   "original_name": "klassieke naam",
   "variants": [
@@ -163,6 +175,8 @@ Geef 2 varianten van dit gerecht hertaald in Jules' DNA. JSON formaat:
     `• ${d.name}${d.description ? ` — ${d.description}` : ''}`
   ).join('\n') || ''
 
+  const pushText = PUSH_LEVEL_PROMPTS[push_level as keyof typeof PUSH_LEVEL_PROMPTS] || PUSH_LEVEL_PROMPTS.balanced
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -176,6 +190,9 @@ Geef 2 varianten van dit gerecht hertaald in Jules' DNA. JSON formaat:
       system: `Je bent de AI-partner van Jules Van Groenweghe — Belgische top-chef, SIR Catering / Food by Jules.
 Jules' stijl: Belgisch-Frans + Japanse umami. Comfort-elegantie. Handtekening: lavas, dashi, forelkaviaar, gepekelde eidooier, hamachi, zwarte look, miso, kimchi, XO, zeekraal.
 HERTAALFILOSOFIE: upgrade ingredient → premium | saus → moderne techniek | umami-laag | zuur-accent.
+
+${pushText}
+
 Antwoord ALLEEN als JSON.`,
       messages: [{
         role: 'user',
@@ -185,7 +202,7 @@ CONTEXT:
 • Stijl: ${styleText || 'Belgisch-Frans, Japanse umami-accenten'}
 • Nu in seizoen: ${seasonalText}
 • Concept event: ${concept || 'geen'}
-• Exclusies: ${exclusions.join(', ') || 'geen'}
+• Exclusies/allergenen (VERPLICHT vermijden): ${exclusions.join(', ') || 'geen'}
 • Andere gangen al aanwezig: ${existingDishes.join(', ') || 'geen'}
 
 LEGENDE REFERENTIE (Jules' signatuurgerechten — inspirieer hierop maar kopieer niet):
