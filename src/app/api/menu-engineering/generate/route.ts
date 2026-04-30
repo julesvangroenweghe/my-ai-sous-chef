@@ -364,22 +364,31 @@ Zeeuwse mossel
 
     // Jules' vaste handtekening-elementen — komen terug in zijn DNA
     const julesDNA = `
-VASTE SMAAKELEMENTEN:
-- Lavas: gebruikt als olie, in gribiche, of als aromaat — kenmerkend
-- Dashi: als jus-basis, beurre blanc of bouillon
-- Forelkaviaar: kleine luxe-accent, zoutig-mineraal
-- Gepekelde dooier: geraspt over gerechten voor umami-diepte
+HARTIGE SIGNATUURELEMENTEN (NOOIT in desserts):
+- Lavas: 100% hartig kruid — als olie, in gribiche, of als aromaat. Nooit in zoete bereidingen.
+- Dashi: als jus-basis, beurre blanc of bouillon — hartig
+- Forelkaviaar: kleine luxe-accent, zoutig-mineraal — hartig finishing touch
+- Gepekelde dooier: geraspt over hartige gerechten voor umami-diepte — NOOIT in desserts
+- Hamachi: koud, rauw, ceviche-stijl — hartig/Japans
+- Zwarte look: als gel of creme voor diepte — hartig
+- Sgombro: als vinaigrette of espuma op vlees — hartig
+- Kimchi / miso: fermentatie-accenten — hartig
+- XO saus: umami-booster — hartig
+- Zeekraal: zout-knapperig, maritiem — NOOIT in desserts
+
+NEUTRALE ELEMENTEN (zowel hartig als zoet mogelijk):
 - Knolselder: als tagliatelle, creme, chips, gebrand — veelzijdig
 - Prei: gerookt, BBQ, als emulsie, gefrituurd — steeds anders
-- Hamachi: koud, rauw, ceviche-stijl
-- Zwarte look: als gel of creme voor diepte
-- Sgombro: als vinaigrette of espuma op vlees
-- Gerookte amandel/hazelnoot: textuur en rooktoon
-- Furikake: Japanse touch over vis
-- Kimchi / miso: fermentatie-accenten
-- XO saus: umami-booster
-- Oesterblad: op vrijwel alles mogelijk
-- Mosterdzaad gepekeld: textuur en frisheid
+- Gerookte amandel/hazelnoot: textuur en rooktoon (ook in desserts)
+- Oesterblad: op hartige gerechten
+- Mosterdzaad gepekeld: textuur en frisheid — hartige context
+
+DESSERT-SIGNATUURELEMENTEN (Jules' echte signaturen voor zoete bereidingen):
+- Verveine (citroenverbena): licht citrus-kruid, werkt perfect in sorbets, mousses, creams
+- Dragon (tarragon): subtiele anijs-hint, klassiek duo met aardbei of perzik
+- Yuzu: citrus-accent, past in zoete en hartige context
+- Gefermenteerde room / crème fraîche: zuur-accent in desserts
+- Seizoensfruit: altijd het startpunt voor desserts
 
 VASTE TECHNIEKEN:
 - 'Konro' = yakitori-grill stijl, intensief roken op houtskool
@@ -686,6 +695,68 @@ Produceer het definitieve menu. Behoud de JSON structuur van het origineel.`
         } catch {
           // Keep generator output if arbiter fails
         }
+      }
+    }
+
+
+    // ==========================================
+    // PASS 4: THE CULINAIRE WACHTER
+    // Blokkeert culinaire nonsens — laatste check voor tonen
+    // ==========================================
+    const wachterSystem = `Je bent de Culinaire Wachter — de laatste check voor het menu wordt getoond aan de chef.
+
+HARTIGE KRUIDEN van Jules — NOOIT in desserts:
+- Lavas (lovage): 100% hartig — past bij knolselder/vis/sauzen; ABSOLUUT VERBODEN in dessert
+- Zeekraal: hartig, maritiem — nooit in dessert
+- Daslook, bieslook: hartig — nooit in dessert
+
+DESSERT-KRUIDEN van Jules (zijn échte signaturen voor zoete bereidingen):
+- Verveine (citroenverbena): zijn dessert-signatuur #1
+- Dragon (tarragon): subtiel anijs, klassiek met aardbei of perzik — dessert-signatuur #2
+- Munt, tijmbloemen: altijd toegestaan
+
+HARTIGE UMAMI-ELEMENTEN — NOOIT in desserts:
+- Gepekelde eidooier, dashi, miso, XO, kimchi, bonito, hamachi, sgombro, parmezaan, zeekraal
+
+LOGISCHE FOUTEN — altijd corrigeren:
+- Meer dan 2 umami-lagen op 1 bord
+- Carpaccio/tataki met hete saus (vernietigt textuur)
+
+Geef ALLEEN JSON:
+{
+  "approved": true,
+  "issues": [],
+  "fixed_courses": null
+}
+Of bij fouten:
+{
+  "approved": false,
+  "issues": [{"dish": "naam", "course": "dessert", "problem": "...", "fix": "..."}],
+  "fixed_courses": [/* gecorrigeerde courses array */]
+}`
+
+    const wachterPrompt = \`Controleer dit menu op culinaire fouten en corrigeer waar nodig:
+\${JSON.stringify(finalMenu.courses || [], null, 2)}
+
+Kijk SPECIFIEK naar: hartige kruiden in desserts (lavas!), umami-elementen in zoete bereidingen.
+Bij fouten: pas het gerecht minimaal aan — enkel het foutieve element vervangen.\`
+
+    const wachterRes = await callAnthropic(wachterSystem, wachterPrompt, 2000)
+    if (wachterRes.ok) {
+      const wachterResult = await wachterRes.json()
+      const wachterText = wachterResult.content?.[0]?.text || ''
+      try {
+        const wachterCheck = extractJSON(wachterText)
+        if (!wachterCheck.approved && wachterCheck.fixed_courses) {
+          finalMenu = {
+            ...finalMenu,
+            courses: wachterCheck.fixed_courses,
+            wachter_corrections: wachterCheck.issues,
+          }
+          console.log('[Culinaire Wachter] Gecorrigeerd:', wachterCheck.issues.length, 'issue(s)')
+        }
+      } catch {
+        console.warn('[Culinaire Wachter] Parse fout — menu doorgegeven zonder wachter-correctie')
       }
     }
 

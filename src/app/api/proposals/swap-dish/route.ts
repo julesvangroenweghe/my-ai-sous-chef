@@ -24,11 +24,12 @@ function getSignatureIngredients(course: string): string {
   const isSavory = !isDessert
 
   if (isDessert) {
-    // Voor desserts: alleen zuur-accenten en lichte aromatische elementen
-    return `Jules' stijl voor desserts: luchtigheid, zuur-contrast, verfijnd zoet. 
-Toegestane elementen: lavascrème (subtiel), citrusgel, gefermenteerde room, yuzu, seizoensfruit, krokante texturen.
-NOOIT voor desserts: dashi, gepekelde eidooier, XO, kimchi, miso, bonito, zeekraal, hamachi — dit zijn HARTIGE elementen.
-Desserts volgen: fruit + zuur + textuur + (optioneel) kruid-element.`
+    // Voor desserts: verfijnde kruiden + zuur-accenten — NOOIT hartige umami-elementen
+    return `Jules' stijl voor desserts: luchtigheid, zuur-contrast, verfijnd zoet, elegante kruiden.
+Jules' dessert-kruiden: VERVEINE (citroenverbena) en DRAGON (tarragon) — dit zijn zijn signatures voor zoete bereidingen.
+Andere toegestane elementen: citrusgel, gefermenteerde room, yuzu, seizoensfruit, krokante texturen, gefermenteerde honing.
+NOOIT voor desserts: lavas (hartig kruid), dashi, gepekelde eidooier, XO, kimchi, miso, bonito, zeekraal, hamachi — dit zijn HARTIGE elementen.
+Desserts bouwen op: seizoensfruit + zuur-element + textuur + verveine of dragon als kruid-accent.`
   }
 
   if (isSavory) {
