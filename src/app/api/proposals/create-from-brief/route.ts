@@ -22,15 +22,30 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
+  // chef_profiles heeft GEEN kitchen_id kolom — die zit in kitchen_members
   const { data: profile } = await supabase
     .from('chef_profiles')
-    .select('id, kitchen_id')
+    .select('id')
     .eq('auth_user_id', user.id)
     .single()
 
-  if (!profile?.kitchen_id) {
-    return NextResponse.json({ error: 'Geen kitchen gevonden' }, { status: 403 })
+  if (!profile) {
+    return NextResponse.json({ error: 'Geen chef profiel gevonden' }, { status: 403 })
   }
+
+  // Kitchen ophalen via kitchen_members — gefilterd op chef_id
+  const { data: membership } = await supabase
+    .from('kitchen_members')
+    .select('kitchen_id')
+    .eq('chef_id', profile.id)
+    .limit(1)
+    .single()
+
+  if (!membership?.kitchen_id) {
+    return NextResponse.json({ error: 'Geen keuken gevonden voor dit profiel' }, { status: 403 })
+  }
+
+  const kitchenId = membership.kitchen_id
 
   try {
     const { parsedBrief } = await request.json()
@@ -56,7 +71,7 @@ export async function POST(request: NextRequest) {
     const { data: eventRecord, error: eventError } = await supabase
       .from('events')
       .insert({
-        kitchen_id: profile.kitchen_id,
+        kitchen_id: kitchenId,
         name: eventData.name,
         event_date: eventData.start_date,
         event_type: primaryFormat,
@@ -105,27 +120,21 @@ export async function POST(request: NextRequest) {
 
       // Build event_requirements with rich structure for proposal editor
       const eventRequirements = {
-        // Brief import marker
         imported_from_brief: true,
-        // Day info
         day_label: day.day_label,
         date: day.date,
         moments: day.moments,
         budget_items: day.budget_items || [],
-        // Open questions — day-specific + global combined
         open_questions: dayOpenQuestions,
         day_open_questions: dayOpenQuestions,
         global_open_questions: globalQuestions,
-        // Dietary
         dietary_restrictions,
         dietary_notes,
-        // Contact
         contact: {
           name: eventData.contact_name,
           email: eventData.contact_email || null,
           phone: eventData.contact_phone || null,
         },
-        // For proposal editor compatibility
         exclusions: dietary_restrictions || [],
         preferences: {},
         concept: `${eventData.name} — ${day.day_label}`,
@@ -143,7 +152,7 @@ export async function POST(request: NextRequest) {
       const { data: proposal, error: propError } = await supabase
         .from('saved_menus')
         .insert({
-          kitchen_id: profile.kitchen_id,
+          kitchen_id: kitchenId,
           created_by: profile.id,
           event_id: eventRecord.id,
           name: `${day.day_label} — ${eventData.name}`,
