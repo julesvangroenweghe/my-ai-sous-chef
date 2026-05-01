@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   X,
@@ -15,7 +15,20 @@ import {
   Calendar,
   Euro,
   AlertTriangle,
+  Upload,
+  File,
 } from 'lucide-react'
+import GoogleCalendarPicker from './google-calendar-picker'
+
+interface CalendarEvent {
+  id: string
+  summary: string
+  start: string
+  end: string
+  location?: string
+  description?: string
+  htmlLink: string
+}
 
 interface ParsedDish {
   name: string
@@ -97,6 +110,15 @@ export default function ImportBriefModal({ onClose }: Props) {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([0]))
   const [createdEventId, setCreatedEventId] = useState<string | null>(null)
 
+  // New state for tabs, drag & drop, and calendar
+  const [activeTab, setActiveTab] = useState<'paste' | 'calendar'>('paste')
+  const [isDragging, setIsDragging] = useState(false)
+  const [isExtractingFile, setIsExtractingFile] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [selectedCalendarEvent, setSelectedCalendarEvent] = useState<CalendarEvent | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const toggleDay = (idx: number) => {
     setExpandedDays((prev) => {
       const next = new Set(prev)
@@ -106,15 +128,91 @@ export default function ImportBriefModal({ onClose }: Props) {
     })
   }
 
+  const processFile = useCallback(async (file: File) => {
+    const isText = file.type === 'text/plain' || file.type === 'text/markdown' || file.name.endsWith('.txt') || file.name.endsWith('.md')
+
+    if (isText) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const text = e.target?.result as string
+        setBriefText(text)
+        setUploadedFileName(file.name)
+      }
+      reader.readAsText(file)
+    } else {
+      // PDF or DOCX — send to extraction API
+      setIsExtractingFile(true)
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        const res = await fetch('/api/briefs/extract-file', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = await res.json()
+        if (data.text) {
+          setBriefText(data.text)
+          setUploadedFileName(file.name)
+        } else {
+          setError(data.error || 'Bestand kon niet worden gelezen')
+        }
+      } catch {
+        setError('Bestand uploaden mislukt')
+      } finally {
+        setIsExtractingFile(false)
+      }
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      const file = e.dataTransfer.files[0]
+      if (file) await processFile(file)
+    },
+    [processFile]
+  )
+
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) await processFile(file)
+    },
+    [processFile]
+  )
+
   const parseBrief = async () => {
-    if (!briefText.trim()) return
+    const hasText = briefText.trim()
+    const hasCalendarEvent = selectedCalendarEvent !== null
+
+    if (!hasText && !hasCalendarEvent) return
+
     setIsLoading(true)
     setError(null)
     try {
+      const combinedText = briefText + (selectedCalendarEvent
+        ? `\n\nEvent details: ${selectedCalendarEvent.summary} op ${selectedCalendarEvent.start} te ${selectedCalendarEvent.location || ''}`
+        : '')
+
       const res = await fetch('/api/proposals/parse-multi-day-brief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ briefText }),
+        body: JSON.stringify({
+          briefText: combinedText,
+          calendarEventId: selectedCalendarEvent?.id,
+          calendarEventSummary: selectedCalendarEvent?.summary,
+        }),
       })
       if (!res.ok) throw new Error((await res.json()).error || 'Parsing mislukt')
       const data = await res.json()
@@ -153,15 +251,16 @@ export default function ImportBriefModal({ onClose }: Props) {
     onClose()
   }
 
-  const totalDishes = parsedBrief?.days.reduce(
-    (sum, day) =>
-      sum +
-      day.moments.reduce(
-        (ms, m) => ms + m.courses.reduce((cs, c) => cs + c.dishes.length, 0),
-        0
-      ),
-    0
-  ) || 0
+  const totalDishes =
+    parsedBrief?.days.reduce(
+      (sum, day) =>
+        sum +
+        day.moments.reduce(
+          (ms, m) => ms + m.courses.reduce((cs, c) => cs + c.dishes.length, 0),
+          0
+        ),
+      0
+    ) || 0
 
   const allOpenQuestions = parsedBrief
     ? [
@@ -169,6 +268,8 @@ export default function ImportBriefModal({ onClose }: Props) {
         ...parsedBrief.days.flatMap((d) => d.open_questions || []),
       ]
     : []
+
+  const canAnalyze = briefText.trim() || selectedCalendarEvent !== null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -215,16 +316,128 @@ export default function ImportBriefModal({ onClose }: Props) {
           {step === 'paste' && (
             <div className="p-6 space-y-4">
               <p className="text-sm text-[#5C4730] leading-relaxed">
-                Kopieer de volledige brief — met verloop, menu per dag, dieetwensen en budget. 
+                Kopieer de volledige brief — met verloop, menu per dag, dieetwensen en budget.
                 De AI herkent alles: meerdere dagen, allergieën, open vragen, prijzen per moment.
               </p>
-              <textarea
-                value={briefText}
-                onChange={(e) => setBriefText(e.target.value)}
-                placeholder="Plak hier de volledige aanvraagbrief... (datum, locatie, verloop, menu, budget)"
-                className="w-full h-64 p-4 rounded-2xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-[#C4A882] font-mono leading-relaxed"
-                autoFocus
-              />
+
+              {/* Tab bar */}
+              <div className="flex gap-1 p-1 bg-[#F2E8D5] rounded-2xl">
+                <button
+                  onClick={() => setActiveTab('paste')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    activeTab === 'paste'
+                      ? 'bg-white text-[#2C1810] shadow-sm'
+                      : 'text-[#9E7E60] hover:text-[#5C4730]'
+                  }`}
+                >
+                  <Upload className="w-4 h-4" />
+                  Tekst plakken / slepen
+                </button>
+                <button
+                  onClick={() => setActiveTab('calendar')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    activeTab === 'calendar'
+                      ? 'bg-white text-[#2C1810] shadow-sm'
+                      : 'text-[#9E7E60] hover:text-[#5C4730]'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Google Agenda
+                </button>
+              </div>
+
+              {/* Tab: Paste / Drag & Drop */}
+              {activeTab === 'paste' && (
+                <div className="space-y-3">
+                  {/* Drag & Drop zone */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                      isDragging
+                        ? 'border-amber-400 bg-amber-50'
+                        : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/50 bg-white'
+                    }`}
+                  >
+                    {isExtractingFile ? (
+                      <>
+                        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                        <p className="text-sm text-[#9E7E60]">Bestand verwerken...</p>
+                      </>
+                    ) : uploadedFileName ? (
+                      <>
+                        <File className="w-8 h-8 text-amber-500" />
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">
+                            {uploadedFileName}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#9E7E60]">Klik om een ander bestand te kiezen</p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-amber-300" />
+                        <p className="text-sm font-medium text-[#5C4730]">
+                          Sleep een bestand hierheen
+                        </p>
+                        <p className="text-xs text-[#9E7E60]">.txt, .pdf, .docx</p>
+                        <p className="text-xs text-[#C4A882]">Of klik om te bladeren</p>
+                      </>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".txt,.md,.pdf,.docx,text/plain,application/pdf"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Textarea */}
+                  <textarea
+                    value={briefText}
+                    onChange={(e) => setBriefText(e.target.value)}
+                    placeholder="Plak hier de volledige aanvraagbrief... (datum, locatie, verloop, menu, budget)"
+                    className="w-full h-48 p-4 rounded-2xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-[#C4A882] font-mono leading-relaxed"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {/* Tab: Google Calendar */}
+              {activeTab === 'calendar' && (
+                <div className="space-y-3">
+                  <GoogleCalendarPicker
+                    onSelect={(event) => setSelectedCalendarEvent(event)}
+                    selectedId={selectedCalendarEvent?.id}
+                  />
+
+                  {selectedCalendarEvent && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1">
+                      <p className="text-xs font-semibold text-amber-700">Geselecteerd event</p>
+                      <p className="text-sm font-medium text-[#2C1810]">{selectedCalendarEvent.summary}</p>
+                      {selectedCalendarEvent.location && (
+                        <p className="text-xs text-[#9E7E60]">{selectedCalendarEvent.location}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[#9E7E60] uppercase tracking-wide">
+                      Extra briefdetails (optioneel)
+                    </label>
+                    <textarea
+                      value={briefText}
+                      onChange={(e) => setBriefText(e.target.value)}
+                      placeholder="Voeg menu details, dieetwensen, budget... toe"
+                      className="w-full h-32 p-4 rounded-2xl border border-[#E8D5B5] bg-white text-[#2C1810] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-[#C4A882] font-mono leading-relaxed"
+                    />
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl p-3">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -240,7 +453,7 @@ export default function ImportBriefModal({ onClose }: Props) {
                 </button>
                 <button
                   onClick={parseBrief}
-                  disabled={!briefText.trim() || isLoading}
+                  disabled={!canAnalyze || isLoading}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
