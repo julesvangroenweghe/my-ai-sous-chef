@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -17,41 +17,53 @@ import {
   Square,
   ClipboardList,
   AlertTriangle,
-  CheckCircle,
   Pencil,
   X,
   Euro,
   ShieldCheck,
+  GripVertical,
+  Trash2,
+  Plus,
+  Check,
+  Link2,
+  ExternalLink,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Ingredient {
+interface IngredientRow {
+  rci_id: string
+  component_id: string
+  ingredient_id: string | null
   ingredient_name: string
   quantity_per_person: number
   total_quantity: number
   unit: string
+  prep_instruction: string | null
   cost_per_unit: number
   grammage_warning?: boolean
 }
 
-interface Component {
+interface ComponentRow {
+  component_id: string
   component_name: string
-  ingredients: Ingredient[]
+  ingredients: IngredientRow[]
 }
 
-interface Course {
+interface CourseRow {
+  menu_item_id: string
   course: string
   course_label: string
   course_order: number
   category_sort_order: number
   recipe_id: string | null
   recipe_name: string
+  serving_size_grams: number
   cost_per_person: number
   total_cost: number
   component_group: string | null
-  components: Component[]
+  components: ComponentRow[]
 }
 
 interface MepData {
@@ -64,7 +76,7 @@ interface MepData {
     price_per_person: number | null
     status: string
   }
-  courses: Course[]
+  courses: CourseRow[]
   categories: Array<{ code: string; label: string; sort_order: number }>
   totals: {
     food_cost_per_person: number
@@ -81,6 +93,23 @@ interface Financials {
   cost_logistics: number
   cost_variables: number
   total_revenue: number
+}
+
+interface SearchResult {
+  id: string
+  name: string
+  price_per_kg?: number | null
+  supplier_name?: string
+  type: 'ingredient' | 'supplier_product'
+}
+
+interface SaveIngredientPayload {
+  ingredient_id: string | null
+  ingredient_name: string
+  quantity_per_person: number
+  unit: string
+  prep_instruction: string | null
+  component_id: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -287,7 +316,6 @@ function FinancialsModal({
     financials.cost_logistics +
     financials.cost_variables
 
-  // VAT: food & non-alc = 12%, rest = 21%
   const vatFood = (financials.cost_food + financials.cost_drinks_nonalc) * 0.12
   const vatRest =
     (financials.cost_drinks + financials.cost_personnel + financials.cost_logistics + financials.cost_variables) * 0.21
@@ -349,7 +377,6 @@ function FinancialsModal({
           </button>
         </div>
 
-        {/* Cost fields */}
         <div className="space-y-3 mb-4">
           {fields.map((f) => (
             <div key={f.key} className="flex items-center gap-3">
@@ -375,7 +402,6 @@ function FinancialsModal({
           ))}
         </div>
 
-        {/* Revenue */}
         <div className="mb-4">
           <div className="text-xs text-[#9E7E60] mb-1">Totale omzet (excl. BTW)</div>
           <div className="relative">
@@ -394,7 +420,6 @@ function FinancialsModal({
           </div>
         </div>
 
-        {/* Summary */}
         <div className="bg-[#FDF8F2]/80 rounded-xl p-4 space-y-2 mb-5 border border-[#E8D5B5]">
           <div className="flex justify-between text-sm">
             <span className="text-[#9E7E60]">Totale kosten (excl. BTW)</span>
@@ -418,7 +443,6 @@ function FinancialsModal({
           )}
         </div>
 
-        {/* Staffing reference */}
         <div className="bg-white/30 rounded-xl p-3 mb-5 border border-[#E8D5B5]/60">
           <div className="text-xs font-medium text-[#9E7E60] mb-2 uppercase tracking-wider">Personeelstarieven</div>
           <div className="grid grid-cols-2 gap-1 text-xs text-[#9E7E60]">
@@ -446,6 +470,502 @@ function FinancialsModal({
   )
 }
 
+// ─── InlineEditForm ───────────────────────────────────────────────────────────
+
+function InlineEditForm({
+  ingredient,
+  componentId,
+  subGroups,
+  onSave,
+  onCancel,
+  isNew = false,
+}: {
+  ingredient?: IngredientRow
+  componentId: string
+  subGroups: Array<{ id: string; name: string }>
+  onSave: (payload: SaveIngredientPayload) => Promise<void>
+  onCancel: () => void
+  isNew?: boolean
+}) {
+  const [qty, setQty] = useState(isNew ? 0 : ingredient?.quantity_per_person || 0)
+  const [unit, setUnit] = useState(isNew ? 'gr' : ingredient?.unit || 'gr')
+  const [prep, setPrep] = useState(isNew ? '' : ingredient?.prep_instruction || '')
+  const [selectedComponentId, setSelectedComponentId] = useState(componentId)
+  const [linkedIngredient, setLinkedIngredient] = useState<SearchResult | null>(
+    !isNew && ingredient?.ingredient_id
+      ? { id: ingredient.ingredient_id, name: ingredient.ingredient_name, type: 'ingredient' }
+      : null
+  )
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searching, setSearching] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>()
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    if (q.length < 2) {
+      setSearchResults([])
+      return
+    }
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/mep/ingredient-search?q=${encodeURIComponent(q)}`)
+        const json = await res.json()
+        setSearchResults(json.results || [])
+      } catch {
+        setSearchResults([])
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await onSave({
+        ingredient_id: linkedIngredient?.id || null,
+        ingredient_name: linkedIngredient?.name || ingredient?.ingredient_name || '',
+        quantity_per_person: qty,
+        unit,
+        prep_instruction: prep || null,
+        component_id: selectedComponentId,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const displayName = linkedIngredient?.name || ingredient?.ingredient_name || ''
+
+  return (
+    <div className="mx-4 mb-3 bg-[#FDF8F2] border border-[#E8D5B5] rounded-xl p-4 space-y-3">
+      {displayName && (
+        <div className="px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] font-medium">
+          {displayName}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          type="number"
+          value={qty || ''}
+          onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
+          placeholder="0"
+          className="w-20 px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+        />
+        <select
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          className="w-20 px-2 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+        >
+          <option value="gr">gr</option>
+          <option value="ml">ml</option>
+          <option value="stuk">stuk</option>
+          <option value="cl">cl</option>
+          <option value="kg">kg</option>
+          <option value="l">l</option>
+          <option value="tl">tl</option>
+          <option value="el">el</option>
+        </select>
+        <input
+          value={prep}
+          onChange={(e) => setPrep(e.target.value)}
+          placeholder="Bereiding"
+          className="flex-1 px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+        />
+      </div>
+
+      {linkedIngredient ? (
+        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E8A040]/30 rounded-lg">
+          <Link2 className="w-3.5 h-3.5 text-[#E8A040] shrink-0" />
+          <span className="text-xs text-[#E8A040] flex-1 truncate">
+            {linkedIngredient.name}
+            {linkedIngredient.price_per_kg ? ` — €${linkedIngredient.price_per_kg}/kg` : ''}
+            {(linkedIngredient as any).supplier_name ? ` — ${(linkedIngredient as any).supplier_name}` : ''}
+          </span>
+          <button
+            onClick={() => setLinkedIngredient(null)}
+            className="text-[#9E7E60] hover:text-[#2C1810] transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div className="relative">
+          <input
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Zoek ingrediënt of leveranciersproduct..."
+            className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none placeholder:text-[#B8997A]"
+          />
+          {searching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="w-3.5 h-3.5 text-[#9E7E60] animate-spin" />
+            </div>
+          )}
+          {searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8D5B5] rounded-xl z-20 max-h-44 overflow-y-auto shadow-lg">
+              {searchResults.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => {
+                    setLinkedIngredient(r)
+                    setSearchQuery('')
+                    setSearchResults([])
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-[#FDF8F2] text-[#2C1810] border-b border-[#E8D5B5]/50 last:border-0 transition-colors"
+                >
+                  <span className="font-medium">{r.name}</span>
+                  {r.price_per_kg && (
+                    <span className="text-[#E8A040] ml-2">€{r.price_per_kg}/kg</span>
+                  )}
+                  {r.supplier_name && (
+                    <span className="text-[#9E7E60] ml-2">{r.supplier_name}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {subGroups.length > 1 && (
+        <select
+          value={selectedComponentId}
+          onChange={(e) => setSelectedComponentId(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#9E7E60] focus:border-[#E8A040]/50 focus:outline-none"
+        >
+          {subGroups.map((sg) => (
+            <option key={sg.id} value={sg.id}>
+              {sg.name}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <div className="flex justify-end gap-2 pt-1">
+        <button
+          onClick={onCancel}
+          className="p-2 rounded-lg text-[#9E7E60] hover:text-[#2C1810] hover:bg-white border border-transparent hover:border-[#E8D5B5] transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-3 py-2 bg-[#E8A040] hover:bg-[#d4922e] text-stone-900 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          {isNew ? 'Toevoegen' : 'Opslaan'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── IngredientRowItem ────────────────────────────────────────────────────────
+
+function IngredientRowItem({
+  ingredient,
+  subGroups,
+  checked,
+  onToggleChecked,
+  onSave,
+  onDelete,
+}: {
+  ingredient: IngredientRow
+  subGroups: Array<{ id: string; name: string }>
+  checked: boolean
+  onToggleChecked: () => void
+  onSave: (rciId: string, payload: SaveIngredientPayload) => Promise<void>
+  onDelete: (rciId: string) => Promise<void>
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleSave = async (payload: SaveIngredientPayload) => {
+    await onSave(ingredient.rci_id, payload)
+    setIsEditing(false)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`"${ingredient.ingredient_name}" verwijderen?`)) return
+    setDeleting(true)
+    try {
+      await onDelete(ingredient.rci_id)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div className={`transition-opacity ${checked ? 'opacity-50' : ''}`}>
+      <div className="flex items-center gap-2 px-4 py-2.5 hover:bg-[#FDF8F2]/60 group transition-colors">
+        <span className="text-[#D4C5A9] cursor-grab shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <GripVertical className="w-4 h-4" />
+        </span>
+
+        <button
+          onClick={onToggleChecked}
+          className="w-5 h-5 shrink-0 text-[#5C4730] hover:text-[#E8A040] transition-colors"
+          aria-label={checked ? 'Markeer als niet gedaan' : 'Markeer als gedaan'}
+        >
+          {checked ? (
+            <CheckSquare className="w-5 h-5 text-emerald-500" />
+          ) : (
+            <Square className="w-5 h-5" />
+          )}
+        </button>
+
+        <span className={`flex-1 text-sm min-w-0 ${checked ? 'line-through text-[#B8997A]' : 'text-[#3D2810]'}`}>
+          {ingredient.ingredient_name}
+          {ingredient.quantity_per_person > 0 && (
+            <span className="text-[#9E7E60] ml-2 font-mono">
+              — {ingredient.quantity_per_person} {ingredient.unit}
+            </span>
+          )}
+          {ingredient.prep_instruction && (
+            <span className="text-[#B8997A] ml-1 text-xs italic">
+              ({ingredient.prep_instruction})
+            </span>
+          )}
+          {ingredient.ingredient_id && (
+            <Link2 className="inline w-3 h-3 text-[#E8A040] ml-1.5 shrink-0" />
+          )}
+        </span>
+
+        {ingredient.grammage_warning && (
+          <span title="Buiten verwachte portiegrootte" className="text-[#E8A040] shrink-0">
+            <AlertTriangle className="w-4 h-4" />
+          </span>
+        )}
+
+        <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
+          <button
+            title="Naar recept"
+            className="p-1.5 rounded-lg text-[#9E7E60] hover:text-[#2C1810] hover:bg-white transition-all"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setIsEditing((v) => !v)}
+            title="Bewerken"
+            className={`p-1.5 rounded-lg transition-all ${
+              isEditing
+                ? 'bg-[#E8A040]/10 text-[#E8A040]'
+                : 'text-[#9E7E60] hover:text-[#E8A040] hover:bg-white'
+            }`}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            title="Verwijderen"
+            className="p-1.5 rounded-lg text-[#9E7E60] hover:text-red-500 hover:bg-white transition-all disabled:opacity-50"
+          >
+            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {isEditing && (
+        <InlineEditForm
+          ingredient={ingredient}
+          componentId={ingredient.component_id}
+          subGroups={subGroups}
+          onSave={handleSave}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── ComponentSection ─────────────────────────────────────────────────────────
+
+function ComponentSection({
+  component,
+  allComponents,
+  numPersons,
+  checked,
+  onToggleChecked,
+  onSaveIngredient,
+  onDeleteIngredient,
+  onAddIngredient,
+  checkKeyPrefix,
+}: {
+  component: ComponentRow
+  allComponents: ComponentRow[]
+  numPersons: number
+  checked: Record<string, boolean>
+  onToggleChecked: (key: string) => void
+  onSaveIngredient: (rciId: string, payload: SaveIngredientPayload) => Promise<void>
+  onDeleteIngredient: (rciId: string) => Promise<void>
+  onAddIngredient: (componentId: string, payload: SaveIngredientPayload) => Promise<void>
+  checkKeyPrefix: string
+}) {
+  const [addingNew, setAddingNew] = useState(false)
+  const subGroups = allComponents.map((c) => ({ id: c.component_id, name: c.component_name }))
+
+  const handleAddSave = async (payload: SaveIngredientPayload) => {
+    await onAddIngredient(payload.component_id || component.component_id, payload)
+    setAddingNew(false)
+  }
+
+  return (
+    <div>
+      <div className="px-4 py-1.5 bg-white/30 border-b border-[#E8D5B5]/30">
+        <span className="text-xs font-semibold text-[#E8A040]/90 uppercase tracking-wide">
+          {component.component_name}
+        </span>
+      </div>
+
+      {component.ingredients.length === 0 ? (
+        <div className="px-4 py-2 text-xs text-[#B8997A] italic">Geen ingrediënten</div>
+      ) : (
+        component.ingredients.map((ing, ingIdx) => {
+          const checkKey = `${checkKeyPrefix}-${ingIdx}`
+          return (
+            <IngredientRowItem
+              key={ing.rci_id}
+              ingredient={ing}
+              subGroups={subGroups}
+              checked={!!checked[checkKey]}
+              onToggleChecked={() => onToggleChecked(checkKey)}
+              onSave={onSaveIngredient}
+              onDelete={onDeleteIngredient}
+            />
+          )
+        })
+      )}
+
+      {addingNew && (
+        <InlineEditForm
+          componentId={component.component_id}
+          subGroups={subGroups}
+          onSave={handleAddSave}
+          onCancel={() => setAddingNew(false)}
+          isNew
+        />
+      )}
+
+      {!addingNew && (
+        <button
+          onClick={() => setAddingNew(true)}
+          className="flex items-center gap-1.5 mx-4 my-2 px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#E8A040] hover:bg-[#FDF8F2] rounded-lg border border-dashed border-[#D4C5A9] hover:border-[#E8A040]/50 transition-all"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          component
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── DishCard ─────────────────────────────────────────────────────────────────
+
+function DishCard({
+  course,
+  numPersons,
+  checked,
+  onToggleChecked,
+  onSaveIngredient,
+  onDeleteIngredient,
+  onAddIngredient,
+  onEditScope,
+  courseGlobalIdx,
+}: {
+  course: CourseRow
+  numPersons: number
+  checked: Record<string, boolean>
+  onToggleChecked: (key: string) => void
+  onSaveIngredient: (rciId: string, payload: SaveIngredientPayload) => Promise<void>
+  onDeleteIngredient: (rciId: string) => Promise<void>
+  onAddIngredient: (componentId: string, payload: SaveIngredientPayload) => Promise<void>
+  onEditScope: (recipeName: string) => void
+  courseGlobalIdx: number
+}) {
+  return (
+    <div className="mep-course-block bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
+      <div className="px-5 py-3.5 bg-white border-b border-[#E8D5B5] flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[#D4C5A9] shrink-0 cursor-grab">
+            <GripVertical className="w-4 h-4" />
+          </span>
+          <h3 className="font-display text-base font-bold text-[#2C1810] truncate">
+            {course.recipe_name}
+          </h3>
+          {course.serving_size_grams > 0 && (
+            <span className="text-xs text-[#B8997A] font-mono shrink-0">
+              {course.serving_size_grams}g/p
+            </span>
+          )}
+          <button
+            onClick={() => onEditScope(course.recipe_name)}
+            className="p-1 rounded text-[#5C4730] hover:text-[#E8A040] transition-colors no-print shrink-0"
+            data-no-print
+            title="Aanpassing scope"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        {course.cost_per_person > 0 && (
+          <div className="text-right shrink-0 ml-3">
+            <div className="font-mono text-sm font-bold text-[#3D2810]">
+              {formatEur(course.cost_per_person)}/p
+            </div>
+            <div className="font-mono text-xs text-[#B8997A]">
+              {formatEur(course.total_cost)} totaal
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="divide-y divide-[#E8D5B5]/40">
+        {course.components.length === 0 ? (
+          <div className="px-5 py-3 text-[#B8997A] text-sm">
+            Geen componenten — voeg ingrediënten toe via het recept
+          </div>
+        ) : (
+          course.components.map((comp, compIdx) => (
+            <ComponentSection
+              key={comp.component_id}
+              component={comp}
+              allComponents={course.components}
+              numPersons={numPersons}
+              checked={checked}
+              onToggleChecked={onToggleChecked}
+              onSaveIngredient={onSaveIngredient}
+              onDeleteIngredient={onDeleteIngredient}
+              onAddIngredient={onAddIngredient}
+              checkKeyPrefix={`${courseGlobalIdx}-${compIdx}`}
+            />
+          ))
+        )}
+      </div>
+
+      <div className="px-4 py-3 border-t border-[#E8D5B5]/40 bg-white/10">
+        <button
+          onClick={() => {
+            toast.info('Sub-groep toevoegen', {
+              description: 'Functionaliteit binnenkort beschikbaar',
+            })
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#5C4730] hover:bg-white rounded-lg border border-dashed border-[#D4C5A9] hover:border-[#9E7E60] transition-all"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          sub-groep
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function MepDetailPage() {
@@ -463,32 +983,29 @@ export default function MepDetailPage() {
   const [showFinancials, setShowFinancials] = useState(false)
   const supabase = createClient()
 
-  // Load MEP data
-  useEffect(() => {
-    setLoading(true)
-    fetch(`/api/mep/${eventId}`)
-      .then((res) => {
-        if (res.status === 401) {
-          router.push('/login')
-          return null
-        }
-        return res.json()
-      })
-      .then((json) => {
-        if (json?.error) {
-          setError(json.error)
-        } else if (json) {
-          setData(json)
-        }
-        setLoading(false)
-      })
-      .catch(() => {
-        setError('Kon MEP niet laden')
-        setLoading(false)
-      })
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/mep/${eventId}`)
+      if (res.status === 401) {
+        router.push('/login')
+        return
+      }
+      const json = await res.json()
+      if (json?.error) {
+        setError(json.error)
+      } else if (json) {
+        setData(json)
+      }
+    } catch {
+      setError('Kon MEP niet laden')
+    }
   }, [eventId, router])
 
-  // Load checkboxes from localStorage
+  useEffect(() => {
+    setLoading(true)
+    loadData().finally(() => setLoading(false))
+  }, [loadData])
+
   useEffect(() => {
     setChecked(getCheckedState(eventId))
   }, [eventId])
@@ -502,6 +1019,81 @@ export default function MepDetailPage() {
       })
     },
     [eventId]
+  )
+
+  const handleSaveIngredient = useCallback(
+    async (rciId: string, payload: SaveIngredientPayload) => {
+      try {
+        const res = await fetch(`/api/mep/ingredients/${rciId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quantity_per_person: payload.quantity_per_person,
+            unit: payload.unit,
+            prep_instruction: payload.prep_instruction,
+            ingredient_id: payload.ingredient_id,
+            component_id: payload.component_id,
+          }),
+        })
+        if (!res.ok) {
+          const json = await res.json()
+          throw new Error(json.error || 'Update mislukt')
+        }
+        toast.success('Ingredient bijgewerkt')
+        await loadData()
+      } catch (err: any) {
+        toast.error(err.message || 'Update mislukt')
+        throw err
+      }
+    },
+    [loadData]
+  )
+
+  const handleDeleteIngredient = useCallback(
+    async (rciId: string) => {
+      try {
+        const res = await fetch(`/api/mep/ingredients/${rciId}`, { method: 'DELETE' })
+        if (!res.ok) {
+          const json = await res.json()
+          throw new Error(json.error || 'Verwijderen mislukt')
+        }
+        toast.success('Ingredient verwijderd')
+        await loadData()
+      } catch (err: any) {
+        toast.error(err.message || 'Verwijderen mislukt')
+        throw err
+      }
+    },
+    [loadData]
+  )
+
+  const handleAddIngredient = useCallback(
+    async (componentId: string, payload: SaveIngredientPayload) => {
+      try {
+        const res = await fetch('/api/mep/ingredients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            component_id: componentId,
+            ingredient_id: payload.ingredient_id,
+            ingredient_name: payload.ingredient_name,
+            quantity_per_person: payload.quantity_per_person,
+            unit: payload.unit,
+            prep_instruction: payload.prep_instruction,
+          }),
+        })
+        if (!res.ok) {
+          const json = await res.json()
+          throw new Error(json.error || 'Toevoegen mislukt')
+        }
+        toast.success('Ingredient toegevoegd')
+        await loadData()
+      } catch (err: any) {
+        toast.error(err.message || 'Toevoegen mislukt')
+        throw err
+      }
+    },
+    [loadData]
   )
 
   const handleApprove = async () => {
@@ -551,8 +1143,6 @@ export default function MepDetailPage() {
 
   const handlePrint = () => window.print()
 
-  // ── Loading & error states ──────────────────────────────────────────────────
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -591,8 +1181,7 @@ export default function MepDetailPage() {
             Geen menu items gevonden
           </h3>
           <p className="text-[#B8997A] text-sm mb-6 max-w-md mx-auto">
-            Dit event heeft nog geen gerechten in het menu. Voeg eerst gerechten toe via de event
-            pagina.
+            Dit event heeft nog geen gerechten in het menu. Voeg eerst gerechten toe via de event pagina.
           </p>
           <Link
             href={`/events/${eventId}`}
@@ -608,7 +1197,6 @@ export default function MepDetailPage() {
   const { event, courses, totals } = data
   const statusInfo = statusConfig[event.status] || statusConfig.draft
 
-  // Calculate progress
   const totalIngredients = courses.reduce(
     (sum, c) => sum + c.components.reduce((s, comp) => s + comp.ingredients.length, 0),
     0
@@ -616,7 +1204,6 @@ export default function MepDetailPage() {
   const totalChecked = Object.values(checked).filter(Boolean).length
   const progressPct = totalIngredients > 0 ? (totalChecked / totalIngredients) * 100 : 0
 
-  // Group courses by category
   const categoryGroups: Array<{
     categoryCode: string
     categoryLabel: string
@@ -639,12 +1226,8 @@ export default function MepDetailPage() {
   }
   categoryGroups.sort((a, b) => a.categorySortOrder - b.categorySortOrder)
 
-  // Track ingredient index for checkbox keys
-  let globalIngIdx = 0
-
   return (
     <>
-      {/* ── Print CSS ── */}
       <style jsx global>{`
         @media print {
           nav, aside, header, [data-sidebar], [data-no-print], .no-print {
@@ -658,7 +1241,6 @@ export default function MepDetailPage() {
         }
       `}</style>
 
-      {/* Edit Scope Modal */}
       {editScopeRecipe && (
         <EditScopeModal
           recipeName={editScopeRecipe}
@@ -666,7 +1248,6 @@ export default function MepDetailPage() {
         />
       )}
 
-      {/* Financials Modal */}
       {showFinancials && (
         <FinancialsModal
           eventId={eventId}
@@ -677,7 +1258,6 @@ export default function MepDetailPage() {
       )}
 
       <div className="space-y-6 mep-print-content">
-        {/* ── Top Bar ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print" data-no-print>
           <div className="flex items-center gap-3">
             <Link
@@ -695,13 +1275,11 @@ export default function MepDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Status badge */}
             <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${statusInfo.className}`}>
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
               {statusInfo.label}
             </span>
 
-            {/* Approve button (only when not yet approved) */}
             {event.status !== 'approved' && event.status !== 'completed' && (
               <button
                 onClick={handleApprove}
@@ -731,7 +1309,6 @@ export default function MepDetailPage() {
           </div>
         </div>
 
-        {/* ── Event Header ── */}
         <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
           <div className="flex flex-wrap gap-4 items-start justify-between">
             <div>
@@ -757,7 +1334,6 @@ export default function MepDetailPage() {
               </div>
             </div>
 
-            {/* Cost summary + Financials */}
             <div className="flex flex-col gap-2">
               {totals.food_cost_per_person > 0 && (
                 <div className="flex gap-2">
@@ -795,7 +1371,6 @@ export default function MepDetailPage() {
             </div>
           </div>
 
-          {/* Progress bar */}
           {totalIngredients > 0 && (
             <div className="mt-4 no-print" data-no-print>
               <div className="flex items-center justify-between text-xs text-[#B8997A] mb-1.5">
@@ -817,11 +1392,9 @@ export default function MepDetailPage() {
           )}
         </div>
 
-        {/* ── Category Groups ── */}
         <div className="space-y-6">
           {categoryGroups.map((group) => (
             <div key={group.categoryCode}>
-              {/* Category header */}
               <div className="flex items-center gap-3 mb-3">
                 <div className="h-px flex-1 bg-white" />
                 <h2 className="text-xs font-bold text-[#E8A040] uppercase tracking-widest mep-amber whitespace-nowrap">
@@ -830,142 +1403,22 @@ export default function MepDetailPage() {
                 <div className="h-px flex-1 bg-white" />
               </div>
 
-              {/* Courses in this category */}
               <div className="space-y-3">
-                {group.courses.map((course, courseIdx) => {
+                {group.courses.map((course) => {
                   const courseGlobalIdx = courses.indexOf(course)
-
                   return (
-                    <div
-                      key={courseIdx}
-                      className="mep-course-block bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden"
-                    >
-                      {/* Course header */}
-                      <div className="px-5 py-3.5 bg-white border-b border-[#E8D5B5] flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-display text-base font-bold text-[#2C1810]">
-                            {course.recipe_name}
-                          </h3>
-                          {/* Portiegrootte */}
-                          {course.serving_size_grams > 0 && (
-                            <span className="text-xs text-[#B8997A] font-mono">
-                              {course.serving_size_grams}g/p
-                            </span>
-                          )}
-                          {/* Edit scope trigger */}
-                          <button
-                            onClick={() => setEditScopeRecipe(course.recipe_name)}
-                            className="p-1 rounded text-[#5C4730] hover:text-[#E8A040] transition-colors no-print"
-                            data-no-print
-                            title="Aanpassing scope"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        {course.cost_per_person > 0 && (
-                          <div className="text-right">
-                            <div className="font-mono text-sm font-bold text-[#3D2810]">
-                              {formatEur(course.cost_per_person)}/p
-                            </div>
-                            <div className="font-mono text-xs text-[#B8997A]">
-                              {formatEur(course.total_cost)} totaal
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Components & ingredients */}
-                      <div className="divide-y divide-[#E8D5B5]/50">
-                        {course.components.length === 0 ? (
-                          <div className="px-5 py-3 text-[#B8997A] text-sm">
-                            Geen componenten — voeg ingrediënten toe via het recept
-                          </div>
-                        ) : (
-                          course.components.map((comp, compIdx) => {
-                            return (
-                              <div key={compIdx}>
-                                {/* Component subheader */}
-                                <div className="px-5 py-1.5 bg-white/20">
-                                  <span className="text-xs font-semibold text-[#E8A040]/80 uppercase tracking-wide mep-amber">
-                                    {comp.component_name}
-                                  </span>
-                                </div>
-
-                                {/* Ingredient table header */}
-                                <div className="px-5 py-1.5 flex items-center gap-3 text-xs text-[#B8997A] font-medium bg-white/10">
-                                  <span className="w-6 shrink-0 no-print" data-no-print />
-                                  <span className="flex-1">Ingrediënt</span>
-                                  <span className="w-24 text-right">Per persoon</span>
-                                  <span className="w-28 text-right font-semibold">
-                                    Totaal ({event.num_persons}p)
-                                  </span>
-                                </div>
-
-                                {/* Ingredients */}
-                                {comp.ingredients.map((ing, ingIdx) => {
-                                  const checkKey = `${courseGlobalIdx}-${compIdx}-${ingIdx}`
-                                  const isChecked = !!checked[checkKey]
-
-                                  return (
-                                    <div
-                                      key={ingIdx}
-                                      className={`px-5 py-2.5 flex items-center gap-3 border-b border-[#E8D5B5]/30 transition-colors hover:bg-white/20 ${
-                                        isChecked ? 'opacity-50' : ''
-                                      }`}
-                                    >
-                                      {/* Checkbox */}
-                                      <button
-                                        onClick={() => toggleChecked(checkKey)}
-                                        className="w-5 h-5 shrink-0 text-[#5C4730] hover:text-[#E8A040] transition-colors no-print"
-                                        data-no-print
-                                        aria-label={isChecked ? 'Markeer als niet gedaan' : 'Markeer als gedaan'}
-                                      >
-                                        {isChecked ? (
-                                          <CheckSquare className="w-5 h-5 text-emerald-500" />
-                                        ) : (
-                                          <Square className="w-5 h-5" />
-                                        )}
-                                      </button>
-
-                                      {/* Name */}
-                                      <span
-                                        className={`flex-1 text-sm ${
-                                          isChecked ? 'line-through text-[#B8997A]' : 'text-[#3D2810]'
-                                        }`}
-                                      >
-                                        {ing.ingredient_name}
-                                      </span>
-
-                                      {/* Grammage warning */}
-                                      {ing.grammage_warning && (
-                                        <span
-                                          title="Buiten verwachte portiegrootte"
-                                          className="text-[#E8A040] no-print"
-                                          data-no-print
-                                        >
-                                          <AlertTriangle className="w-4 h-4" />
-                                        </span>
-                                      )}
-
-                                      {/* Per person */}
-                                      <span className="w-24 text-right text-xs text-[#9E7E60] font-mono">
-                                        {ing.quantity_per_person}
-                                        {ing.unit}/p
-                                      </span>
-
-                                      {/* Total */}
-                                      <span className="w-28 text-right text-sm font-mono font-bold text-[#2C1810]">
-                                        {formatQty(ing.total_quantity, ing.unit)}
-                                      </span>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )
-                          })
-                        )}
-                      </div>
-                    </div>
+                    <DishCard
+                      key={course.menu_item_id}
+                      course={course}
+                      numPersons={event.num_persons}
+                      checked={checked}
+                      onToggleChecked={toggleChecked}
+                      onSaveIngredient={handleSaveIngredient}
+                      onDeleteIngredient={handleDeleteIngredient}
+                      onAddIngredient={handleAddIngredient}
+                      onEditScope={setEditScopeRecipe}
+                      courseGlobalIdx={courseGlobalIdx}
+                    />
                   )
                 })}
               </div>
@@ -973,7 +1426,6 @@ export default function MepDetailPage() {
           ))}
         </div>
 
-        {/* ── Footer totals ── */}
         {totals.total_food_cost > 0 && (
           <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -1004,7 +1456,6 @@ export default function MepDetailPage() {
           </div>
         )}
 
-        {/* ── Actions (bottom) ── */}
         <div className="flex gap-3 no-print flex-wrap" data-no-print>
           <Link
             href={`/events/${eventId}`}
