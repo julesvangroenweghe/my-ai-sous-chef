@@ -109,9 +109,35 @@ export default function RecipesPage() {
               </div>
             </div>
           </div>
-          <Link href="/recipes/new" className="btn-primary shrink-0">
-            <Plus className="w-4 h-4" /> Nieuw Recept
-          </Link>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <Link
+              href="/recipes/import"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 16px',
+                borderRadius: 10,
+                border: '1px solid #E8D5B5',
+                backgroundColor: 'white',
+                color: '#5C4730',
+                fontSize: 13,
+                fontWeight: 500,
+                textDecoration: 'none',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E8A040" strokeWidth="2" strokeLinecap="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Importeren
+            </Link>
+            <Link href="/recipes/new" className="btn-primary">
+              <Plus className="w-4 h-4" /> Nieuw Recept
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -172,7 +198,7 @@ export default function RecipesPage() {
               Alles
             </button>
             {categories.map(cat => {
-              const color = categoryColors[cat] || 'bg-stone-50 text-[#5C4730]'
+              const color = categoryColors[cat] || 'bg-stone-50 text-stone-700'
               return (
                 <button
                   key={cat}
@@ -211,13 +237,23 @@ export default function RecipesPage() {
           <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
             {recipes.length > 0
               ? 'Pas je zoekterm of filter aan.'
-              : 'Voeg recepten toe met componentniveau kostenberekening. Prijzen worden automatisch bijgewerkt via factuurscans.'
+              : 'Voeg recepten toe met componentniveau kostenberekening, of importeer bestaande recepten via foto of Evernote.'
             }
           </p>
           {recipes.length === 0 && (
-            <Link href="/recipes/new" className="btn-primary">
-              <Plus className="w-4 h-4" /> Eerste recept toevoegen
-            </Link>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/recipes/import" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '10px 20px', borderRadius: 10,
+                border: '1px solid #E8D5B5', backgroundColor: 'white',
+                color: '#5C4730', fontSize: 13, fontWeight: 500, textDecoration: 'none',
+              }}>
+                Recepten importeren
+              </Link>
+              <Link href="/recipes/new" className="btn-primary">
+                <Plus className="w-4 h-4" /> Eerste recept toevoegen
+              </Link>
+            </div>
           )}
         </div>
       ) : (
