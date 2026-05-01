@@ -735,11 +735,11 @@ Of bij fouten:
   "fixed_courses": [/* gecorrigeerde courses array */]
 }`
 
-    const wachterPrompt = \`Controleer dit menu op culinaire fouten en corrigeer waar nodig:
-\${JSON.stringify(finalMenu.courses || [], null, 2)}
+    const wachterPrompt = `Controleer dit menu op culinaire fouten en corrigeer waar nodig:
+${JSON.stringify(finalMenu.courses || [], null, 2)}
 
 Kijk SPECIFIEK naar: hartige kruiden in desserts (lavas!), umami-elementen in zoete bereidingen.
-Bij fouten: pas het gerecht minimaal aan — enkel het foutieve element vervangen.\`
+Bij fouten: pas het gerecht minimaal aan — enkel het foutieve element vervangen.`
 
     const wachterRes = await callAnthropic(wachterSystem, wachterPrompt, 2000)
     if (wachterRes.ok) {
