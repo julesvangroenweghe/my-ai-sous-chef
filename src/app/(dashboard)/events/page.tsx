@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, CalendarDays, MapPin, Users, ArrowRight, Euro, ClipboardList, AlertTriangle, FileText } from 'lucide-react'
+import { Plus, CalendarDays, MapPin, Users, ArrowRight, Euro, ClipboardList, AlertTriangle, FileText, Link2 } from 'lucide-react'
 import { ChefTip } from '@/components/ai/chef-tip'
 import ImportBriefModal from '@/components/events/import-brief-modal'
 
@@ -18,6 +18,8 @@ interface Event {
   price_per_person: number | null
   notes: string | null
   created_at: string
+  google_calendar_event_id?: string | null
+  google_calendar_summary?: string | null
 }
 
 const eventTypeConfig: Record<string, { label: string; color: string }> = {
@@ -311,6 +313,12 @@ export default function EventsPage() {
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
                               <AlertTriangle className="w-2.5 h-2.5" />
                               MEP nodig
+                            </span>
+                          )}
+                          {event.google_calendar_event_id && (
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#FEF3E2] text-[#C4703A] border border-[#E8A040]/20 flex items-center gap-1">
+                              <Link2 className="w-2.5 h-2.5" />
+                              {event.google_calendar_summary || 'Google Agenda'}
                             </span>
                           )}
                         </div>

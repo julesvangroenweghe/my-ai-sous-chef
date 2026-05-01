@@ -7,12 +7,14 @@ import Link from 'next/link'
 import {
  ArrowLeft, CalendarDays, MapPin, Users, Euro, Clock,
  Plus, Trash2, ClipboardList, ChefHat, Loader2,
- X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp, FileText
+ X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp, FileText,
+ Calendar, Link2, ExternalLink
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
 import { MepOcrImporter } from '@/components/mep/mep-ocr-importer'
 import { EventAllergenSection } from '@/components/allergens/event-allergen-section'
+import CalendarLinkModal from '@/components/events/calendar-link-modal'
 
 interface EventDetail {
  id: string
@@ -27,39 +29,42 @@ interface EventDetail {
  arrival_time: string | null
  notes: string | null
  status: string
+ google_calendar_event_id?: string | null
+ google_calendar_summary?: string | null
+ google_calendar_html_link?: string | null
  menu_items: {
- id: string
- recipe_id: string
- course_order: number
- recipe: {
- id: string
- name: string
- description: string | null
- total_cost_per_serving: number | null
- components: {
- id: string
- name: string
- ingredients: {
- id: string
- quantity: number
- quantity_per_person: number | null
- unit: string
- ingredient: {
- id: string
- name: string
- category: string | null
- unit: string | null
- current_price: number | null
- } | null
- }[]
- }[]
- }
+  id: string
+  recipe_id: string
+  course_order: number
+  recipe: {
+   id: string
+   name: string
+   description: string | null
+   total_cost_per_serving: number | null
+   components: {
+    id: string
+    name: string
+    ingredients: {
+     id: string
+     quantity: number
+     quantity_per_person: number | null
+     unit: string
+     ingredient: {
+      id: string
+      name: string
+      category: string | null
+      unit: string | null
+      current_price: number | null
+     } | null
+    }[]
+   }[]
+  }
  }[]
  dietary_flags: {
- id: string
- flag_name: string
- guest_name: string | null
- notes: string | null
+  id: string
+  flag_name: string
+  guest_name: string | null
+  notes: string | null
  }[]
 }
 
@@ -109,94 +114,105 @@ export default function EventDetailPage() {
  const [activeTab, setActiveTab] = useState<TabId>('menu')
  const [mepRefreshKey, setMepRefreshKey] = useState(0)
  const [showMepImport, setShowMepImport] = useState(false)
+ const [showCalendarModal, setShowCalendarModal] = useState(false)
+ const [calendarLink, setCalendarLink] = useState<{id: string, summary: string, htmlLink: string} | null>(null)
 
  const fetchEvent = useCallback(async () => {
- const { data, error } = await supabase
- .from('events')
- .select(`
- *,
- menu_items:event_menu_items(
- id, recipe_id, course_order, course,
- recipe:recipes(
- id, name, description, total_cost_per_serving,
- components:recipe_components(
- id, name,
- ingredients:recipe_component_ingredients(
- id, quantity, quantity_per_person, unit,
- ingredient:ingredients(id, name, category, unit, current_price)
- )
- )
- )
- ),
- dietary_flags:event_dietary_flags(id, flag_name, guest_name, notes)
- `)
- .eq('id', eventId)
- .single()
+  const { data, error } = await supabase
+   .from('events')
+   .select(`
+    *,
+    menu_items:event_menu_items(
+     id, recipe_id, course_order, course,
+     recipe:recipes(
+      id, name, description, total_cost_per_serving,
+      components:recipe_components(
+       id, name,
+       ingredients:recipe_component_ingredients(
+        id, quantity, quantity_per_person, unit,
+        ingredient:ingredients(id, name, category, unit, current_price)
+       )
+      )
+     )
+    ),
+    dietary_flags:event_dietary_flags(id, flag_name, guest_name, notes)
+   `)
+   .eq('id', eventId)
+   .single()
 
- if (data) {
- data.menu_items = (data.menu_items || []).sort((a: any, b: any) => a.course_order - b.course_order)
- setEvent(data as unknown as EventDetail)
- }
- setLoading(false)
+  if (data) {
+   data.menu_items = (data.menu_items || []).sort((a: any, b: any) => a.course_order - b.course_order)
+   setEvent(data as unknown as EventDetail)
+   if (data.google_calendar_event_id) {
+    setCalendarLink({
+     id: data.google_calendar_event_id,
+     summary: data.google_calendar_summary || '',
+     htmlLink: data.google_calendar_html_link || ''
+    })
+   } else {
+    setCalendarLink(null)
+   }
+  }
+  setLoading(false)
  }, [eventId])
 
  const fetchRecipes = useCallback(async () => {
- const { data } = await supabase
- .from('recipes')
- .select('id, name')
- .eq('status', 'active')
- .order('name')
- setRecipes(data || [])
+  const { data } = await supabase
+   .from('recipes')
+   .select('id, name')
+   .eq('status', 'active')
+   .order('name')
+  setRecipes(data || [])
  }, [])
 
  useEffect(() => {
- fetchEvent()
- fetchRecipes()
+  fetchEvent()
+  fetchRecipes()
  }, [fetchEvent, fetchRecipes])
 
  const addRecipeToEvent = async () => {
- if (!selectedRecipeId || !event) return
- setAddingRecipe(true)
- const { error } = await supabase
- .from('event_menu_items')
- .insert({ event_id: event.id, recipe_id: selectedRecipeId, course_order: selectedCourse, course: courseLabels[selectedCourse]?.trim() || `Gang ${selectedCourse}` })
- if (!error) {
- await fetchEvent()
- setShowAddRecipe(false)
- setSelectedRecipeId('')
- }
- setAddingRecipe(false)
+  if (!selectedRecipeId || !event) return
+  setAddingRecipe(true)
+  const { error } = await supabase
+   .from('event_menu_items')
+   .insert({ event_id: event.id, recipe_id: selectedRecipeId, course_order: selectedCourse, course: courseLabels[selectedCourse]?.trim() || `Gang ${selectedCourse}` })
+  if (!error) {
+   await fetchEvent()
+   setShowAddRecipe(false)
+   setSelectedRecipeId('')
+  }
+  setAddingRecipe(false)
  }
 
  const removeRecipeFromEvent = async (menuItemId: string) => {
- await supabase.from('event_menu_items').delete().eq('id', menuItemId)
- await fetchEvent()
+  await supabase.from('event_menu_items').delete().eq('id', menuItemId)
+  await fetchEvent()
  }
 
  if (loading) {
- return (
- <div className="flex items-center justify-center py-20">
- <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
- </div>
- )
+  return (
+   <div className="flex items-center justify-center py-20">
+    <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
+   </div>
+  )
  }
 
  if (!event) {
- return (
- <div className="text-center py-20">
- <p className="text-[#9E7E60]">Event niet gevonden</p>
- <Link href="/events" className="text-brand-400 hover:text-brand-300 text-sm mt-2 inline-block">Terug naar events</Link>
- </div>
- )
+  return (
+   <div className="text-center py-20">
+    <p className="text-[#9E7E60]">Event niet gevonden</p>
+    <Link href="/events" className="text-brand-400 hover:text-brand-300 text-sm mt-2 inline-block">Terug naar events</Link>
+   </div>
+  )
  }
 
  // Group menu items by course text label, sorted by course_order
  const menuByCourse: Record<string, { order: number; items: typeof event.menu_items }> = {}
  for (const item of event.menu_items) {
- const label = (item.course || courseLabels[item.course_order]?.trim() || `Gang ${item.course_order}`).toUpperCase()
- if (!menuByCourse[label]) menuByCourse[label] = { order: item.course_order, items: [] }
- menuByCourse[label].items.push(item)
- if (item.course_order < menuByCourse[label].order) menuByCourse[label].order = item.course_order
+  const label = (item.course || courseLabels[item.course_order]?.trim() || `Gang ${item.course_order}`).toUpperCase()
+  if (!menuByCourse[label]) menuByCourse[label] = { order: item.course_order, items: [] }
+  menuByCourse[label].items.push(item)
+  if (item.course_order < menuByCourse[label].order) menuByCourse[label].order = item.course_order
  }
 
  const totalMenuCost = event.menu_items.reduce((sum, item) => sum + (Number(item.recipe?.total_cost_per_serving) || 0), 0)
@@ -205,210 +221,240 @@ export default function EventDetailPage() {
  const foodCostPct = revenue > 0 ? (totalEventCost / revenue) * 100 : 0
 
  const tabs = [
- { id: 'menu' as TabId, label: 'Menu', icon: ChefHat, count: event.menu_items.length },
- { id: 'mep' as TabId, label: 'MEP Plan', icon: ClipboardList },
- { id: 'shopping' as TabId, label: 'Boodschappen', icon: ShoppingCart },
- { id: 'voorstel' as TabId, label: 'Voorstellen', icon: FileText },
+  { id: 'menu' as TabId, label: 'Menu', icon: ChefHat, count: event.menu_items.length },
+  { id: 'mep' as TabId, label: 'MEP Plan', icon: ClipboardList },
+  { id: 'shopping' as TabId, label: 'Boodschappen', icon: ShoppingCart },
+  { id: 'voorstel' as TabId, label: 'Voorstellen', icon: FileText },
  ]
 
  return (
- <div className="space-y-6">
- {/* Header */}
- <div className="flex items-start gap-4">
- <Link href="/events" className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-1">
- <ArrowLeft className="w-5 h-5" />
- </Link>
- <div className="flex-1">
- <div className="flex items-center gap-3 mb-1">
- <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">{event.name}</h1>
- <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
- {event.status}
- </span>
- </div>
- <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
- <span className="flex items-center gap-1.5">
- <CalendarDays className="w-4 h-4" />
- {event.event_date ? new Date(event.event_date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Geen datum'}
- </span>
- <span>{eventTypeLabels[event.event_type] || event.event_type}</span>
- {event.num_persons && (
- <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{event.num_persons} personen</span>
- )}
- {event.location && (
- <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{event.location}</span>
- )}
- {event.departure_time && (
- <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />Vertrek: {event.departure_time}</span>
- )}
- </div>
- </div>
- </div>
+  <div className="space-y-6">
+   {/* Header */}
+   <div className="flex items-start gap-4">
+    <Link href="/events" className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-1">
+     <ArrowLeft className="w-5 h-5" />
+    </Link>
+    <div className="flex-1">
+     <div className="flex items-center gap-3 mb-1">
+      <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">{event.name}</h1>
+      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[event.status] || statusColors.draft}`}>
+       {event.status}
+      </span>
+     </div>
+     <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
+      <span className="flex items-center gap-1.5">
+       <CalendarDays className="w-4 h-4" />
+       {event.event_date ? new Date(event.event_date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Geen datum'}
+      </span>
+      <span>{eventTypeLabels[event.event_type] || event.event_type}</span>
+      {event.num_persons && (
+       <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{event.num_persons} personen</span>
+      )}
+      {event.location && (
+       <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{event.location}</span>
+      )}
+      {event.departure_time && (
+       <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />Vertrek: {event.departure_time}</span>
+      )}
+     </div>
 
- {/* Cost Summary Cards */}
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
- <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
- <div className="text-xs text-[#9E7E60] mb-1">Kost/persoon</div>
- <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalMenuCost.toFixed(2)}</div>
- </div>
- <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
- <div className="text-xs text-[#9E7E60] mb-1">Totale kost</div>
- <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalEventCost.toFixed(2)}</div>
- </div>
- <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
- <div className="text-xs text-[#9E7E60] mb-1">Omzet</div>
- <div className="text-lg font-mono font-bold text-[#2C1810]">€{revenue.toFixed(2)}</div>
- </div>
- <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
- <div className="text-xs text-[#9E7E60] mb-1">Food Cost</div>
- <div className={`text-lg font-mono font-bold ${
- foodCostPct === 0 ? 'text-[#9E7E60]' :
- foodCostPct < 30 ? 'text-green-400' :
- foodCostPct <= 35 ? 'text-amber-700' : 'text-red-400'
- }`}>
- {foodCostPct > 0 ? `${foodCostPct.toFixed(1)}%` : '—'}
- </div>
- </div>
- </div>
+     {/* Google Calendar badge */}
+     {calendarLink ? (
+      <div className="flex items-center gap-2 flex-wrap mt-2">
+       <a
+        href={calendarLink.htmlLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#FEF3E2] border border-[#E8A040]/30 text-[#C4703A] rounded-full hover:bg-[#FDE8C0] transition-colors"
+       >
+        <Link2 className="w-3 h-3" />
+        {calendarLink.summary}
+        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+       </a>
+       <button
+        onClick={() => setShowCalendarModal(true)}
+        className="text-xs text-[#9E7E60] hover:text-[#2C1810] transition-colors"
+       >
+        Wijzigen
+       </button>
+      </div>
+     ) : (
+      <button
+       onClick={() => setShowCalendarModal(true)}
+       className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-white border border-[#E8D5B5] text-[#9E7E60] rounded-full hover:bg-[#F2E8D5] hover:text-[#2C1810] transition-colors mt-2"
+      >
+       <Calendar className="w-3 h-3" />
+       Koppel aan Google Agenda
+      </button>
+     )}
+    </div>
+   </div>
 
- {/* Tab Navigation */}
- <div className="flex items-center gap-1 bg-white border border-[#E8D5B5] rounded-xl p-1">
- {tabs.map(tab => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id)}
- className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
- activeTab === tab.id
- ? 'bg-brand-600 text-[#2C1810] shadow-lg shadow-brand-500/20'
- : 'text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5]'
- }`}
- >
- <tab.icon className="w-4 h-4" />
- {tab.label}
- {tab.count !== undefined && (
- <span className={`text-xs px-1.5 py-0.5 rounded-full ${
- activeTab === tab.id ? 'bg-white/20' : 'bg-stone-100'
- }`}>
- {tab.count}
- </span>
- )}
- </button>
- ))}
- </div>
+   {/* Cost Summary Cards */}
+   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+     <div className="text-xs text-[#9E7E60] mb-1">Kost/persoon</div>
+     <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalMenuCost.toFixed(2)}</div>
+    </div>
+    <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+     <div className="text-xs text-[#9E7E60] mb-1">Totale kost</div>
+     <div className="text-lg font-mono font-bold text-[#2C1810]">€{totalEventCost.toFixed(2)}</div>
+    </div>
+    <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+     <div className="text-xs text-[#9E7E60] mb-1">Omzet</div>
+     <div className="text-lg font-mono font-bold text-[#2C1810]">€{revenue.toFixed(2)}</div>
+    </div>
+    <div className="bg-white border border-[#E8D5B5] rounded-xl p-4">
+     <div className="text-xs text-[#9E7E60] mb-1">Food Cost</div>
+     <div className={`text-lg font-mono font-bold ${
+      foodCostPct === 0 ? 'text-[#9E7E60]' :
+      foodCostPct < 30 ? 'text-green-400' :
+      foodCostPct <= 35 ? 'text-amber-700' : 'text-red-400'
+     }`}>
+      {foodCostPct > 0 ? `${foodCostPct.toFixed(1)}%` : '—'}
+     </div>
+    </div>
+   </div>
 
- {/* Tab Content */}
- {activeTab === 'menu' && (
- <div className="bg-white border border-[#E8D5B5] rounded-2xl">
- <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center justify-between">
- <h2 className="text-lg font-display font-semibold text-[#2C1810] flex items-center gap-2">
- <ChefHat className="w-5 h-5 text-brand-400" /> Menu
- </h2>
- <button
- onClick={() => setShowAddRecipe(true)}
- className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-xs font-medium rounded-lg transition-all"
- >
- <Plus className="w-3.5 h-3.5" /> Gerecht Toevoegen
- </button>
- </div>
+   {/* Tab Navigation */}
+   <div className="flex items-center gap-1 bg-white border border-[#E8D5B5] rounded-xl p-1">
+    {tabs.map(tab => (
+     <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${
+       activeTab === tab.id
+        ? 'bg-brand-600 text-[#2C1810] shadow-lg shadow-brand-500/20'
+        : 'text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5]'
+      }`}
+     >
+      <tab.icon className="w-4 h-4" />
+      {tab.label}
+      {tab.count !== undefined && (
+       <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+        activeTab === tab.id ? 'bg-white/20' : 'bg-stone-100'
+       }`}>
+        {tab.count}
+       </span>
+      )}
+     </button>
+    ))}
+   </div>
 
- {showAddRecipe && (
- <div className="px-6 py-4 border-b border-[#E8D5B5] bg-[#FAF6EF]">
- <div className="flex items-end gap-3">
- <div className="flex-1 space-y-1.5">
- <label className="text-xs text-[#9E7E60]">Recept</label>
- <select value={selectedRecipeId} onChange={(e) => setSelectedRecipeId(e.target.value)}
- className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
- <option value="">Kies een recept...</option>
- {recipes.map(r => (<option key={r.id} value={r.id}>{r.name}</option>))}
- </select>
- </div>
- <div className="w-44 space-y-1.5">
- <label className="text-xs text-[#9E7E60]">Gang</label>
- <select value={selectedCourse} onChange={(e) => setSelectedCourse(Number(e.target.value))}
- className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
- {Object.entries(courseLabels).map(([num, label]) => (<option key={num} value={num}>{label}</option>))}
- </select>
- </div>
- <button onClick={addRecipeToEvent} disabled={!selectedRecipeId || addingRecipe}
- className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm rounded-lg transition-all disabled:opacity-50">
- {addingRecipe ? '...' : 'Toevoegen'}
- </button>
- <button onClick={() => setShowAddRecipe(false)} className="p-2 text-[#9E7E60] hover:text-[#2C1810] transition-colors">
- <X className="w-4 h-4" />
- </button>
- </div>
- </div>
- )}
+   {/* Tab Content */}
+   {activeTab === 'menu' && (
+    <div className="bg-white border border-[#E8D5B5] rounded-2xl">
+     <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center justify-between">
+      <h2 className="text-lg font-display font-semibold text-[#2C1810] flex items-center gap-2">
+       <ChefHat className="w-5 h-5 text-brand-400" /> Menu
+      </h2>
+      <button
+       onClick={() => setShowAddRecipe(true)}
+       className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-xs font-medium rounded-lg transition-all"
+      >
+       <Plus className="w-3.5 h-3.5" /> Gerecht Toevoegen
+      </button>
+     </div>
 
- {event.menu_items.length === 0 ? (
- <div className="px-6 py-12 text-center">
- <ChefHat className="w-10 h-10 text-[#B8997A] mx-auto mb-3" />
- <p className="text-[#9E7E60] text-sm">Nog geen gerechten toegevoegd</p>
- </div>
- ) : (
- <div className="divide-y divide-[#F0E8D8]">
- {Object.entries(menuByCourse).sort(([, a], [, b]) => a.order - b.order).map(([courseLabel, { items }]) => (
- <div key={courseLabel}>
- <div className="px-6 py-2.5 bg-[#F5EDE0]">
- <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
- {courseLabel}
- </span>
- </div>
- {items.map((item) => (
- <div key={item.id} className="px-6 py-3 flex items-center gap-4 hover:bg-[#F5EDE0] transition-colors">
- <div className="flex-1">
- <Link href={`/recipes/${item.recipe?.id}`} className="text-sm font-medium text-[#2C1810] hover:text-brand-400 transition-colors">
- {item.recipe?.name || 'Onbekend recept'}
- </Link>
- {item.recipe?.components && (
- <div className="flex items-center gap-2 mt-1">
- <span className="text-xs text-[#9E7E60]">
- {item.recipe.components.length} componenten · {item.recipe.components.reduce((s, c) => s + (c.ingredients?.length || 0), 0)} ingrediënten
- </span>
- </div>
- )}
- {item.recipe?.total_cost_per_serving && (
- <span className="text-xs font-mono text-[#9E7E60]">
- €{Number(item.recipe.total_cost_per_serving).toFixed(2)}/p
- </span>
- )}
- </div>
- <button onClick={() => removeRecipeFromEvent(item.id)}
- className="p-1.5 text-[#B8997A] hover:text-red-400 transition-colors">
- <Trash2 className="w-4 h-4" />
- </button>
- </div>
- ))}
- </div>
- ))}
- </div>
- )}
- </div>
- )}
+     {showAddRecipe && (
+      <div className="px-6 py-4 border-b border-[#E8D5B5] bg-[#FAF6EF]">
+       <div className="flex items-end gap-3">
+        <div className="flex-1 space-y-1.5">
+         <label className="text-xs text-[#9E7E60]">Recept</label>
+         <select value={selectedRecipeId} onChange={(e) => setSelectedRecipeId(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="">Kies een recept...</option>
+          {recipes.map(r => (<option key={r.id} value={r.id}>{r.name}</option>))}
+         </select>
+        </div>
+        <div className="w-44 space-y-1.5">
+         <label className="text-xs text-[#9E7E60]">Gang</label>
+         <select value={selectedCourse} onChange={(e) => setSelectedCourse(Number(e.target.value))}
+          className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-[#2C1810] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+          {Object.entries(courseLabels).map(([num, label]) => (<option key={num} value={num}>{label}</option>))}
+         </select>
+        </div>
+        <button onClick={addRecipeToEvent} disabled={!selectedRecipeId || addingRecipe}
+         className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-[#2C1810] text-sm rounded-lg transition-all disabled:opacity-50">
+         {addingRecipe ? '...' : 'Toevoegen'}
+        </button>
+        <button onClick={() => setShowAddRecipe(false)} className="p-2 text-[#9E7E60] hover:text-[#2C1810] transition-colors">
+         <X className="w-4 h-4" />
+        </button>
+       </div>
+      </div>
+     )}
 
- {activeTab === 'mep' && event.num_persons && (
- <MepInlineEditor
- key={mepRefreshKey}
- eventId={eventId}
- eventName={event.name}
- numPersons={event.num_persons}
- onMepGenerated={() => setMepRefreshKey(k => k + 1)}
- />
- )}
+     {event.menu_items.length === 0 ? (
+      <div className="px-6 py-12 text-center">
+       <ChefHat className="w-10 h-10 text-[#B8997A] mx-auto mb-3" />
+       <p className="text-[#9E7E60] text-sm">Nog geen gerechten toegevoegd</p>
+      </div>
+     ) : (
+      <div className="divide-y divide-[#F0E8D8]">
+       {Object.entries(menuByCourse).sort(([, a], [, b]) => a.order - b.order).map(([courseLabel, { items }]) => (
+        <div key={courseLabel}>
+         <div className="px-6 py-2.5 bg-[#F5EDE0]">
+          <span className="text-xs font-medium text-[#9E7E60] uppercase tracking-wider">
+           {courseLabel}
+          </span>
+         </div>
+         {items.map((item) => (
+          <div key={item.id} className="px-6 py-3 flex items-center gap-4 hover:bg-[#F5EDE0] transition-colors">
+           <div className="flex-1">
+            <Link href={`/recipes/${item.recipe?.id}`} className="text-sm font-medium text-[#2C1810] hover:text-brand-400 transition-colors">
+             {item.recipe?.name || 'Onbekend recept'}
+            </Link>
+            {item.recipe?.components && (
+             <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-[#9E7E60]">
+               {item.recipe.components.length} componenten · {item.recipe.components.reduce((s, c) => s + (c.ingredients?.length || 0), 0)} ingrediënten
+              </span>
+             </div>
+            )}
+            {item.recipe?.total_cost_per_serving && (
+             <span className="text-xs font-mono text-[#9E7E60]">
+              €{Number(item.recipe.total_cost_per_serving).toFixed(2)}/p
+             </span>
+            )}
+           </div>
+           <button onClick={() => removeRecipeFromEvent(item.id)}
+            className="p-1.5 text-[#B8997A] hover:text-red-400 transition-colors">
+            <Trash2 className="w-4 h-4" />
+           </button>
+          </div>
+         ))}
+        </div>
+       ))}
+      </div>
+     )}
+    </div>
+   )}
 
- {activeTab === 'mep' && !event.num_persons && (
- <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
- <AlertTriangle className="w-8 h-8 text-amber-700 mx-auto mb-3" />
- <p className="text-amber-300 font-medium">Vul eerst het aantal personen in</p>
- <p className="text-[#9E7E60] text-sm mt-1">Het MEP plan heeft het aantal gasten nodig om hoeveelheden te berekenen.</p>
- </div>
- )}
+   {activeTab === 'mep' && event.num_persons && (
+    <MepInlineEditor
+     key={mepRefreshKey}
+     eventId={eventId}
+     eventName={event.name}
+     numPersons={event.num_persons}
+     onMepGenerated={() => setMepRefreshKey(k => k + 1)}
+    />
+   )}
 
- {activeTab === 'shopping' && event.num_persons && (
- <MepShoppingAggregate
- eventId={eventId}
- numPersons={event.num_persons}
- />
- )}
+   {activeTab === 'mep' && !event.num_persons && (
+    <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
+     <AlertTriangle className="w-8 h-8 text-amber-700 mx-auto mb-3" />
+     <p className="text-amber-300 font-medium">Vul eerst het aantal personen in</p>
+     <p className="text-[#9E7E60] text-sm mt-1">Het MEP plan heeft het aantal gasten nodig om hoeveelheden te berekenen.</p>
+    </div>
+   )}
+
+   {activeTab === 'shopping' && event.num_persons && (
+    <MepShoppingAggregate
+     eventId={eventId}
+     numPersons={event.num_persons}
+    />
+   )}
       {activeTab === 'voorstel' && (
         <div className="bg-white border border-[#E8D5B5] rounded-2xl p-8 text-center">
           <FileText className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
@@ -420,39 +466,55 @@ export default function EventDetailPage() {
         </div>
       )}
 
- {/* MEP OCR Import */}
- {activeTab === 'menu' && (
-   <div className="space-y-3">
-     <button
-       onClick={() => setShowMepImport(!showMepImport)}
-       className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF6EF] hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#2C1810] text-sm font-medium rounded-xl transition-all w-full"
-     >
-       <FileUp className="w-4 h-4 text-brand-400" />
-       MEP importeren uit document
-       {showMepImport ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
-     </button>
-     {showMepImport && (
-       <MepOcrImporter
-         eventId={eventId}
-         onImportComplete={async () => {
-           setShowMepImport(false)
-           await fetchEvent()
-         }}
-       />
-     )}
-   </div>
- )}
+   {/* MEP OCR Import */}
+   {activeTab === 'menu' && (
+     <div className="space-y-3">
+       <button
+         onClick={() => setShowMepImport(!showMepImport)}
+         className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF6EF] hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#2C1810] text-sm font-medium rounded-xl transition-all w-full"
+       >
+         <FileUp className="w-4 h-4 text-brand-400" />
+         MEP importeren uit document
+         {showMepImport ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+       </button>
+       {showMepImport && (
+         <MepOcrImporter
+           eventId={eventId}
+           onImportComplete={async () => {
+             setShowMepImport(false)
+             await fetchEvent()
+           }}
+         />
+       )}
+     </div>
+   )}
 
- {/* Allergen Overview */}
- <EventAllergenSection eventId={eventId} />
+   {/* Allergen Overview */}
+   <EventAllergenSection eventId={eventId} />
 
- {/* Notes */}
- {event.notes && (
- <div className="bg-white border border-[#E8D5B5] rounded-2xl p-6">
- <h3 className="text-sm font-medium text-[#9E7E60] mb-2">Notities</h3>
- <p className="text-[#5C4730] text-sm whitespace-pre-wrap">{event.notes}</p>
- </div>
- )}
- </div>
+   {/* Notes */}
+   {event.notes && (
+    <div className="bg-white border border-[#E8D5B5] rounded-2xl p-6">
+     <h3 className="text-sm font-medium text-[#9E7E60] mb-2">Notities</h3>
+     <p className="text-[#5C4730] text-sm whitespace-pre-wrap">{event.notes}</p>
+    </div>
+   )}
+
+   {/* Calendar Link Modal */}
+   {showCalendarModal && (
+    <CalendarLinkModal
+     eventId={eventId}
+     currentCalendarEventId={calendarLink?.id}
+     onLinked={(calEvent) => {
+      if (calEvent) {
+       setCalendarLink({ id: calEvent.id, summary: calEvent.summary, htmlLink: calEvent.htmlLink })
+      } else {
+       setCalendarLink(null)
+      }
+     }}
+     onClose={() => setShowCalendarModal(false)}
+    />
+   )}
+  </div>
  )
 }
