@@ -82,7 +82,7 @@ export async function GET(
           components:recipe_components(
             id, name,
             ingredients:recipe_component_ingredients(
-              id, quantity_per_person, unit, cost_per_unit,
+              id, quantity_per_person, unit, cost_per_unit, prep_instruction,
               ingredient:ingredients(id, name)
             )
           )
@@ -122,7 +122,11 @@ export async function GET(
               grammageRef ? qpp < grammageRef.min || qpp > grammageRef.max : false
 
             return {
+              rci_id: rci.id,
+              component_id: component.id,
+              ingredient_id: rci.ingredient?.id || null,
               ingredient_name: rci.ingredient?.name || 'Onbekend',
+              prep_instruction: rci.prep_instruction || null,
               quantity_per_person: qpp,
               total_quantity: totalQuantity,
               unit,
@@ -132,6 +136,7 @@ export async function GET(
           })
 
           return {
+            component_id: component.id,
             component_name: component.name,
             ingredients,
           }
@@ -150,6 +155,7 @@ export async function GET(
           (item.course_order || 999) * 10
 
         return {
+          menu_item_id: item.id,
           course: item.course || `Gang ${item.course_order}`,
           course_label: catInfo?.label || item.course || `Gang ${item.course_order}`,
           course_order: item.course_order,
