@@ -11,31 +11,19 @@ export async function GET(request: NextRequest) {
   const date_from = searchParams.get('date_from')
   const date_to = searchParams.get('date_to')
 
-  // Get user's kitchen first for proper filtering
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json([], { status: 200 })
 
-  const { data: profile } = await supabase
-    .from('chef_profiles')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .single()
+  // Gebruik get_my_kitchen_ids() RPC — bypast RLS
+  const { data: kitchenIds } = await supabase.rpc('get_my_kitchen_ids')
+  if (!kitchenIds?.length) return NextResponse.json([], { status: 200 })
 
-  if (!profile) return NextResponse.json([], { status: 200 })
-
-  const { data: membership } = await supabase
-    .from('kitchen_members')
-    .select('kitchen_id')
-    .eq('chef_id', profile.id)
-    .limit(1)
-    .single()
-
-  if (!membership?.kitchen_id) return NextResponse.json([], { status: 200 })
+  const kitchenId = kitchenIds[0]
 
   let query = supabase
     .from('events')
     .select('*')
-    .eq('kitchen_id', membership.kitchen_id)
+    .eq('kitchen_id', kitchenId)
     .neq('status', 'cancelled')
     .order('event_date', { ascending: true })
 
@@ -57,28 +45,17 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Get chef profile
-  const { data: profile } = await supabase
-    .from('chef_profiles')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .single()
+  // Gebruik get_my_kitchen_ids() RPC — bypast RLS
+  const { data: kitchenIds, error: rpcError } = await supabase.rpc('get_my_kitchen_ids')
 
-  if (!profile) {
-    return NextResponse.json({ error: 'Geen chef profiel gevonden' }, { status: 403 })
+  if (rpcError || !kitchenIds?.length) {
+    return NextResponse.json(
+      { error: `Geen keuken gevonden (${rpcError?.message || 'geen resultaten'})` },
+      { status: 403 }
+    )
   }
 
-  // Get kitchen membership — gefilterd op de ingelogde chef
-  const { data: membership } = await supabase
-    .from('kitchen_members')
-    .select('kitchen_id')
-    .eq('chef_id', profile.id)
-    .limit(1)
-    .single()
-
-  if (!membership?.kitchen_id) {
-    return NextResponse.json({ error: 'Geen keuken gevonden voor dit profiel' }, { status: 403 })
-  }
+  const kitchenId = kitchenIds[0]
 
   const { data: event, error: eventError } = await supabase
     .from('events')
@@ -94,14 +71,13 @@ export async function POST(request: NextRequest) {
       arrival_time: body.arrival_time || null,
       notes: body.notes || null,
       status: body.status || 'draft',
-      kitchen_id: membership.kitchen_id,
+      kitchen_id: kitchenId,
     })
     .select()
     .single()
 
   if (eventError) return NextResponse.json({ error: eventError.message }, { status: 500 })
 
-  // Insert menu items if provided
   if (body.menu_items && body.menu_items.length > 0) {
     await supabase.from('event_menu_items').insert(
       body.menu_items.map((item: { recipe_id: string; course_order: number }) => ({

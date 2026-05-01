@@ -1,28 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
+  const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
-  // chef_profiles heeft GEEN kitchen_id kolom — die zit in kitchen_members
+  // Gebruik get_my_kitchen_ids() RPC — SECURITY DEFINER, bypast RLS volledig
+  const { data: kitchenIds, error: rpcError } = await supabase.rpc('get_my_kitchen_ids')
+
+  if (rpcError || !kitchenIds?.length) {
+    // Fallback: directe SQL join als RPC faalt
+    const { data: fallback } = await supabase
+      .from('chef_profiles')
+      .select('kitchen_members(kitchen_id)')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    const kitchenId = (fallback as any)?.kitchen_members?.[0]?.kitchen_id
+    if (!kitchenId) {
+      return NextResponse.json(
+        { error: `Geen keuken gevonden (uid: ${user.id}, rpc: ${rpcError?.message})` },
+        { status: 403 }
+      )
+    }
+    return handleCreate(request, supabase, user, kitchenId)
+  }
+
+  const kitchenId = kitchenIds[0]
+  return handleCreate(request, supabase, user, kitchenId)
+}
+
+async function handleCreate(
+  request: NextRequest,
+  supabase: any,
+  user: any,
+  kitchenId: string
+) {
+  // Get chef profile id
   const { data: profile } = await supabase
     .from('chef_profiles')
     .select('id')
@@ -33,26 +49,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Geen chef profiel gevonden' }, { status: 403 })
   }
 
-  // Kitchen ophalen via kitchen_members — gefilterd op chef_id
-  const { data: membership } = await supabase
-    .from('kitchen_members')
-    .select('kitchen_id')
-    .eq('chef_id', profile.id)
-    .limit(1)
-    .single()
-
-  if (!membership?.kitchen_id) {
-    return NextResponse.json({ error: 'Geen keuken gevonden voor dit profiel' }, { status: 403 })
-  }
-
-  const kitchenId = membership.kitchen_id
-
   try {
     const { parsedBrief } = await request.json()
     const { event: eventData, days, dietary_restrictions, dietary_notes, global_open_questions } = parsedBrief
 
     // Determine event_type from the days/moments
-    const allFormats = days.flatMap((d: any) => d.moments.map((m: any) => m.format))
+    const allFormats = days.flatMap((d: any) => d.moments?.map((m: any) => m.format) || [])
     const primaryFormat = allFormats.includes('sit_down') ? 'sit_down'
       : allFormats.includes('walking_dinner') ? 'walking_dinner'
       : allFormats.includes('buffet') ? 'buffet'
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
       const allDishes: any[] = []
       let courseOrder = 1
 
-      for (const moment of day.moments) {
+      for (const moment of (day.moments || [])) {
         for (const course of (moment.courses || [])) {
           for (let dishIndex = 0; dishIndex < (course.dishes || []).length; dishIndex++) {
             const dish = course.dishes[dishIndex]
@@ -114,16 +116,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Combine day-specific + global open questions
       const dayOpenQuestions = day.open_questions || []
       const globalQuestions = global_open_questions || []
 
-      // Build event_requirements with rich structure for proposal editor
       const eventRequirements = {
         imported_from_brief: true,
         day_label: day.day_label,
         date: day.date,
-        moments: day.moments,
+        moments: day.moments || [],
         budget_items: day.budget_items || [],
         open_questions: dayOpenQuestions,
         day_open_questions: dayOpenQuestions,
@@ -142,13 +142,11 @@ export async function POST(request: NextRequest) {
         contact_person: eventData.contact_name || '',
       }
 
-      // Calculate total budget for this day
       const dayBudget = (day.budget_items || []).reduce(
         (sum: number, b: any) => sum + (b.price_pp || 0),
         0
       )
 
-      // Create proposal for this day
       const { data: proposal, error: propError } = await supabase
         .from('saved_menus')
         .insert({
@@ -170,7 +168,6 @@ export async function POST(request: NextRequest) {
 
       if (propError) throw propError
 
-      // Insert menu items
       if (allDishes.length > 0) {
         const itemsToInsert = allDishes.map((dish) => ({
           ...dish,
@@ -181,7 +178,7 @@ export async function POST(request: NextRequest) {
           .from('saved_menu_items')
           .insert(itemsToInsert)
 
-        if (itemsError) throw itemsError
+        if (itemsError) console.error('Items insert error:', itemsError)
       }
 
       createdProposals.push({
@@ -197,7 +194,7 @@ export async function POST(request: NextRequest) {
       event_id: eventRecord.id,
       event_name: eventData.name,
       proposals: createdProposals,
-      total_open_questions: (global_open_questions || []).length + 
+      total_open_questions: (global_open_questions || []).length +
         days.reduce((sum: number, d: any) => sum + (d.open_questions?.length || 0), 0),
     })
   } catch (error) {
