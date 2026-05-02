@@ -99,8 +99,11 @@ interface SearchResult {
   id: string
   name: string
   price_per_kg?: number | null
+  unit_price?: number | null
   supplier_name?: string
+  supplier_id?: string
   type: 'ingredient' | 'supplier_product'
+  group?: string
 }
 
 interface SaveIngredientPayload {
@@ -110,6 +113,8 @@ interface SaveIngredientPayload {
   unit: string
   prep_instruction: string | null
   component_id: string
+  supplier_product_id?: string | null
+  cost_per_unit?: number
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -472,6 +477,22 @@ function FinancialsModal({
 
 // ─── InlineEditForm ───────────────────────────────────────────────────────────
 
+function PriceEstimate({ qty, unit, pricePerKg }: { qty: number; unit: string; pricePerKg: number }) {
+  let costPerPerson = 0
+  if (unit === 'gr') costPerPerson = (qty / 1000) * pricePerKg
+  else if (unit === 'kg') costPerPerson = qty * pricePerKg
+  else if (unit === 'ml') costPerPerson = (qty / 1000) * pricePerKg
+  else if (unit === 'l') costPerPerson = qty * pricePerKg
+  else costPerPerson = (qty / 1000) * pricePerKg // fallback
+
+  if (costPerPerson <= 0) return null
+  return (
+    <span className="text-[#E8A040] font-mono text-xs ml-auto shrink-0">
+      ~€{costPerPerson.toFixed(3)}/p
+    </span>
+  )
+}
+
 function InlineEditForm({
   ingredient,
   componentId,
@@ -483,7 +504,7 @@ function InlineEditForm({
   ingredient?: IngredientRow
   componentId: string
   subGroups: Array<{ id: string; name: string }>
-  onSave: (payload: SaveIngredientPayload) => Promise<void>
+  onSave: (payload: SaveIngredientPayload & { supplier_product_id?: string | null }) => Promise<void>
   onCancel: () => void
   isNew?: boolean
 }) {
@@ -491,41 +512,92 @@ function InlineEditForm({
   const [unit, setUnit] = useState(isNew ? 'gr' : ingredient?.unit || 'gr')
   const [prep, setPrep] = useState(isNew ? '' : ingredient?.prep_instruction || '')
   const [selectedComponentId, setSelectedComponentId] = useState(componentId)
+
+  // Linked ingredient (from ingredients table)
   const [linkedIngredient, setLinkedIngredient] = useState<SearchResult | null>(
     !isNew && ingredient?.ingredient_id
       ? { id: ingredient.ingredient_id, name: ingredient.ingredient_name, type: 'ingredient' }
       : null
   )
+  // Linked supplier product (separate from ingredient)
+  const [linkedSupplier, setLinkedSupplier] = useState<SearchResult | null>(null)
+
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchResults, setSearchResults] = useState<{ results: SearchResult[]; groups: Array<{ name: string; items: SearchResult[] }> }>({ results: [], groups: [] })
   const [searching, setSearching] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const [saving, setSaving] = useState(false)
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  // Auto-suggest on open: search by ingredient name
+  useEffect(() => {
+    const name = ingredient?.ingredient_name || ''
+    if (name.length >= 2 && !linkedIngredient) {
+      doSearch(name)
+      setSearchQuery(name)
+      setShowSearch(true)
+    }
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSearch(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const doSearch = async (q: string) => {
+    if (q.length < 1) {
+      setSearchResults({ results: [], groups: [] })
+      return
+    }
+    setSearching(true)
+    try {
+      const res = await fetch(`/api/mep/ingredient-search?q=${encodeURIComponent(q)}&mode=suggest`)
+      const json = await res.json()
+      setSearchResults({ results: json.results || [], groups: json.groups || [] })
+    } catch {
+      setSearchResults({ results: [], groups: [] })
+    } finally {
+      setSearching(false)
+    }
+  }
 
   const handleSearchChange = (q: string) => {
     setSearchQuery(q)
+    setShowSearch(true)
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (q.length < 2) {
-      setSearchResults([])
-      return
+    searchTimeout.current = setTimeout(() => doSearch(q), 250)
+  }
+
+  const selectResult = (r: SearchResult) => {
+    if (r.type === 'ingredient') {
+      setLinkedIngredient(r)
+    } else {
+      // supplier_product: set as supplier link
+      setLinkedSupplier(r)
     }
-    searchTimeout.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await fetch(`/api/mep/ingredient-search?q=${encodeURIComponent(q)}`)
-        const json = await res.json()
-        setSearchResults(json.results || [])
-      } catch {
-        setSearchResults([])
-      } finally {
-        setSearching(false)
-      }
-    }, 300)
+    setSearchQuery('')
+    setShowSearch(false)
+    setSearchResults({ results: [], groups: [] })
   }
 
   const handleSave = async () => {
     setSaving(true)
     try {
+      const costPerUnit = linkedSupplier?.price_per_kg
+        ? unit === 'gr'
+          ? linkedSupplier.price_per_kg / 1000
+          : unit === 'kg'
+          ? linkedSupplier.price_per_kg
+          : linkedSupplier.price_per_kg / 1000
+        : undefined
+
       await onSave({
         ingredient_id: linkedIngredient?.id || null,
         ingredient_name: linkedIngredient?.name || ingredient?.ingredient_name || '',
@@ -533,6 +605,8 @@ function InlineEditForm({
         unit,
         prep_instruction: prep || null,
         component_id: selectedComponentId,
+        supplier_product_id: linkedSupplier?.id || null,
+        ...(costPerUnit !== undefined ? { cost_per_unit: costPerUnit } : {}),
       })
     } finally {
       setSaving(false)
@@ -543,12 +617,20 @@ function InlineEditForm({
 
   return (
     <div className="mx-4 mb-3 bg-[#FDF8F2] border border-[#E8D5B5] rounded-xl p-4 space-y-3">
+      {/* Ingredient name display */}
       {displayName && (
-        <div className="px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] font-medium">
-          {displayName}
+        <div className="px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] font-medium flex items-center gap-2">
+          {linkedIngredient && <Link2 className="w-3.5 h-3.5 text-[#E8A040] shrink-0" />}
+          <span className="flex-1">{displayName}</span>
+          {linkedIngredient && (
+            <button onClick={() => setLinkedIngredient(null)} className="text-[#B8997A] hover:text-[#E8A040] transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       )}
 
+      {/* Qty / Unit / Prep */}
       <div className="flex gap-2">
         <input
           type="number"
@@ -579,60 +661,96 @@ function InlineEditForm({
         />
       </div>
 
-      {linkedIngredient ? (
-        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E8A040]/30 rounded-lg">
-          <Link2 className="w-3.5 h-3.5 text-[#E8A040] shrink-0" />
-          <span className="text-xs text-[#E8A040] flex-1 truncate">
-            {linkedIngredient.name}
-            {linkedIngredient.price_per_kg ? ` — €${linkedIngredient.price_per_kg}/kg` : ''}
-            {(linkedIngredient as any).supplier_name ? ` — ${(linkedIngredient as any).supplier_name}` : ''}
-          </span>
-          <button
-            onClick={() => setLinkedIngredient(null)}
-            className="text-[#9E7E60] hover:text-[#2C1810] transition-colors"
-          >
+      {/* Supplier link badge */}
+      {linkedSupplier ? (
+        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E8A040]/40 rounded-lg">
+          <div className="w-5 h-5 rounded-md bg-[#E8A040]/10 flex items-center justify-center shrink-0">
+            <Link2 className="w-3 h-3 text-[#E8A040]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-[#3D2810] truncate">{linkedSupplier.name}</div>
+            <div className="text-xs text-[#9E7E60]">
+              {linkedSupplier.supplier_name && <span>{linkedSupplier.supplier_name} · </span>}
+              {linkedSupplier.price_per_kg && (
+                <span className="text-[#E8A040]">€{linkedSupplier.price_per_kg.toFixed(2)}/kg</span>
+              )}
+              {linkedSupplier.unit_price && !linkedSupplier.price_per_kg && (
+                <span className="text-[#E8A040]">€{linkedSupplier.unit_price.toFixed(2)}/stuk</span>
+              )}
+            </div>
+          </div>
+          {linkedSupplier.price_per_kg && qty > 0 && (
+            <PriceEstimate qty={qty} unit={unit} pricePerKg={linkedSupplier.price_per_kg} />
+          )}
+          <button onClick={() => setLinkedSupplier(null)} className="text-[#B8997A] hover:text-red-400 transition-colors shrink-0">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
-      ) : (
+      ) : null}
+
+      {/* Search box */}
+      <div className="relative" ref={searchRef}>
         <div className="relative">
           <input
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Zoek ingrediënt of leveranciersproduct..."
-            className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none placeholder:text-[#B8997A]"
+            onFocus={() => {
+              if (searchQuery.length >= 1) setShowSearch(true)
+              else if (!linkedIngredient) {
+                const name = ingredient?.ingredient_name || ''
+                if (name.length >= 2) { handleSearchChange(name) }
+              }
+            }}
+            placeholder={linkedIngredient ? 'Leverancier koppelen...' : 'Zoek ingrediënt of leverancier...'}
+            className="w-full pl-8 pr-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none placeholder:text-[#B8997A]"
           />
-          {searching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="w-3.5 h-3.5 text-[#9E7E60] animate-spin" />
-            </div>
-          )}
-          {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8D5B5] rounded-xl z-20 max-h-44 overflow-y-auto shadow-lg">
-              {searchResults.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    setLinkedIngredient(r)
-                    setSearchQuery('')
-                    setSearchResults([])
-                  }}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-[#FDF8F2] text-[#2C1810] border-b border-[#E8D5B5]/50 last:border-0 transition-colors"
-                >
-                  <span className="font-medium">{r.name}</span>
-                  {r.price_per_kg && (
-                    <span className="text-[#E8A040] ml-2">€{r.price_per_kg}/kg</span>
-                  )}
-                  {r.supplier_name && (
-                    <span className="text-[#9E7E60] ml-2">{r.supplier_name}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2">
+            {searching
+              ? <Loader2 className="w-3.5 h-3.5 text-[#9E7E60] animate-spin" />
+              : <Link2 className="w-3.5 h-3.5 text-[#B8997A]" />}
+          </div>
         </div>
-      )}
 
+        {/* Dropdown: grouped results */}
+        {showSearch && searchResults.groups.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E8D5B5] rounded-xl z-30 max-h-56 overflow-y-auto shadow-xl">
+            {searchResults.groups.map((group) => (
+              <div key={group.name}>
+                <div className="px-3 py-1.5 text-[10px] font-bold text-[#B8997A] uppercase tracking-wider bg-[#FDF8F2] border-b border-[#E8D5B5]/60 sticky top-0">
+                  {group.name}
+                </div>
+                {group.items.map((r) => (
+                  <button
+                    key={r.id}
+                    onMouseDown={(e) => { e.preventDefault(); selectResult(r) }}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-[#FEF3E2] text-[#2C1810] border-b border-[#E8D5B5]/30 last:border-0 transition-colors flex items-center gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium block truncate">{r.name}</span>
+                      {r.supplier_name && (
+                        <span className="text-[#9E7E60] text-[10px]">{r.supplier_name}</span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      {r.price_per_kg && (
+                        <span className="text-[#E8A040] font-mono">€{r.price_per_kg.toFixed(2)}/kg</span>
+                      )}
+                      {r.unit_price && !r.price_per_kg && (
+                        <span className="text-[#9E7E60] font-mono">€{r.unit_price.toFixed(2)}</span>
+                      )}
+                      <span className="text-[#B8997A] text-[10px] block">
+                        {r.type === 'ingredient' ? 'Ingrediënt' : 'Leverancier'}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sub-group selector */}
       {subGroups.length > 1 && (
         <select
           value={selectedComponentId}
@@ -640,9 +758,7 @@ function InlineEditForm({
           className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#9E7E60] focus:border-[#E8A040]/50 focus:outline-none"
         >
           {subGroups.map((sg) => (
-            <option key={sg.id} value={sg.id}>
-              {sg.name}
-            </option>
+            <option key={sg.id} value={sg.id}>{sg.name}</option>
           ))}
         </select>
       )}
@@ -1033,6 +1149,8 @@ export default function MepDetailPage() {
             prep_instruction: payload.prep_instruction,
             ingredient_id: payload.ingredient_id,
             component_id: payload.component_id,
+            supplier_product_id: payload.supplier_product_id ?? null,
+            ...(payload.cost_per_unit !== undefined ? { cost_per_unit: payload.cost_per_unit } : {}),
           }),
         })
         if (!res.ok) {

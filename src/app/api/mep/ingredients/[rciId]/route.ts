@@ -12,15 +12,26 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
   const body = await request.json()
-  const { quantity_per_person, unit, prep_instruction, ingredient_id, notes, component_id } = body
+  const {
+    quantity_per_person,
+    unit,
+    prep_instruction,
+    ingredient_id,
+    supplier_product_id,
+    notes,
+    component_id,
+    cost_per_unit,
+  } = body
 
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (quantity_per_person !== undefined) updateData.quantity_per_person = quantity_per_person
   if (unit !== undefined) updateData.unit = unit
   if (prep_instruction !== undefined) updateData.prep_instruction = prep_instruction
   if (ingredient_id !== undefined) updateData.ingredient_id = ingredient_id
+  if (supplier_product_id !== undefined) updateData.supplier_product_id = supplier_product_id
   if (notes !== undefined) updateData.notes = notes
   if (component_id !== undefined) updateData.component_id = component_id
+  if (cost_per_unit !== undefined) updateData.cost_per_unit = cost_per_unit
 
   const { data, error } = await supabase
     .from('recipe_component_ingredients')
