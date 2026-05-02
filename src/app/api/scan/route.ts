@@ -33,59 +33,24 @@ Detecteer eerst het type document:
 
 ${typeHint ? `Hint: de gebruiker geeft aan dat dit een "${typeHint}" is.` : ''}
 
-Reageer ALTIJD in exact dit JSON-formaat (geen andere tekst):
+Reageer ALTIJD in exact dit JSON-formaat (geen andere tekst, geen markdown code blocks):
 
 Voor facturen:
-{
-  "type": "invoice",
-  "confidence": 0.95,
-  "data": {
-    "supplier_name": "...",
-    "invoice_date": "YYYY-MM-DD",
-    "invoice_number": "...",
-    "line_items": [
-      { "product_name": "...", "quantity": 1, "unit": "kg", "unit_price": 10.50, "total": 10.50 }
-    ],
-    "total_amount": 0,
-    "vat_amount": 0
-  }
-}
+{"type":"invoice","confidence":0.95,"data":{"supplier_name":"...","invoice_date":"YYYY-MM-DD","invoice_number":"...","line_items":[{"product_name":"...","quantity":1,"unit":"kg","unit_price":10.50,"total":10.50}],"total_amount":0,"vat_amount":0}}
 
 Voor MEP-lijsten:
-{
-  "type": "mep",
-  "confidence": 0.95,
-  "data": {
-    "title": "...",
-    "date": "YYYY-MM-DD",
-    "dishes": [
-      {
-        "name": "...",
-        "components": [
-          { "name": "...", "ingredients": [{ "name": "...", "quantity": "80", "unit": "g" }] }
-        ]
-      }
-    ]
-  }
-}
+{"type":"mep","confidence":0.95,"data":{"title":"...","date":"YYYY-MM-DD","dishes":[{"name":"...","components":[{"name":"...","ingredients":[{"name":"...","quantity":"80","unit":"g"}]}]}]}}
 
 Voor recepten:
-{
-  "type": "recipe",
-  "confidence": 0.95,
-  "data": {
-    "name": "...",
-    "servings": 4,
-    "prep_time_minutes": 30,
-    "ingredients": [
-      { "name": "...", "quantity": "200", "unit": "g" }
-    ],
-    "method": ["Stap 1...", "Stap 2..."],
-    "notes": "..."
-  }
+{"type":"recipe","confidence":0.95,"data":{"name":"...","servings":4,"prep_time_minutes":30,"ingredients":[{"name":"...","quantity":"200","unit":"g"}],"method":["Stap 1...","Stap 2..."],"notes":"..."}}
+
+Belangrijk: Beperk de output tot maximaal 50 gerechten / 200 ingrediënten om de response beheersbaar te houden. Geef een confidence score tussen 0 en 1.`
 }
 
-Analyseer het document nauwkeurig. Bij handgeschreven documenten, doe je best om alles te ontcijferen. Geef een confidence score tussen 0 en 1.`
+function sanitizeJsonString(text: string): string {
+  // Remove control characters except \n, \r, \t
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
 }
 
 export async function POST(request: NextRequest) {
@@ -137,13 +102,13 @@ export async function POST(request: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4096,
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 8192,
         messages: [{
           role: 'user',
           content: [
             {
-              type: 'image',
+              type: 'document',
               source: {
                 type: 'base64',
                 media_type: mediaType,
@@ -168,13 +133,23 @@ export async function POST(request: NextRequest) {
     const aiResult = await anthropicResponse.json()
     const textContent = aiResult.content?.[0]?.text || ''
 
-    // Parse JSON from response
-    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
+    // Sanitize and extract JSON from response
+    const sanitized = sanitizeJsonString(textContent)
+    const jsonMatch = sanitized.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      return NextResponse.json({ error: 'Kon document niet verwerken', raw: textContent }, { status: 422 })
+      return NextResponse.json({ error: 'Kon document niet verwerken', raw: textContent.slice(0, 500) }, { status: 422 })
     }
 
-    const parsed: ScanResult = JSON.parse(jsonMatch[0])
+    let parsed: ScanResult
+    try {
+      parsed = JSON.parse(jsonMatch[0])
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, '\nRaw (first 500):', jsonMatch[0].slice(0, 500))
+      return NextResponse.json({
+        error: 'Document kon niet worden verwerkt. Probeer een duidelijker of kleiner document.',
+        details: parseError instanceof Error ? parseError.message : 'JSON parse fout'
+      }, { status: 422 })
+    }
 
     // Auto-match products to existing ingredients for invoices
     if (parsed.type === 'invoice' && parsed.data.line_items) {
@@ -227,6 +202,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Scan error:', error)
-    return NextResponse.json({ error: 'Fout bij verwerken van document' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Fout bij verwerken van document',
+      details: error instanceof Error ? error.message : 'Onbekende fout'
+    }, { status: 500 })
   }
 }
