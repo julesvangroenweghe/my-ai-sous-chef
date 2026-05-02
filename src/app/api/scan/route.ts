@@ -33,59 +33,18 @@ Detecteer eerst het type document:
 
 ${typeHint ? `Hint: de gebruiker geeft aan dat dit een "${typeHint}" is.` : ''}
 
-Reageer ALTIJD in exact dit JSON-formaat (geen andere tekst):
+Reageer ALTIJD in exact dit JSON-formaat (geen andere tekst, geen markdown, geen uitleg):
 
 Voor facturen:
-{
-  "type": "invoice",
-  "confidence": 0.95,
-  "data": {
-    "supplier_name": "...",
-    "invoice_date": "YYYY-MM-DD",
-    "invoice_number": "...",
-    "line_items": [
-      { "product_name": "...", "quantity": 1, "unit": "kg", "unit_price": 10.50, "total": 10.50 }
-    ],
-    "total_amount": 0,
-    "vat_amount": 0
-  }
-}
+{"type":"invoice","confidence":0.95,"data":{"supplier_name":"...","invoice_date":"YYYY-MM-DD","invoice_number":"...","line_items":[{"product_name":"...","quantity":1,"unit":"kg","unit_price":10.50,"total":10.50}],"total_amount":0,"vat_amount":0}}
 
 Voor MEP-lijsten:
-{
-  "type": "mep",
-  "confidence": 0.95,
-  "data": {
-    "title": "...",
-    "date": "YYYY-MM-DD",
-    "dishes": [
-      {
-        "name": "...",
-        "components": [
-          { "name": "...", "ingredients": [{ "name": "...", "quantity": "80", "unit": "g" }] }
-        ]
-      }
-    ]
-  }
-}
+{"type":"mep","confidence":0.95,"data":{"title":"...","date":"YYYY-MM-DD","dishes":[{"name":"...","components":[{"name":"...","ingredients":[{"name":"...","quantity":"80","unit":"g"}]}]}]}}
 
 Voor recepten:
-{
-  "type": "recipe",
-  "confidence": 0.95,
-  "data": {
-    "name": "...",
-    "servings": 4,
-    "prep_time_minutes": 30,
-    "ingredients": [
-      { "name": "...", "quantity": "200", "unit": "g" }
-    ],
-    "method": ["Stap 1...", "Stap 2..."],
-    "notes": "..."
-  }
-}
+{"type":"recipe","confidence":0.95,"data":{"name":"...","servings":4,"prep_time_minutes":30,"ingredients":[{"name":"...","quantity":"200","unit":"g"}],"method":["Stap 1...","Stap 2..."],"notes":"..."}}
 
-Analyseer het document nauwkeurig. Bij handgeschreven documenten, doe je best om alles te ontcijferen. Geef een confidence score tussen 0 en 1.`
+Analyseer het document nauwkeurig. Geef een confidence score tussen 0 en 1. Reageer ALLEEN met pure JSON, geen andere tekst.`
 }
 
 export async function POST(request: NextRequest) {
@@ -122,11 +81,31 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Validate media type
-  const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
-  if (!supportedTypes.some(t => mediaType.startsWith(t))) {
+  // Normalize media type
+  const isPdf = mediaType === 'application/pdf' || mediaType.includes('pdf')
+  const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!isPdf && !supportedImageTypes.some(t => mediaType.startsWith(t))) {
     mediaType = 'image/jpeg'
   }
+
+  // Build content block: PDFs use 'document' type, images use 'image' type
+  const contentBlock = isPdf
+    ? {
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: base64Data,
+        },
+      }
+    : {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: base64Data,
+        },
+      }
 
   try {
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -135,21 +114,15 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY!,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'pdfs-2024-09-25',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 4096,
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: base64Data,
-              },
-            },
+            contentBlock,
             {
               type: 'text',
               text: buildPrompt(typeHint),
@@ -168,13 +141,40 @@ export async function POST(request: NextRequest) {
     const aiResult = await anthropicResponse.json()
     const textContent = aiResult.content?.[0]?.text || ''
 
-    // Parse JSON from response
-    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      return NextResponse.json({ error: 'Kon document niet verwerken', raw: textContent }, { status: 422 })
+    // Try to extract valid JSON from response (handle markdown code blocks)
+    let parsed: ScanResult | null = null
+    
+    // First try direct parse
+    try {
+      parsed = JSON.parse(textContent)
+    } catch {
+      // Try extracting JSON from markdown code block
+      const codeBlockMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (codeBlockMatch) {
+        try {
+          parsed = JSON.parse(codeBlockMatch[1].trim())
+        } catch {
+          // ignore
+        }
+      }
+      
+      // Try extracting first complete JSON object
+      if (!parsed) {
+        const jsonMatch = textContent.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          try {
+            parsed = JSON.parse(jsonMatch[0])
+          } catch {
+            // ignore
+          }
+        }
+      }
     }
 
-    const parsed: ScanResult = JSON.parse(jsonMatch[0])
+    if (!parsed) {
+      console.error('Could not parse AI response:', textContent.substring(0, 500))
+      return NextResponse.json({ error: 'Kon document niet verwerken - AI respons onverwacht formaat', raw: textContent.substring(0, 500) }, { status: 422 })
+    }
 
     // Auto-match products to existing ingredients for invoices
     if (parsed.type === 'invoice' && parsed.data.line_items) {
