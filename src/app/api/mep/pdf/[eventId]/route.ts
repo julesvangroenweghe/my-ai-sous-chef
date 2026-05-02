@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { renderToBuffer } from '@react-pdf/renderer'
-import { MepPdfDocument } from '@/components/mep/mep-pdf-document'
+import { MepListDocument, type MepListData } from '@/components/mep/mep-list-pdf'
 import React from 'react'
 
 export async function GET(
@@ -19,10 +19,12 @@ export async function GET(
       return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
     }
 
-    // Get event data
+    // 1. Fetch event
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, name, event_date, num_persons, event_type, location, price_per_person')
+      .select(
+        'id, name, event_date, num_persons, event_type, location, venue_address, price_per_person, event_start_time, event_end_time, contact_person, departure_time, kitchen_arrival_time'
+      )
       .eq('id', eventId)
       .single()
 
@@ -30,116 +32,84 @@ export async function GET(
       return NextResponse.json({ error: 'Event niet gevonden' }, { status: 404 })
     }
 
-    const numPersons = event.num_persons || 0
-
-    // Get menu items with full recipe/component/ingredient data
-    const { data: menuItems, error: menuError } = await supabase
-      .from('event_menu_items')
-      .select(
-        `
-        id, course, course_order,
-        recipe:recipes(
-          id, name, total_cost_per_serving, serving_size_grams,
-          components:recipe_components(
-            id, name,
-            ingredients:recipe_component_ingredients(
-              id, quantity_per_person, unit, cost_per_unit,
-              ingredient:ingredients(id, name)
-            )
-          )
-        )
-      `
-      )
+    // 2. Fetch dishes
+    const { data: dishes, error: dishError } = await supabase
+      .from('mep_dishes')
+      .select('id, title, category, sort_order, notes, timing_label')
       .eq('event_id', eventId)
-      .order('course_order')
+      .order('sort_order')
 
-    if (menuError) {
-      console.error('MEP PDF query error:', menuError)
-      return NextResponse.json({ error: 'Fout bij laden menu' }, { status: 500 })
+    if (dishError) {
+      console.error('MEP dishes query error:', dishError)
+      return NextResponse.json({ error: 'Fout bij laden gerechten' }, { status: 500 })
     }
 
-    // Build courses
-    const courses = ((menuItems || []) as any[])
-      .map((item: any) => {
-        const recipe = item.recipe
-        if (!recipe) return null
+    if (!dishes || dishes.length === 0) {
+      return NextResponse.json(
+        { error: 'Geen gerechten gevonden voor dit event. Voeg eerst gerechten toe aan de MEP.' },
+        { status: 404 }
+      )
+    }
 
-        const components = ((recipe.components || []) as any[]).map((component: any) => {
-          const ingredients = ((component.ingredients || []) as any[]).map((rci: any) => {
-            const qpp = Number(rci.quantity_per_person) || 0
-            const unit = (rci.unit || 'g').toLowerCase()
+    // 3. Fetch components for all dishes
+    const dishIds = dishes.map((d) => d.id)
+    const { data: components, error: compError } = await supabase
+      .from('mep_components')
+      .select('id, dish_id, component_name, quantity, unit, preparation, component_group, sort_order')
+      .in('dish_id', dishIds)
+      .order('sort_order')
 
-            let totalQuantity: number
-            if (unit === 'kg' || unit === 'l') {
-              totalQuantity = Math.round((qpp / 1000) * numPersons * 100) / 100
-            } else {
-              totalQuantity = Math.round(qpp * numPersons * 100) / 100
-            }
+    if (compError) {
+      console.error('MEP components query error:', compError)
+      return NextResponse.json({ error: 'Fout bij laden componenten' }, { status: 500 })
+    }
 
-            return {
-              ingredient_name: rci.ingredient?.name || 'Onbekend',
-              quantity_per_person: qpp,
-              total_quantity: totalQuantity,
-              unit,
-              cost_per_unit: Number(rci.cost_per_unit) || 0,
-            }
-          })
+    // 4. Map to MepListData
+    const compsByDish: Record<string, typeof components> = {}
+    for (const comp of components || []) {
+      if (!compsByDish[comp.dish_id]) compsByDish[comp.dish_id] = []
+      compsByDish[comp.dish_id].push(comp)
+    }
 
-          return {
-            component_name: component.name,
-            ingredients,
-          }
-        })
-
-        const costPerPerson = Number(recipe.total_cost_per_serving) || 0
-        const totalCost = costPerPerson * numPersons
-
-        return {
-          course: item.course || `Gang ${item.course_order}`,
-          course_order: item.course_order,
-          recipe_id: recipe.id,
-          recipe_name: recipe.name,
-          cost_per_person: costPerPerson,
-          total_cost: totalCost,
-          components,
-        }
-      })
-      .filter(Boolean)
-
-    const totalFoodCostPerPerson = courses.reduce(
-      (sum: number, c: any) => sum + c.cost_per_person,
-      0
-    )
-    const totalFoodCost = totalFoodCostPerPerson * numPersons
-    const revenue = (Number(event.price_per_person) || 0) * numPersons
-    const foodCostPercentage = revenue > 0 ? (totalFoodCost / revenue) * 100 : 0
-
-    const mepData = {
+    const mepData: MepListData = {
       event: {
         name: event.name,
         event_date: event.event_date,
-        num_persons: numPersons,
-        event_type: event.event_type,
+        num_persons: event.num_persons || 0,
+        event_type: event.event_type || '',
         location: event.location,
-        price_per_person: event.price_per_person,
+        venue_address: event.venue_address,
+        price_per_person: event.price_per_person ? Number(event.price_per_person) : null,
+        event_start_time: event.event_start_time,
+        event_end_time: event.event_end_time,
+        contact_person: event.contact_person,
+        departure_time: event.departure_time,
+        kitchen_arrival_time: event.kitchen_arrival_time,
       },
-      courses,
-      totals: {
-        food_cost_per_person: Math.round(totalFoodCostPerPerson * 100) / 100,
-        total_food_cost: Math.round(totalFoodCost * 100) / 100,
-        food_cost_percentage: Math.round(foodCostPercentage * 10) / 10,
-      },
+      dishes: dishes.map((dish) => ({
+        id: dish.id,
+        title: dish.title,
+        category: dish.category || 'OVERIGE',
+        sort_order: dish.sort_order || 0,
+        notes: dish.notes,
+        timing_label: dish.timing_label,
+        components: (compsByDish[dish.id] || []).map((c) => ({
+          component_name: c.component_name,
+          quantity: c.quantity ? Number(c.quantity) : null,
+          unit: c.unit,
+          preparation: c.preparation,
+          component_group: c.component_group,
+          sort_order: c.sort_order || 0,
+        })),
+      })),
     }
 
-    // Generate PDF
-    // Filter out null courses before rendering
-    mepData.courses = (mepData.courses as any[]).filter(Boolean)
-    
+    // 5. Generate PDF
     const pdfBuffer = await renderToBuffer(
-      React.createElement(MepPdfDocument, { data: mepData as any })
+      React.createElement(MepListDocument, { data: mepData })
     )
 
-    const eventNameSlug = event.name
+    const slug = event.name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
       .replace(/-+/g, '-')
@@ -148,12 +118,12 @@ export async function GET(
     return new NextResponse(pdfBuffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="mep-${eventNameSlug}.pdf"`,
+        'Content-Disposition': `inline; filename="mep-${slug}.pdf"`,
         'Cache-Control': 'no-store',
       },
     })
   } catch (error) {
-    console.error('MEP PDF error:', error)
+    console.error('MEP PDF generation error:', error)
     return NextResponse.json({ error: 'PDF generatie mislukt' }, { status: 500 })
   }
 }
