@@ -6,15 +6,24 @@ import { usePathname } from 'next/navigation'
 import { useKitchen } from '@/providers/kitchen-provider'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid', sub: null },
-  { href: '/mep', label: 'MEP Overzicht', icon: 'clipboard', sub: 'Mis en place lijsten' },
-  { href: '/mep/inbox', label: 'MEP Inbox', icon: 'tray', sub: 'Concepten reviewen' },
-  { href: '/mep/planning', label: 'MEP Planning', icon: 'cal-week', sub: 'Weekoverzicht' },
-  { href: '/mep/recepten', label: 'MEP Recepten', icon: 'recipe-db', sub: 'Receptendatabank' },
-  { href: '/mep/leveranciers', label: 'MEP Leveranciers', icon: 'store', sub: 'Leveranciersbeheer' },
   { href: '/events', label: 'Events & Planning', icon: 'calendar', sub: null },
+  {
+    href: '/mep',
+    label: 'MEP',
+    icon: 'clipboard',
+    sub: 'Mis en place',
+    children: [
+      { href: '/mep', label: 'Overzicht', icon: 'grid-small' },
+      { href: '/mep/inbox', label: 'Inbox', icon: 'tray' },
+      { href: '/mep/planning', label: 'Planning', icon: 'cal-week' },
+      { href: '/mep/recepten', label: 'Recepten', icon: 'recipe-db' },
+      { href: '/mep/leveranciers', label: 'Leveranciers', icon: 'store' },
+    ],
+  },
   { href: '/recipes', label: 'Recepten', icon: 'book', sub: null },
   { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng', sub: 'AI audit engine' },
   { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf', sub: null },
@@ -43,6 +52,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
 
   const icons: Record<string, JSX.Element> = {
     grid: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+    'grid-small': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
     book: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
     calendar: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     leaf: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
@@ -52,25 +62,199 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     truck: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
     star: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     sparkles: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 3l1.88 5.76L20 10l-6.12 1.24L12 17l-1.88-5.76L4 10l6.12-1.24z"/><path d="M19 3l.75 2.25L22 6l-2.25.75L19 9l-.75-2.25L16 6l2.25-.75z"/></svg>,
-    'check-square': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
     clipboard: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>,
     'menu-eng': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>,
     chart: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
     receipt: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>,
-    chef: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>,
     cal: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>,
-    'cal-week': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="5" height="5" rx="0.5" fill={color} stroke="none"/></svg>,
+    'cal-week': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="5" height="5" rx="0.5" fill={color} stroke="none"/></svg>,
     plug: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8H6a2 2 0 0 0-2 2v3a6 6 0 0 0 12 0v-3a2 2 0 0 0-2-2z"/></svg>,
     mail: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-    tray: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M2 12l3-9h14l3 9"/><path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/></svg>,
+    tray: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M2 12l3-9h14l3 9"/><path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/></svg>,
     archive: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
     user: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-    settings: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-    'recipe-db': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
-    store: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
+    settings: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+    'recipe-db': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+    store: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
+    chevron: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>,
   }
 
   return icons[type] || icons['grid']
+}
+
+type NavItem = {
+  href: string
+  label: string
+  icon: string
+  sub?: string | null
+  children?: { href: string; label: string; icon: string }[]
+}
+
+function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string }) {
+  const isMepSection = pathname.startsWith('/mep')
+  const [open, setOpen] = useState(isMepSection)
+
+  useEffect(() => {
+    if (item.children && pathname.startsWith(item.href)) {
+      setOpen(true)
+    }
+  }, [pathname, item.href, item.children])
+
+  const isParentActive = item.children
+    ? pathname.startsWith(item.href)
+    : (item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href))
+
+  if (item.children) {
+    const activeChild = item.children.find(c =>
+      c.href === '/mep' ? pathname === '/mep' || pathname.match(/^\/mep\/[^/]+$/) && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)) : pathname.startsWith(c.href)
+    )
+
+    return (
+      <div>
+        {/* Parent row */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '6px 18px',
+            margin: '1px 6px',
+            borderRadius: 6,
+            background: 'none',
+            border: 'none',
+            borderLeft: isParentActive ? '2px solid #E8A040' : '2px solid transparent',
+            backgroundColor: isParentActive ? '#FEF3E2' : 'transparent',
+            cursor: 'pointer',
+            width: 'calc(100% - 12px)',
+            textAlign: 'left',
+          }}
+        >
+          <NavIcon type={item.icon} active={isParentActive} />
+          <span style={{
+            fontSize: 13,
+            fontWeight: isParentActive ? 500 : 400,
+            color: isParentActive ? '#B5631A' : '#5C4730',
+            flex: 1,
+          }}>
+            {item.label}
+            {item.sub && (
+              <span style={{
+                display: 'block',
+                fontSize: 9,
+                color: isParentActive ? '#C4791A' : '#9C8060',
+                lineHeight: 1.2,
+                marginTop: 1,
+                fontWeight: 400,
+              }}>
+                {item.sub}
+              </span>
+            )}
+          </span>
+          {/* Chevron */}
+          <svg
+            width={12} height={12}
+            fill="none"
+            stroke={isParentActive ? '#E8A040' : '#9C8060'}
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            style={{
+              transition: 'transform 0.2s ease',
+              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+              flexShrink: 0,
+            }}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        {/* Sub items */}
+        {open && (
+          <div style={{
+            marginLeft: 28,
+            marginBottom: 4,
+            borderLeft: '1px solid #E5D8C0',
+            paddingLeft: 8,
+          }}>
+            {item.children.map(child => {
+              const childActive = child.href === '/mep'
+                ? pathname === '/mep'
+                : pathname.startsWith(child.href)
+              return (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '5px 10px',
+                    margin: '1px 4px',
+                    borderRadius: 5,
+                    textDecoration: 'none',
+                    backgroundColor: childActive ? '#FEF3E2' : 'transparent',
+                    borderLeft: childActive ? '2px solid #E8A040' : '2px solid transparent',
+                  }}
+                >
+                  <NavIcon type={child.icon} active={childActive} />
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: childActive ? 500 : 400,
+                    color: childActive ? '#B5631A' : '#6B5040',
+                  }}>
+                    {child.label}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Regular item
+  const active = item.href === '/dashboard'
+    ? pathname === '/dashboard'
+    : pathname.startsWith(item.href)
+
+  return (
+    <Link
+      href={item.href}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '6px 18px',
+        margin: '1px 6px',
+        borderRadius: 6,
+        textDecoration: 'none',
+        backgroundColor: active ? '#FEF3E2' : 'transparent',
+        borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
+      }}
+    >
+      <NavIcon type={item.icon} active={active} />
+      <span style={{
+        fontSize: 13,
+        fontWeight: active ? 500 : 400,
+        color: active ? '#B5631A' : '#5C4730',
+      }}>
+        {item.label}
+        {item.sub && (
+          <span style={{
+            display: 'block',
+            fontSize: 9,
+            color: active ? '#C4791A' : '#9C8060',
+            lineHeight: 1.2,
+            marginTop: 1,
+            fontWeight: 400,
+          }}>
+            {item.sub}
+          </span>
+        )}
+      </span>
+    </Link>
+  )
 }
 
 export default function Sidebar() {
@@ -79,16 +263,6 @@ export default function Sidebar() {
   const supabase = createClient()
   const signOut = async () => { await supabase.auth.signOut(); router.push('/login') }
   const { kitchen } = useKitchen()
-
-  const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard'
-    if (href === '/mep') return pathname === '/mep'
-    if (href === '/mep/inbox') return pathname === '/mep/inbox'
-    if (href === '/mep/planning') return pathname.startsWith('/mep/planning')
-    if (href === '/mep/recepten') return pathname.startsWith('/mep/recepten')
-    if (href === '/mep/leveranciers') return pathname.startsWith('/mep/leveranciers')
-    return pathname.startsWith(href)
-  }
 
   return (
     <aside
@@ -167,51 +341,9 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {navItems.map((item) => {
-          const active = isActive(item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '6px 18px',
-                margin: '1px 6px',
-                borderRadius: 6,
-                textDecoration: 'none',
-                position: 'relative',
-                transition: 'all 0.15s ease',
-                backgroundColor: active ? '#FEF3E2' : 'transparent',
-                borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
-              }}
-            >
-              <NavIcon type={item.icon} active={active} />
-              <span style={{
-                fontSize: 13,
-                fontWeight: active ? 500 : 400,
-                color: active ? '#B5631A' : '#5C4730',
-                letterSpacing: '0.01em',
-                transition: 'color 0.15s ease',
-              }}>
-                {item.label}
-                {(item as any).sub && (
-                  <span style={{
-                    display: 'block',
-                    fontSize: 9,
-                    color: active ? '#C4791A' : '#9C8060',
-                    lineHeight: 1.2,
-                    marginTop: 1,
-                    fontWeight: 400,
-                  }}>
-                    {(item as any).sub}
-                  </span>
-                )}
-              </span>
-            </Link>
-          )
-        })}
+        {navItems.map((item) => (
+          <NavItemComponent key={item.href} item={item} pathname={pathname} />
+        ))}
       </nav>
 
       {/* Divider */}
@@ -220,7 +352,7 @@ export default function Sidebar() {
       {/* Bottom items */}
       <div style={{ padding: '8px 0 4px' }}>
         {bottomItems.map((item) => {
-          const active = isActive(item.href)
+          const active = pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}
