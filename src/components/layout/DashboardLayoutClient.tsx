@@ -6,15 +6,14 @@ import JulesAI from '@/components/layout/JulesAI'
 import { PageTransition } from '@/components/ui/page-transition'
 
 export function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(true) // default true = mobile-first
+  const [open, setOpen] = useState(false)
+  const [isWide, setIsWide] = useState(false)
 
   useEffect(() => {
     const check = () => {
-      const mobile = window.innerWidth < 768
-      setIsMobile(mobile)
-      // Auto-open sidebar on desktop
-      if (!mobile) setSidebarOpen(true)
+      const wide = window.innerWidth >= 1024
+      setIsWide(wide)
+      if (wide) setOpen(true)
     }
     check()
     window.addEventListener('resize', check)
@@ -22,115 +21,105 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   }, [])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100dvh', backgroundColor: '#FDF8F2', position: 'relative' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: '#FDF8F2', position: 'relative' }}>
 
-      {/* Backdrop — mobile only */}
-      {isMobile && sidebarOpen && (
+      {/* Backdrop — only when open on narrow screen */}
+      {open && !isWide && (
         <div
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setOpen(false)}
           style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 39,
-            backgroundColor: 'rgba(44,24,16,0.5)',
-            backdropFilter: 'blur(2px)',
-            WebkitBackdropFilter: 'blur(2px)',
+            position: 'fixed', inset: 0, zIndex: 39,
+            backgroundColor: 'rgba(44,24,16,0.45)',
           }}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — always overlay, JS controls transform */}
       <Sidebar
-        isOpen={sidebarOpen}
-        isMobile={isMobile}
-        onClose={() => setSidebarOpen(false)}
+        isOpen={open}
+        onClose={() => setOpen(false)}
       />
 
-      {/* Desktop spacer */}
-      {!isMobile && (
-        <div style={{ width: 232, flexShrink: 0 }} aria-hidden="true" />
-      )}
-
-      {/* Main content */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-
-        {/* Mobile topbar */}
-        {isMobile && (
-          <div style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 30,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '12px 16px',
-            backgroundColor: '#F2E8D5',
-            borderBottom: '1px solid #DDD0B8',
-          }}>
-            <button
-              onClick={() => setSidebarOpen(o => !o)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: 6, backgroundColor: 'rgba(232,160,64,0.1)',
-              }}
-              aria-label="Menu openen"
-            >
-              <svg width={20} height={20} fill="none" stroke="#5C4730" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="18" x2="21" y2="18"/>
-              </svg>
-            </button>
-
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-icon.png" alt="My AI Sous Chef" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-            <span style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 15, fontWeight: 700, color: '#E8A040',
-            }}>
-              My AI Sous Chef
-            </span>
-          </div>
-        )}
-
-        {/* Page content */}
-        <div style={{ flex: 1, padding: isMobile ? '20px 16px 100px' : '32px 40px' }}>
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </div>
-      </div>
-
-      {/* FLOATING MENU BUTTON — only on mobile, always visible */}
-      {isMobile && !sidebarOpen && (
-        <button
-          onClick={() => setSidebarOpen(true)}
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            left: 20,
-            zIndex: 50,
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            backgroundColor: '#E8A040',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(232,160,64,0.5), 0 2px 6px rgba(0,0,0,0.15)',
-          }}
-          aria-label="Menu"
-        >
-          <svg width={20} height={20} fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
+      {/* ALWAYS-VISIBLE toggle button — top left, fixed */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label={open ? 'Sluit menu' : 'Open menu'}
+        style={{
+          position: 'fixed',
+          top: 14,
+          left: open && isWide ? 246 : 14,
+          zIndex: 50,
+          width: 38,
+          height: 38,
+          borderRadius: 8,
+          backgroundColor: '#E8A040',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 2px 10px rgba(232,160,64,0.4)',
+          transition: 'left 280ms ease-in-out',
+        }}
+      >
+        {open ? (
+          <svg width={16} height={16} fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        ) : (
+          <svg width={16} height={16} fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
             <line x1="3" y1="6" x2="21" y2="6"/>
             <line x1="3" y1="12" x2="21" y2="12"/>
             <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
-        </button>
-      )}
+        )}
+      </button>
+
+      {/* ALWAYS-VISIBLE floating Scan button — bottom right */}
+      <a
+        href="/scan"
+        aria-label="Scan & OCR"
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 20,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          borderRadius: 24,
+          backgroundColor: '#C4703A',
+          textDecoration: 'none',
+          boxShadow: '0 4px 16px rgba(196,112,58,0.4)',
+        }}
+      >
+        <svg width={15} height={15} fill="none" stroke="white" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+          <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+          <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+          <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+          <line x1="7" y1="12" x2="17" y2="12"/>
+        </svg>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'white', whiteSpace: 'nowrap' }}>Scan</span>
+      </a>
+
+      {/* Page content — padding-left on wide screens to make room for open sidebar */}
+      <div
+        style={{
+          paddingTop: 64,
+          paddingLeft: isWide && open ? 248 : 16,
+          paddingRight: 16,
+          paddingBottom: 100,
+          transition: 'padding-left 280ms ease-in-out',
+          minHeight: '100dvh',
+        }}
+      >
+        <PageTransition>
+          {children}
+        </PageTransition>
+      </div>
 
       <JulesAI />
     </div>
