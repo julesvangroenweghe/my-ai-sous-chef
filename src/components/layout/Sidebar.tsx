@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid', sub: null },
   { href: '/mep', label: 'MEP Overzicht', icon: 'clipboard', sub: 'Mis en place lijsten' },
   { href: '/mep/inbox', label: 'MEP Inbox', icon: 'tray', sub: 'Concepten reviewen' },
+  { href: '/mep/planning', label: 'MEP Planning', icon: 'cal-week', sub: 'Weekoverzicht' },
   { href: '/events', label: 'Events & Planning', icon: 'calendar', sub: null },
   { href: '/recipes', label: 'Recepten', icon: 'book', sub: null },
   { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng', sub: 'AI audit engine' },
@@ -56,6 +57,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     receipt: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>,
     chef: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>,
     cal: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>,
+    'cal-week': <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="5" height="5" rx="0.5" fill={color} stroke="none"/></svg>,
     plug: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8H6a2 2 0 0 0-2 2v3a6 6 0 0 0 12 0v-3a2 2 0 0 0-2-2z"/></svg>,
     mail: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     tray: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M2 12l3-9h14l3 9"/><path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/></svg>,
@@ -78,6 +80,7 @@ export default function Sidebar() {
     if (href === '/dashboard') return pathname === '/dashboard'
     if (href === '/mep') return pathname === '/mep'
     if (href === '/mep/inbox') return pathname === '/mep/inbox'
+    if (href === '/mep/planning') return pathname.startsWith('/mep/planning')
     return pathname.startsWith(href)
   }
 
