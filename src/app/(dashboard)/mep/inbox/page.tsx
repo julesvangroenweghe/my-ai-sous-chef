@@ -91,7 +91,13 @@ function EventCard({
       }`}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-bold text-[#2C1810] truncate">{event.name}</h3>
+            {/* Clickable event name */}
+            <Link
+              href={`/mep/${event.id}`}
+              className="text-sm font-bold text-[#2C1810] truncate hover:text-[#E8A040] hover:underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              {event.name}
+            </Link>
             {hasAI && (
               <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-md font-semibold border border-orange-200 shrink-0">
                 {totalAI} AI
@@ -189,7 +195,6 @@ export default function MepInboxPage() {
   const loadDraftEvents = useCallback(async () => {
     setLoading(true)
 
-    // 1. Load all draft events
     const { data: eventData, error } = await supabase
       .from('events')
       .select('id, name, event_date, event_type, num_persons, location, status')
@@ -209,7 +214,6 @@ export default function MepInboxPage() {
 
     const eventIds = eventData.map((e: any) => e.id)
 
-    // 2. Load dishes for these events
     const { data: dishData } = await supabase
       .from('mep_dishes')
       .select('id, event_id, is_ai_suggestion')
@@ -217,7 +221,6 @@ export default function MepInboxPage() {
 
     const dishIds = (dishData || []).map((d: any) => d.id)
 
-    // 3. Load component AI flags
     let componentData: any[] = []
     if (dishIds.length > 0) {
       const { data: compData } = await supabase
@@ -227,7 +230,6 @@ export default function MepInboxPage() {
       componentData = compData || []
     }
 
-    // 4. Compute counts per event
     const dishesByEvent: Record<string, { total: number; ai: number }> = {}
     for (const d of dishData || []) {
       if (!dishesByEvent[d.event_id]) dishesByEvent[d.event_id] = { total: 0, ai: 0 }
@@ -235,7 +237,6 @@ export default function MepInboxPage() {
       if (d.is_ai_suggestion) dishesByEvent[d.event_id].ai++
     }
 
-    // Map dish_id → event_id
     const dishEventMap: Record<string, string> = {}
     for (const d of dishData || []) {
       dishEventMap[d.id] = d.event_id
@@ -271,7 +272,6 @@ export default function MepInboxPage() {
   }, [loadDraftEvents])
 
   const handleApproveAll = async (eventId: string) => {
-    // Get all dish IDs for this event
     const { data: dishes } = await supabase
       .from('mep_dishes')
       .select('id')
@@ -301,11 +301,9 @@ export default function MepInboxPage() {
     }
 
     toast.success('Event goedgekeurd ✓ — staat nu in planning')
-    // Remove from draft list
     setEvents((prev) => prev.filter((e) => e.id !== eventId))
   }
 
-  // Group by week
   const byWeek: Record<number, DraftEvent[]> = {}
   for (const ev of events) {
     const wk = getWeekNumber(ev.event_date)
@@ -328,7 +326,6 @@ export default function MepInboxPage() {
 
   return (
     <div className="space-y-8 pb-16">
-      {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">MEP Inbox</h1>
@@ -346,7 +343,6 @@ export default function MepInboxPage() {
         )}
       </div>
 
-      {/* Empty state */}
       {events.length === 0 && (
         <div className="text-center py-20 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
           <div className="w-14 h-14 rounded-2xl bg-[#F2E8D5] flex items-center justify-center mx-auto mb-4">
@@ -366,7 +362,6 @@ export default function MepInboxPage() {
         </div>
       )}
 
-      {/* Events grouped by week */}
       {sortedWeeks.map(({ week, events: weekEvents }) => (
         <section key={week}>
           <div className="flex items-center gap-3 mb-3">
