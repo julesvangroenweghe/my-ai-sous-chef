@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-type DocumentType = 'invoice' | 'mep' | 'recipe'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist'
 
 interface ScanResult {
   type: DocumentType
@@ -9,31 +9,21 @@ interface ScanResult {
   confidence: number
 }
 
-function detectDocumentType(text: string, typeHint?: string): DocumentType {
-  if (typeHint) {
-    const hint = typeHint.toLowerCase()
-    if (hint === 'invoice' || hint === 'factuur') return 'invoice'
-    if (hint === 'mep' || hint === 'mise en place' || hint === 'productielijst') return 'mep'
-    if (hint === 'recipe' || hint === 'recept') return 'recipe'
-  }
-  const lower = text.toLowerCase()
-  if (lower.includes('factuur') || lower.includes('invoice') || lower.includes('btw') || lower.includes('totaal')) return 'invoice'
-  if (lower.includes('mep') || lower.includes('mise en place') || lower.includes('productielijst')) return 'mep'
-  if (lower.includes('recept') || lower.includes('bereidingswijze') || lower.includes('ingrediënten')) return 'recipe'
-  return 'invoice'
-}
-
 function buildPrompt(typeHint?: string): string {
   return `Je bent een expert OCR-assistent voor de horeca/keukenindustrie. Analyseer dit document en extraheer gestructureerde data.
 
-Detecteer eerst het type document:
-- "factuur" / "invoice" → factuurverwerking
-- "MEP" / "mise en place" / "productielijst" → MEP-lijst
-- "recept" / receptachtige inhoud → receptextractie
+Detecteer het type document:
+- "prijslijst" / "price list" / "catalogus" / producten met prijzen maar GEEN factuurgegevens → pricelist
+- "factuur" / "invoice" → invoice
+- "MEP" / "mise en place" / "productielijst" → mep
+- "recept" / receptachtige inhoud → recipe
 
-${typeHint ? `Hint: de gebruiker geeft aan dat dit een "${typeHint}" is.` : ''}
+${typeHint ? `De gebruiker geeft aan dat dit een "${typeHint}" is — gebruik dit type tenzij je 100% zeker bent dat het anders is.` : ''}
 
 Reageer ALTIJD in exact dit JSON-formaat (geen andere tekst, geen markdown, geen uitleg):
+
+Voor prijslijsten (pricelist):
+{"type":"pricelist","confidence":0.95,"data":{"supplier_name":"...","price_date":"YYYY-MM-DD of null","products":[{"product_name":"...","unit":"kg","price":10.50,"price_per_kg":10.50,"category":"vlees/vis/groenten/zuivel/droog/overig"}]}}
 
 Voor facturen:
 {"type":"invoice","confidence":0.95,"data":{"supplier_name":"...","invoice_date":"YYYY-MM-DD","invoice_number":"...","line_items":[{"product_name":"...","quantity":1,"unit":"kg","unit_price":10.50,"total":10.50}],"total_amount":0,"vat_amount":0}}
@@ -44,7 +34,12 @@ Voor MEP-lijsten:
 Voor recepten:
 {"type":"recipe","confidence":0.95,"data":{"name":"...","servings":4,"prep_time_minutes":30,"ingredients":[{"name":"...","quantity":"200","unit":"g"}],"method":["Stap 1...","Stap 2..."],"notes":"..."}}
 
-Analyseer het document nauwkeurig. Geef een confidence score tussen 0 en 1. Reageer ALLEEN met pure JSON, geen andere tekst.`
+Regels voor prijslijsten:
+- Extraheer ALLE producten met prijzen
+- Bereken price_per_kg indien mogelijk (bv. prijs per 500g → * 2)
+- supplier_name: naam leverancier bovenaan of in de header
+
+Analyseer nauwkeurig. Reageer ALLEEN met pure JSON.`
 }
 
 export async function POST(request: NextRequest) {
@@ -81,31 +76,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Normalize media type
   const isPdf = mediaType === 'application/pdf' || mediaType.includes('pdf')
   const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!isPdf && !supportedImageTypes.some(t => mediaType.startsWith(t))) {
     mediaType = 'image/jpeg'
   }
 
-  // Build content block: PDFs use 'document' type, images use 'image' type
   const contentBlock = isPdf
-    ? {
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: base64Data,
-        },
-      }
-    : {
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: mediaType,
-          data: base64Data,
-        },
-      }
+    ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
+    : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }
 
   try {
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -117,16 +96,13 @@ export async function POST(request: NextRequest) {
         'anthropic-beta': 'pdfs-2024-09-25',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5',
         max_tokens: 4096,
         messages: [{
           role: 'user',
           content: [
             contentBlock,
-            {
-              type: 'text',
-              text: buildPrompt(typeHint),
-            },
+            { type: 'text', text: buildPrompt(typeHint) },
           ],
         }],
       }),
@@ -141,56 +117,41 @@ export async function POST(request: NextRequest) {
     const aiResult = await anthropicResponse.json()
     const textContent = aiResult.content?.[0]?.text || ''
 
-    // Try to extract valid JSON from response (handle markdown code blocks)
     let parsed: ScanResult | null = null
-    
-    // First try direct parse
     try {
       parsed = JSON.parse(textContent)
     } catch {
-      // Try extracting JSON from markdown code block
       const codeBlockMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/)
       if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim())
-        } catch {
-          // ignore
-        }
+        try { parsed = JSON.parse(codeBlockMatch[1].trim()) } catch { /* ignore */ }
       }
-      
-      // Try extracting first complete JSON object
       if (!parsed) {
         const jsonMatch = textContent.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
-          try {
-            parsed = JSON.parse(jsonMatch[0])
-          } catch {
-            // ignore
-          }
+          try { parsed = JSON.parse(jsonMatch[0]) } catch { /* ignore */ }
         }
       }
     }
 
     if (!parsed) {
-      console.error('Could not parse AI response:', textContent.substring(0, 500))
-      return NextResponse.json({ error: 'Kon document niet verwerken - AI respons onverwacht formaat', raw: textContent.substring(0, 500) }, { status: 422 })
+      return NextResponse.json({ error: 'Kon document niet verwerken', raw: textContent.substring(0, 500) }, { status: 422 })
     }
 
-    // Auto-match products to existing ingredients for invoices
-    if (parsed.type === 'invoice' && parsed.data.line_items) {
-      const { data: ingredients } = await supabase
-        .from('ingredients')
-        .select('id, name')
+    // Auto-match ingredients
+    const { data: ingredients } = await supabase.from('ingredients').select('id, name')
 
-      if (ingredients) {
-        const lineItems = parsed.data.line_items as Array<Record<string, unknown>>
-        for (const item of lineItems) {
-          const productName = (item.product_name as string || '').toLowerCase()
-          const match = ingredients.find(
-            (ing) =>
-              ing.name.toLowerCase().includes(productName) ||
-              productName.includes(ing.name.toLowerCase())
-          )
+    if (ingredients) {
+      const matchProduct = (name: string) => {
+        const lower = name.toLowerCase()
+        return ingredients.find(ing =>
+          ing.name.toLowerCase().includes(lower) || lower.includes(ing.name.toLowerCase())
+        )
+      }
+
+      if (parsed.type === 'pricelist' && parsed.data.products) {
+        const products = parsed.data.products as Array<Record<string, unknown>>
+        for (const item of products) {
+          const match = matchProduct(item.product_name as string || '')
           if (match) {
             item.matched_ingredient_id = match.id
             item.matched_ingredient_name = match.name
@@ -198,22 +159,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Auto-match to supplier_products for price verification
-      const { data: supplierProducts } = await supabase
-        .from('supplier_products')
-        .select('id, product_name, price, supplier_id')
-
-      if (supplierProducts) {
+      if (parsed.type === 'invoice' && parsed.data.line_items) {
         const lineItems = parsed.data.line_items as Array<Record<string, unknown>>
         for (const item of lineItems) {
-          const productName = (item.product_name as string || '').toLowerCase()
-          const spMatch = supplierProducts.find(
-            (sp) => sp.product_name.toLowerCase().includes(productName) ||
-              productName.includes(sp.product_name.toLowerCase())
-          )
-          if (spMatch) {
-            item.matched_supplier_product_id = spMatch.id
-            item.supplier_reference_price = spMatch.price
+          const match = matchProduct(item.product_name as string || '')
+          if (match) {
+            item.matched_ingredient_id = match.id
+            item.matched_ingredient_name = match.name
           }
         }
       }
