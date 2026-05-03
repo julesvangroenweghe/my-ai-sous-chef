@@ -19,7 +19,6 @@ const navItems = [
     children: [
       { href: '/mep', label: 'Overzicht', icon: 'grid-small' },
       { href: '/mep/inbox', label: 'Inbox', icon: 'tray' },
-      { href: '/mep/planning', label: 'Planning', icon: 'cal-week' },
       { href: '/mep/recepten', label: 'Recepten', icon: 'recipe-db' },
       { href: '/mep/leveranciers', label: 'Leveranciers', icon: 'store' },
     ],
@@ -98,7 +97,6 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     chart: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
     receipt: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>,
     cal: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>,
-    'cal-week': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="5" height="5" rx="0.5" fill={color} stroke="none"/></svg>,
     plug: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8H6a2 2 0 0 0-2 2v3a6 6 0 0 0 12 0v-3a2 2 0 0 0-2-2z"/></svg>,
     mail: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     tray: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M2 12l3-9h14l3 9"/><path d="M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/></svg>,
@@ -133,7 +131,7 @@ function NavItemComponent({
 }) {
   const anyChildActive = item.children
     ? item.children.some(c => {
-        if (c.href === '/mep') return pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
+        if (c.href === '/mep') return pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','recepten','leveranciers'].some(s => pathname.includes(s)))
         return pathname.startsWith(c.href)
       })
     : false
@@ -181,7 +179,7 @@ function NavItemComponent({
           <div style={{ marginLeft: 28, marginBottom: 4, borderLeft: '1px solid #E5D8C0', paddingLeft: 8 }}>
             {item.children.map(child => {
               const childActive = child.href === '/mep'
-                ? pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
+                ? pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','recepten','leveranciers'].some(s => pathname.includes(s)))
                 : pathname.startsWith(child.href)
               return (
                 <Link key={child.href} href={child.href} onClick={onNavigate} style={{
@@ -265,7 +263,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <aside
       style={{
-        // CRITICAL: always position:fixed — never a flex child taking up space
         position: 'fixed',
         left: 0,
         top: 0,
@@ -278,12 +275,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         borderRight: '1px solid #DDD0B8',
         overflowY: 'auto',
         scrollbarWidth: 'none',
-        // JS-controlled show/hide via transform
         transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 280ms ease-in-out',
       }}
     >
-      {/* Logo + kitchen name */}
+      {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Image src="/logo-icon.png" alt="My AI Sous Chef" width={36} height={36} style={{ objectFit: 'contain' }} />
@@ -291,144 +287,80 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             My AI<br/>
             <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
           </div>
-          {/* Close button — always visible */}
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              padding: 4, borderRadius: 4,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-            aria-label="Sluit menu"
-          >
-            <svg width={18} height={18} fill="none" stroke="#9C8060" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Sluit menu">
+            <svg width={18} height={18} fill="none" stroke="#9C8060" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5D8C0', display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#E8A040', flexShrink: 0 }} />
-          <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontWeight: 500 }}>
+          <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>
             {kitchen?.name || 'Mijn Keuken'}
           </span>
           <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>· {kitchen?.kitchen_type || 'Catering'}</span>
         </div>
       </div>
 
-      {/* Navigation */}
       <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
         {navItems.map((item) => (
           <NavItemComponent key={item.href} item={item} pathname={pathname} onNavigate={handleNavigate} />
         ))}
       </nav>
 
-      {/* Scan CTA */}
       <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
-        <Link href="/scan" onClick={handleNavigate} style={{
-          display: 'flex', alignItems: 'center', gap: 9,
-          padding: '9px 12px', borderRadius: 7,
-          backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)',
-          border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`,
-          textDecoration: 'none',
-        }}>
+        <Link href="/scan" onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', borderRadius: 7, backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)', border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`, textDecoration: 'none' }}>
           <NavIcon type="scan" active={true} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#B5631A', lineHeight: 1.2 }}>Scan & OCR</div>
             <div style={{ fontSize: 10, color: '#9C8060', lineHeight: 1.2 }}>Prijslijst, factuur, recept</div>
           </div>
-          <svg width={10} height={10} fill="none" stroke="#C4703A" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
+          <svg width={10} height={10} fill="none" stroke="#C4703A" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </Link>
       </div>
 
-      {/* Divider */}
       <div style={{ borderTop: '1px solid #E5D8C0', margin: '6px 14px 0', flexShrink: 0 }} />
 
-      {/* Bottom items */}
       <div style={{ padding: '6px 0 4px', flexShrink: 0 }}>
-        {/* Alerts */}
-        <Link href="/alerts" onClick={handleNavigate} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-          textDecoration: 'none',
-          backgroundColor: alertsActive ? '#FEF3E2' : 'transparent',
-          borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent',
-        }}>
+        <Link href="/alerts" onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 18px', margin: '1px 6px', borderRadius: 6, textDecoration: 'none', backgroundColor: alertsActive ? '#FEF3E2' : 'transparent', borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent' }}>
           <div style={{ position: 'relative' }}>
             <NavIcon type="bell" active={alertsActive || unreadAlerts > 0} />
             {unreadAlerts > 0 && (
-              <span style={{
-                position: 'absolute', top: -4, right: -4,
-                backgroundColor: '#E53E3E', color: 'white',
-                fontSize: 8, fontWeight: 700, borderRadius: '50%',
-                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+              <span style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#E53E3E', color: 'white', fontSize: 8, fontWeight: 700, borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {unreadAlerts > 9 ? '9+' : unreadAlerts}
               </span>
             )}
           </div>
           <span style={{ fontSize: 13, fontWeight: (alertsActive || unreadAlerts > 0) ? 500 : 400, color: (alertsActive || unreadAlerts > 0) ? '#B5631A' : '#5C4730' }}>
             Meldingen
-            {unreadAlerts > 0 && (
-              <span style={{ marginLeft: 6, fontSize: 10, color: '#9C8060', fontWeight: 400 }}>{unreadAlerts} nieuw</span>
-            )}
+            {unreadAlerts > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: '#9C8060', fontWeight: 400 }}>{unreadAlerts} nieuw</span>}
           </span>
         </Link>
 
         {bottomItems.map((item) => {
           const active = pathname.startsWith(item.href)
           return (
-            <Link key={item.href} href={item.href} onClick={handleNavigate} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-              textDecoration: 'none',
-              backgroundColor: active ? '#FEF3E2' : 'transparent',
-              borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
-            }}>
+            <Link key={item.href} href={item.href} onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 18px', margin: '1px 6px', borderRadius: 6, textDecoration: 'none', backgroundColor: active ? '#FEF3E2' : 'transparent', borderLeft: active ? '2px solid #E8A040' : '2px solid transparent' }}>
               <NavIcon type={item.icon} active={active} />
-              <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>
-                {item.label}
-              </span>
+              <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>{item.label}</span>
             </Link>
           )
         })}
 
-        {/* Sign out */}
-        <button onClick={signOut} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-          background: 'none', border: 'none', borderLeft: '2px solid transparent',
-          cursor: 'pointer', width: 'calc(100% - 12px)',
-        }}>
-          <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
+        <button onClick={signOut} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 18px', margin: '1px 6px', borderRadius: 6, background: 'none', border: 'none', borderLeft: '2px solid transparent', cursor: 'pointer', width: 'calc(100% - 12px)' }}>
+          <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           <span style={{ fontSize: 13, color: '#9C8060' }}>Afmelden</span>
         </button>
       </div>
 
-      {/* Search */}
       <button
         onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }); document.dispatchEvent(e) }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6,
-          background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0',
-          cursor: 'pointer', width: 'calc(100% - 24px)', flexShrink: 0,
-        }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
+        style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0', cursor: 'pointer', width: 'calc(100% - 24px)', flexShrink: 0 }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <span style={{ fontSize: 12, color: '#9C8060', flex: 1, textAlign: 'left' }}>Zoeken...</span>
         <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
       </button>
 
-      {/* Food cost target */}
       <div style={{ margin: '8px 12px 16px', padding: '10px 12px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid #E5D8C0', flexShrink: 0 }}>
-        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 6 }}>Food Cost Target</div>
+        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Food Cost Target</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
             <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
