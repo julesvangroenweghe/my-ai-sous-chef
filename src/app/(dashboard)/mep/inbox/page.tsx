@@ -18,7 +18,7 @@ interface DraftEvent {
   event_type: string | null
   num_persons: number | null
   location: string | null
-  status: string
+  mep_status: string
   totalDishes: number
   aiDishes: number
   aiComponents: number
@@ -91,7 +91,6 @@ function EventCard({
       }`}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Clickable event name */}
             <Link
               href={`/mep/${event.id}`}
               className="text-sm font-bold text-[#2C1810] truncate hover:text-[#E8A040] hover:underline underline-offset-2 transition-colors cursor-pointer"
@@ -125,7 +124,6 @@ function EventCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Approve all or confirm */}
           {confirming ? (
             <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 py-1.5">
               <span className="text-xs text-emerald-700 font-medium">Zeker?</span>
@@ -195,10 +193,11 @@ export default function MepInboxPage() {
   const loadDraftEvents = useCallback(async () => {
     setLoading(true)
 
+    // Filter on mep_status = 'draft' (not event booking status)
     const { data: eventData, error } = await supabase
       .from('events')
-      .select('id, name, event_date, event_type, num_persons, location, status')
-      .eq('status', 'draft')
+      .select('id, name, event_date, event_type, num_persons, location, mep_status')
+      .eq('mep_status', 'draft')
       .order('event_date')
 
     if (error || !eventData) {
@@ -258,7 +257,7 @@ export default function MepInboxPage() {
         event_type: e.event_type,
         num_persons: e.num_persons,
         location: e.location,
-        status: e.status,
+        mep_status: e.mep_status,
         totalDishes: dishesByEvent[e.id]?.total || 0,
         aiDishes: dishesByEvent[e.id]?.ai || 0,
         aiComponents: aiCompByEvent[e.id] || 0,
@@ -272,6 +271,7 @@ export default function MepInboxPage() {
   }, [loadDraftEvents])
 
   const handleApproveAll = async (eventId: string) => {
+    // Get event dishes for AI suggestion cascade
     const { data: dishes } = await supabase
       .from('mep_dishes')
       .select('id')
@@ -279,23 +279,9 @@ export default function MepInboxPage() {
 
     const dishIds = (dishes || []).map((d: any) => d.id)
 
-    const { error: eventErr } = await supabase
-      .from('events')
-      .update({ status: 'approved' })
-      .eq('id', eventId)
-
-    if (dishIds.length > 0) {
-      await supabase
-        .from('mep_dishes')
-        .update({ is_ai_suggestion: false })
-        .in('id', dishIds)
-      await supabase
-        .from('mep_components')
-        .update({ is_ai_suggestion: false })
-        .in('dish_id', dishIds)
-    }
-
-    if (eventErr) {
+    // Use API route (server-side with admin client) to avoid RLS issues
+    const res = await fetch(`/api/mep/approve/${eventId}`, { method: 'POST' })
+    if (!res.ok) {
       toast.error('Goedkeuren mislukt')
       return
     }

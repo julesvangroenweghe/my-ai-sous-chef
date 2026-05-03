@@ -90,8 +90,8 @@ function translateEventType(t: string | null): string {
   return map[t] || t
 }
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'approved') {
+function StatusBadge({ mepStatus }: { mepStatus: string | null }) {
+  if (mepStatus === 'approved') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
         <CheckCircle2 className="w-3 h-3" />
@@ -178,7 +178,7 @@ function EventRow({
           >
             {event.name}
           </Link>
-          <StatusBadge status={event.status} />
+          <StatusBadge mepStatus={event.mep_status} />
           {event.ai_count && event.ai_count > 0 ? (
             <span className="text-xs text-orange-500 font-medium">{event.ai_count} AI</span>
           ) : null}
@@ -252,7 +252,7 @@ function WeekCard({
   anySelected: boolean
 }) {
   const [collapsed, setCollapsed] = useState(false)
-  const approvedCount = group.events.filter((e) => e.status === 'approved').length
+  const approvedCount = group.events.filter((e) => e.mep_status === 'approved').length
   const totalPax = group.events.reduce((sum, e) => sum + (e.num_persons || 0), 0)
   const weekEventIds = group.events.map((e) => e.id)
   const allWeekSelected = weekEventIds.every((id) => selectedIds.has(id))
@@ -358,6 +358,7 @@ export default function MepPlanningPage() {
         .select(
           'id, name, event_date, status, mep_status, num_persons, price_per_person, location, event_type, contact_person, start_time, end_time'
         )
+        .eq('mep_status', 'approved')
         .order('event_date', { ascending: true })
 
       if (error || !events) {
@@ -463,7 +464,6 @@ export default function MepPlanningPage() {
         a.click()
         URL.revokeObjectURL(url)
         downloaded++
-        // small delay between downloads
         await new Promise((r) => setTimeout(r, 400))
       } catch {
         // skip failed
@@ -475,10 +475,6 @@ export default function MepPlanningPage() {
   }
 
   const totalEvents = weeks.reduce((s, w) => s + w.events.length, 0)
-  const totalApproved = weeks.reduce(
-    (s, w) => s + w.events.filter((e) => e.status === 'approved').length,
-    0
-  )
   const anySelected = selectedIds.size > 0
 
   return (
@@ -488,7 +484,7 @@ export default function MepPlanningPage() {
         <div>
           <h1 className="text-2xl font-bold text-[#2C1810]">Planning</h1>
           <p className="text-sm text-[#9E7E60] mt-0.5">
-            Weekoverzicht · {totalEvents} events · {totalApproved} goedgekeurd
+            Weekoverzicht · {totalEvents} goedgekeurde events
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -547,7 +543,7 @@ export default function MepPlanningPage() {
       ) : weeks.length === 0 ? (
         <div className="text-center py-20 text-[#9E7E60]">
           <Calendar className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Geen events gevonden</p>
+          <p className="font-medium">Geen goedgekeurde events gevonden</p>
         </div>
       ) : (
         <div>

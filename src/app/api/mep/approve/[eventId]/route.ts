@@ -10,10 +10,10 @@ export async function POST(
 
   const supabase = createAdminClient()
 
-  // 1. Approve event
+  // 1. Approve event — only update mep_status (status field has different check constraint)
   const { error: eventErr } = await supabase
     .from('events')
-    .update({ status: 'approved', mep_status: 'approved' })
+    .update({ mep_status: 'approved' })
     .eq('id', eventId)
 
   if (eventErr) {
