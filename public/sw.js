@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sous-chef-v1';
+const CACHE_NAME = 'sous-chef-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',

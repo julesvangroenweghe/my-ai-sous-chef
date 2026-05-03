@@ -265,17 +265,12 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
   return (
     <aside
       className={[
-        // Base styles
-        'fixed left-0 top-0 z-40 flex flex-col h-screen overflow-y-auto',
+        // app-sidebar handles: position fixed, transform, transition, z-index, overflow via globals.css
+        'app-sidebar flex flex-col',
         // Width, background, border
-        'w-[232px] bg-[#F2E8D5] border-r border-[#DDD0B8]',
-        // Scrollbar hidden
-        '[scrollbar-width:none]',
-        // Transition
-        'transition-transform duration-300 ease-in-out',
-        // Mobile: hidden by default, shown when open
-        // Desktop: always visible
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+        'bg-[#F2E8D5] border-r border-[#DDD0B8]',
+        // Open state — CSS class controls translateX
+        sidebarOpen ? 'sidebar-is-open' : '',
       ].join(' ')}
     >
       {/* Logo + kitchen name */}
@@ -289,7 +284,7 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
           {/* Close button — only visible on mobile */}
           <button
             onClick={onClose}
-            className="flex md:hidden items-center justify-center p-1 rounded"
+            className="sidebar-close-btn"
             style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             aria-label="Sluit menu"
           >
