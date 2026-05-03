@@ -1,7 +1,10 @@
+// src/app/api/scan/route.ts
+// OCR scan route — auto-saves to scanned_documents na verwerking
+
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
 
 interface ScanResult {
   type: DocumentType
@@ -12,35 +15,43 @@ interface ScanResult {
 function buildSystemPrompt(): string {
   return `Je bent een expert OCR-assistent voor de horeca/keukenindustrie. Je taak is het extraheren van gestructureerde data uit documenten.
 
-CRITISCH: Reageer UITSLUITEND met pure, geldige JSON. Geen uitleg, geen inleiding, geen markdown, geen code blocks, geen tekst voor of na de JSON. Alleen de JSON-object zelf.`
+KRITISCH: Reageer UITSLUITEND met pure, geldige JSON. Absoluut geen uitleg, geen inleiding, geen markdown code blocks, geen tekst voor of na de JSON. Alleen de JSON zelf. Start direct met { en eindig met }.`
 }
 
 function buildUserPrompt(typeHint?: string): string {
+  const hint = typeHint && typeHint !== 'auto'
+    ? `De gebruiker heeft aangegeven dat dit een "${typeHint}" is — gebruik dit type.`
+    : ''
+
   return `Analyseer dit document en extraheer de data.
 
 Detecteer het type:
-- "prijslijst" / "price list" / "catalogus" / producten met prijzen maar GEEN factuurgegevens → "pricelist"
+- "prijslijst" / "price list" / producten met prijzen maar GEEN factuurgegevens → "pricelist"
 - "factuur" / "invoice" / BTW-nummer / factuurnummer → "invoice"
 - "MEP" / "mise en place" / "productielijst" → "mep"
 - "recept" / bereiding / ingrediënten → "recipe"
+- Alles wat niet past → "other"
 
-${typeHint ? `De gebruiker heeft aangegeven: "${typeHint}" — gebruik dit type tenzij 100% zeker anders.` : ''}
+${hint}
 
-Gebruik exact dit JSON-formaat:
+Gebruik exact dit JSON-formaat op basis van type:
 
-Voor prijslijst:
-{"type":"pricelist","confidence":0.95,"data":{"supplier_name":"Naam leverancier","price_date":"YYYY-MM-DD of null","products":[{"product_name":"Productnaam","unit":"kg","price":10.50,"price_per_kg":10.50,"category":"vlees"}]}}
+Voor pricelist:
+{"type":"pricelist","confidence":0.95,"data":{"supplier_name":"Naam leverancier","price_date":"YYYY-MM-DD","products":[{"product_name":"Naam","unit":"kg","price":10.50,"price_per_kg":10.50,"category":"vlees"}]}}
 
-Voor factuur:
+Voor invoice:
 {"type":"invoice","confidence":0.95,"data":{"supplier_name":"...","invoice_date":"YYYY-MM-DD","invoice_number":"...","line_items":[{"product_name":"...","quantity":1,"unit":"kg","unit_price":10.50,"total":10.50}],"total_amount":0,"vat_amount":0}}
 
-Voor MEP:
+Voor mep:
 {"type":"mep","confidence":0.95,"data":{"title":"...","date":"YYYY-MM-DD","dishes":[{"name":"...","components":[{"name":"...","ingredients":[{"name":"...","quantity":"80","unit":"g"}]}]}]}}
 
-Voor recept:
+Voor recipe:
 {"type":"recipe","confidence":0.95,"data":{"name":"...","servings":4,"prep_time_minutes":30,"ingredients":[{"name":"...","quantity":"200","unit":"g"}],"method":["Stap 1","Stap 2"],"notes":""}}
 
-Extraheer ALLE producten. Bereken price_per_kg waar mogelijk. Reageer ALLEEN met JSON.`
+Voor other:
+{"type":"other","confidence":0.90,"data":{"description":"Korte beschrijving van wat er in het document staat","content":"Samenvatting van de inhoud"}}
+
+Extraheer ALLE producten. Bereken price_per_kg waar mogelijk. Reageer ALLEEN met JSON — begin direct met {`
 }
 
 export async function POST(request: NextRequest) {
@@ -49,9 +60,13 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Kitchen ophalen
+  const kitchenId = await supabase.rpc('get_my_kitchen_ids').then(({ data }) => data?.[0] ?? null)
+
   let base64Data: string
   let mediaType: string
   let typeHint: string | undefined
+  let fileName: string = 'document'
 
   const contentType = request.headers.get('content-type') || ''
 
@@ -59,52 +74,37 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     typeHint = (formData.get('type') as string) || undefined
-
-    if (!file) {
-      return NextResponse.json({ error: 'Geen bestand geüpload' }, { status: 400 })
-    }
-
+    if (!file) return NextResponse.json({ error: 'Geen bestand geüpload' }, { status: 400 })
     const bytes = await file.arrayBuffer()
     base64Data = Buffer.from(bytes).toString('base64')
     mediaType = file.type || 'image/jpeg'
-    
-    console.log('Scan upload:', { fileName: file.name, fileType: file.type, fileSize: file.size, typeHint })
+    fileName = file.name || 'document'
   } else {
     const body = await request.json()
     base64Data = body.base64
     mediaType = body.media_type || 'image/jpeg'
     typeHint = body.type
-    if (!base64Data) {
-      return NextResponse.json({ error: 'base64 data is vereist' }, { status: 400 })
-    }
+    fileName = body.file_name || 'document'
+    if (!base64Data) return NextResponse.json({ error: 'base64 data is vereist' }, { status: 400 })
   }
 
   // Normalize media type
   const isPdf = mediaType === 'application/pdf' || mediaType.includes('pdf')
-  const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif']
-  
+  const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   let normalizedMediaType = mediaType
-  if (!isPdf && !supportedImageTypes.some(t => mediaType.startsWith(t))) {
-    normalizedMediaType = 'image/jpeg'
-  }
-  // HEIC/HEIF → jpeg for API compatibility
-  if (normalizedMediaType.includes('heic') || normalizedMediaType.includes('heif')) {
-    normalizedMediaType = 'image/jpeg'
-  }
+  if (!isPdf && !supportedImageTypes.some(t => mediaType.startsWith(t))) normalizedMediaType = 'image/jpeg'
+  if (normalizedMediaType.includes('heic') || normalizedMediaType.includes('heif')) normalizedMediaType = 'image/jpeg'
 
   const contentBlock = isPdf
     ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
     : { type: 'image', source: { type: 'base64', media_type: normalizedMediaType, data: base64Data } }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY not set')
-    return NextResponse.json({ error: 'API key niet geconfigureerd' }, { status: 500 })
-  }
+  if (!apiKey) return NextResponse.json({ error: 'API key niet geconfigureerd' }, { status: 500 })
 
   try {
     const requestBody = {
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       system: buildSystemPrompt(),
       messages: [{
@@ -121,11 +121,7 @@ export async function POST(request: NextRequest) {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     }
-    
-    // Only add PDF beta header for PDF files
-    if (isPdf) {
-      headers['anthropic-beta'] = 'pdfs-2024-09-25'
-    }
+    if (isPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25'
 
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -136,63 +132,36 @@ export async function POST(request: NextRequest) {
     if (!anthropicResponse.ok) {
       const errText = await anthropicResponse.text()
       console.error('Anthropic API error:', anthropicResponse.status, errText)
-      return NextResponse.json({ 
-        error: `OCR-service fout (${anthropicResponse.status})`, 
-        details: errText.substring(0, 200) 
+      return NextResponse.json({
+        error: `OCR-service fout (${anthropicResponse.status})`,
+        details: errText.substring(0, 200)
       }, { status: 502 })
     }
 
     const aiResult = await anthropicResponse.json()
     const textContent = aiResult.content?.[0]?.text || ''
-    
-    console.log('AI response preview:', textContent.substring(0, 200))
 
-    // Try to parse JSON - multiple strategies
+    // JSON parse — 4 strategieën
     let parsed: ScanResult | null = null
-    
-    // Strategy 1: direct parse
-    try {
-      parsed = JSON.parse(textContent.trim())
-    } catch { /* continue */ }
-    
-    // Strategy 2: extract from code block
+    try { parsed = JSON.parse(textContent.trim()) } catch { /* continue */ }
     if (!parsed) {
-      const codeBlockMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (codeBlockMatch) {
-        try { parsed = JSON.parse(codeBlockMatch[1].trim()) } catch { /* continue */ }
-      }
+      const cbMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (cbMatch) { try { parsed = JSON.parse(cbMatch[1].trim()) } catch { /* continue */ } }
     }
-    
-    // Strategy 3: find first { ... } block
     if (!parsed) {
       const jsonMatch = textContent.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        try { parsed = JSON.parse(jsonMatch[0]) } catch { /* continue */ }
-      }
+      if (jsonMatch) { try { parsed = JSON.parse(jsonMatch[0]) } catch { /* continue */ } }
     }
-    
-    // Strategy 4: find last complete JSON object
     if (!parsed) {
-      const allMatches = [...textContent.matchAll(/\{[\s\S]*?\}/g)]
-      for (const match of allMatches.reverse()) {
-        try { 
-          parsed = JSON.parse(match[0])
-          if (parsed && parsed.type) break
-        } catch { /* continue */ }
-      }
-    }
-
-    if (!parsed) {
-      console.error('Could not parse AI response:', textContent.substring(0, 500))
-      return NextResponse.json({ 
-        error: 'Kon document niet verwerken — AI gaf geen geldig antwoord', 
+      console.error('OCR parse failed. Raw response:', textContent.substring(0, 400))
+      return NextResponse.json({
+        error: 'Kon document niet verwerken — probeer een duidelijkere foto of ander bestandstype',
         raw: textContent.substring(0, 300)
       }, { status: 422 })
     }
 
-    // Auto-match ingredients in DB
+    // Auto-match ingrediënten in DB
     const { data: ingredients } = await supabase.from('ingredients').select('id, name')
-
     if (ingredients) {
       const matchProduct = (name: string) => {
         const lower = name.toLowerCase()
@@ -200,26 +169,83 @@ export async function POST(request: NextRequest) {
           ing.name.toLowerCase().includes(lower) || lower.includes(ing.name.toLowerCase())
         )
       }
-
       if (parsed.type === 'pricelist' && parsed.data.products) {
-        const products = parsed.data.products as Array<Record<string, unknown>>
-        for (const item of products) {
+        for (const item of parsed.data.products as Array<Record<string, unknown>>) {
           const match = matchProduct(item.product_name as string || '')
-          if (match) {
-            item.matched_ingredient_id = match.id
-            item.matched_ingredient_name = match.name
-          }
+          if (match) { item.matched_ingredient_id = match.id; item.matched_ingredient_name = match.name }
+        }
+      }
+      if (parsed.type === 'invoice' && parsed.data.line_items) {
+        for (const item of parsed.data.line_items as Array<Record<string, unknown>>) {
+          const match = matchProduct(item.product_name as string || '')
+          if (match) { item.matched_ingredient_id = match.id; item.matched_ingredient_name = match.name }
+        }
+      }
+    }
+
+    // Auto-save naar scanned_documents
+    let savedId: string | null = null
+    let autoImportResult: Record<string, unknown> | null = null
+
+    if (kitchenId) {
+      const docTitle = parsed.type === 'pricelist'
+        ? `Prijslijst — ${(parsed.data.supplier_name as string) || fileName}`
+        : parsed.type === 'invoice'
+        ? `Factuur — ${(parsed.data.supplier_name as string) || (parsed.data.invoice_number as string) || fileName}`
+        : parsed.type === 'recipe'
+        ? `Recept — ${(parsed.data.name as string) || fileName}`
+        : parsed.type === 'mep'
+        ? `MEP — ${(parsed.data.title as string) || fileName}`
+        : `Document — ${fileName}`
+
+      const { data: savedDoc } = await supabase
+        .from('scanned_documents')
+        .insert({
+          kitchen_id: kitchenId,
+          document_type: parsed.type,
+          title: docTitle,
+          raw_data: parsed.data,
+          confidence: parsed.confidence || 0.85,
+          auto_imported: false,
+        })
+        .select('id')
+        .single()
+
+      savedId = savedDoc?.id ?? null
+
+      // Auto-import prijslijst
+      if (parsed.type === 'pricelist' && savedId) {
+        const importResult = await autoImportPricelist(supabase, parsed.data, kitchenId)
+        autoImportResult = importResult
+        if (importResult.imported > 0) {
+          await supabase
+            .from('scanned_documents')
+            .update({ auto_imported: true, import_summary: importResult })
+            .eq('id', savedId)
         }
       }
 
-      if (parsed.type === 'invoice' && parsed.data.line_items) {
-        const lineItems = parsed.data.line_items as Array<Record<string, unknown>>
-        for (const item of lineItems) {
-          const match = matchProduct(item.product_name as string || '')
-          if (match) {
-            item.matched_ingredient_id = match.id
-            item.matched_ingredient_name = match.name
-          }
+      // Auto-import recept
+      if (parsed.type === 'recipe' && parsed.data.name && savedId) {
+        const recipeData = parsed.data
+        const { data: newRecipe } = await supabase
+          .from('recipes')
+          .insert({
+            kitchen_id: kitchenId,
+            name: recipeData.name as string,
+            number_of_servings: (recipeData.servings as number) || 4,
+            prep_time_minutes: (recipeData.prep_time_minutes as number) || null,
+            notes: (recipeData.notes as string) || `Geïmporteerd via OCR scan`,
+          })
+          .select('id')
+          .single()
+
+        autoImportResult = { recipe_id: newRecipe?.id, recipe_name: recipeData.name }
+        if (newRecipe?.id) {
+          await supabase
+            .from('scanned_documents')
+            .update({ auto_imported: true, import_summary: autoImportResult })
+            .eq('id', savedId)
         }
       }
     }
@@ -228,13 +254,69 @@ export async function POST(request: NextRequest) {
       type: parsed.type,
       data: parsed.data,
       confidence: parsed.confidence || 0.85,
+      saved: !!savedId,
+      saved_id: savedId,
+      auto_imported: !!autoImportResult,
+      import_result: autoImportResult,
     })
 
   } catch (error) {
     console.error('Scan error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Fout bij verwerken van document',
       details: error instanceof Error ? error.message : 'Onbekende fout'
     }, { status: 500 })
   }
+}
+
+async function autoImportPricelist(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  data: Record<string, unknown>,
+  kitchenId: string
+): Promise<{ imported: number; skipped: number; supplier_name: string }> {
+  const supplierName = (data.supplier_name as string) || 'Onbekende leverancier'
+  const products = (data.products as Array<Record<string, unknown>>) || []
+
+  // Zoek of maak leverancier
+  let { data: supplier } = await supabase
+    .from('suppliers')
+    .select('id')
+    .ilike('name', supplierName)
+    .single()
+
+  if (!supplier) {
+    const { data: newSupplier } = await supabase
+      .from('suppliers')
+      .insert({ name: supplierName, kitchen_id: kitchenId })
+      .select('id')
+      .single()
+    supplier = newSupplier
+  }
+
+  if (!supplier) return { imported: 0, skipped: products.length, supplier_name: supplierName }
+
+  let imported = 0
+  let skipped = 0
+
+  for (const product of products) {
+    if (!product.product_name || product.price == null) { skipped++; continue }
+
+    try {
+      await supabase
+        .from('supplier_products')
+        .upsert({
+          supplier_id: supplier.id,
+          product_name: product.product_name as string,
+          unit: (product.unit as string) || 'kg',
+          price: product.price as number,
+          price_per_kg: (product.price_per_kg as number) || null,
+          last_updated: new Date().toISOString(),
+        }, { onConflict: 'supplier_id,product_name' })
+      imported++
+    } catch {
+      skipped++
+    }
+  }
+
+  return { imported, skipped, supplier_name: supplierName }
 }
