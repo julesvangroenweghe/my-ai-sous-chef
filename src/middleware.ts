@@ -3,26 +3,26 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Skip middleware entirely for API routes, static files, and public paths
+  const skipPaths = [
+    '/api',
+    '/_next',
+    '/favicon',
+    '/login',
+    '/signup',
+    '/callback',
+    '/onboarding',
+  ]
+  if (skipPaths.some((p) => pathname.startsWith(p)) || pathname === '/') {
+    return NextResponse.next()
+  }
+
   const response = await updateSession(request)
 
   // If updateSession already issued a redirect (e.g. to /login), honour it
   if (response.headers.get('location')) {
-    return response
-  }
-
-  const pathname = request.nextUrl.pathname
-
-  // Never redirect these paths to /onboarding
-  const skipPaths = [
-    '/onboarding',
-    '/login',
-    '/signup',
-    '/callback',
-    '/api',
-    '/_next',
-    '/favicon',
-  ]
-  if (skipPaths.some((p) => pathname.startsWith(p) || pathname === '/')) {
     return response
   }
 
