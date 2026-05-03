@@ -232,7 +232,7 @@ const S = StyleSheet.create({
   // Columns
   columnContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     alignItems: 'flex-start',
   },
   column: {
@@ -241,8 +241,8 @@ const S = StyleSheet.create({
 
   // Category header
   categoryBlock: {
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 5,
+    marginBottom: 3,
   },
   categoryHeader: {
     fontSize: 12,
@@ -270,7 +270,8 @@ const S = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
-    marginBottom: 3,
+    marginBottom: 2,
+    spaceBefore: 4,
   },
   dishTiming: {
     fontSize: 7.5,
@@ -292,7 +293,7 @@ const S = StyleSheet.create({
   },
   componentRow: {
     flexDirection: 'row',
-    marginBottom: 2,
+    marginBottom: 1,
     flexWrap: 'wrap',
   },
   // Bullet dot
@@ -320,13 +321,8 @@ const S = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 1,
   },
-  componentPrepInline: {
-    fontSize: 9,
-    fontFamily: 'Helvetica-Oblique',
-    color: '#888888',
-  },
   dishSpacer: {
-    height: 12,
+    height: 8,
   },
 
   // Footer
@@ -365,17 +361,19 @@ function DishCard({ dish }: { dish: MepListDish }) {
           {group.items.map((comp, ci) => {
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
             return (
-              <View key={ci} style={S.componentRow}>
-                <Text style={S.componentBullet}>·</Text>
-                <Text style={S.componentName}>
-                  {comp.component_name}
-                  {qtyStr ? (
-                    <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
-                  ) : null}
-                  {comp.preparation ? (
-                    <Text style={S.componentPrepInline}>{' '}({comp.preparation})</Text>
-                  ) : null}
-                </Text>
+              <View key={ci}>
+                <View style={S.componentRow}>
+                  <Text style={S.componentBullet}>·</Text>
+                  <Text style={S.componentName}>
+                    {comp.component_name}
+                    {qtyStr ? (
+                      <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
+                    ) : null}
+                  </Text>
+                </View>
+                {comp.preparation && (
+                  <Text style={S.componentPrep}>{comp.preparation}</Text>
+                )}
               </View>
             )
           })}
@@ -433,24 +431,48 @@ export function MepListDocument({ data }: { data: MepListData }) {
     }
   }
 
-  // Distribute across columns
+  // Distribute across columns — sequential fill (left→right) with height estimation
+  // This preserves reading order and keeps categories with their dishes
+  function estimateHeight(item: RenderItem): number {
+    if (item.type === 'category') return 22
+    const d = item.dish
+    let h = 18 // dish title
+    if (d.notes) h += 10
+    const comps = d.components || []
+    const groups = new Set(comps.map((c: any) => c.component_group || null))
+    const numGroups = [...groups].filter(g => g !== null).length
+    h += numGroups * 12 // sub-group headers
+    h += comps.length * 9  // component rows
+    return h + 6 // bottom margin
+  }
+
+  const totalH = items.reduce((s, it) => s + estimateHeight(it), 0)
+  const targetPerCol = totalH / numCols
+
   const columns: RenderItem[][] = Array.from({ length: numCols }, () => [])
   let colIdx = 0
-  let i = 0
-  while (i < items.length) {
+  let colH = 0
+
+  for (let i = 0; i < items.length; i++) {
     const item = items[i]
-    if (item.type === 'category') {
-      columns[colIdx].push(item)
-      i++
-      if (i < items.length && items[i].type === 'dish') {
-        columns[colIdx].push(items[i])
-        i++
+    const h = estimateHeight(item)
+
+    // Move to next column when target exceeded — but keep category with its first dish
+    if (colH + h > targetPerCol && colIdx < numCols - 1) {
+      // Don't orphan a category header — move to next col together
+      if (item.type === 'category') {
+        colIdx++
+        colH = 0
+      } else if (item.type === 'dish' && i > 0 && items[i - 1].type === 'category') {
+        // Already pushed category to this col, keep dish here too
+      } else {
+        colIdx++
+        colH = 0
       }
-    } else {
-      columns[colIdx].push(item)
-      i++
     }
-    colIdx = (colIdx + 1) % numCols
+
+    columns[colIdx].push(item)
+    colH += h
   }
 
   // Travel line
