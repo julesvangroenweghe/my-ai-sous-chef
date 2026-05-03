@@ -14,8 +14,6 @@ import {
   Loader2,
   ChefHat,
   ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
   Eye,
   FileText,
 } from 'lucide-react'
@@ -59,10 +57,10 @@ const eventTypeLabels: Record<string, string> = {
   tasting: 'Proeverij',
 }
 
-const mepStatusConfig: Record<string, { color: string; label: string; icon: string }> = {
-  approved: { color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', label: 'MEP ✓', icon: '✓' },
-  draft: { color: 'bg-[#E8A040]/20 text-[#E8A040] border-[#E8A040]/30', label: 'MEP concept', icon: '~' },
-  pending: { color: 'bg-orange-500/20 text-orange-300 border-orange-500/30', label: 'MEP nodig', icon: '!' },
+const mepStatusConfig: Record<string, { color: string; label: string }> = {
+  approved: { color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', label: 'MEP ✓' },
+  draft: { color: 'bg-[#E8A040]/10 text-[#C4703A] border-[#E8A040]/20', label: 'MEP concept' },
+  pending: { color: 'bg-orange-500/10 text-orange-600 border-orange-500/20', label: 'MEP nodig' },
 }
 
 const dayNames = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']
@@ -82,7 +80,6 @@ export default function MepWeekPage() {
     const startStr = start.toISOString().split('T')[0]
     const endStr = end.toISOString().split('T')[0]
 
-    // Get events for this week
     const { data: eventRows } = await supabase
       .from('events')
       .select('id, name, event_date, event_type, num_persons, location, status, mep_status, price_per_person')
@@ -92,7 +89,6 @@ export default function MepWeekPage() {
 
     const eventIds = (eventRows || []).map((e: any) => e.id)
 
-    // Batch count mep_dishes per event
     let dishCountMap: Record<string, number> = {}
     if (eventIds.length > 0) {
       const { data: dishRows } = await supabase
@@ -154,7 +150,6 @@ export default function MepWeekPage() {
   const totalPersons = events.reduce((s, e) => s + (e.num_persons || 0), 0)
   const approvedMep = events.filter(e => e.mep_status === 'approved').length
 
-  // Day grid
   const dayGrid: Record<string, WeekEvent[]> = {}
   for (let i = 0; i < 7; i++) {
     const d = new Date(start)
@@ -223,16 +218,16 @@ export default function MepWeekPage() {
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
             <div className="text-xs text-[#B8997A]">Events</div>
-            <div className="text-lg font-bold text-[#3D2810] font-mono">{events.length}</div>
-            <div className="text-xs text-emerald-400">{approvedMep} MEP klaar</div>
+            <div className="text-lg font-bold text-[#2C1810] font-mono">{events.length}</div>
+            <div className="text-xs text-emerald-600">{approvedMep} MEP klaar</div>
           </div>
           <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
             <div className="text-xs text-[#B8997A]">Totaal pax</div>
-            <div className="text-lg font-bold text-[#3D2810] font-mono">{totalPersons || '—'}</div>
+            <div className="text-lg font-bold text-[#2C1810] font-mono">{totalPersons || '—'}</div>
           </div>
           <div className="bg-[#FDF8F2]/80 rounded-xl p-3 text-center">
             <div className="text-xs text-[#B8997A]">MEP status</div>
-            <div className="text-lg font-bold text-[#3D2810] font-mono">
+            <div className="text-lg font-bold text-[#2C1810] font-mono">
               {events.length > 0 ? `${approvedMep}/${events.length}` : '—'}
             </div>
           </div>
@@ -275,9 +270,9 @@ export default function MepWeekPage() {
                     <Link
                       key={event.id}
                       href={`/mep/${event.id}`}
-                      className="block p-2 rounded-lg bg-[#FDF8F2]/80 hover:bg-white border border-[#E8D5B5]/60 hover:border-[#E8A040]/30 transition-all mb-1 group"
+                      className="block p-2 rounded-lg bg-[#FDF8F2]/80 hover:bg-white border border-[#E8D5B5]/60 hover:border-[#E8A040]/30 transition-all mb-1 group cursor-pointer"
                     >
-                      <div className="text-xs font-medium text-[#3D2810] truncate group-hover:text-[#E8A040] transition-colors">
+                      <div className="text-xs font-medium text-[#2C1810] truncate group-hover:text-[#E8A040] transition-colors">
                         {event.name}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
@@ -286,8 +281,8 @@ export default function MepWeekPage() {
                         )}
                         <span className={`text-[9px] px-1 py-0.5 rounded border ${
                           event.mep_status === 'approved'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : 'bg-[#E8A040]/10 text-[#E8A040] border-[#E8A040]/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                            : 'bg-[#E8A040]/10 text-[#C4703A] border-[#E8A040]/20'
                         }`}>
                           {event.mep_status === 'approved' ? '✓' : '~'}
                         </span>
@@ -308,13 +303,14 @@ export default function MepWeekPage() {
               {events.map((event) => {
                 const mepCfg = mepStatusConfig[event.mep_status || 'pending'] || mepStatusConfig.pending
                 return (
-                  <div
+                  <Link
                     key={event.id}
-                    className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5 hover:border-[#E8A040]/30 transition-all group"
+                    href={`/mep/${event.id}`}
+                    className="block bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5 hover:border-[#E8A040]/50 hover:bg-[#FEF9F2] transition-all group cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-11 h-11 bg-[#E8A040]/10 rounded-xl flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 bg-[#E8A040]/10 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-[#E8A040]/20 transition-colors">
                           <CalendarDays className="w-5 h-5 text-[#E8A040]" />
                         </div>
                         <div className="min-w-0">
@@ -367,22 +363,20 @@ export default function MepWeekPage() {
                         </div>
 
                         <span className={`px-2 py-1 text-xs font-medium rounded-lg border ${mepCfg.color}`}>
-                          {event.dish_count > 0 ? (event.mep_status === 'approved' ? 'MEP ✓' : 'MEP concept') : 'Geen MEP'}
+                          {event.dish_count > 0 ? mepCfg.label : 'Geen MEP'}
                         </span>
 
-                        <div className="flex items-center gap-1.5">
-                          <Link
-                            href={`/mep/${event.id}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8A040]/10 hover:bg-[#E8A040]/20 border border-[#E8A040]/30 text-[#E8A040] text-xs font-medium rounded-lg transition-all"
-                          >
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.preventDefault()}>
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8A040]/10 border border-[#E8A040]/30 text-[#C4703A] text-xs font-medium rounded-lg">
                             <Eye className="w-3.5 h-3.5" />
                             Bekijken
-                          </Link>
+                          </span>
                           {event.dish_count > 0 && (
                             <a
                               href={`/api/mep/pdf/${event.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] text-xs font-medium rounded-lg transition-all"
                             >
                               <FileText className="w-3.5 h-3.5" />
@@ -392,13 +386,13 @@ export default function MepWeekPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
           ) : (
             <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-12 text-center">
-              <CalendarDays className="w-12 h-12 text-[#5C4730] mx-auto mb-4" />
+              <CalendarDays className="w-12 h-12 text-[#9E7E60] mx-auto mb-4" />
               <h3 className="text-lg font-display font-semibold text-[#5C4730] mb-2">
                 Geen events in week {currentWeek}
               </h3>
