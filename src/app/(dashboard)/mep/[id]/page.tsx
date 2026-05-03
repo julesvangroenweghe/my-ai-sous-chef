@@ -405,28 +405,24 @@ function ComponentRow({
       }`}
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-1.5 flex-wrap">
-          {(component.quantity || component.unit) && (
-            <span
-              className={`text-sm font-mono font-semibold shrink-0 ${
-                isAI ? 'text-orange-500' : 'text-[#E8A040]'
-              }`}
-            >
-              {formatQty(component.quantity, component.unit)}
-            </span>
-          )}
+        <div className="flex items-baseline gap-1 flex-wrap">
           <span className={`text-sm ${isAI ? 'text-orange-700' : 'text-[#2C1810]'}`}>
             {component.component_name}
           </span>
+          {(component.quantity || component.unit) && (
+            <span className={`text-xs shrink-0 ${isAI ? 'text-orange-400' : 'text-[#9E7E60]'}`}>
+              ({formatQty(component.quantity, component.unit)})
+            </span>
+          )}
+          {component.preparation && (
+            <span className={`text-xs shrink-0 italic ${isAI ? 'text-orange-400' : 'text-[#9E7E60]'}`}>
+              ({component.preparation})
+            </span>
+          )}
           {component.supplier && (
-            <span className="text-xs text-[#B8997A] shrink-0">({component.supplier})</span>
+            <span className="text-xs text-[#B8997A] shrink-0">· {component.supplier}</span>
           )}
         </div>
-        {component.preparation && (
-          <p className={`text-xs mt-0.5 italic leading-relaxed ${isAI ? 'text-orange-400' : 'text-[#9E7E60]'}`}>
-            {component.preparation}
-          </p>
-        )}
       </div>
 
       {/* Action buttons — always slightly visible, full on hover */}
