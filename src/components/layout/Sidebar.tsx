@@ -229,12 +229,11 @@ function NavItemComponent({
 }
 
 interface SidebarProps {
-  isMobile?: boolean
-  isOpen?: boolean
+  sidebarOpen?: boolean
   onClose?: () => void
 }
 
-export default function Sidebar({ isMobile = false, isOpen = true, onClose }: SidebarProps) {
+export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -260,179 +259,197 @@ export default function Sidebar({ isMobile = false, isOpen = true, onClose }: Si
   const scanActive = pathname.startsWith('/scan')
   const alertsActive = pathname.startsWith('/alerts')
 
-  // On mobile, close sidebar after navigation
+  // Close sidebar after navigation (on mobile)
   const handleNavigate = () => {
-    if (isMobile && onClose) onClose()
+    if (onClose) onClose()
   }
 
   return (
-    <aside style={{
-      width: 232, minWidth: 232,
-      height: '100vh',
-      backgroundColor: '#F2E8D5',
-      borderRight: '1px solid #DDD0B8',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      zIndex: 40,
-      overflowY: 'auto',
-      scrollbarWidth: 'none',
-      // Mobile slide animation
-      transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
-      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    }}>
-      {/* Logo + close button on mobile */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Image src="/logo-icon.png" alt="My AI Sous Chef" width={36} height={36} style={{ objectFit: 'contain' }} />
-          <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 13, fontWeight: 700, color: '#E8A040', letterSpacing: '0.01em', lineHeight: 1.3, flex: 1 }}>
-            My AI<br/>
-            <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
-          </div>
-          {/* Close button — mobile only */}
-          {isMobile && (
+    <>
+      <style>{`
+        .sidebar-component {
+          width: 232px;
+          min-width: 232px;
+          height: 100vh;
+          background-color: #F2E8D5;
+          border-right: 1px solid #DDD0B8;
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          left: 0;
+          top: 0;
+          z-index: 40;
+          overflow-y: auto;
+          scrollbar-width: none;
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-close-btn {
+          display: none;
+        }
+        @media (max-width: 767px) {
+          .sidebar-component {
+            transform: translateX(-100%);
+          }
+          .sidebar-component.sidebar-open {
+            transform: translateX(0);
+          }
+          .sidebar-close-btn {
+            display: flex;
+          }
+        }
+      `}</style>
+
+      <aside className={`sidebar-component${sidebarOpen ? ' sidebar-open' : ''}`}>
+        {/* Logo + optional close button */}
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Image src="/logo-icon.png" alt="My AI Sous Chef" width={36} height={36} style={{ objectFit: 'contain' }} />
+            <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 13, fontWeight: 700, color: '#E8A040', letterSpacing: '0.01em', lineHeight: 1.3, flex: 1 }}>
+              My AI<br/>
+              <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
+            </div>
+            {/* Close button — mobile only via CSS */}
             <button
               onClick={onClose}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4 }}
+              className="sidebar-close-btn"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}
             >
               <svg width={18} height={18} fill="none" stroke="#9C8060" strokeWidth="2" viewBox="0 0 24 24">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
-          )}
-        </div>
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5D8C0', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#E8A040', flexShrink: 0 }} />
-          <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontWeight: 500 }}>
-            {kitchen?.name || 'Mijn Keuken'}
-          </span>
-          <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>· {kitchen?.kitchen_type || 'Catering'}</span>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {navItems.map((item) => (
-          <NavItemComponent key={item.href} item={item} pathname={pathname} onNavigate={handleNavigate} />
-        ))}
-      </nav>
-
-      {/* Scan CTA */}
-      <div style={{ padding: '8px 12px 4px' }}>
-        <Link href="/scan" onClick={handleNavigate} style={{
-          display: 'flex', alignItems: 'center', gap: 9,
-          padding: '9px 12px', borderRadius: 7,
-          backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)',
-          border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`,
-          textDecoration: 'none',
-        }}>
-          <NavIcon type="scan" active={true} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#B5631A', lineHeight: 1.2 }}>Scan & OCR</div>
-            <div style={{ fontSize: 10, color: '#9C8060', lineHeight: 1.2 }}>Prijslijst, factuur, recept</div>
           </div>
-          <svg width={10} height={10} fill="none" stroke="#C4703A" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </Link>
-      </div>
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5D8C0', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#E8A040', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontWeight: 500 }}>
+              {kitchen?.name || 'Mijn Keuken'}
+            </span>
+            <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>· {kitchen?.kitchen_type || 'Catering'}</span>
+          </div>
+        </div>
 
-      {/* Divider */}
-      <div style={{ borderTop: '1px solid #E5D8C0', margin: '6px 14px 0' }} />
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
+          {navItems.map((item) => (
+            <NavItemComponent key={item.href} item={item} pathname={pathname} onNavigate={handleNavigate} />
+          ))}
+        </nav>
 
-      {/* Bottom items */}
-      <div style={{ padding: '6px 0 4px' }}>
-        {/* Alerts */}
-        <Link href="/alerts" onClick={handleNavigate} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-          textDecoration: 'none',
-          backgroundColor: alertsActive ? '#FEF3E2' : 'transparent',
-          borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent',
-        }}>
-          <div style={{ position: 'relative' }}>
-            <NavIcon type="bell" active={alertsActive || unreadAlerts > 0} />
-            {unreadAlerts > 0 && (
-              <span style={{
-                position: 'absolute', top: -4, right: -4,
-                backgroundColor: '#E53E3E', color: 'white',
-                fontSize: 8, fontWeight: 700, borderRadius: '50%',
-                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        {/* Scan CTA */}
+        <div style={{ padding: '8px 12px 4px' }}>
+          <Link href="/scan" onClick={handleNavigate} style={{
+            display: 'flex', alignItems: 'center', gap: 9,
+            padding: '9px 12px', borderRadius: 7,
+            backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)',
+            border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`,
+            textDecoration: 'none',
+          }}>
+            <NavIcon type="scan" active={true} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#B5631A', lineHeight: 1.2 }}>Scan & OCR</div>
+              <div style={{ fontSize: 10, color: '#9C8060', lineHeight: 1.2 }}>Prijslijst, factuur, recept</div>
+            </div>
+            <svg width={10} height={10} fill="none" stroke="#C4703A" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </Link>
+        </div>
+
+        {/* Divider */}
+        <div style={{ borderTop: '1px solid #E5D8C0', margin: '6px 14px 0' }} />
+
+        {/* Bottom items */}
+        <div style={{ padding: '6px 0 4px' }}>
+          {/* Alerts */}
+          <Link href="/alerts" onClick={handleNavigate} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
+            textDecoration: 'none',
+            backgroundColor: alertsActive ? '#FEF3E2' : 'transparent',
+            borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent',
+          }}>
+            <div style={{ position: 'relative' }}>
+              <NavIcon type="bell" active={alertsActive || unreadAlerts > 0} />
+              {unreadAlerts > 0 && (
+                <span style={{
+                  position: 'absolute', top: -4, right: -4,
+                  backgroundColor: '#E53E3E', color: 'white',
+                  fontSize: 8, fontWeight: 700, borderRadius: '50%',
+                  width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {unreadAlerts > 9 ? '9+' : unreadAlerts}
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 13, fontWeight: (alertsActive || unreadAlerts > 0) ? 500 : 400, color: (alertsActive || unreadAlerts > 0) ? '#B5631A' : '#5C4730' }}>
+              Meldingen
+              {unreadAlerts > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 10, color: '#9C8060', fontWeight: 400 }}>{unreadAlerts} nieuw</span>
+              )}
+            </span>
+          </Link>
+
+          {bottomItems.map((item) => {
+            const active = pathname.startsWith(item.href)
+            return (
+              <Link key={item.href} href={item.href} onClick={handleNavigate} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
+                textDecoration: 'none',
+                backgroundColor: active ? '#FEF3E2' : 'transparent',
+                borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
               }}>
-                {unreadAlerts > 9 ? '9+' : unreadAlerts}
-              </span>
-            )}
-          </div>
-          <span style={{ fontSize: 13, fontWeight: (alertsActive || unreadAlerts > 0) ? 500 : 400, color: (alertsActive || unreadAlerts > 0) ? '#B5631A' : '#5C4730' }}>
-            Meldingen
-            {unreadAlerts > 0 && (
-              <span style={{ marginLeft: 6, fontSize: 10, color: '#9C8060', fontWeight: 400 }}>{unreadAlerts} nieuw</span>
-            )}
-          </span>
-        </Link>
+                <NavIcon type={item.icon} active={active} />
+                <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
 
-        {bottomItems.map((item) => {
-          const active = pathname.startsWith(item.href)
-          return (
-            <Link key={item.href} href={item.href} onClick={handleNavigate} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-              textDecoration: 'none',
-              backgroundColor: active ? '#FEF3E2' : 'transparent',
-              borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
-            }}>
-              <NavIcon type={item.icon} active={active} />
-              <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
-
-        {/* Sign out */}
-        <button onClick={signOut} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
-          background: 'none', border: 'none', borderLeft: '2px solid transparent',
-          cursor: 'pointer', width: 'calc(100% - 12px)',
-        }}>
-          <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span style={{ fontSize: 13, color: '#9C8060' }}>Afmelden</span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <button
-        onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }); document.dispatchEvent(e) }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6,
-          background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0',
-          cursor: 'pointer', width: 'calc(100% - 24px)',
-        }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <span style={{ fontSize: 12, color: '#9C8060', flex: 1, textAlign: 'left' }}>Zoeken...</span>
-        <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
-      </button>
-
-      {/* Food cost target */}
-      <div style={{ margin: '8px 12px 16px', padding: '10px 12px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid #E5D8C0' }}>
-        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 6 }}>Food Cost Target</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
-            <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
-          </div>
-          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25-30%</span>
+          {/* Sign out */}
+          <button onClick={signOut} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '7px 18px', margin: '1px 6px', borderRadius: 6,
+            background: 'none', border: 'none', borderLeft: '2px solid transparent',
+            cursor: 'pointer', width: 'calc(100% - 12px)',
+          }}>
+            <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span style={{ fontSize: 13, color: '#9C8060' }}>Afmelden</span>
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Search */}
+        <button
+          onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }); document.dispatchEvent(e) }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6,
+            background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0',
+            cursor: 'pointer', width: 'calc(100% - 24px)',
+          }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <span style={{ fontSize: 12, color: '#9C8060', flex: 1, textAlign: 'left' }}>Zoeken...</span>
+          <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
+        </button>
+
+        {/* Food cost target */}
+        <div style={{ margin: '8px 12px 16px', padding: '10px 12px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid #E5D8C0' }}>
+          <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 6 }}>Food Cost Target</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
+              <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
+            </div>
+            <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25-30%</span>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }
