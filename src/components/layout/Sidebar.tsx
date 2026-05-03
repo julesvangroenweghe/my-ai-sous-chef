@@ -57,7 +57,6 @@ const navItems = [
       { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng' },
       { href: '/food-cost', label: 'Food Cost', icon: 'chart' },
       { href: '/invoices', label: 'Facturen', icon: 'receipt' },
-      { href: '/scan', label: 'Scan & OCR', icon: 'scan' },
     ],
   },
   {
@@ -108,6 +107,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     settings: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
     'recipe-db': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
     store: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
+    bell: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   }
 
   return icons[type] || icons['grid']
@@ -123,7 +123,6 @@ type NavItem = {
 }
 
 function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string }) {
-  // Check if any child is active
   const anyChildActive = item.children
     ? item.children.some(c => {
         if (c.href === '/mep') return pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
@@ -144,7 +143,6 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
   if (item.children) {
     return (
       <div>
-        {/* Parent toggle button — no navigation, just open/close */}
         <button
           onClick={() => setOpen(o => !o)}
           style={{
@@ -164,76 +162,36 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
           }}
         >
           <NavIcon type={item.icon} active={isParentActive} />
-          <span style={{
-            fontSize: 13,
-            fontWeight: isParentActive ? 500 : 400,
-            color: isParentActive ? '#B5631A' : '#5C4730',
-            flex: 1,
-          }}>
+          <span style={{ fontSize: 13, fontWeight: isParentActive ? 500 : 400, color: isParentActive ? '#B5631A' : '#5C4730', flex: 1 }}>
             {item.label}
             {item.sub && (
-              <span style={{
-                display: 'block',
-                fontSize: 9,
-                color: isParentActive ? '#C4791A' : '#9C8060',
-                lineHeight: 1.2,
-                marginTop: 1,
-                fontWeight: 400,
-              }}>
+              <span style={{ display: 'block', fontSize: 9, color: isParentActive ? '#C4791A' : '#9C8060', lineHeight: 1.2, marginTop: 1, fontWeight: 400 }}>
                 {item.sub}
               </span>
             )}
           </span>
-          <svg
-            width={12} height={12}
-            fill="none"
-            stroke={isParentActive ? '#E8A040' : '#9C8060'}
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            style={{
-              transition: 'transform 0.2s ease',
-              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-              flexShrink: 0,
-            }}
-          >
+          <svg width={12} height={12} fill="none" stroke={isParentActive ? '#E8A040' : '#9C8060'} strokeWidth="2" viewBox="0 0 24 24"
+            style={{ transition: 'transform 0.2s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
 
-        {/* Sub items */}
         {open && (
-          <div style={{
-            marginLeft: 28,
-            marginBottom: 4,
-            borderLeft: '1px solid #E5D8C0',
-            paddingLeft: 8,
-          }}>
+          <div style={{ marginLeft: 28, marginBottom: 4, borderLeft: '1px solid #E5D8C0', paddingLeft: 8 }}>
             {item.children.map(child => {
               const childActive = child.href === '/mep'
                 ? pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
                 : pathname.startsWith(child.href)
               return (
-                <Link
-                  key={child.href}
-                  href={child.href}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '5px 10px',
-                    margin: '1px 4px',
-                    borderRadius: 5,
-                    textDecoration: 'none',
-                    backgroundColor: childActive ? '#FEF3E2' : 'transparent',
-                    borderLeft: childActive ? '2px solid #E8A040' : '2px solid transparent',
-                  }}
-                >
+                <Link key={child.href} href={child.href} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '5px 10px', margin: '1px 4px', borderRadius: 5,
+                  textDecoration: 'none',
+                  backgroundColor: childActive ? '#FEF3E2' : 'transparent',
+                  borderLeft: childActive ? '2px solid #E8A040' : '2px solid transparent',
+                }}>
                   <NavIcon type={child.icon} active={childActive} />
-                  <span style={{
-                    fontSize: 12,
-                    fontWeight: childActive ? 500 : 400,
-                    color: childActive ? '#B5631A' : '#6B5040',
-                  }}>
+                  <span style={{ fontSize: 12, fontWeight: childActive ? 500 : 400, color: childActive ? '#B5631A' : '#6B5040' }}>
                     {child.label}
                   </span>
                 </Link>
@@ -245,42 +203,21 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
     )
   }
 
-  // Regular item (no children)
-  const active = item.href === '/dashboard'
-    ? pathname === '/dashboard'
-    : pathname.startsWith(item.href)
+  const active = item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
 
   return (
-    <Link
-      href={item.href}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '6px 18px',
-        margin: '1px 6px',
-        borderRadius: 6,
-        textDecoration: 'none',
-        backgroundColor: active ? '#FEF3E2' : 'transparent',
-        borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
-      }}
-    >
+    <Link href={item.href} style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '6px 18px', margin: '1px 6px', borderRadius: 6,
+      textDecoration: 'none',
+      backgroundColor: active ? '#FEF3E2' : 'transparent',
+      borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
+    }}>
       <NavIcon type={item.icon} active={active} />
-      <span style={{
-        fontSize: 13,
-        fontWeight: active ? 500 : 400,
-        color: active ? '#B5631A' : '#5C4730',
-      }}>
+      <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>
         {item.label}
         {item.sub && (
-          <span style={{
-            display: 'block',
-            fontSize: 9,
-            color: active ? '#C4791A' : '#9C8060',
-            lineHeight: 1.2,
-            marginTop: 1,
-            fontWeight: 400,
-          }}>
+          <span style={{ display: 'block', fontSize: 9, color: active ? '#C4791A' : '#9C8060', lineHeight: 1.2, marginTop: 1, fontWeight: 400 }}>
             {item.sub}
           </span>
         )}
@@ -295,79 +232,51 @@ export default function Sidebar() {
   const supabase = createClient()
   const signOut = async () => { await supabase.auth.signOut(); router.push('/login') }
   const { kitchen } = useKitchen()
+  const [unreadAlerts, setUnreadAlerts] = useState(0)
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await fetch('/api/alerts?unread=true')
+        if (res.ok) {
+          const data = await res.json()
+          setUnreadAlerts(data.alerts?.length || 0)
+        }
+      } catch {
+        // silent fail
+      }
+    }
+    fetchAlerts()
+    const interval = setInterval(fetchAlerts, 60000) // check every minute
+    return () => clearInterval(interval)
+  }, [])
+
+  const scanActive = pathname.startsWith('/scan')
+  const alertsActive = pathname.startsWith('/alerts')
 
   return (
-    <aside
-      style={{
-        width: 232,
-        minWidth: 232,
-        height: '100vh',
-        backgroundColor: '#F2E8D5',
-        borderRight: '1px solid #DDD0B8',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        zIndex: 40,
-        overflowY: 'auto',
-        scrollbarWidth: 'none',
-      }}
-    >
+    <aside style={{
+      width: 232, minWidth: 232, height: '100vh',
+      backgroundColor: '#F2E8D5', borderRight: '1px solid #DDD0B8',
+      display: 'flex', flexDirection: 'column',
+      position: 'fixed', left: 0, top: 0, zIndex: 40,
+      overflowY: 'auto', scrollbarWidth: 'none',
+    }}>
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Image
-            src="/logo-icon.png"
-            alt="My AI Sous Chef"
-            width={36}
-            height={36}
-            style={{ objectFit: 'contain' }}
-          />
-          <div style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            fontSize: 13,
-            fontWeight: 700,
-            color: '#E8A040',
-            letterSpacing: '0.01em',
-            lineHeight: 1.3,
-          }}>
+          <Image src="/logo-icon.png" alt="My AI Sous Chef" width={36} height={36} style={{ objectFit: 'contain' }} />
+          <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 13, fontWeight: 700, color: '#E8A040', letterSpacing: '0.01em', lineHeight: 1.3 }}>
             My AI<br/>
             <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
           </div>
         </div>
-
-        {/* Kitchen name */}
-        <div style={{
-          marginTop: 10,
-          paddingTop: 10,
-          borderTop: '1px solid #E5D8C0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}>
-          <div style={{
-            width: 5, height: 5, borderRadius: '50%',
-            backgroundColor: '#E8A040',
-            flexShrink: 0,
-          }} />
-          <span style={{
-            fontSize: 11,
-            fontFamily: 'Georgia, serif',
-            color: '#B5631A',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase' as const,
-            fontWeight: 500,
-          }}>
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5D8C0', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#E8A040', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontWeight: 500 }}>
             {kitchen?.name || 'Mijn Keuken'}
           </span>
-          <span style={{
-            fontSize: 10,
-            color: '#9C8060',
-            marginLeft: 2,
-          }}>
-            · {kitchen?.kitchen_type || 'Catering'}
-          </span>
+          <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>· {kitchen?.kitchen_type || 'Catering'}</span>
         </div>
       </div>
 
@@ -378,35 +287,76 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Scan CTA — altijd zichtbaar */}
+      <div style={{ padding: '8px 12px 4px' }}>
+        <Link href="/scan" style={{
+          display: 'flex', alignItems: 'center', gap: 9,
+          padding: '9px 12px', borderRadius: 7,
+          backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)',
+          border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`,
+          textDecoration: 'none',
+          transition: 'background 0.15s',
+        }}>
+          <NavIcon type="scan" active={true} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#B5631A', lineHeight: 1.2 }}>Scan & OCR</div>
+            <div style={{ fontSize: 10, color: '#9C8060', lineHeight: 1.2 }}>Prijslijst, factuur, recept</div>
+          </div>
+          <svg width={10} height={10} fill="none" stroke="#C4703A" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </Link>
+      </div>
+
       {/* Divider */}
-      <div style={{ borderTop: '1px solid #E5D8C0', margin: '0 14px' }} />
+      <div style={{ borderTop: '1px solid #E5D8C0', margin: '6px 14px 0' }} />
 
       {/* Bottom items */}
-      <div style={{ padding: '8px 0 4px' }}>
+      <div style={{ padding: '6px 0 4px' }}>
+        {/* Alerts */}
+        <Link href="/alerts" style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '6px 18px', margin: '1px 6px', borderRadius: 6,
+          textDecoration: 'none',
+          backgroundColor: alertsActive ? '#FEF3E2' : 'transparent',
+          borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent',
+        }}>
+          <div style={{ position: 'relative' }}>
+            <NavIcon type="bell" active={alertsActive || unreadAlerts > 0} />
+            {unreadAlerts > 0 && (
+              <span style={{
+                position: 'absolute', top: -4, right: -4,
+                backgroundColor: '#E53E3E', color: 'white',
+                fontSize: 8, fontWeight: 700, borderRadius: '50%',
+                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                lineHeight: 1,
+              }}>
+                {unreadAlerts > 9 ? '9+' : unreadAlerts}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: 13, fontWeight: (alertsActive || unreadAlerts > 0) ? 500 : 400, color: (alertsActive || unreadAlerts > 0) ? '#B5631A' : '#5C4730' }}>
+            Meldingen
+            {unreadAlerts > 0 && (
+              <span style={{ marginLeft: 6, fontSize: 10, color: '#9C8060', fontWeight: 400 }}>
+                {unreadAlerts} nieuw
+              </span>
+            )}
+          </span>
+        </Link>
+
         {bottomItems.map((item) => {
           const active = pathname.startsWith(item.href)
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '6px 18px',
-                margin: '1px 6px',
-                borderRadius: 6,
-                textDecoration: 'none',
-                backgroundColor: active ? '#FEF3E2' : 'transparent',
-                borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
-              }}
-            >
+            <Link key={item.href} href={item.href} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '6px 18px', margin: '1px 6px', borderRadius: 6,
+              textDecoration: 'none',
+              backgroundColor: active ? '#FEF3E2' : 'transparent',
+              borderLeft: active ? '2px solid #E8A040' : '2px solid transparent',
+            }}>
               <NavIcon type={item.icon} active={active} />
-              <span style={{
-                fontSize: 13,
-                fontWeight: active ? 500 : 400,
-                color: active ? '#B5631A' : '#5C4730',
-              }}>
+              <span style={{ fontSize: 13, fontWeight: active ? 500 : 400, color: active ? '#B5631A' : '#5C4730' }}>
                 {item.label}
               </span>
             </Link>
@@ -414,22 +364,12 @@ export default function Sidebar() {
         })}
 
         {/* Sign out */}
-        <button
-          onClick={signOut}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '6px 18px',
-            margin: '1px 6px',
-            borderRadius: 6,
-            background: 'none',
-            border: 'none',
-            borderLeft: '2px solid transparent',
-            cursor: 'pointer',
-            width: 'calc(100% - 12px)',
-          }}
-        >
+        <button onClick={signOut} style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '6px 18px', margin: '1px 6px', borderRadius: 6,
+          background: 'none', border: 'none', borderLeft: '2px solid transparent',
+          cursor: 'pointer', width: 'calc(100% - 12px)',
+        }}>
           <svg width="16" height="16" fill="none" stroke="#9C8060" strokeWidth="1.5" viewBox="0 0 24 24">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -439,25 +379,14 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Search / Command Palette */}
-      <button
-        onClick={() => {
-          const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
-          document.dispatchEvent(e)
-        }}
+      {/* Search */}
+      <button onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }); document.dispatchEvent(e) }}
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          margin: '4px 12px 0',
-          padding: '7px 10px',
-          borderRadius: 6,
-          background: 'rgba(255,255,255,0.6)',
-          border: '1px solid #E5D8C0',
-          cursor: 'pointer',
-          width: 'calc(100% - 24px)',
-        }}
-      >
+          display: 'flex', alignItems: 'center', gap: 8,
+          margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6,
+          background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0',
+          cursor: 'pointer', width: 'calc(100% - 24px)',
+        }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
@@ -466,21 +395,13 @@ export default function Sidebar() {
       </button>
 
       {/* Food cost target */}
-      <div style={{
-        margin: '8px 12px 16px',
-        padding: '10px 12px',
-        borderRadius: 6,
-        backgroundColor: 'rgba(255,255,255,0.5)',
-        border: '1px solid #E5D8C0',
-      }}>
-        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
-          Food Cost Target
-        </div>
+      <div style={{ margin: '8px 12px 16px', padding: '10px 12px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid #E5D8C0' }}>
+        <div style={{ fontSize: 9, color: '#9C8060', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 6 }}>Food Cost Target</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
             <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
           </div>
-          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25–30%</span>
+          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25-30%</span>
         </div>
       </div>
     </aside>
