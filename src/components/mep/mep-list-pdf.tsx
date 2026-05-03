@@ -232,7 +232,7 @@ const S = StyleSheet.create({
   // Columns
   columnContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
     alignItems: 'flex-start',
   },
   column: {
@@ -241,8 +241,8 @@ const S = StyleSheet.create({
 
   // Category header
   categoryBlock: {
-    marginTop: 5,
-    marginBottom: 3,
+    marginTop: 8,
+    marginBottom: 4,
   },
   categoryHeader: {
     fontSize: 12,
@@ -270,8 +270,7 @@ const S = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
-    marginBottom: 2,
-    spaceBefore: 4,
+    marginBottom: 3,
   },
   dishTiming: {
     fontSize: 7.5,
@@ -293,7 +292,7 @@ const S = StyleSheet.create({
   },
   componentRow: {
     flexDirection: 'row',
-    marginBottom: 1,
+    marginBottom: 2,
     flexWrap: 'wrap',
   },
   // Bullet dot
@@ -321,8 +320,13 @@ const S = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 1,
   },
+  componentPrepInline: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Oblique',
+    color: '#888888',
+  },
   dishSpacer: {
-    height: 8,
+    height: 12,
   },
 
   // Footer
@@ -361,19 +365,17 @@ function DishCard({ dish }: { dish: MepListDish }) {
           {group.items.map((comp, ci) => {
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
             return (
-              <View key={ci}>
-                <View style={S.componentRow}>
-                  <Text style={S.componentBullet}>·</Text>
-                  <Text style={S.componentName}>
-                    {comp.component_name}
-                    {qtyStr ? (
-                      <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
-                    ) : null}
-                  </Text>
-                </View>
-                {comp.preparation && (
-                  <Text style={S.componentPrep}>{comp.preparation}</Text>
-                )}
+              <View key={ci} style={S.componentRow}>
+                <Text style={S.componentBullet}>·</Text>
+                <Text style={S.componentName}>
+                  {comp.component_name}
+                  {qtyStr ? (
+                    <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
+                  ) : null}
+                  {comp.preparation ? (
+                    <Text style={S.componentPrepInline}>{' '}({comp.preparation})</Text>
+                  ) : null}
+                </Text>
               </View>
             )
           })}

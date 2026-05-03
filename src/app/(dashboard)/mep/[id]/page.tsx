@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft, CalendarDays, Users, MapPin, Clock, Euro,
   ChefHat, Loader2, Check, X, Pencil, Trash2,
-  AlertTriangle, ShieldCheck, Plus,
+  AlertTriangle, ShieldCheck, Plus, Download, FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -368,6 +368,73 @@ function InlineComponentEdit({
   )
 }
 
+
+// ─── EditScopeModal ───────────────────────────────────────────────────────────
+
+function EditScopeModal({
+  onSelect,
+  onCancel,
+}: {
+  onSelect: (scope: 'once' | 'database' | 'variant') => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-[#FDF8F2] border border-[#E8D5B5] rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 space-y-4">
+        <h3 className="text-lg font-display font-bold text-[#2C1810]">Hoe wil je opslaan?</h3>
+        <p className="text-sm text-[#9E7E60]">Kies hoe deze wijziging wordt toegepast:</p>
+        
+        <div className="space-y-2">
+          <button
+            onClick={() => onSelect('once')}
+            className="w-full text-left px-4 py-3 bg-white border border-[#E8D5B5] rounded-xl hover:border-[#E8A040] hover:bg-[#FDF8F2] transition-all group"
+          >
+            <div className="font-semibold text-sm text-[#2C1810] group-hover:text-[#E8A040]">
+              📌 Eenmalige correctie
+            </div>
+            <div className="text-xs text-[#9E7E60] mt-0.5">
+              Alleen voor dit event — database blijft ongewijzigd
+            </div>
+          </button>
+          
+          <button
+            onClick={() => onSelect('database')}
+            className="w-full text-left px-4 py-3 bg-white border border-[#E8D5B5] rounded-xl hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group"
+          >
+            <div className="font-semibold text-sm text-[#2C1810] group-hover:text-emerald-600">
+              📚 Database recept bijwerken
+            </div>
+            <div className="text-xs text-[#9E7E60] mt-0.5">
+              Wijzig het masterrecept — alle toekomstige drafts worden bijgewerkt
+            </div>
+          </button>
+          
+          <button
+            onClick={() => onSelect('variant')}
+            className="w-full text-left px-4 py-3 bg-white border border-[#E8D5B5] rounded-xl hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
+          >
+            <div className="font-semibold text-sm text-[#2C1810] group-hover:text-blue-600">
+              🔀 Nieuw portievariant
+            </div>
+            <div className="text-xs text-[#9E7E60] mt-0.5">
+              Zelfde gerecht, andere portiegrootte — wordt apart opgeslagen
+            </div>
+          </button>
+        </div>
+        
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm text-[#9E7E60] hover:text-[#3D2810] transition-colors"
+          >
+            Annuleren
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── ComponentRow ─────────────────────────────────────────────────────────────
 
 function ComponentRow({
@@ -383,18 +450,44 @@ function ComponentRow({
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showScopeModal, setShowScopeModal] = useState(false)
+  const [pendingUpdates, setPendingUpdates] = useState<Partial<MepComponent> | null>(null)
   const isAI = component.is_ai_suggestion
 
   if (editing) {
     return (
-      <InlineComponentEdit
-        component={component}
-        onSave={async (updates) => {
-          await onEdit(updates)
-          setEditing(false)
-        }}
-        onCancel={() => setEditing(false)}
-      />
+      <>
+        <InlineComponentEdit
+          component={component}
+          onSave={async (updates) => {
+            if (isAI) {
+              // AI suggestions skip scope modal
+              await onEdit(updates)
+              setEditing(false)
+            } else {
+              // Show scope modal for existing DB recipes
+              setPendingUpdates(updates)
+              setShowScopeModal(true)
+            }
+          }}
+          onCancel={() => setEditing(false)}
+        />
+        {showScopeModal && pendingUpdates && (
+          <EditScopeModal
+            onSelect={async (scope) => {
+              // For now, all scopes save to this event (scope handling can be extended)
+              await onEdit(pendingUpdates)
+              setShowScopeModal(false)
+              setPendingUpdates(null)
+              setEditing(false)
+            }}
+            onCancel={() => {
+              setShowScopeModal(false)
+              setPendingUpdates(null)
+            }}
+          />
+        )}
+      </>
     )
   }
 
@@ -998,6 +1091,17 @@ export default function MepDetailPage() {
               </button>
             )
           )}
+
+          {/* PDF download button */}
+          <a
+            href={`/api/mep/pdf/${event.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8D5B5] text-[#5C4730] text-xs font-medium rounded-xl hover:bg-[#FDF8F2] hover:border-[#E8A040] transition-all"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            PDF
+          </a>
         </div>
       </div>
 
