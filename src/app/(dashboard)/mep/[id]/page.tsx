@@ -400,7 +400,7 @@ function ComponentRow({
 
   return (
     <div
-      className={`group flex items-start gap-2 py-1.5 px-2 rounded-lg hover:bg-[#FDF8F2]/60 transition-all ${
+      className={`group flex items-start gap-2 py-0.5 px-2 rounded hover:bg-[#FDF8F2]/60 transition-all ${
         isAI ? 'border-l-2 border-orange-400/60 pl-3 ml-0' : ''
       }`}
     >
@@ -530,7 +530,7 @@ function DishCard({
     >
       {/* Dish header */}
       <div
-        className={`px-4 py-2.5 flex items-center justify-between gap-3 ${
+        className={`px-3 py-1.5 flex items-center justify-between gap-3 ${
           isAI ? 'bg-orange-50/60' : 'bg-[#FDFAF6]/90'
         }`}
       >
@@ -615,7 +615,7 @@ function DishCard({
       )}
 
       {/* Components */}
-      <div className="px-3 py-2 space-y-0.5">
+      <div className="px-2 py-1 space-y-0">
         {ungrouped.map((c) => (
           <ComponentRow
             key={c.id}
@@ -1114,11 +1114,11 @@ export default function MepDetailPage() {
           <p className="text-[#B8997A] text-sm">Upload een menu PDF om de MEP automatisch te genereren.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {sortedCategories.map(([category, categoryDishes]) => (
             <section key={category}>
               {/* Category header */}
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#5C4730] shrink-0">
                   {getCategoryLabel(category)}
                 </h2>
@@ -1129,7 +1129,7 @@ export default function MepDetailPage() {
               </div>
 
               {/* Dishes */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[...categoryDishes]
                   .sort((a, b) => a.sort_order - b.sort_order)
                   .map((dish) => (

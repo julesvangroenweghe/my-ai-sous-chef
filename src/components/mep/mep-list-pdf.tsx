@@ -44,14 +44,13 @@ export interface MepListData {
 
 function getCategoryOrder(cat: string): number {
   const c = (cat || '').toUpperCase().trim()
-  // MIDDAG/APERO awareness — check suffix first
   if (c.includes('MIDDAG')) {
     if (c.includes('FINGERFOOD')) return 21
     if (c.includes('FINGERBITES')) return 31
     if (c.includes('HAPJES') || c.includes('HAPJE')) return 41
     if (c.includes('AMUSE')) return 51
     if (c.includes('DESSERT')) return 92
-    return 25 // generic middag
+    return 25
   }
   if (c.includes('APERO')) {
     if (c.includes('FINGERFOOD')) return 22
@@ -59,9 +58,8 @@ function getCategoryOrder(cat: string): number {
     if (c.includes('HAPJES') || c.includes('HAPJE')) return 42
     if (c.includes('AMUSE')) return 52
     if (c.includes('DESSERT')) return 93
-    return 26 // generic apero
+    return 26
   }
-  // Walking / foodstand variants
   if (c.includes('WALKING')) {
     if (c.includes('VOOR')) return 63
     if (c.includes('HOOFD')) return 83
@@ -70,7 +68,6 @@ function getCategoryOrder(cat: string): number {
   }
   if (c.includes('FOODSTAND')) return 76
   if (c.includes('BARISTA')) return 201
-  // Standard categories
   if (c === 'DRANKEN' || c.includes('MOCKTAIL') || c.includes('COCKTAIL')) return 10
   if (c === 'FINGERFOOD') return 20
   if (c === 'FINGERBITES') return 30
@@ -135,7 +132,7 @@ function formatTime(t: string | null): string {
   return t.slice(0, 5)
 }
 
-function formatQty(qty: number | null, unit: string | null): string {
+function formatQtyShort(qty: number | null, unit: string | null): string {
   if (!qty) return ''
   const q = qty % 1 === 0 ? qty.toString() : qty.toFixed(1)
   return unit ? `${q} ${unit}` : q
@@ -146,11 +143,29 @@ function translateEventType(t: string): string {
     cocktail: 'Cocktailreceptie',
     walking_dinner: 'Walking dinner',
     sit_down: 'Diner aan tafel',
+    seated_dinner: 'Diner aan tafel',
     buffet: 'Buffet',
     daily_service: 'Dagservice',
     tasting: 'Proeverij',
+    reception: 'Receptie',
+    bbq: 'BBQ',
+    brunch: 'Brunch',
+    lunch: 'Lunch',
   }
   return map[t] || t
+}
+
+function calcDeparture(kitchenArrival: string | null, travelMin: number | null): string | null {
+  if (!kitchenArrival || !travelMin) return null
+  try {
+    const [hh, mm] = kitchenArrival.split(':').map(Number)
+    const totalMin = hh * 60 + mm - Math.round(travelMin * 1.15)
+    const dh = Math.floor(((totalMin % 1440) + 1440) % 1440 / 60)
+    const dm = ((totalMin % 1440) + 1440) % 1440 % 60
+    return `${String(dh).padStart(2, '0')}:${String(dm).padStart(2, '0')}`
+  } catch {
+    return null
+  }
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -159,39 +174,39 @@ const S = StyleSheet.create({
   page: {
     fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',
-    paddingTop: 24,
-    paddingBottom: 28,
-    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 26,
+    paddingHorizontal: 18,
     fontSize: 8,
     color: '#1C1008',
   },
 
   // Header
   header: {
-    marginBottom: 10,
-    paddingBottom: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: '#2D5A1B',
+    marginBottom: 8,
+    paddingBottom: 7,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#2d6a4f',
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   clientName: {
     fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    color: '#1C1008',
+    color: '#1a1a2e',
     letterSpacing: 0.3,
   },
   headerRight: {
     alignItems: 'flex-end',
   },
   headerDate: {
-    fontSize: 9,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
-    color: '#2D5A1B',
+    color: '#2d6a4f',
   },
   headerMeta: {
     fontSize: 8.5,
@@ -200,22 +215,17 @@ const S = StyleSheet.create({
   },
   headerContact: {
     fontSize: 7.5,
-    color: '#7A6050',
+    color: '#888888',
     marginTop: 2,
-  },
-  headerLocation: {
-    fontSize: 7.5,
-    color: '#7A6050',
-    marginTop: 1,
   },
   headerTravelRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginTop: 3,
   },
   headerTravelItem: {
     fontSize: 7.5,
-    color: '#4A3728',
+    color: '#1d4ed8',
     fontFamily: 'Helvetica-Bold',
   },
 
@@ -231,84 +241,88 @@ const S = StyleSheet.create({
 
   // Category header
   categoryBlock: {
-    marginTop: 6,
-    marginBottom: 4,
+    marginTop: 5,
+    marginBottom: 3,
   },
   categoryHeader: {
     fontSize: 12,
     fontFamily: 'Helvetica-Bold',
-    color: '#1C1008',
+    color: '#1a1a2e',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     paddingBottom: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2D5A1B',
-    marginBottom: 4,
+    borderBottomWidth: 0.8,
+    borderBottomColor: '#2d6a4f',
+    marginBottom: 3,
   },
 
   // Dish block
   dishBlock: {
-    marginBottom: 6,
+    marginBottom: 5,
   },
   dishNotes: {
     fontSize: 9,
-    color: '#7A6050',
+    color: '#b45309',
     fontFamily: 'Helvetica-Oblique',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   dishTitle: {
     fontSize: 10.5,
     fontFamily: 'Helvetica-Bold',
-    color: '#1C1008',
+    color: '#1a1a2e',
     marginBottom: 2,
+    spaceBefore: 4,
   },
   dishTiming: {
     fontSize: 7.5,
-    color: '#7A6050',
+    color: '#888888',
     marginBottom: 2,
   },
 
   // Components
   componentGroup: {
-    marginTop: 3,
+    marginTop: 2,
     marginBottom: 1,
   },
   componentGroupHeader: {
-    fontSize: 10,
-    color: '#4A3728',
-    fontFamily: 'Helvetica-Bold',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#E0D0C0',
+    fontSize: 9.5,
+    color: '#888888',
+    fontFamily: 'Helvetica-BoldOblique',
     paddingBottom: 1,
     marginBottom: 2,
   },
   componentRow: {
     flexDirection: 'row',
-    marginBottom: 1.5,
+    marginBottom: 1,
     flexWrap: 'wrap',
   },
-  componentQty: {
+  // Bullet dot
+  componentBullet: {
     fontSize: 10,
-    fontFamily: 'Helvetica-Bold',
-    color: '#1C1008',
-    marginRight: 3,
+    color: '#1a1a2e',
+    marginRight: 2,
+    width: 8,
   },
+  // Component name (main text, dark)
   componentName: {
     fontSize: 10,
-    color: '#1C1008',
+    color: '#1a1a2e',
     flex: 1,
+  },
+  // Grammage inline after name, gray
+  componentQtyInline: {
+    fontSize: 9,
+    color: '#888888',
   },
   componentPrep: {
     fontSize: 9,
     fontFamily: 'Helvetica-Oblique',
-    color: '#7A6050',
-    marginLeft: 6,
+    color: '#666666',
+    marginLeft: 10,
     marginBottom: 1,
   },
-
-  // Spacer between dishes for handwritten notes
   dishSpacer: {
-    height: 10,
+    height: 8,
   },
 
   // Footer
@@ -323,7 +337,6 @@ const S = StyleSheet.create({
 // ─── Dish Component ───────────────────────────────────────────────────────────
 
 function DishCard({ dish }: { dish: MepListDish }) {
-  // Group components by component_group
   const grouped: { groupName: string | null; items: MepListComponent[] }[] = []
   for (const comp of dish.components) {
     const g = comp.component_group || null
@@ -337,27 +350,33 @@ function DishCard({ dish }: { dish: MepListDish }) {
 
   return (
     <View style={S.dishBlock}>
-      {dish.notes && <Text style={S.dishNotes}>{dish.notes}</Text>}
+      {dish.notes && <Text style={S.dishNotes}>⚑ {dish.notes}</Text>}
       <Text style={S.dishTitle}>{dish.title}</Text>
       {dish.timing_label && <Text style={S.dishTiming}>{dish.timing_label}</Text>}
       {grouped.map((group, gi) => (
         <View key={gi} style={group.groupName ? S.componentGroup : undefined}>
           {group.groupName && (
-            <Text style={S.componentGroupHeader}>{group.groupName}</Text>
+            <Text style={S.componentGroupHeader}>■ {group.groupName}</Text>
           )}
-          {group.items.map((comp, ci) => (
-            <View key={ci}>
-              <View style={S.componentRow}>
-                {comp.quantity && (
-                  <Text style={S.componentQty}>{formatQty(comp.quantity, comp.unit)}</Text>
+          {group.items.map((comp, ci) => {
+            const qtyStr = formatQtyShort(comp.quantity, comp.unit)
+            return (
+              <View key={ci}>
+                <View style={S.componentRow}>
+                  <Text style={S.componentBullet}>·</Text>
+                  <Text style={S.componentName}>
+                    {comp.component_name}
+                    {qtyStr ? (
+                      <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
+                    ) : null}
+                  </Text>
+                </View>
+                {comp.preparation && (
+                  <Text style={S.componentPrep}>{comp.preparation}</Text>
                 )}
-                <Text style={S.componentName}>{comp.component_name}</Text>
               </View>
-              {comp.preparation && (
-                <Text style={S.componentPrep}>{comp.preparation}</Text>
-              )}
-            </View>
-          ))}
+            )
+          })}
         </View>
       ))}
       <View style={S.dishSpacer} />
@@ -371,7 +390,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
   const { event, dishes } = data
   const numCols = (event.num_persons || 0) >= 60 ? 4 : 3
 
-  // Sort dishes by category order, then sort_order within category
   const sortedDishes = [...dishes].sort((a, b) => {
     const oa = getCategoryOrder(a.category)
     const ob = getCategoryOrder(b.category)
@@ -379,7 +397,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
     return (a.sort_order || 0) - (b.sort_order || 0)
   })
 
-  // Group by category
   interface CatGroup {
     category: string
     label: string
@@ -402,7 +419,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   catGroups.sort((a, b) => a.order - b.order)
 
-  // Build flat render items
   type RenderItem =
     | { type: 'category'; label: string }
     | { type: 'dish'; dish: MepListDish }
@@ -415,14 +431,13 @@ export function MepListDocument({ data }: { data: MepListData }) {
     }
   }
 
-  // Distribute across columns (keep category + first dish together)
+  // Distribute across columns
   const columns: RenderItem[][] = Array.from({ length: numCols }, () => [])
   let colIdx = 0
   let i = 0
   while (i < items.length) {
     const item = items[i]
     if (item.type === 'category') {
-      // Place category header + next dish in same column slot
       columns[colIdx].push(item)
       i++
       if (i < items.length && items[i].type === 'dish') {
@@ -436,6 +451,22 @@ export function MepListDocument({ data }: { data: MepListData }) {
     colIdx = (colIdx + 1) % numCols
   }
 
+  // Travel line
+  const departure = calcDeparture(event.kitchen_arrival_time, null)
+  const travelParts: string[] = []
+  if (departure) travelParts.push(`Vertrek Mariakerke: ${departure}`)
+  if (event.kitchen_arrival_time) travelParts.push(`Aankomst keuken: ${formatTime(event.kitchen_arrival_time)}`)
+  if (event.venue_address) travelParts.push(event.venue_address)
+
+  // Info line
+  const infoParts: string[] = []
+  if (event.num_persons) infoParts.push(`${event.num_persons} pers.`)
+  if (event.event_start_time && event.event_end_time)
+    infoParts.push(`${formatTime(event.event_start_time)} – ${formatTime(event.event_end_time)}`)
+  else if (event.event_start_time) infoParts.push(`Start: ${formatTime(event.event_start_time)}`)
+  if (event.price_per_person) infoParts.push(`€${event.price_per_person} pp`)
+  if (event.event_type) infoParts.push(translateEventType(event.event_type))
+
   return (
     <Document>
       <Page size="A4" orientation="portrait" style={S.page}>
@@ -448,38 +479,17 @@ export function MepListDocument({ data }: { data: MepListData }) {
             </View>
           </View>
 
-          {/* Pax · tijd · prijs */}
-          <Text style={S.headerMeta}>
-            {[
-              event.num_persons ? `${event.num_persons} pax` : null,
-              event.event_start_time ? formatTime(event.event_start_time) : null,
-              event.event_end_time ? `→ ${formatTime(event.event_end_time)}` : null,
-              event.price_per_person ? `€${Number(event.price_per_person).toFixed(2)}/pp` : null,
-              translateEventType(event.event_type),
-            ]
-              .filter(Boolean)
-              .join('  ·  ')}
-          </Text>
-
+          {infoParts.length > 0 && (
+            <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
+          )}
           {event.contact_person && (
             <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
           )}
-          {(event.venue_address || event.location) && (
-            <Text style={S.headerLocation}>📍 {event.venue_address || event.location}</Text>
-          )}
-
-          {(event.departure_time || event.kitchen_arrival_time) && (
+          {travelParts.length > 0 && (
             <View style={S.headerTravelRow}>
-              {event.departure_time && (
-                <Text style={S.headerTravelItem}>
-                  🚗 Vertrek Mariakerke: {formatTime(event.departure_time)}
-                </Text>
-              )}
-              {event.kitchen_arrival_time && (
-                <Text style={S.headerTravelItem}>
-                  👨‍🍳 Aankomst keuken: {formatTime(event.kitchen_arrival_time)}
-                </Text>
-              )}
+              {travelParts.map((p, i) => (
+                <Text key={i} style={S.headerTravelItem}>{p}</Text>
+              ))}
             </View>
           )}
         </View>
@@ -492,7 +502,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
                 if (item.type === 'category') {
                   return (
                     <View key={ii} style={S.categoryBlock}>
-                      <Text style={S.categoryHeader}>{item.label}</Text>
+                      <Text style={S.categoryHeader}>{item.label.toUpperCase()}</Text>
                     </View>
                   )
                 }
@@ -501,12 +511,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
             </View>
           ))}
         </View>
-
-        {/* ── Footer ── */}
-        <Text style={S.footer}>
-          My AI Sous Chef ·{' '}
-          {new Date().toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </Text>
       </Page>
     </Document>
   )
