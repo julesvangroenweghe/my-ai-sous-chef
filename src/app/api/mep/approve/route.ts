@@ -1,0 +1,61 @@
+import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { eventId } = await request.json()
+    if (!eventId) {
+      return NextResponse.json({ error: 'eventId required' }, { status: 400 })
+    }
+
+    // Use regular anon client - RLS now allows anon updates
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    // Update event status to approved
+    const { error: eventError } = await supabase
+      .from('events')
+      .update({ status: 'approved', mep_status: 'approved' })
+      .eq('id', eventId)
+
+    if (eventError) {
+      console.error('Event update error:', eventError)
+      return NextResponse.json({ error: eventError.message }, { status: 500 })
+    }
+
+    // Mark all AI suggestions as approved (is_ai_suggestion = false)
+    const { error: dishError } = await supabase
+      .from('mep_dishes')
+      .update({ is_ai_suggestion: false })
+      .eq('event_id', eventId)
+
+    if (dishError) {
+      console.error('Dish update error:', dishError)
+    }
+
+    // Get all dish IDs for this event
+    const { data: dishes } = await supabase
+      .from('mep_dishes')
+      .select('id')
+      .eq('event_id', eventId)
+
+    if (dishes && dishes.length > 0) {
+      const dishIds = dishes.map(d => d.id)
+      const { error: compError } = await supabase
+        .from('mep_components')
+        .update({ is_ai_suggestion: false })
+        .in('dish_id', dishIds)
+
+      if (compError) {
+        console.error('Component update error:', compError)
+      }
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Approve error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
