@@ -95,9 +95,7 @@ const CAT_ORDER: Record<string, number> = {
 
 function getCategoryOrder(cat: string): number {
   const lower = cat.toLowerCase().trim()
-  // Exact match first
   if (CAT_ORDER[lower] !== undefined) return CAT_ORDER[lower]
-  // MIDDAG/APERO awareness: check these before partial matching
   if (lower.includes('middag')) {
     if (lower.includes('fingerfood')) return CAT_ORDER['fingerfood middag']
     if (lower.includes('dessert')) return CAT_ORDER['dessert middag']
@@ -108,7 +106,6 @@ function getCategoryOrder(cat: string): number {
     return 4
   }
   if (lower.includes('avond') && lower.includes('dessert')) return CAT_ORDER['dessert avond']
-  // Sort by key length descending so more-specific keys match first
   const sortedKeys = Object.keys(CAT_ORDER).sort((a, b) => b.length - a.length)
   for (const key of sortedKeys) {
     if (lower.includes(key)) return CAT_ORDER[key]
@@ -518,7 +515,6 @@ function DishCard({
     setEditingTitle(false)
   }
 
-  // Sort components and group by component_group
   const sorted = [...dish.components].sort((a, b) => a.sort_order - b.sort_order)
   const ungrouped: MepComponent[] = sorted.filter((c) => !c.component_group)
   const groupsMap: Record<string, MepComponent[]> = {}
@@ -547,7 +543,6 @@ function DishCard({
             </span>
           )}
 
-          {/* Inline title edit */}
           {editingTitle ? (
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <input
@@ -613,14 +608,12 @@ function DishCard({
         )}
       </div>
 
-      {/* Dish notes */}
       {dish.notes && (
         <div className="px-4 py-1.5 text-xs italic text-[#9E7E60] border-b border-[#E8D5B5]/50 bg-[#FDF8F2]/30">
           {dish.notes}
         </div>
       )}
 
-      {/* Components */}
       <div className="px-2 py-1 space-y-0">
         {ungrouped.map((c) => (
           <ComponentRow
@@ -653,7 +646,6 @@ function DishCard({
           </div>
         ))}
 
-        {/* Add component form or button */}
         {showAddForm ? (
           <AddComponentForm
             onSave={async (data) => {
@@ -869,45 +861,37 @@ export default function MepDetailPage() {
     toast.success('Titel bijgewerkt ✓')
   }
 
+  // ── Approve event via server API (bypasses RLS) ──
   const handleApproveEvent = async () => {
     if (!event) return
     setApprovingEvent(true)
 
-    // Approve all dishes and components
-    const dishIds = dishes.map((d) => d.id)
-    const { error: eventErr } = await supabase
-      .from('events')
-      .update({ status: 'approved' })
-      .eq('id', event.id)
+    try {
+      const res = await fetch(`/api/mep/approve/${event.id}`, { method: 'POST' })
+      const json = await res.json()
 
-    if (dishIds.length > 0) {
-      await supabase
-        .from('mep_dishes')
-        .update({ is_ai_suggestion: false })
-        .in('id', dishIds)
-      await supabase
-        .from('mep_components')
-        .update({ is_ai_suggestion: false })
-        .in('dish_id', dishIds)
-    }
+      if (!res.ok || json.error) {
+        toast.error('Goedkeuren mislukt: ' + (json.error || res.statusText))
+        setApprovingEvent(false)
+        return
+      }
 
-    if (eventErr) {
-      toast.error('Goedkeuren mislukt')
+      // Update local state
+      setEvent((prev) => prev ? { ...prev, status: 'approved' } : prev)
+      setDishes((prev) =>
+        prev.map((d) => ({
+          ...d,
+          is_ai_suggestion: false,
+          components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
+        }))
+      )
+      setConfirmApproveEvent(false)
+      toast.success('Event goedgekeurd ✓ — staat nu in planning')
+    } catch (err) {
+      toast.error('Netwerkfout bij goedkeuren')
+    } finally {
       setApprovingEvent(false)
-      return
     }
-
-    setEvent((prev) => prev ? { ...prev, status: 'approved' } : prev)
-    setDishes((prev) =>
-      prev.map((d) => ({
-        ...d,
-        is_ai_suggestion: false,
-        components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
-      }))
-    )
-    setConfirmApproveEvent(false)
-    setApprovingEvent(false)
-    toast.success('Event goedgekeurd ✓ — staat nu in planning')
   }
 
   // ── Group by category ──
@@ -966,7 +950,6 @@ export default function MepDetailPage() {
           <p className="text-[#B8997A] text-sm">{formatDate(event.event_date)}</p>
         </div>
 
-        {/* Status badge + approve button */}
         <div className="flex items-center gap-2 shrink-0">
           <span
             className={`px-3 py-1 text-xs font-semibold rounded-full border ${
@@ -980,7 +963,7 @@ export default function MepDetailPage() {
             {event.status === 'approved' ? 'Goedgekeurd' : event.status === 'draft' ? 'Concept' : event.status}
           </span>
 
-          {event.status === 'draft' && (
+          {event.status !== 'approved' && (
             confirmApproveEvent ? (
               <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5">
                 <span className="text-xs text-emerald-700 font-medium">Zeker goedkeuren?</span>
@@ -1101,7 +1084,7 @@ export default function MepDetailPage() {
             <strong>{totalAI} AI-suggestie{totalAI !== 1 ? 's' : ''}</strong> wachten op goedkeuring.
             Oranje items zijn nog niet geverifieerd.
           </p>
-          {event.status === 'draft' && (
+          {event.status !== 'approved' && (
             <button
               onClick={() => setConfirmApproveEvent(true)}
               className="text-xs text-emerald-700 font-semibold hover:underline shrink-0"
@@ -1123,7 +1106,6 @@ export default function MepDetailPage() {
         <div className="space-y-5">
           {sortedCategories.map(([category, categoryDishes]) => (
             <section key={category}>
-              {/* Category header */}
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-[#5C4730] shrink-0">
                   {getCategoryLabel(category)}
@@ -1134,7 +1116,6 @@ export default function MepDetailPage() {
                 </span>
               </div>
 
-              {/* Dishes */}
               <div className="space-y-2">
                 {[...categoryDishes]
                   .sort((a, b) => a.sort_order - b.sort_order)
