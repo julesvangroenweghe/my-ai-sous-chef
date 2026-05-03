@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid', sub: null },
-  { href: '/events', label: 'Events & Planning', icon: 'calendar', sub: null },
+  { href: '/events', label: 'Events & Planning', icon: 'calendar', sub: 'Voorstellen & offertes' },
   {
     href: '/mep',
     label: 'MEP',
@@ -24,24 +24,56 @@ const navItems = [
       { href: '/mep/leveranciers', label: 'Leveranciers', icon: 'store' },
     ],
   },
-  { href: '/recipes', label: 'Recepten', icon: 'book', sub: null },
-  { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng', sub: 'AI audit engine' },
-  { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf', sub: null },
-  { href: '/preparations', label: 'Halffabricaten', icon: 'layers', sub: 'Sauzen, bases, fondsen' },
-  { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout', sub: null },
-  { href: '/scan', label: 'Scan', icon: 'scan', sub: 'OCR facturen & recepten' },
-  { href: '/suppliers', label: 'Leveranciers', icon: 'truck', sub: null },
-  { href: '/legende', label: 'LEGENDE', icon: 'star', sub: 'Jouw signatuurgerechten' },
-  { href: '/match-style', label: 'Match My Style', icon: 'sparkles', sub: 'AI stijlmatch' },
-  { href: '/food-cost', label: 'Food Cost', icon: 'chart', sub: null },
-  { href: '/invoices', label: 'Facturen', icon: 'receipt', sub: null },
-  { href: '/calendar', label: 'Kalender', icon: 'cal', sub: null },
-  { href: '/inbox', label: 'Inbox', icon: 'mail', sub: null },
-  { href: '/integrations', label: 'Integraties', icon: 'plug', sub: null },
-  { href: '/knowledge', label: 'Kennisbank', icon: 'archive', sub: 'Escoffier & klassiekers' },
+  {
+    href: '/keuken',
+    label: 'Keuken',
+    icon: 'book',
+    sub: 'Recepten & stijl',
+    children: [
+      { href: '/recipes', label: 'Recepten', icon: 'book' },
+      { href: '/legende', label: 'LEGENDE', icon: 'star' },
+      { href: '/match-style', label: 'Match My Style', icon: 'sparkles' },
+      { href: '/knowledge', label: 'Kennisbank', icon: 'archive' },
+    ],
+  },
+  {
+    href: '/producten',
+    label: 'Producten',
+    icon: 'leaf',
+    sub: 'Ingrediënten & leveranciers',
+    children: [
+      { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf' },
+      { href: '/preparations', label: 'Halffabricaten', icon: 'layers' },
+      { href: '/suppliers', label: 'Leveranciers', icon: 'truck' },
+      { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout' },
+    ],
+  },
+  {
+    href: '/business',
+    label: 'Business',
+    icon: 'chart',
+    sub: 'Kosten & engineering',
+    children: [
+      { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng' },
+      { href: '/food-cost', label: 'Food Cost', icon: 'chart' },
+      { href: '/invoices', label: 'Facturen', icon: 'receipt' },
+      { href: '/scan', label: 'Scan & OCR', icon: 'scan' },
+    ],
+  },
+  {
+    href: '/communicatie',
+    label: 'Communicatie',
+    icon: 'mail',
+    sub: 'Mail & agenda',
+    children: [
+      { href: '/inbox', label: 'Inbox', icon: 'mail' },
+      { href: '/calendar', label: 'Kalender', icon: 'cal' },
+    ],
+  },
 ]
 
 const bottomItems = [
+  { href: '/integrations', label: 'Integraties', icon: 'plug' },
   { href: '/profile', label: 'Profiel', icon: 'user' },
   { href: '/settings', label: 'Instellingen', icon: 'settings' },
 ]
@@ -76,42 +108,43 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     settings: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
     'recipe-db': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
     store: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
-    chevron: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>,
   }
 
   return icons[type] || icons['grid']
 }
 
+type NavChild = { href: string; label: string; icon: string }
 type NavItem = {
   href: string
   label: string
   icon: string
   sub?: string | null
-  children?: { href: string; label: string; icon: string }[]
+  children?: NavChild[]
 }
 
 function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string }) {
-  const isMepSection = pathname.startsWith('/mep')
-  const [open, setOpen] = useState(isMepSection)
+  // Check if any child is active
+  const anyChildActive = item.children
+    ? item.children.some(c => {
+        if (c.href === '/mep') return pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
+        return pathname.startsWith(c.href)
+      })
+    : false
+
+  const [open, setOpen] = useState(anyChildActive)
 
   useEffect(() => {
-    if (item.children && pathname.startsWith(item.href)) {
-      setOpen(true)
-    }
-  }, [pathname, item.href, item.children])
+    if (anyChildActive) setOpen(true)
+  }, [anyChildActive])
 
   const isParentActive = item.children
-    ? pathname.startsWith(item.href)
+    ? anyChildActive
     : (item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href))
 
   if (item.children) {
-    const activeChild = item.children.find(c =>
-      c.href === '/mep' ? pathname === '/mep' || pathname.match(/^\/mep\/[^/]+$/) && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)) : pathname.startsWith(c.href)
-    )
-
     return (
       <div>
-        {/* Parent row */}
+        {/* Parent toggle button — no navigation, just open/close */}
         <button
           onClick={() => setOpen(o => !o)}
           style={{
@@ -151,7 +184,6 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
               </span>
             )}
           </span>
-          {/* Chevron */}
           <svg
             width={12} height={12}
             fill="none"
@@ -178,7 +210,7 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
           }}>
             {item.children.map(child => {
               const childActive = child.href === '/mep'
-                ? pathname === '/mep'
+                ? pathname === '/mep' || (pathname.startsWith('/mep/') && !['inbox','planning','recepten','leveranciers'].some(s => pathname.includes(s)))
                 : pathname.startsWith(child.href)
               return (
                 <Link
@@ -213,7 +245,7 @@ function NavItemComponent({ item, pathname }: { item: NavItem; pathname: string 
     )
   }
 
-  // Regular item
+  // Regular item (no children)
   const active = item.href === '/dashboard'
     ? pathname === '/dashboard'
     : pathname.startsWith(item.href)
