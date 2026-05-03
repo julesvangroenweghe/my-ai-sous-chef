@@ -1,19 +1,16 @@
 {
   "functions": {
-    "src/app/api/menu-engineering/generate/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/menu-builder/generate/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/menu-board/suggest/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/jules-chat/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/jules/route.ts": {
-      "maxDuration": 60
+    "src/app/api/menu-engineering/generate/route.ts": { "maxDuration": 300 },
+    "src/app/api/menu-builder/generate/route.ts": { "maxDuration": 300 },
+    "src/app/api/menu-board/suggest/route.ts": { "maxDuration": 60 },
+    "src/app/api/jules-chat/route.ts": { "maxDuration": 60 },
+    "src/app/api/jules/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/check-mail/route.ts": { "maxDuration": 60 }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/check-mail",
+      "schedule": "*/10 * * * *"
     }
-  }
+  ]
 }
