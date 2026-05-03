@@ -1005,18 +1005,18 @@ export default function MepDetailPage() {
       <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {event.num_persons && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Users className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Personen</div>
                 <div className="text-sm font-semibold text-[#2C1810]">{event.num_persons}</div>
               </div>
             </div>
           )}
           {event.price_per_person && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Euro className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Prijs p.p.</div>
                 <div className="text-sm font-semibold text-[#2C1810]">
                   €{Number(event.price_per_person).toFixed(2)}
@@ -1025,29 +1025,29 @@ export default function MepDetailPage() {
             </div>
           )}
           {event.location && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <MapPin className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Locatie</div>
-                <div className="text-sm font-semibold text-[#2C1810] truncate">{event.location}</div>
+                <div className="text-sm font-semibold text-[#2C1810] truncate" title={event.location}>{event.location}</div>
               </div>
             </div>
           )}
           {event.event_type && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <ChefHat className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Type</div>
-                <div className="text-sm font-semibold text-[#2C1810]">
+                <div className="text-sm font-semibold text-[#2C1810] truncate">
                   {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
                 </div>
               </div>
             </div>
           )}
           {event.departure_time && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Vertrek Mariakerke</div>
                 <div className="text-sm font-semibold text-[#2C1810]">
                   {String(event.departure_time).slice(0, 5)}
@@ -1056,9 +1056,9 @@ export default function MepDetailPage() {
             </div>
           )}
           {event.arrival_time && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Aankomst keuken</div>
                 <div className="text-sm font-semibold text-[#2C1810]">
                   {String(event.arrival_time).slice(0, 5)}
@@ -1067,11 +1067,11 @@ export default function MepDetailPage() {
             </div>
           )}
           {event.contact_person && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <CalendarDays className="w-4 h-4 text-[#E8A040] shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Contact</div>
-                <div className="text-sm font-semibold text-[#2C1810]">{event.contact_person}</div>
+                <div className="text-sm font-semibold text-[#2C1810] truncate">{event.contact_person}</div>
               </div>
             </div>
           )}
