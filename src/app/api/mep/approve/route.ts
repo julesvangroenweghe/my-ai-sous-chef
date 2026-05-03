@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -8,11 +8,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'eventId required' }, { status: 400 })
     }
 
-    // Use regular anon client - RLS now allows anon updates
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    // Server-side client leest auth cookie → voldoet aan RLS
+    const supabase = await createClient()
 
     // Update event status to approved
     const { error: eventError } = await supabase
@@ -25,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: eventError.message }, { status: 500 })
     }
 
-    // Mark all AI suggestions as approved (is_ai_suggestion = false)
+    // Mark all AI suggestions as approved
     const { error: dishError } = await supabase
       .from('mep_dishes')
       .update({ is_ai_suggestion: false })
@@ -42,7 +39,7 @@ export async function POST(request: NextRequest) {
       .eq('event_id', eventId)
 
     if (dishes && dishes.length > 0) {
-      const dishIds = dishes.map(d => d.id)
+      const dishIds = dishes.map((d: { id: string }) => d.id)
       const { error: compError } = await supabase
         .from('mep_components')
         .update({ is_ai_suggestion: false })
