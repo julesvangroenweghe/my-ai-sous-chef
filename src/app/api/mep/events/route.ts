@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+// Admin API route — bypasses RLS, no auth required
 export async function GET() {
   try {
     const supabase = createAdminClient()
