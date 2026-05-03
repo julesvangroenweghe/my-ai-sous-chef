@@ -300,12 +300,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       </div>
 
-      <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      {/* Main nav — NO flex:1 or overflowY here; the sidebar itself scrolls */}
+      <nav style={{ padding: '10px 0' }}>
         {navItems.map((item) => (
           <NavItemComponent key={item.href} item={item} pathname={pathname} onNavigate={handleNavigate} />
         ))}
       </nav>
 
+      {/* Scan & OCR — standalone amber button */}
       <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
         <Link href="/scan" onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', borderRadius: 7, backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)', border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`, textDecoration: 'none' }}>
           <NavIcon type="scan" active={true} />
@@ -319,6 +321,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <div style={{ borderTop: '1px solid #E5D8C0', margin: '6px 14px 0', flexShrink: 0 }} />
 
+      {/* Bottom navigation */}
       <div style={{ padding: '6px 0 4px', flexShrink: 0 }}>
         <Link href="/alerts" onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 18px', margin: '1px 6px', borderRadius: 6, textDecoration: 'none', backgroundColor: alertsActive ? '#FEF3E2' : 'transparent', borderLeft: alertsActive ? '2px solid #E8A040' : '2px solid transparent' }}>
           <div style={{ position: 'relative' }}>
