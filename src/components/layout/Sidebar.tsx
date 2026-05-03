@@ -228,11 +228,12 @@ function NavItemComponent({
 }
 
 interface SidebarProps {
-  sidebarOpen?: boolean
+  isOpen: boolean
+  isMobile: boolean
   onClose?: () => void
 }
 
-export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, isMobile, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -279,7 +280,7 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
         overflowY: 'auto',
         scrollbarWidth: 'none',
         // JS-controlled show/hide via transform
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 280ms ease-in-out',
       }}
     >
@@ -291,8 +292,8 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
             My AI<br/>
             <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
           </div>
-          {/* Close button — always rendered, parent hides it on desktop by not passing onClose */}
-          <button
+          {/* Close button — only on mobile */}
+          {isMobile && <button
             onClick={onClose}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -304,7 +305,7 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
             <svg width={18} height={18} fill="none" stroke="#9C8060" strokeWidth="2" viewBox="0 0 24 24">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
-          </button>
+          </button>}
         </div>
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5D8C0', display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#E8A040', flexShrink: 0 }} />
