@@ -264,14 +264,24 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
 
   return (
     <aside
-      className={[
-        // app-sidebar handles: position fixed, transform, transition, z-index, overflow via globals.css
-        'app-sidebar flex flex-col',
-        // Width, background, border
-        'bg-[#F2E8D5] border-r border-[#DDD0B8]',
-        // Open state — CSS class controls translateX
-        sidebarOpen ? 'sidebar-is-open' : '',
-      ].join(' ')}
+      style={{
+        // CRITICAL: always position:fixed — never a flex child taking up space
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        height: '100vh',
+        width: 232,
+        zIndex: 40,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#F2E8D5',
+        borderRight: '1px solid #DDD0B8',
+        overflowY: 'auto',
+        scrollbarWidth: 'none',
+        // JS-controlled show/hide via transform
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 280ms ease-in-out',
+      }}
     >
       {/* Logo + kitchen name */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #E5D8C0', flexShrink: 0 }}>
@@ -281,11 +291,14 @@ export default function Sidebar({ sidebarOpen = false, onClose }: SidebarProps) 
             My AI<br/>
             <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
           </div>
-          {/* Close button — only visible on mobile */}
+          {/* Close button — always rendered, parent hides it on desktop by not passing onClose */}
           <button
             onClick={onClose}
-            className="sidebar-close-btn"
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: 4, borderRadius: 4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
             aria-label="Sluit menu"
           >
             <svg width={18} height={18} fill="none" stroke="#9C8060" strokeWidth="2" viewBox="0 0 24 24">
