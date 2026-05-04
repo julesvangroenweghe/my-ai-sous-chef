@@ -20,8 +20,8 @@ interface MepEvent {
   price_per_person: number | null
   location: string | null
   contact_person: string | null
-  start_time: string | null
-  end_time: string | null
+  event_start_time: string | null
+  event_end_time: string | null
   mep_status: string
   event_type: string | null
   travel_time_minutes: number | null
@@ -108,6 +108,17 @@ function formatDate(d: string): string {
   })
 }
 
+const eventTypeLabels: Record<string, string> = {
+  cocktail: 'Cocktailreceptie',
+  walking_dinner: 'Walking Dinner',
+  sit_down: 'Diner aan tafel',
+  seated_dinner: 'Diner aan tafel',
+  buffet: 'Buffet',
+  daily_service: 'Dagservice',
+  tasting: 'Proeverij',
+  lunch: 'Lunch',
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function MepDetailPage() {
@@ -135,6 +146,13 @@ export default function MepDetailPage() {
 
   // Delete component confirm
   const [deletingComp, setDeletingComp] = useState<string | null>(null)
+
+  // Delete dish confirm
+  const [deletingDish, setDeletingDish] = useState<string | null>(null)
+
+  // Edit dish title
+  const [editingDishId, setEditingDishId] = useState<string | null>(null)
+  const [editDishTitle, setEditDishTitle] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -227,6 +245,22 @@ export default function MepDetailPage() {
     await fetchData()
   }
 
+  // Delete dish
+  const deleteDish = async (dishId: string) => {
+    await supabase.from('mep_components').delete().eq('dish_id', dishId)
+    await supabase.from('mep_dishes').delete().eq('id', dishId)
+    setDeletingDish(null)
+    await fetchData()
+  }
+
+  // Save dish title
+  const saveDishTitle = async (dishId: string) => {
+    if (!editDishTitle.trim()) return
+    await supabase.from('mep_dishes').update({ title: editDishTitle.trim() }).eq('id', dishId)
+    setEditingDishId(null)
+    await fetchData()
+  }
+
   // Add component
   const addComponent = async (dishId: string) => {
     if (!addForm.name.trim()) return
@@ -276,129 +310,191 @@ export default function MepDetailPage() {
   const isApproved = event.mep_status === 'approved'
 
   return (
-    <div className="space-y-5 pb-12">
+    <div className="space-y-4 pb-12">
 
       {/* ── Header ── */}
-      <div className="flex items-start gap-4">
-        <Link href="/mep" className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-1 shrink-0">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-1 flex-wrap">
-            <h1 className="text-2xl font-bold text-[#2C1810] truncate">{event.name}</h1>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border ${
-              isApproved
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-stone-100 text-[#5C4730] border-[#E8D5B5]'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-emerald-500' : 'bg-stone-400'}`} />
-              {isApproved ? 'Goedgekeurd' : 'Concept'}
-            </span>
+      <div className="bg-[#FAF6EF] border border-[#E8D5B5] rounded-2xl p-4">
+        <div className="flex items-start gap-3">
+          <Link href="/mep" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-0.5 shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h1 className="text-xl font-bold text-[#2C1810]">{event.name}</h1>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${
+                isApproved
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                {isApproved ? 'Goedgekeurd' : 'Concept'}
+              </span>
+              {event.event_type && (
+                <span className="text-xs text-[#9E7E60] bg-white border border-[#E8D5B5] px-2 py-0.5 rounded-full">
+                  {eventTypeLabels[event.event_type] || event.event_type}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-[#9E7E60]">
+              <span className="flex items-center gap-1">
+                <CalendarDays className="w-3.5 h-3.5" />
+                {formatDate(event.event_date)}
+              </span>
+              {event.event_start_time && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {event.event_start_time}{event.event_end_time ? ` – ${event.event_end_time}` : ''}
+                </span>
+              )}
+              {event.num_persons && (
+                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{event.num_persons} pax</span>
+              )}
+              {event.price_per_person && (
+                <span className="flex items-center gap-1"><Euro className="w-3.5 h-3.5" />€{event.price_per_person}/pp</span>
+              )}
+              {event.location && (
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{event.location}</span>
+              )}
+              {event.contact_person && (
+                <span className="text-[#B8997A]">Contact: {event.contact_person}</span>
+              )}
+              {event.travel_time_minutes && (
+                <span className="text-[#B8997A]">Reistijd: {event.travel_time_minutes} min</span>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-[#9E7E60]">
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="w-4 h-4" />
-              {formatDate(event.event_date)}
-            </span>
-            {event.num_persons && (
-              <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{event.num_persons} personen</span>
-            )}
-            {event.price_per_person && (
-              <span className="flex items-center gap-1.5"><Euro className="w-4 h-4" />€{event.price_per_person}/pp</span>
-            )}
-            {event.location && (
-              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{event.location}</span>
-            )}
-            {event.start_time && (
-              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{event.start_time}{event.end_time ? ` – ${event.end_time}` : ''}</span>
-            )}
-            {event.contact_person && (
-              <span className="text-[#B8997A]">Contact: {event.contact_person}</span>
-            )}
-          </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0 mt-1">
-          {/* PDF download */}
-          <a
-            href={`/api/mep/pdf/${eventId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm hover:bg-[#F2E8D5] transition-all"
-          >
-            <Download className="w-4 h-4" />
-            PDF
-          </a>
-
-          {/* Approve button */}
-          {!isApproved && (
-            <button
-              onClick={handleApprove}
-              disabled={approving}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-all disabled:opacity-50"
+          {/* Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`/api/mep/pdf/${eventId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-xs hover:bg-[#F2E8D5] transition-all"
             >
-              {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              Goedkeuren
-            </button>
-          )}
+              <Download className="w-3.5 h-3.5" />
+              PDF
+            </a>
+            {!isApproved && (
+              <button
+                onClick={handleApprove}
+                disabled={approving}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all disabled:opacity-50"
+              >
+                {approving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Goedkeuren
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {approveError && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          {approveError}
-        </div>
-      )}
+        {approveError && (
+          <div className="flex items-center gap-2 px-3 py-2 mt-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            {approveError}
+          </div>
+        )}
+      </div>
 
       {/* ── MEP Content ── */}
       {dishes.length === 0 ? (
         <div className="bg-white border border-[#E8D5B5] rounded-2xl p-12 text-center">
           <ChefHat className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
           <p className="text-[#9E7E60]">Nog geen MEP gerechten voor dit event</p>
+          <p className="text-xs text-[#B8997A] mt-1">Upload een menu PDF via de Inbox om automatisch een MEP te genereren</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {sortedCategories.map(cat => {
             const catDishes = byCategory.get(cat)!
             return (
               <div key={cat}>
                 {/* Category header */}
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-[#9E7E60]">{catLabel(cat)}</h2>
+                  <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#9E7E60] shrink-0">{catLabel(cat)}</h2>
                   <div className="flex-1 h-px bg-[#E8D5B5]" />
+                  <span className="text-[10px] text-[#C4B090]">{catDishes.length} gerecht{catDishes.length !== 1 ? 'en' : ''}</span>
                 </div>
 
                 {/* Dishes */}
                 <div className="space-y-2">
                   {catDishes.map(dish => {
                     const isAiDish = dish.is_ai_suggestion === 1
+                    const isDeletingThisDish = deletingDish === dish.id
+                    const isEditingTitle = editingDishId === dish.id
+
+                    if (isDeletingThisDish) {
+                      return (
+                        <div key={dish.id} className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between gap-3">
+                          <span className="text-sm text-red-700">Verwijder <strong>{dish.title}</strong> + alle componenten?</span>
+                          <div className="flex gap-1 shrink-0">
+                            <button onClick={() => deleteDish(dish.id)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg">Ja</button>
+                            <button onClick={() => setDeletingDish(null)} className="px-3 py-1 border border-red-200 text-red-600 text-xs rounded-lg">Nee</button>
+                          </div>
+                        </div>
+                      )
+                    }
+
                     return (
                       <div key={dish.id} className="bg-white border border-[#E8D5B5] rounded-xl overflow-hidden">
                         {/* Dish header */}
-                        <div className={`px-4 py-2 flex items-start justify-between gap-2 border-b border-[#F0E8D8] ${isAiDish ? 'bg-orange-50' : 'bg-[#FAF6EF]'}`}>
-                          <div className="min-w-0">
-                            <span className={`text-sm font-semibold ${isAiDish ? 'text-orange-600' : 'text-[#2C1810]'}`}>
-                              {dish.title}
-                              {isAiDish && <Sparkles className="inline w-3 h-3 ml-1 text-orange-400" />}
-                            </span>
-                            {dish.notes && (
-                              <p className="text-xs text-[#9E7E60] italic mt-0.5">{dish.notes}</p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => setAddingToDish(addingToDish === dish.id ? null : dish.id)}
-                            className="p-1 rounded-lg text-[#B8997A] hover:text-amber-600 hover:bg-amber-50 transition-all shrink-0"
-                            title="Component toevoegen"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
+                        <div className={`px-3 py-1.5 flex items-center gap-2 group border-b border-[#F0E8D8] ${
+                          isAiDish ? 'bg-orange-50' : 'bg-[#FAF6EF]'
+                        }`}>
+                          {isEditingTitle ? (
+                            <div className="flex gap-1.5 flex-1">
+                              <input
+                                type="text"
+                                value={editDishTitle}
+                                onChange={e => setEditDishTitle(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') saveDishTitle(dish.id); if (e.key === 'Escape') setEditingDishId(null); }}
+                                className="flex-1 px-2 py-0.5 text-sm border border-amber-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                autoFocus
+                              />
+                              <button onClick={() => saveDishTitle(dish.id)} className="p-1 rounded bg-emerald-500 text-white"><Check className="w-3 h-3" /></button>
+                              <button onClick={() => setEditingDishId(null)} className="p-1 rounded border border-[#E8D5B5] text-[#9E7E60]"><X className="w-3 h-3" /></button>
+                            </div>
+                          ) : (
+                            <>
+                              <span className={`flex-1 text-sm font-semibold truncate ${
+                                isAiDish ? 'text-orange-600' : 'text-[#2C1810]'
+                              }`}>
+                                {dish.title}
+                                {isAiDish && <Sparkles className="inline w-3 h-3 ml-1 text-orange-400" />}
+                              </span>
+                              {dish.notes && (
+                                <span className="text-xs text-[#9E7E60] italic truncate max-w-[200px]">{dish.notes}</span>
+                              )}
+                              {/* Action buttons — always slightly visible, full on hover */}
+                              <div className="flex items-center gap-0 opacity-30 group-hover:opacity-100 transition-opacity shrink-0">
+                                <button
+                                  onClick={() => setAddingToDish(addingToDish === dish.id ? null : dish.id)}
+                                  className="p-1 rounded text-[#9E7E60] hover:text-amber-600 hover:bg-amber-50 transition-all"
+                                  title="Component toevoegen"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => { setEditingDishId(dish.id); setEditDishTitle(dish.title) }}
+                                  className="p-1 rounded text-[#9E7E60] hover:text-amber-600 hover:bg-amber-50 transition-all"
+                                  title="Naam bewerken"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => setDeletingDish(dish.id)}
+                                  className="p-1 rounded text-[#9E7E60] hover:text-red-500 hover:bg-red-50 transition-all"
+                                  title="Gerecht verwijderen"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* Components */}
-                        <div className="divide-y divide-[#F5EDE0]">
-                          {/* Group by component_group */}
+                        <div>
                           {(() => {
                             const groups: Map<string | null, MepComponent[]> = new Map()
                             for (const comp of dish.components) {
@@ -411,7 +507,7 @@ export default function MepDetailPage() {
 
                             return (
                               <>
-                                {mainComps.map(comp => (
+                                {mainComps.map((comp) => (
                                   <ComponentRowItem
                                     key={comp.id}
                                     comp={comp}
@@ -429,10 +525,10 @@ export default function MepDetailPage() {
                                 ))}
                                 {subGroups.map(([grpName, comps]) => (
                                   <div key={grpName}>
-                                    <div className="px-4 py-1 bg-[#F5EDE0]/60">
-                                      <span className="text-xs font-medium text-[#B8997A] uppercase tracking-wider">{grpName}</span>
+                                    <div className="px-3 py-0.5 bg-[#F5EDE0]/60 border-t border-[#F0E8D8]">
+                                      <span className="text-[10px] font-semibold text-[#B8997A] uppercase tracking-wider">{grpName}</span>
                                     </div>
-                                    {comps.map(comp => (
+                                    {comps.map((comp) => (
                                       <ComponentRowItem
                                         key={comp.id}
                                         comp={comp}
@@ -457,32 +553,32 @@ export default function MepDetailPage() {
 
                         {/* Add component form */}
                         {addingToDish === dish.id && (
-                          <div className="px-4 py-3 bg-amber-50 border-t border-amber-100">
-                            <div className="flex gap-2 flex-wrap">
+                          <div className="px-3 py-2.5 bg-amber-50 border-t border-amber-100">
+                            <div className="flex gap-1.5 flex-wrap">
                               <input
                                 type="text"
-                                placeholder="Naam component"
+                                placeholder="Naam component *"
                                 value={addForm.name}
                                 onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
                                 onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
                                 autoFocus
-                                className="flex-1 min-w-40 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                className="flex-1 min-w-36 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
                               />
                               <input
                                 type="text"
-                                placeholder="Hoeveelheid"
+                                placeholder="Qty"
                                 value={addForm.qty}
                                 onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))}
                                 onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
-                                className="w-24 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                className="w-16 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
                               />
                               <input
                                 type="text"
-                                placeholder="Eenheid"
+                                placeholder="Eenh."
                                 value={addForm.unit}
                                 onChange={e => setAddForm(f => ({ ...f, unit: e.target.value }))}
                                 onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
-                                className="w-20 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                className="w-16 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
                               />
                               <input
                                 type="text"
@@ -490,21 +586,29 @@ export default function MepDetailPage() {
                                 value={addForm.prep}
                                 onChange={e => setAddForm(f => ({ ...f, prep: e.target.value }))}
                                 onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
-                                className="flex-1 min-w-32 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                className="flex-1 min-w-28 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Leverancier"
+                                value={addForm.supplier}
+                                onChange={e => setAddForm(f => ({ ...f, supplier: e.target.value }))}
+                                onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
+                                className="w-28 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
                               />
                               <div className="flex gap-1">
                                 <button
                                   onClick={() => addComponent(dish.id)}
                                   disabled={addingComp || !addForm.name.trim()}
-                                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+                                  className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50"
                                 >
-                                  {addingComp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                  {addingComp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                                 </button>
                                 <button
                                   onClick={() => { setAddingToDish(null); setAddForm({ name: '', qty: '', unit: '', prep: '', supplier: '' }) }}
-                                  className="px-3 py-1.5 border border-[#E8D5B5] text-[#9E7E60] text-sm rounded-lg hover:bg-white transition-all"
+                                  className="px-3 py-1 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all"
                                 >
-                                  <X className="w-4 h-4" />
+                                  <X className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -540,7 +644,8 @@ interface ComponentRowItemProps {
 }
 
 function ComponentRowItem({
-  comp, editingId, editForm, setEditForm,
+  comp,
+  editingId, editForm, setEditForm,
   onStartEdit, onSave, onCancel,
   deletingId, onDeleteClick, onDeleteConfirm, onDeleteCancel,
 }: ComponentRowItemProps) {
@@ -548,59 +653,50 @@ function ComponentRowItem({
   const isDeleting = deletingId === comp.id
   const isAi = comp.is_ai_suggestion === 1
 
-  // Build display string
-  const info: string[] = []
-  if (comp.quantity) info.push(comp.quantity + (comp.unit ? ` ${comp.unit}` : ''))
-  if (comp.preparation) info.push(comp.preparation)
-  const infoStr = info.join(' · ')
-
   if (isEditing) {
     return (
-      <div className="px-4 py-2 bg-amber-50 border-t border-amber-100">
-        <div className="flex gap-2 flex-wrap mb-2">
+      <div className="px-3 py-2 bg-amber-50 border-t border-amber-100">
+        <div className="flex gap-1.5 flex-wrap mb-1.5">
           <input
             type="text"
             value={editForm.component_name}
             onChange={e => setEditForm((f: any) => ({ ...f, component_name: e.target.value }))}
-            className="flex-1 min-w-40 px-2.5 py-1.5 text-sm border border-amber-300 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className="flex-1 min-w-36 px-2 py-1 text-xs border border-amber-300 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
             placeholder="Naam"
+            autoFocus
           />
           <input
             type="text"
             value={editForm.quantity}
             onChange={e => setEditForm((f: any) => ({ ...f, quantity: e.target.value }))}
-            className="w-20 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className="w-16 px-2 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
             placeholder="Qty"
           />
           <input
             type="text"
             value={editForm.unit}
             onChange={e => setEditForm((f: any) => ({ ...f, unit: e.target.value }))}
-            className="w-16 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className="w-16 px-2 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
             placeholder="Eenh."
           />
           <input
             type="text"
             value={editForm.preparation}
             onChange={e => setEditForm((f: any) => ({ ...f, preparation: e.target.value }))}
-            className="flex-1 min-w-32 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className="flex-1 min-w-28 px-2 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
             placeholder="Bereiding"
           />
           <input
             type="text"
             value={editForm.supplier}
             onChange={e => setEditForm((f: any) => ({ ...f, supplier: e.target.value }))}
-            className="w-28 px-2.5 py-1.5 text-sm border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+            className="w-28 px-2 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
             placeholder="Leverancier"
           />
         </div>
         <div className="flex gap-1">
-          <button onClick={() => onSave(comp.id)} className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all">
-            Opslaan
-          </button>
-          <button onClick={onCancel} className="px-3 py-1.5 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all">
-            Annuleren
-          </button>
+          <button onClick={() => onSave(comp.id)} className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all">Opslaan</button>
+          <button onClick={onCancel} className="px-3 py-1 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all">Annuleren</button>
         </div>
       </div>
     )
@@ -608,44 +704,55 @@ function ComponentRowItem({
 
   if (isDeleting) {
     return (
-      <div className="px-4 py-2 bg-red-50 flex items-center justify-between gap-3">
-        <span className="text-sm text-red-700">Verwijder <span className="font-medium">{comp.component_name}</span>?</span>
+      <div className="px-3 py-1.5 bg-red-50 border-t border-red-100 flex items-center justify-between gap-3">
+        <span className="text-xs text-red-700">Verwijder <strong>{comp.component_name}</strong>?</span>
         <div className="flex gap-1">
-          <button onClick={() => onDeleteConfirm(comp.id)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-all">Ja</button>
-          <button onClick={onDeleteCancel} className="px-3 py-1 border border-red-200 text-red-600 text-xs rounded-lg hover:bg-white transition-all">Nee</button>
+          <button onClick={() => onDeleteConfirm(comp.id)} className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg">Ja</button>
+          <button onClick={onDeleteCancel} className="px-2.5 py-1 border border-red-200 text-red-600 text-xs rounded-lg">Nee</button>
         </div>
       </div>
     )
   }
 
+  // Inline display: naam (qty unit) (bereiding) — like sandbox
+  const qtyStr = comp.quantity ? `${comp.quantity}${comp.unit ? ` ${comp.unit}` : ''}` : null
+  const prepStr = comp.preparation || null
+
   return (
-    <div className="group px-4 py-1 flex items-center gap-2 hover:bg-[#F5EDE0]/50 transition-colors">
-      <div className="flex-1 min-w-0">
-        <span className={`text-sm ${isAi ? 'text-orange-500' : 'text-[#2C1810]'}`}>
+    <div className="group px-3 py-0.5 flex items-center gap-1.5 hover:bg-[#F5EDE0]/40 transition-colors border-t border-[#F5EDE0] first:border-t-0">
+      <div className="flex-1 min-w-0 flex items-baseline gap-0 flex-wrap">
+        <span className={`text-sm leading-relaxed ${
+          isAi ? 'text-orange-500' : 'text-[#2C1810]'
+        }`}>
           {comp.component_name}
-          {isAi && <Sparkles className="inline w-3 h-3 ml-1 text-orange-400" />}
+          {isAi && <Sparkles className="inline w-3 h-3 ml-0.5 text-orange-400" />}
         </span>
-        {infoStr && (
-          <span className="text-xs text-[#9E7E60] ml-1.5">({infoStr})</span>
+        {(qtyStr || prepStr) && (
+          <span className="text-xs text-[#9E7E60] ml-1.5">
+            {qtyStr && `(${qtyStr})`}
+            {qtyStr && prepStr && ' '}
+            {prepStr && `(${prepStr})`}
+          </span>
         )}
         {comp.supplier && (
-          <span className="text-xs text-[#B8997A] ml-1.5 italic">{comp.supplier}</span>
+          <span className="text-xs text-[#C4B090] ml-1.5 italic">{comp.supplier}</span>
         )}
       </div>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Buttons: always 30% visible, full on hover — like sandbox */}
+      <div className="flex items-center gap-0 opacity-30 group-hover:opacity-100 transition-opacity shrink-0">
         <button
           onClick={() => onStartEdit(comp)}
           className="p-1 rounded text-[#B8997A] hover:text-amber-600 hover:bg-amber-50 transition-all"
           title="Bewerken"
         >
-          <Pencil className="w-3.5 h-3.5" />
+          <Pencil className="w-3 h-3" />
         </button>
         <button
           onClick={() => onDeleteClick(comp.id)}
           className="p-1 rounded text-[#B8997A] hover:text-red-500 hover:bg-red-50 transition-all"
           title="Verwijderen"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3 h-3" />
         </button>
       </div>
     </div>
