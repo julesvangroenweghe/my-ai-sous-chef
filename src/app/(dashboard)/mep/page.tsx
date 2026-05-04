@@ -31,8 +31,8 @@ interface EventRow {
   mep_status: string | null
   price_per_person: number | null
   contact_person: string | null
-  start_time: string | null
-  end_time: string | null
+  event_start_time: string | null
+  event_end_time: string | null
   dish_count: number
 }
 
