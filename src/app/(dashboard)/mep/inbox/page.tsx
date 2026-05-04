@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   Inbox, Loader2, AlertTriangle, ShieldCheck, ChefHat,
-  CalendarDays, Users, MapPin, ArrowRight, Check, X, Loader,
+  CalendarDays, Users, MapPin, ArrowRight, Check, X, Loader, Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -189,6 +189,28 @@ export default function MepInboxPage() {
   const supabase = createClient()
   const [events, setEvents] = useState<DraftEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handlePdfImport = async (file: File) => {
+    setImporting(true)
+    setImportError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/mep/import-pdf', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Import mislukt')
+      toast.success(`✓ ${data.eventName} — ${data.numDishes} gerechten aangemaakt`)
+      await loadDraftEvents()
+    } catch (err: any) {
+      setImportError(err.message)
+      toast.error(err.message)
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const loadDraftEvents = useCallback(async () => {
     setLoading(true)
@@ -312,6 +334,54 @@ export default function MepInboxPage() {
 
   return (
     <div className="space-y-8 pb-16">
+      {/* PDF Upload */}
+      <div
+        className={`border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer ${
+          importing
+            ? 'border-amber-300 bg-amber-50/50 cursor-wait'
+            : 'border-[#E8D5B5] hover:border-amber-300 hover:bg-[#FAF6EF]/60 bg-white/40'
+        }`}
+        onClick={() => !importing && fileInputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault()
+          const file = e.dataTransfer.files[0]
+          if (file && !importing) handlePdfImport(file)
+        }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handlePdfImport(file)
+            e.target.value = ''
+          }}
+        />
+        {importing ? (
+          <div className="flex items-center justify-center gap-3 py-1">
+            <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
+            <div className="text-left">
+              <p className="text-sm font-semibold text-[#2C1810]">Menu verwerken...</p>
+              <p className="text-xs text-[#9E7E60]">AI analyseert het menu PDF</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-3 py-1">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+              <Upload className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-[#2C1810]">Sleep een menu PDF hierheen</p>
+              <p className="text-xs text-[#9E7E60]">of klik om te bladeren — PDF, JPG, PNG</p>
+            </div>
+          </div>
+        )}
+        {importError && <p className="text-xs text-red-500 mt-2">{importError}</p>}
+      </div>
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-extrabold text-[#2C1810]">MEP Inbox</h1>

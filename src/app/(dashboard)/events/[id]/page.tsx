@@ -5,13 +5,13 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
-  ArrowLeft, CalendarDays, MapPin, Users, Euro, Clock,
+  ArrowLeft, ArrowRight, CalendarDays, MapPin, Users, Euro, Clock,
   Plus, Trash2, ClipboardList, ChefHat, Loader2,
-  X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileUp, ChevronDown, ChevronUp, FileText, Check
+  X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileText, Check
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
-import { MepOcrImporter } from '@/components/mep/mep-ocr-importer'
+
 import { EventAllergenSection } from '@/components/allergens/event-allergen-section'
 
 interface EventDetail {
@@ -125,7 +125,7 @@ export default function EventDetailPage() {
   const [addingRecipe, setAddingRecipe] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('menu')
   const [mepRefreshKey, setMepRefreshKey] = useState(0)
-  const [showMepImport, setShowMepImport] = useState(false)
+
 
   // Edit state
   const [showEditModal, setShowEditModal] = useState(false)
@@ -695,26 +695,21 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      {/* MEP OCR Import */}
+      {/* Link naar MEP module */}
       {activeTab === 'menu' && (
-        <div className="space-y-3">
-          <button
-            onClick={() => setShowMepImport(!showMepImport)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#FAF6EF] hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#2C1810] text-sm font-medium rounded-xl transition-all w-full"
+        <div className="bg-[#FAF6EF] border border-[#E8D5B5] rounded-2xl p-5 flex items-center gap-4">
+          <ClipboardList className="w-6 h-6 text-amber-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[#2C1810]">MEP Productielijst</p>
+            <p className="text-xs text-[#9E7E60] mt-0.5">Beheer de volledige MEP lijst met gerechten en componenten.</p>
+          </div>
+          <Link
+            href={`/mep/${eventId}`}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-all whitespace-nowrap shrink-0"
           >
-            <FileUp className="w-4 h-4 text-brand-400" />
-            MEP importeren uit document
-            {showMepImport ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
-          </button>
-          {showMepImport && (
-            <MepOcrImporter
-              eventId={eventId}
-              onImportComplete={async () => {
-                setShowMepImport(false)
-                await fetchEvent()
-              }}
-            />
-          )}
+            <ArrowRight className="w-4 h-4" />
+            Open MEP
+          </Link>
         </div>
       )}
 

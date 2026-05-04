@@ -89,6 +89,12 @@ function getCategoryOrder(cat: string): number {
     return 112  // overige APERO
   }
 
+  // === LUNCH (broodjeslunch, tasting lunch) ===
+  if (c === 'LUNCH') return 18
+
+  // === HOOFDGERECHT PREMIUM ===
+  if (c.includes('HOOFDGERECHT') && c.includes('PREMIUM')) return 81
+
   // === FOODSTAND (stands/stations) ===
   if (c.includes('FOODSTAND')) return 150
 
@@ -106,13 +112,15 @@ function getCategoryOrder(cat: string): number {
   if (c === 'TUSSENGERECHT') return 70
   if (c === 'HOOFDGERECHT') return 80
   if (c === 'ON THE SIDE' || c === 'SAUZEN' || c.includes('BIJGERECHT')) return 85
+  if (c.includes('BROOD')) return 86
   if (c === 'KAAS') return 88
   if (c === 'DESSERT') return 90
   if (c === 'DESSERT BUFFET') return 91
   if (c === 'PETITS FOURS' || c === 'PETIT FOURS') return 95
-  if (c === 'AFTER SNACKS' || c === 'NIGHT SNACK' || c === 'BBQ' || c === 'BUFFET') return 98
+  if (c === 'AFTER SNACKS' || c.includes('NIGHT SNACK') || c.includes('LATE NIGHT') || c === 'BBQ' || c === 'BUFFET') return 98
   if (c === 'MIGNARDISES') return 200
   if (c === 'HALFABRICAAT') return 250
+  if (c === 'KIDS' || c === 'KINDERMENU' || c === 'KIDS MENU') return 210
   return 99
 }
 
@@ -149,6 +157,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   'AFTER SNACKS': 'After snacks',
   'NIGHT SNACK': 'Night snack',
   HALFABRICAAT: 'Halfabricaat',
+  'LUNCH': 'Lunch',
+  'BROOD': 'Brood',
+  'BROOD & BOTER': 'Brood & boter',
+  'HOOFDGERECHT PREMIUM': 'Hoofdgerecht Premium (+)',
+  'KIDS': 'Kids menu',
+  'KINDERMENU': 'Kids menu',
+  'KIDS MENU': 'Kids menu',
+  'LATE NIGHT SNACK': 'Late night snack',
+  'KOFFIE & THEE': 'Koffie & thee',
   'FOODSTAND BURGER': 'Foodstand – Burger',
   'FOODSTAND PIZZA': 'Foodstand – Pizza',
   'FOODSTAND PASTA': 'Foodstand – Pasta',
@@ -448,6 +465,9 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   const catGroups: CatGroup[] = []
   for (const dish of sortedDishes) {
+    // Skip Koffie & Thee — niet op MEP lijst
+    const skipCheck = (dish.category || '').toUpperCase()
+    if (skipCheck.includes('KOFFIE') || skipCheck === 'THEE') continue
     const existing = catGroups.find((g) => g.category === dish.category)
     if (existing) {
       existing.dishes.push(dish)
