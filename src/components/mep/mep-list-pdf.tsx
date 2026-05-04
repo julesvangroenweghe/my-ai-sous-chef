@@ -41,34 +41,63 @@ export interface MepListData {
 }
 
 // ─── Category ordering ────────────────────────────────────────────────────────
+// CRITICAL: MIDDAG session scores 4-92, APERO session scores 110-145
+// This ensures APERO never interleaves with MIDDAG/seated courses
 
 function getCategoryOrder(cat: string): number {
   const c = (cat || '').toUpperCase().trim()
-  if (c.includes('MIDDAG')) {
-    if (c.includes('FINGERFOOD')) return 21
-    if (c.includes('FINGERBITES')) return 31
-    if (c.includes('HAPJES') || c.includes('HAPJE')) return 41
-    if (c.includes('AMUSE')) return 51
-    if (c.includes('DESSERT')) return 92
-    return 25
+
+  // === MIDDAG SESSION (lunch/middag receptie) ===
+  if (c.includes('MIDDAG') || c === 'DESSERT LUNCH' || (c.includes('LUNCH') && c.includes('DESSERT'))) {
+    if (c.includes('FINGERFOOD')) return 4
+    if (c.includes('FINGERBITES')) return 5
+    if (c.includes('HAPJES') || c.includes('HAPJE') || c.includes('APPETIZERS')) return 7
+    if (c.includes('AMUSE')) return 9
+    if (c.includes('VOOR')) return 62
+    if (c.includes('TUSSEN')) return 72
+    if (c.includes('HOOFD')) return 82
+    if (c.includes('DESSERT') || c.includes('LUNCH')) return 91
+    return 6  // overige MIDDAG
   }
-  if (c.includes('APERO')) {
-    if (c.includes('FINGERFOOD')) return 22
-    if (c.includes('FINGERBITES')) return 32
-    if (c.includes('HAPJES') || c.includes('HAPJE')) return 42
-    if (c.includes('AMUSE')) return 52
-    if (c.includes('DESSERT')) return 93
-    return 26
-  }
+
+  // === WALKING variants ===
   if (c.includes('WALKING')) {
     if (c.includes('VOOR')) return 63
     if (c.includes('HOOFD')) return 83
     if (c.includes('DESSERT')) return 94
-    return 75
+    return 75  // WALKING DINNER generiek
   }
-  if (c.includes('FOODSTAND')) return 76
+
+  // === SHARING variants ===
+  if (c.includes('SHARING')) {
+    if (c.includes('VOOR')) return 64
+    if (c.includes('HOOFD')) return 84
+    if (c.includes('DESSERT')) return 95
+    return 76
+  }
+
+  // === APERO SESSION (avond receptie, na dessert middag) ===
+  if (c.includes('APERO')) {
+    if (c.includes('FINGERFOOD')) return 110
+    if (c.includes('FINGERBITES')) return 115
+    if (c.includes('HAPJES') || c.includes('HAPJE') || c.includes('APPETIZERS')) return 120
+    if (c.includes('AMUSE')) return 125
+    if (c.includes('VOOR')) return 130
+    if (c.includes('TUSSEN')) return 135
+    if (c.includes('HOOFD')) return 140
+    if (c.includes('DESSERT')) return 145
+    return 112  // overige APERO
+  }
+
+  // === FOODSTAND (stands/stations) ===
+  if (c.includes('FOODSTAND')) return 150
+
+  // === BARISTA (altijd net voor MIGNARDISES) ===
   if (c.includes('BARISTA')) return 201
+
+  // === Standaard exacte matches ===
   if (c === 'DRANKEN' || c.includes('MOCKTAIL') || c.includes('COCKTAIL')) return 10
+  if (c === 'ONTVANGST') return 15
   if (c === 'FINGERFOOD') return 20
   if (c === 'FINGERBITES') return 30
   if (c === 'HAPJES' || c === 'HAPJE' || c === 'HAPJES_WARM' || c === 'APPETIZERS') return 40
@@ -79,8 +108,9 @@ function getCategoryOrder(cat: string): number {
   if (c === 'ON THE SIDE' || c === 'SAUZEN' || c.includes('BIJGERECHT')) return 85
   if (c === 'KAAS') return 88
   if (c === 'DESSERT') return 90
+  if (c === 'DESSERT BUFFET') return 91
   if (c === 'PETITS FOURS' || c === 'PETIT FOURS') return 95
-  if (c === 'AFTER SNACKS' || c === 'BBQ' || c === 'BUFFET') return 98
+  if (c === 'AFTER SNACKS' || c === 'NIGHT SNACK' || c === 'BBQ' || c === 'BUFFET') return 98
   if (c === 'MIGNARDISES') return 200
   if (c === 'HALFABRICAAT') return 250
   return 99
@@ -88,26 +118,41 @@ function getCategoryOrder(cat: string): number {
 
 const CATEGORY_LABELS: Record<string, string> = {
   DRANKEN: 'Dranken',
+  ONTVANGST: 'Ontvangst',
   FINGERFOOD: 'Fingerfood',
+  'FINGERFOOD MIDDAG': 'Fingerfood (middag)',
+  'FINGERFOOD APERO': 'Fingerfood (apero)',
   FINGERBITES: 'Fingerbites',
   HAPJES: 'Hapjes',
   HAPJE: 'Hapjes',
   APPETIZERS: 'Hapjes',
+  'APPETIZERS MIDDAG': 'Hapjes (middag)',
+  'APPETIZERS APERO': 'Hapjes (apero)',
   AMUSE: 'Amuse',
   VOORGERECHT: 'Voorgerecht',
+  'WALKING VOORGERECHT': 'Walking voorgerecht',
+  'SHARING VOORGERECHT': 'Sharing voorgerecht',
   TUSSENGERECHT: 'Tussengerecht',
   HOOFDGERECHT: 'Hoofdgerecht',
+  'WALKING DINNER': 'Walking dinner',
   'ON THE SIDE': 'On the side',
   SAUZEN: 'Sauzen',
   KAAS: 'Kaas',
   DESSERT: 'Dessert',
+  'DESSERT LUNCH': 'Dessert (middag)',
   'PETITS FOURS': 'Petits fours',
   'PETIT FOURS': 'Petits fours',
   MIGNARDISES: 'Mignardises',
-  HALFABRICAAT: 'Halfabricaat',
+  'BARISTA MIGNARDISES': 'Barista / Mignardises',
   BBQ: 'BBQ',
   BUFFET: 'Buffet',
   'AFTER SNACKS': 'After snacks',
+  'NIGHT SNACK': 'Night snack',
+  HALFABRICAAT: 'Halfabricaat',
+  'FOODSTAND BURGER': 'Foodstand – Burger',
+  'FOODSTAND PIZZA': 'Foodstand – Pizza',
+  'FOODSTAND PASTA': 'Foodstand – Pasta',
+  'FOODSTAND LIBANEES': 'Foodstand – Libanees',
 }
 
 function getCategoryLabel(cat: string): string {
@@ -151,6 +196,7 @@ function translateEventType(t: string): string {
     bbq: 'BBQ',
     brunch: 'Brunch',
     lunch: 'Lunch',
+    huwelijk: 'Huwelijk',
   }
   return map[t] || t
 }
@@ -296,20 +342,17 @@ const S = StyleSheet.create({
     marginBottom: 1,
     flexWrap: 'wrap',
   },
-  // Bullet dot
   componentBullet: {
     fontSize: 10,
     color: '#1a1a2e',
     marginRight: 2,
     width: 8,
   },
-  // Component name (main text, dark)
   componentName: {
     fontSize: 10,
     color: '#1a1a2e',
     flex: 1,
   },
-  // Grammage inline after name, gray
   componentQtyInline: {
     fontSize: 9,
     color: '#888888',
@@ -431,19 +474,18 @@ export function MepListDocument({ data }: { data: MepListData }) {
     }
   }
 
-  // Distribute across columns — sequential fill (left→right) with height estimation
-  // This preserves reading order and keeps categories with their dishes
+  // Sequential column filling with height estimation
   function estimateHeight(item: RenderItem): number {
     if (item.type === 'category') return 22
     const d = item.dish
-    let h = 18 // dish title
+    let h = 18
     if (d.notes) h += 10
     const comps = d.components || []
     const groups = new Set(comps.map((c: any) => c.component_group || null))
     const numGroups = [...groups].filter(g => g !== null).length
-    h += numGroups * 12 // sub-group headers
-    h += comps.length * 9  // component rows
-    return h + 6 // bottom margin
+    h += numGroups * 12
+    h += comps.length * 9
+    return h + 6
   }
 
   const totalH = items.reduce((s, it) => s + estimateHeight(it), 0)
@@ -457,14 +499,12 @@ export function MepListDocument({ data }: { data: MepListData }) {
     const item = items[i]
     const h = estimateHeight(item)
 
-    // Move to next column when target exceeded — but keep category with its first dish
     if (colH + h > targetPerCol && colIdx < numCols - 1) {
-      // Don't orphan a category header — move to next col together
       if (item.type === 'category') {
         colIdx++
         colH = 0
       } else if (item.type === 'dish' && i > 0 && items[i - 1].type === 'category') {
-        // Already pushed category to this col, keep dish here too
+        // keep dish with its category header
       } else {
         colIdx++
         colH = 0
