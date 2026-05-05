@@ -19,11 +19,11 @@ export async function GET(
       return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
     }
 
-    // 1. Fetch event
+    // 1. Fetch event — inclusief travel_time_minutes voor vertrekberekening
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select(
-        'id, name, event_date, num_persons, event_type, location, venue_address, price_per_person, event_start_time, event_end_time, contact_person, departure_time, kitchen_arrival_time'
+        'id, name, event_date, num_persons, event_type, location, venue_address, price_per_person, event_start_time, event_end_time, contact_person, departure_time, kitchen_arrival_time, travel_time_minutes'
       )
       .eq('id', eventId)
       .single()
@@ -85,6 +85,7 @@ export async function GET(
         contact_person: event.contact_person,
         departure_time: event.departure_time,
         kitchen_arrival_time: event.kitchen_arrival_time,
+        travel_time_minutes: event.travel_time_minutes ? Number(event.travel_time_minutes) : null,
       },
       dishes: dishes.map((dish) => ({
         id: dish.id,

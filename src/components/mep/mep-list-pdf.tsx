@@ -36,6 +36,7 @@ export interface MepListData {
     contact_person: string | null
     departure_time: string | null
     kitchen_arrival_time: string | null
+    travel_time_minutes: number | null
   }
   dishes: MepListDish[]
 }
@@ -157,12 +158,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   'AFTER SNACKS': 'After snacks',
   'NIGHT SNACK': 'Night snack',
   HALFABRICAAT: 'Halfabricaat',
-  'LUNCH': 'Lunch',
-  'BROOD': 'Brood',
+  LUNCH: 'Lunch',
+  BROOD: 'Brood',
   'BROOD & BOTER': 'Brood & boter',
   'HOOFDGERECHT PREMIUM': 'Hoofdgerecht Premium (+)',
-  'KIDS': 'Kids menu',
-  'KINDERMENU': 'Kids menu',
+  KIDS: 'Kids menu',
+  KINDERMENU: 'Kids menu',
   'KIDS MENU': 'Kids menu',
   'LATE NIGHT SNACK': 'Late night snack',
   'KOFFIE & THEE': 'Koffie & thee',
@@ -244,52 +245,42 @@ const S = StyleSheet.create({
     color: '#1C1008',
   },
 
-  // Header
+  // Header — alles left-aligned, geen space-between
   header: {
     marginBottom: 8,
     paddingBottom: 7,
     borderBottomWidth: 1.5,
     borderBottomColor: '#2d6a4f',
   },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 4,
-  },
   clientName: {
     fontSize: 18,
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
     letterSpacing: 0.3,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
+    marginBottom: 2,
   },
   headerDate: {
     fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: '#2d6a4f',
+    marginBottom: 3,
   },
   headerMeta: {
     fontSize: 8.5,
     color: '#4A3728',
-    marginTop: 2,
+    marginTop: 1,
   },
   headerContact: {
     fontSize: 7.5,
     color: '#888888',
     marginTop: 2,
   },
-  headerTravelRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 3,
-  },
-  headerTravelItem: {
+  // Reistijd op één regel, blauw bold
+  headerTravelLine: {
     fontSize: 7.5,
     color: '#1d4ed8',
     fontFamily: 'Helvetica-Bold',
+    marginTop: 3,
   },
 
   // Columns
@@ -334,7 +325,6 @@ const S = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
     marginBottom: 2,
-    spaceBefore: 4,
   },
   dishTiming: {
     fontSize: 7.5,
@@ -356,8 +346,7 @@ const S = StyleSheet.create({
   },
   componentRow: {
     flexDirection: 'row',
-    marginBottom: 1,
-    flexWrap: 'wrap',
+    marginBottom: 1.5,
   },
   componentBullet: {
     fontSize: 10,
@@ -365,21 +354,16 @@ const S = StyleSheet.create({
     marginRight: 2,
     width: 8,
   },
-  componentName: {
+  // Component name + grammage + bereiding all inline
+  componentText: {
     fontSize: 10,
     color: '#1a1a2e',
     flex: 1,
+    flexWrap: 'wrap',
   },
-  componentQtyInline: {
+  componentGray: {
     fontSize: 9,
     color: '#888888',
-  },
-  componentPrep: {
-    fontSize: 9,
-    fontFamily: 'Helvetica-Oblique',
-    color: '#666666',
-    marginLeft: 10,
-    marginBottom: 1,
   },
   dishSpacer: {
     height: 8,
@@ -420,20 +404,19 @@ function DishCard({ dish }: { dish: MepListDish }) {
           )}
           {group.items.map((comp, ci) => {
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
+            // Bouw inline tekst: naam (grammage) (bereiding)
+            const suffix: string[] = []
+            if (qtyStr) suffix.push(`(${qtyStr})`)
+            if (comp.preparation) suffix.push(`(${comp.preparation})`)
             return (
-              <View key={ci}>
-                <View style={S.componentRow}>
-                  <Text style={S.componentBullet}>·</Text>
-                  <Text style={S.componentName}>
-                    {comp.component_name}
-                    {qtyStr ? (
-                      <Text style={S.componentQtyInline}>{' '}({qtyStr})</Text>
-                    ) : null}
-                  </Text>
-                </View>
-                {comp.preparation && (
-                  <Text style={S.componentPrep}>{comp.preparation}</Text>
-                )}
+              <View key={ci} style={S.componentRow}>
+                <Text style={S.componentBullet}>·</Text>
+                <Text style={S.componentText}>
+                  {comp.component_name}
+                  {suffix.length > 0 ? (
+                    <Text style={S.componentGray}>{' '}{suffix.join(' ')}</Text>
+                  ) : null}
+                </Text>
               </View>
             )
           })}
@@ -501,11 +484,11 @@ export function MepListDocument({ data }: { data: MepListData }) {
     let h = 18
     if (d.notes) h += 10
     const comps = d.components || []
-    const groups = new Set(comps.map((c: any) => c.component_group || null))
+    const groups = new Set(comps.map((c: MepListComponent) => c.component_group || null))
     const numGroups = [...groups].filter(g => g !== null).length
     h += numGroups * 12
-    h += comps.length * 9
-    return h + 6
+    h += comps.length * 11  // iets meer ruimte per comp (inline bereiding)
+    return h + 8
   }
 
   const totalH = items.reduce((s, it) => s + estimateHeight(it), 0)
@@ -524,7 +507,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
         colIdx++
         colH = 0
       } else if (item.type === 'dish' && i > 0 && items[i - 1].type === 'category') {
-        // keep dish with its category header
+        // keep first dish together with its category header
       } else {
         colIdx++
         colH = 0
@@ -535,8 +518,8 @@ export function MepListDocument({ data }: { data: MepListData }) {
     colH += h
   }
 
-  // Travel line
-  const departure = calcDeparture(event.kitchen_arrival_time, null)
+  // Reistijd — gebruik departure_time als beschikbaar, anders berekenen
+  const departure = event.departure_time || calcDeparture(event.kitchen_arrival_time, event.travel_time_minutes)
   const travelParts: string[] = []
   if (departure) travelParts.push(`Vertrek Mariakerke: ${departure}`)
   if (event.kitchen_arrival_time) travelParts.push(`Aankomst keuken: ${formatTime(event.kitchen_arrival_time)}`)
@@ -544,7 +527,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
 
   // Info line
   const infoParts: string[] = []
-  if (event.num_persons) infoParts.push(`${event.num_persons} pers.`)
+  if (event.num_persons) infoParts.push(`${event.num_persons} personen`)
   if (event.event_start_time && event.event_end_time)
     infoParts.push(`${formatTime(event.event_start_time)} – ${formatTime(event.event_end_time)}`)
   else if (event.event_start_time) infoParts.push(`Start: ${formatTime(event.event_start_time)}`)
@@ -554,14 +537,10 @@ export function MepListDocument({ data }: { data: MepListData }) {
   return (
     <Document>
       <Page size="A4" orientation="portrait" style={S.page}>
-        {/* ── Header ── */}
+        {/* ── Header — client naam + datum links uitgelijnd ── */}
         <View style={S.header}>
-          <View style={S.headerTop}>
-            <Text style={S.clientName}>{event.name}</Text>
-            <View style={S.headerRight}>
-              <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
-            </View>
-          </View>
+          <Text style={S.clientName}>{event.name}</Text>
+          <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
 
           {infoParts.length > 0 && (
             <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
@@ -569,16 +548,13 @@ export function MepListDocument({ data }: { data: MepListData }) {
           {event.contact_person && (
             <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
           )}
+          {/* Reistijd op één regel in blauw bold */}
           {travelParts.length > 0 && (
-            <View style={S.headerTravelRow}>
-              {travelParts.map((p, i) => (
-                <Text key={i} style={S.headerTravelItem}>{p}</Text>
-              ))}
-            </View>
+            <Text style={S.headerTravelLine}>{travelParts.join('  ·  ')}</Text>
           )}
         </View>
 
-        {/* ── Columns ── */}
+        {/* ── Kolommen ── */}
         <View style={S.columnContainer}>
           {columns.map((col, ci) => (
             <View key={ci} style={S.column}>
@@ -595,6 +571,11 @@ export function MepListDocument({ data }: { data: MepListData }) {
             </View>
           ))}
         </View>
+
+        {/* ── Footer ── */}
+        <Text style={S.footer} fixed>
+          pagina {'{pageNumber}'} / {'{totalPages}'}  ·  SIR Catering
+        </Text>
       </Page>
     </Document>
   )
