@@ -2,30 +2,28 @@
 
 import { useState, useCallback, useRef } from 'react'
 import {
-  Upload, Loader2, Check, X, FileText, Image,
+  Upload, Loader2, Check, X, FileText,
   ChevronDown, ChevronUp, AlertCircle, FileUp, Sparkles
 } from 'lucide-react'
 
 interface ImportedComponent {
-  name: string
-  quantity_per_person: number
-  unit: string
-  group: string
+  component_name: string
+  quantity: number | null
+  unit: string | null
+  preparation: string | null
+  component_group: string | null
+  sort_order: number
 }
 
 interface ImportedDish {
-  name: string
+  title: string
   category: string
+  sort_order: number
+  notes: string | null
   components: ImportedComponent[]
-  matched_recipe?: { id: string; name: string; score: number } | null
+  // UI state
   selected: boolean
   editedCategory: string
-}
-
-interface ParseResult {
-  dishes: ImportedDish[]
-  document_type: string
-  notes: string
 }
 
 interface MepOcrImporterProps {
@@ -34,21 +32,16 @@ interface MepOcrImporterProps {
 }
 
 const CATEGORY_OPTIONS = [
-  'AMUSE', 'FINGERFOOD', 'FINGERBITES', 'HAPJES',
-  'VOORGERECHT', 'TUSSENGERECHT', 'HOOFDGERECHT',
-  'KAAS', 'DESSERT', 'MIGNARDISES', 'HALFABRICAAT',
+  'DRANKEN', 'LUNCH', 'FINGERFOOD', 'FINGERBITES', 'HAPJES', 'APPETIZERS',
+  'AMUSE', 'VOORGERECHT', 'TUSSENGERECHT', 'HOOFDGERECHT', 'HOOFDGERECHT PREMIUM',
+  'ON THE SIDE', 'KAAS', 'DESSERT', 'MIGNARDISES', 'LATE NIGHT SNACK', 'KIDS',
+  'BROOD & BOTER', 'WALKING VOORGERECHT', 'WALKING DINNER', 'SHARING VOORGERECHT',
 ]
-
-const COURSE_ORDER: Record<string, number> = {
-  AMUSE: 0, FINGERFOOD: 0, FINGERBITES: 0, HAPJES: 0,
-  VOORGERECHT: 1, TUSSENGERECHT: 2, HOOFDGERECHT: 3,
-  KAAS: 4, DESSERT: 5, MIGNARDISES: 6, HALFABRICAAT: 7,
-}
 
 export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProps) {
   const [dragging, setDragging] = useState(false)
   const [parsing, setParsing] = useState(false)
-  const [parseResult, setParseResult] = useState<ParseResult | null>(null)
+  const [parsedDishes, setParsedDishes] = useState<ImportedDish[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [expandedDishes, setExpandedDishes] = useState<Set<number>>(new Set())
@@ -63,13 +56,13 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
 
     setParsing(true)
     setError(null)
-    setParseResult(null)
+    setParsedDishes(null)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await fetch(`/api/events/${eventId}/import-mep`, {
+      const res = await fetch(`/api/mep/${eventId}/import-dishes`, {
         method: 'POST',
         body: formData,
       })
@@ -80,13 +73,13 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
       }
 
       const data = await res.json()
-      const dishes: ImportedDish[] = (data.dishes || []).map((d: Omit<ImportedDish, 'selected' | 'editedCategory'>) => ({
+      const dishes: ImportedDish[] = (data.dishes || []).map((d: any) => ({
         ...d,
         selected: true,
-        editedCategory: d.category,
+        editedCategory: d.category || 'FINGERFOOD',
       }))
 
-      setParseResult({ ...data, dishes })
+      setParsedDishes(dishes)
       setExpandedDishes(new Set(dishes.map((_: ImportedDish, i: number) => i)))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Onbekende fout')
@@ -115,17 +108,17 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
   }
 
   const toggleDish = (index: number) => {
-    if (!parseResult) return
-    const newDishes = [...parseResult.dishes]
+    if (!parsedDishes) return
+    const newDishes = [...parsedDishes]
     newDishes[index] = { ...newDishes[index], selected: !newDishes[index].selected }
-    setParseResult({ ...parseResult, dishes: newDishes })
+    setParsedDishes(newDishes)
   }
 
   const updateCategory = (index: number, category: string) => {
-    if (!parseResult) return
-    const newDishes = [...parseResult.dishes]
+    if (!parsedDishes) return
+    const newDishes = [...parsedDishes]
     newDishes[index] = { ...newDishes[index], editedCategory: category }
-    setParseResult({ ...parseResult, dishes: newDishes })
+    setParsedDishes(newDishes)
   }
 
   const toggleExpanded = (index: number) => {
@@ -136,35 +129,32 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
   }
 
   const saveToEvent = async () => {
-    if (!parseResult) return
+    if (!parsedDishes) return
     setSaving(true)
     try {
-      const selectedDishes = parseResult.dishes.filter(d => d.selected)
+      const selectedDishes = parsedDishes
+        .filter(d => d.selected)
+        .map(d => ({ ...d, category: d.editedCategory }))
 
-      // Only add dishes that have a matched recipe_id
-      const menuItems = selectedDishes
-        .filter(d => d.matched_recipe?.id)
-        .map(d => ({
-          event_id: eventId,
-          recipe_id: d.matched_recipe!.id,
-          course_order: COURSE_ORDER[d.editedCategory] ?? 3,
-          course: d.editedCategory,
-        }))
+      if (selectedDishes.length === 0) {
+        setError('Selecteer minstens één gerecht')
+        setSaving(false)
+        return
+      }
 
-      if (menuItems.length > 0) {
-        const res = await fetch(`/api/events/${eventId}/import-mep`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ menu_items: menuItems }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || 'Fout bij opslaan')
-        }
+      const res = await fetch(`/api/mep/${eventId}/import-dishes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dishes: selectedDishes }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Fout bij opslaan')
       }
 
       onImportComplete()
-      setParseResult(null)
+      setParsedDishes(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fout bij opslaan')
     } finally {
@@ -172,19 +162,18 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
     }
   }
 
-  const selectedCount = parseResult?.dishes.filter(d => d.selected).length || 0
-  const matchedCount = parseResult?.dishes.filter(d => d.selected && d.matched_recipe).length || 0
+  const selectedCount = parsedDishes?.filter(d => d.selected).length || 0
 
   return (
     <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-[#E8D5B5] flex items-center gap-2">
         <FileUp className="w-5 h-5 text-brand-400" />
-        <h3 className="text-base font-display font-semibold text-[#2C1810]">MEP importeren uit document</h3>
+        <h3 className="text-base font-display font-semibold text-[#2C1810]">Gerechten importeren uit document</h3>
       </div>
 
       <div className="p-6 space-y-4">
         {/* Drop zone */}
-        {!parseResult && !parsing && (
+        {!parsedDishes && !parsing && (
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -218,9 +207,8 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                 </p>
               </div>
               <div className="flex items-center gap-4 text-xs text-[#5C4730]">
-                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> Menu</span>
-                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> Offerte</span>
-                <span className="flex items-center gap-1"><Image className="w-3.5 h-3.5" /> MEP lijst</span>
+                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> Menu PDF</span>
+                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> MEP lijst</span>
               </div>
             </div>
           </div>
@@ -239,7 +227,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
             </div>
             <div className="text-center">
               <p className="text-[#3D2810] font-medium">Document analyseren...</p>
-              <p className="text-[#B8997A] text-sm mt-1">AI leest uw document en extraheert gerechten</p>
+              <p className="text-[#B8997A] text-sm mt-1">AI extraheert gerechten en ingrediënten</p>
             </div>
           </div>
         )}
@@ -259,32 +247,25 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
         )}
 
         {/* Parse result */}
-        {parseResult && (
+        {parsedDishes && (
           <div className="space-y-4">
             {/* Summary */}
             <div className="flex items-center gap-3 p-3 bg-[#FDF8F2]/80 rounded-xl">
               <Check className="w-4 h-4 text-emerald-400" />
               <div className="flex-1 text-sm text-[#5C4730]">
-                <span className="font-medium">{parseResult.dishes.length} gerechten</span> geëxtraheerd
-                {parseResult.document_type && (
-                  <span className="text-[#B8997A]"> uit {parseResult.document_type}</span>
-                )}
+                <span className="font-medium">{parsedDishes.length} gerechten</span> geëxtraheerd — selecteer welke je wil toevoegen
               </div>
               <button
-                onClick={() => { setParseResult(null); setError(null) }}
+                onClick={() => { setParsedDishes(null); setError(null) }}
                 className="text-xs text-[#B8997A] hover:text-[#5C4730] transition-colors"
               >
                 Opnieuw uploaden
               </button>
             </div>
 
-            {parseResult.notes && (
-              <p className="text-xs text-[#B8997A] italic">{parseResult.notes}</p>
-            )}
-
             {/* Dishes list */}
             <div className="space-y-2">
-              {parseResult.dishes.map((dish, i) => (
+              {parsedDishes.map((dish, i) => (
                 <div key={i} className={`border rounded-xl overflow-hidden transition-all ${
                   dish.selected ? 'border-[#E8D5B5]' : 'border-[#E8D5B5] opacity-50'
                 }`}>
@@ -300,13 +281,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                       {dish.selected && <Check className="w-3 h-3 text-[#2C1810]" />}
                     </button>
 
-                    <span className="text-sm font-medium text-[#3D2810] flex-1">{dish.name}</span>
-
-                    {dish.matched_recipe && (
-                      <span className="px-2 py-0.5 bg-brand-500/20 text-brand-300 text-xs rounded-full border border-brand-500/30">
-                        Match: {dish.matched_recipe.name} ({Math.round(dish.matched_recipe.score * 100)}%)
-                      </span>
-                    )}
+                    <span className="text-sm font-medium text-[#3D2810] flex-1">{dish.title}</span>
 
                     <select
                       value={dish.editedCategory}
@@ -333,11 +308,18 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                       <div className="space-y-1">
                         {dish.components.map((comp, ci) => (
                           <div key={ci} className="flex items-center gap-3 text-xs">
-                            <span className="text-[#B8997A] w-24 shrink-0">{comp.group}</span>
-                            <span className="text-[#5C4730] flex-1">{comp.name}</span>
-                            <span className="text-[#9E7E60] font-mono">
-                              {comp.quantity_per_person} {comp.unit}/p
-                            </span>
+                            {comp.component_group && (
+                              <span className="text-[#B8997A] w-20 shrink-0 italic">{comp.component_group}</span>
+                            )}
+                            <span className="text-[#5C4730] flex-1">{comp.component_name}</span>
+                            {comp.quantity != null && (
+                              <span className="text-[#9E7E60] font-mono">
+                                {comp.quantity}{comp.unit ? ` ${comp.unit}` : ''}
+                              </span>
+                            )}
+                            {comp.preparation && (
+                              <span className="text-[#B8997A] italic">{comp.preparation}</span>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -350,7 +332,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
             {/* Save button */}
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-[#B8997A]">
-                {selectedCount} geselecteerd · {matchedCount} met receptkoppeling
+                {selectedCount} van {parsedDishes.length} gerechten geselecteerd
               </p>
               <button
                 onClick={saveToEvent}
@@ -360,7 +342,7 @@ export function MepOcrImporter({ eventId, onImportComplete }: MepOcrImporterProp
                 {saving ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Opslaan...</>
                 ) : (
-                  <><Check className="w-4 h-4" /> MEP aanmaken ({selectedCount})</>
+                  <><Check className="w-4 h-4" /> Toevoegen aan MEP ({selectedCount})</>
                 )}
               </button>
             </div>
