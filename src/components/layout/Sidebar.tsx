@@ -42,6 +42,7 @@ const navItems = [
     sub: 'Ingrediënten & leveranciers',
     children: [
       { href: '/ingredients', label: 'Ingrediënten', icon: 'leaf' },
+      { href: '/allergenen', label: 'Allergenen', icon: 'shield' },
       { href: '/preparations', label: 'Halffabricaten', icon: 'layers' },
       { href: '/suppliers', label: 'Leveranciers', icon: 'truck' },
       { href: '/seasonal', label: 'Seizoenskalender', icon: 'sprout' },
@@ -88,6 +89,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     leaf: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
     layers: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
     sprout: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.1 2 3.5c.2-1.4.9-2.7 2-3.5-1.1-.7-2.4-.8-3.6-.7-.4 0-.8.1-1.2.2.2.2.5.3.8.5z"/><path d="M14 7c.7-1 1.5-1.8 2.5-2.3-1.5-.3-3.2 0-4.5 1-1-.4-2-.6-3-.5-.4 0-.7.1-1 .2C9 6.3 10 7.2 10.5 8.3c1.2-1 2.4-1.5 3.5-1.3z"/></svg>,
+    shield: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
     scan: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>,
     truck: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
     star: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
@@ -296,18 +298,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <span style={{ fontSize: 11, fontFamily: 'Georgia, serif', color: '#B5631A', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>
             {kitchen?.name || 'Mijn Keuken'}
           </span>
-          <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>· {kitchen?.kitchen_type || 'Catering'}</span>
+          <span style={{ fontSize: 10, color: '#9C8060', marginLeft: 2 }}>&middot; {kitchen?.kitchen_type || 'Catering'}</span>
         </div>
       </div>
 
-      {/* Main nav — NO flex:1 or overflowY here; the sidebar itself scrolls */}
+      {/* Main nav */}
       <nav style={{ padding: '10px 0' }}>
         {navItems.map((item) => (
           <NavItemComponent key={item.href} item={item} pathname={pathname} onNavigate={handleNavigate} />
         ))}
       </nav>
 
-      {/* Scan & OCR — standalone amber button */}
+      {/* Scan & OCR */}
       <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
         <Link href="/scan" onClick={handleNavigate} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', borderRadius: 7, backgroundColor: scanActive ? '#FEF3E2' : 'rgba(232,160,64,0.07)', border: `1px solid ${scanActive ? '#E8A040' : 'rgba(232,160,64,0.35)'}`, textDecoration: 'none' }}>
           <NavIcon type="scan" active={true} />
@@ -359,7 +361,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 12px 0', padding: '7px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.6)', border: '1px solid #E5D8C0', cursor: 'pointer', width: 'calc(100% - 24px)', flexShrink: 0 }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8060" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <span style={{ fontSize: 12, color: '#9C8060', flex: 1, textAlign: 'left' }}>Zoeken...</span>
-        <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>⌘K</kbd>
+        <kbd style={{ fontSize: 10, color: '#B5A090', background: 'rgba(0,0,0,0.04)', border: '1px solid #E5D8C0', borderRadius: 3, padding: '1px 4px' }}>&crarr;K</kbd>
       </button>
 
       <div style={{ margin: '8px 12px 16px', padding: '10px 12px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid #E5D8C0', flexShrink: 0 }}>
@@ -368,7 +370,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div style={{ flex: 1, height: 3, backgroundColor: '#E5D8C0', borderRadius: 2 }}>
             <div style={{ width: '75%', height: '100%', backgroundColor: '#E8A040', borderRadius: 2 }} />
           </div>
-          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25-30%</span>
+          <span style={{ fontSize: 11, color: '#5C4730', whiteSpace: 'nowrap' }}>25&ndash;30%</span>
         </div>
       </div>
     </aside>
