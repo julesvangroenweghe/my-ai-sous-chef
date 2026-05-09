@@ -7,8 +7,9 @@ import Link from 'next/link'
 import {
   ArrowLeft, Users, Euro, Clock, MapPin, CalendarDays,
   Plus, Trash2, Pencil, Check, X, Loader2, Download,
-  ChefHat, AlertTriangle, Sparkles
+  ChefHat, AlertTriangle, Sparkles, Search
 } from 'lucide-react'
+import { MEPElementenSearchModal, MEPSearchResult } from '@/components/mep/MEPElementenSearch'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,8 +59,9 @@ const CAT_ORDER: [string, number][] = [
   ['DRANKEN', 1], ['MOCKTAILS', 2], ['INFUSED', 2.5], ['LUNCH', 3],
   ['FINGERFOOD', 4], ['FINGERBITES', 5], ['HAPJES', 6], ['HAPJE', 6.5],
   ['APPETIZERS', 7], ['AMUSE', 8], ['WALKING', 10], ['SHARING', 11],
-  ['VOORGERECHT', 11], ['TUSSENGERECHT', 12], ['FOODSTAND', 15.5],
-  ['HOOFDGERECHT', 16], ['BROOD', 17], ['ON THE SIDE', 18], ['SAUZEN', 19],
+  ['VOORGERECHT', 11], ['TUSSENGERECHT', 12], ['FOODSTAND', 23],
+  ['HOOFDGERECHT PREMIUM', 15.5], ['HOOFDGERECHT', 16],
+  ['BROOD', 17], ['ON THE SIDE', 18], ['SAUZEN', 19],
   ['KAAS', 20], ['DESSERT', 21], ['PETIT', 22], ['BARISTA', 24.5],
   ['MIGNARDISES', 25], ['KIDS', 26], ['KINDERMENU', 26], ['LATE NIGHT', 27],
   ['AFTER SNACK', 28], ['HALFABRICAAT', 50],
@@ -153,6 +155,11 @@ export default function MepDetailPage() {
   // Edit dish title
   const [editingDishId, setEditingDishId] = useState<string | null>(null)
   const [editDishTitle, setEditDishTitle] = useState('')
+
+  // MEP Elementen Zoeken modal
+  const [mepSearchOpen, setMepSearchOpen] = useState(false)
+  const [mepSearchQuery, setMepSearchQuery] = useState('')
+  const [mepSearchContext, setMepSearchContext] = useState<'edit' | 'add' | 'global'>('global')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -288,6 +295,35 @@ export default function MepDetailPage() {
     await fetchData()
   }
 
+  // Open MEP search with context
+  const openMepSearch = (query: string, context: 'edit' | 'add' | 'global') => {
+    setMepSearchQuery(query)
+    setMepSearchContext(context)
+    setMepSearchOpen(true)
+  }
+
+  // Handle selection from MEP search
+  const handleMepSearchSelect = (result: MEPSearchResult) => {
+    if (mepSearchContext === 'edit') {
+      setEditForm(f => ({
+        ...f,
+        quantity: result.quantity || f.quantity,
+        unit: result.unit || f.unit,
+        preparation: result.preparation || f.preparation,
+        supplier: result.supplier || f.supplier,
+      }))
+    } else if (mepSearchContext === 'add') {
+      setAddForm(f => ({
+        ...f,
+        qty: result.quantity || f.qty,
+        unit: result.unit || f.unit,
+        prep: result.preparation || f.prep,
+        supplier: result.supplier || f.supplier,
+      }))
+    }
+    // For 'global': just close and let user see results
+  }
+
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -366,6 +402,15 @@ export default function MepDetailPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* MEP Elementen Zoeken — global */}
+            <button
+              onClick={() => openMepSearch('', 'global')}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-xs hover:bg-[#F2E8D5] transition-all"
+              title="Zoek in MEP-elementen"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Zoeken</span>
+            </button>
             <a
               href={`/api/mep/pdf/${eventId}`}
               target="_blank"
@@ -521,6 +566,7 @@ export default function MepDetailPage() {
                                     onDeleteClick={id => setDeletingComp(id)}
                                     onDeleteConfirm={deleteComponent}
                                     onDeleteCancel={() => setDeletingComp(null)}
+                                    onOpenMepSearch={(q) => openMepSearch(q, 'edit')}
                                   />
                                 ))}
                                 {subGroups.map(([grpName, comps]) => (
@@ -542,6 +588,7 @@ export default function MepDetailPage() {
                                         onDeleteClick={id => setDeletingComp(id)}
                                         onDeleteConfirm={deleteComponent}
                                         onDeleteCancel={() => setDeletingComp(null)}
+                                        onOpenMepSearch={(q) => openMepSearch(q, 'edit')}
                                       />
                                     ))}
                                   </div>
@@ -554,7 +601,7 @@ export default function MepDetailPage() {
                         {/* Add component form */}
                         {addingToDish === dish.id && (
                           <div className="px-3 py-2.5 bg-amber-50 border-t border-amber-100">
-                            <div className="flex gap-1.5 flex-wrap">
+                            <div className="flex gap-1.5 flex-wrap mb-1.5">
                               <input
                                 type="text"
                                 placeholder="Naam component *"
@@ -596,21 +643,30 @@ export default function MepDetailPage() {
                                 onKeyDown={e => e.key === 'Enter' && addComponent(dish.id)}
                                 className="w-28 px-2.5 py-1 text-xs border border-amber-200 rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
                               />
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => addComponent(dish.id)}
-                                  disabled={addingComp || !addForm.name.trim()}
-                                  className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50"
-                                >
-                                  {addingComp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                </button>
-                                <button
-                                  onClick={() => { setAddingToDish(null); setAddForm({ name: '', qty: '', unit: '', prep: '', supplier: '' }) }}
-                                  className="px-3 py-1 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                            </div>
+                            <div className="flex gap-1.5 items-center">
+                              {/* Eerdere MEPs button in add form */}
+                              <button
+                                onClick={() => openMepSearch(addForm.name, 'add')}
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 hover:text-amber-800 border border-amber-200 hover:border-amber-300 rounded-lg bg-white hover:bg-amber-50 transition-all"
+                                title="Zoek in eerdere MEPs"
+                              >
+                                <Search className="w-3 h-3" />
+                                Eerdere MEPs
+                              </button>
+                              <button
+                                onClick={() => addComponent(dish.id)}
+                                disabled={addingComp || !addForm.name.trim()}
+                                className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50"
+                              >
+                                {addingComp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                onClick={() => { setAddingToDish(null); setAddForm({ name: '', qty: '', unit: '', prep: '', supplier: '' }) }}
+                                className="px-3 py-1 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         )}
@@ -623,6 +679,14 @@ export default function MepDetailPage() {
           })}
         </div>
       )}
+
+      {/* ── MEP Elementen Zoeken Modal ── */}
+      <MEPElementenSearchModal
+        open={mepSearchOpen}
+        onClose={() => setMepSearchOpen(false)}
+        initialQuery={mepSearchQuery}
+        onSelect={handleMepSearchSelect}
+      />
     </div>
   )
 }
@@ -641,6 +705,7 @@ interface ComponentRowItemProps {
   onDeleteClick: (id: string) => void
   onDeleteConfirm: (id: string) => void
   onDeleteCancel: () => void
+  onOpenMepSearch: (query: string) => void
 }
 
 function ComponentRowItem({
@@ -648,6 +713,7 @@ function ComponentRowItem({
   editingId, editForm, setEditForm,
   onStartEdit, onSave, onCancel,
   deletingId, onDeleteClick, onDeleteConfirm, onDeleteCancel,
+  onOpenMepSearch,
 }: ComponentRowItemProps) {
   const isEditing = editingId === comp.id
   const isDeleting = deletingId === comp.id
@@ -694,7 +760,16 @@ function ComponentRowItem({
             placeholder="Leverancier"
           />
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5 items-center">
+          {/* Eerdere MEPs button in edit form */}
+          <button
+            onClick={() => onOpenMepSearch(editForm.component_name)}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 hover:text-amber-800 border border-amber-200 hover:border-amber-300 rounded-lg bg-white hover:bg-amber-50 transition-all"
+            title="Zoek historische grammages"
+          >
+            <Search className="w-3 h-3" />
+            Eerdere MEPs
+          </button>
           <button onClick={() => onSave(comp.id)} className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all">Opslaan</button>
           <button onClick={onCancel} className="px-3 py-1 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-white transition-all">Annuleren</button>
         </div>
