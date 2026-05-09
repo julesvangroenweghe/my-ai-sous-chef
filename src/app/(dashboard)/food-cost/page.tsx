@@ -6,7 +6,7 @@ import { formatCurrency } from '@/lib/utils'
 import Link from 'next/link'
 import {
   TrendingUp, TrendingDown, Target, ArrowRight,
-  Search, AlertTriangle, CheckCircle, BarChart3
+  Search, AlertTriangle, CheckCircle, BarChart3, Calculator
 } from 'lucide-react'
 
 interface RecipeWithCost {
@@ -74,26 +74,23 @@ export default function FoodCostPage() {
     return 'text-red-500'
   }
 
-  function getCostBg(pct: number | null) {
-    if (!pct || pct === 0) return 'bg-stone-50'
-    if (pct <= targets.excellent) return 'bg-emerald-50'
-    if (pct <= targets.good) return 'bg-emerald-50/50'
-    if (pct <= targets.warning) return 'bg-amber-50'
-    return 'bg-red-50'
-  }
-
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="animate-fade-in">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-[#2C1810]" />
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h1 className="font-display text-3xl font-extrabold text-[#2C1810] tracking-tight">Food Cost</h1>
+              <p className="text-[#B8997A] text-sm">Overzicht kostprijzen en marges per recept</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Food Cost</h1>
-            <p className="text-[#B8997A] text-sm">Overzicht kostprijzen en marges per recept</p>
-          </div>
+          <Link href="/food-cost/calculator" className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-all shrink-0">
+            <Calculator className="w-4 h-4" /> Prijscalculator
+          </Link>
         </div>
       </div>
 
@@ -104,11 +101,11 @@ export default function FoodCostPage() {
           <div className={`font-mono text-2xl font-extrabold ${getCostColor(stats.avgCost)}`}>
             {stats.avgCost > 0 ? `${stats.avgCost.toFixed(1)}%` : '\u2014'}
           </div>
-          <div className="text-[10px] text-[#9E7E60] mt-1">Target: {targets.excellent}-{targets.good}%</div>
+          <div className="text-[10px] text-[#9E7E60] mt-1">Target: {targets.excellent}\u2013{targets.good}%</div>
         </div>
         <div className="card p-4">
           <div className="text-xs text-[#9E7E60] mb-1">Recepten met prijs</div>
-          <div className="font-mono text-2xl font-extrabold text-stone-900">{stats.withCost}/{stats.total}</div>
+          <div className="font-mono text-2xl font-extrabold text-[#2C1810]">{stats.withCost}/{stats.total}</div>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-1 text-xs text-[#9E7E60] mb-1">
@@ -126,8 +123,20 @@ export default function FoodCostPage() {
         </div>
       </div>
 
+      {/* Calculator CTA */}
+      <Link href="/food-cost/calculator" className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-2xl hover:bg-amber-100 transition-all group animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
+        <div className="flex items-center gap-3">
+          <Calculator className="w-8 h-8 text-amber-500" />
+          <div>
+            <div className="font-semibold text-amber-900">Catering Prijscalculator</div>
+            <div className="text-xs text-amber-700">Bereken de aanbevolen prijs per persoon op basis van personeel, logistiek & margedoelen</div>
+          </div>
+        </div>
+        <ArrowRight className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform" />
+      </Link>
+
       {/* Search + Sort */}
-      <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
+      <div className="flex flex-col sm:flex-row gap-3 animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E7E60]" />
           <input
@@ -135,7 +144,7 @@ export default function FoodCostPage() {
             placeholder="Zoek recept..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input-premium pl-10"
+            className="input pl-10 w-full"
           />
         </div>
         <div className="flex gap-2">
@@ -148,7 +157,7 @@ export default function FoodCostPage() {
               key={s.key}
               onClick={() => setSortBy(s.key)}
               className={`px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                sortBy === s.key ? 'bg-white text-[#2C1810]' : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
+                sortBy === s.key ? 'bg-white text-[#2C1810] border border-[#D4B896]' : 'bg-white text-[#5C4730] border border-stone-200 hover:bg-stone-50'
               }`}
             >
               {s.label}
@@ -163,7 +172,7 @@ export default function FoodCostPage() {
           {[...Array(8)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
         </div>
       ) : (
-        <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+        <div className="card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
           <table className="w-full">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-100">
@@ -180,7 +189,7 @@ export default function FoodCostPage() {
                   <tr key={recipe.id} className="hover:bg-stone-50/80 transition-colors">
                     <td className="py-3 px-4">
                       <Link href={`/recipes/${recipe.id}`} className="group">
-                        <div className="font-medium text-stone-900 group-hover:text-brand-600 transition-colors">
+                        <div className="font-medium text-[#2C1810] group-hover:text-amber-700 transition-colors">
                           {recipe.name}
                         </div>
                         {recipe.category && (
