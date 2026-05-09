@@ -7,7 +7,7 @@ import {
   ArrowLeft, Plus, Sparkles, Save, Send, MessageSquare,
   CheckCircle, X, Loader2, ChevronDown, ChevronUp,
   GripVertical, Trash2, Edit2, Check, RefreshCw,
-  Info, ChefHat, Shuffle
+  Info, ChefHat, Shuffle, Printer
 } from 'lucide-react'
 import { SwapDishModal } from '@/components/proposals/swap-dish-modal'
 
@@ -19,7 +19,6 @@ interface EventRequirements {
   contact_person: string
   concept_note?: string
   chef_note?: string
-  // Brief import fields
   open_questions?: string[]
   day_open_questions?: string[]
   dietary_restrictions?: string[]
@@ -69,21 +68,10 @@ const STATUS_FLOW = [
   { key: 'confirmed', label: 'Bevestigd', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
 ]
 
-// COURSE_ORDER: APPETIZERS toegevoegd als eigen gang-niveau (tussen Fingerfood en Voorgerecht)
 const COURSE_ORDER = [
-  'Amuse',
-  'Fingerbites',
-  'Fingerfood',
-  'Hapjes',
-  'Appetizers',
-  'Voorgerecht',
-  'Tussengerecht',
-  'Vis',
-  'Hoofdgerecht',
-  'Kaas',
-  'Pre-dessert',
-  'Dessert',
-  'Mignardises'
+  'Amuse', 'Fingerbites', 'Fingerfood', 'Hapjes', 'Appetizers',
+  'Voorgerecht', 'Tussengerecht', 'Vis', 'Hoofdgerecht',
+  'Kaas', 'Pre-dessert', 'Dessert', 'Mignardises'
 ]
 
 function totalFoodCost(items: MenuItem[]) {
@@ -121,7 +109,6 @@ export default function ProposalEditorPage() {
   const [creatingNewVersion, setCreatingNewVersion] = useState(false)
   const [showOpenQuestions, setShowOpenQuestions] = useState(true)
 
-  // Swap modal state
   const [swapModal, setSwapModal] = useState<{
     itemId: string | null
     course: string
@@ -241,12 +228,7 @@ export default function ProposalEditorPage() {
 
   const aiHelpWithQuestion = (question: string) => {
     const course = detectCourseFromQuestion(question)
-    setSwapModal({
-      itemId: null,
-      course,
-      mode: 'add',
-      aiContext: question,
-    })
+    setSwapModal({ itemId: null, course, mode: 'add', aiContext: question })
   }
 
   function detectCourseFromQuestion(q: string): string {
@@ -296,7 +278,6 @@ export default function ProposalEditorPage() {
 
   const handleSwapSelect = (dish: { name: string; description: string; cost_per_person?: number | null }) => {
     if (!swapModal) return
-
     if (swapModal.mode === 'replace' && swapModal.itemId) {
       setItems(prev => prev.map(item =>
         item.id === swapModal.itemId
@@ -336,13 +317,8 @@ export default function ProposalEditorPage() {
 
   const addCourse = (courseName: string) => {
     const newItem: MenuItem = {
-      id: `new-${Date.now()}`,
-      course: courseName,
-      dish_name: '',
-      dish_description: '',
-      source_type: 'custom',
-      cost_per_person: null,
-      sort_order: items.length,
+      id: `new-${Date.now()}`, course: courseName, dish_name: '', dish_description: '',
+      source_type: 'custom', cost_per_person: null, sort_order: items.length,
     }
     setItems(prev => [...prev, newItem])
     setEditingItem(newItem.id)
@@ -351,12 +327,8 @@ export default function ProposalEditorPage() {
 
   const addDishToCourse = (course: string) => {
     const newItem: MenuItem = {
-      id: `new-${Date.now()}`,
-      course,
-      dish_name: '',
-      dish_description: '',
-      source_type: 'custom',
-      cost_per_person: null,
+      id: `new-${Date.now()}`, course, dish_name: '', dish_description: '',
+      source_type: 'custom', cost_per_person: null,
       sort_order: items.filter(i => i.course === course).length,
     }
     setItems(prev => [...prev, newItem])
@@ -491,6 +463,16 @@ export default function ProposalEditorPage() {
                 {generatingFull ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {generatingFull ? 'Bezig...' : 'AI Voorstel'}
               </button>
+              <a
+                href={`/events/${eventId}/voorstel/${proposalId}/print`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F2E8D5] border border-[#E8D5B5] text-[#9E7E60] text-xs font-medium rounded-xl transition-all"
+                title="PDF / Afdrukken"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                PDF
+              </a>
               <button
                 onClick={() => save()}
                 disabled={saving}
@@ -548,7 +530,7 @@ export default function ProposalEditorPage() {
             <Loader2 className="w-5 h-5 animate-spin" />
             <div>
               <p className="text-sm font-semibold">AI genereert menu voorstel...</p>
-              <p className="text-xs text-amber-600 mt-1">Seizoenskalender + LEGENDE + Jules' DNA — even geduld</p>
+              <p className="text-xs text-amber-600 mt-1">Seizoenskalender + LEGENDE + Jules&apos; DNA &mdash; even geduld</p>
             </div>
           </div>
         </div>
@@ -653,7 +635,7 @@ export default function ProposalEditorPage() {
             </div>
           )}
 
-          {/* Open Vragen sectie — alleen bij brief imports */}
+          {/* Open Vragen sectie */}
           {requirements.imported_from_brief && (requirements.open_questions?.length || requirements.day_open_questions?.length) && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden">
               <button
@@ -676,7 +658,7 @@ export default function ProposalEditorPage() {
                 <div className="border-t border-amber-200 divide-y divide-amber-100">
                   {[...(requirements.open_questions || []), ...(requirements.day_open_questions || [])].map((q, i) => (
                     <div key={i} className="px-4 py-3 flex items-start gap-3">
-                      <span className="text-amber-500 mt-0.5 shrink-0">•</span>
+                      <span className="text-amber-500 mt-0.5 shrink-0">&bull;</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-amber-800 leading-relaxed">{q}</p>
                       </div>
@@ -742,7 +724,7 @@ export default function ProposalEditorPage() {
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-700">
-                Klik op <strong>Shuffle</strong> bij een gerecht voor 3 alternatieven — AI, 9.492 klassieke recepten of jouw LEGENDE.
+                Klik op <strong>Shuffle</strong> bij een gerecht voor 3 alternatieven &mdash; AI, 9.492 klassieke recepten of jouw LEGENDE.
               </p>
             </div>
           </div>
@@ -877,7 +859,7 @@ export default function ProposalEditorPage() {
                   ))}
                   {courseItems.length === 0 && (
                     <div className="px-5 py-4 text-center text-xs text-[#D4B896]">
-                      Leeg — klik "Kies gerecht" voor AI, Kennisbank of LEGENDE opties
+                      Leeg &mdash; klik &ldquo;Kies gerecht&rdquo; voor AI, Kennisbank of LEGENDE opties
                     </div>
                   )}
                 </div>
