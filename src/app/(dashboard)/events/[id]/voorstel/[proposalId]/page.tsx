@@ -69,10 +69,21 @@ const STATUS_FLOW = [
   { key: 'confirmed', label: 'Bevestigd', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
 ]
 
+// COURSE_ORDER: APPETIZERS toegevoegd als eigen gang-niveau (tussen Fingerfood en Voorgerecht)
 const COURSE_ORDER = [
-  'Amuse', 'Fingerbites', 'Fingerfood', 'Hapjes',
-  'Voorgerecht', 'Tussengerecht', 'Vis', 'Hoofdgerecht',
-  'Kaas', 'Pre-dessert', 'Dessert', 'Mignardises'
+  'Amuse',
+  'Fingerbites',
+  'Fingerfood',
+  'Hapjes',
+  'Appetizers',
+  'Voorgerecht',
+  'Tussengerecht',
+  'Vis',
+  'Hoofdgerecht',
+  'Kaas',
+  'Pre-dessert',
+  'Dessert',
+  'Mignardises'
 ]
 
 function totalFoodCost(items: MenuItem[]) {
@@ -229,7 +240,6 @@ export default function ProposalEditorPage() {
   }
 
   const aiHelpWithQuestion = (question: string) => {
-    // Open swap modal with AI tab pre-focused and question as concept context
     const course = detectCourseFromQuestion(question)
     setSwapModal({
       itemId: null,
@@ -243,8 +253,9 @@ export default function ProposalEditorPage() {
     const lower = q.toLowerCase()
     if (lower.includes('dessert') || lower.includes('rood fruit') || lower.includes('aardbeien')) return 'Dessert'
     if (lower.includes('veggie') || lower.includes('vegetarisch')) return 'Hoofdgerecht'
+    if (lower.includes('appetizer') || lower.includes('amuse')) return 'Appetizers'
     if (lower.includes('hapje') || lower.includes('fingerfood') || lower.includes('toast') || lower.includes('avocado')) return 'Fingerfood'
-    if (lower.includes('voorgerecht') || lower.includes('amuse')) return 'Voorgerecht'
+    if (lower.includes('voorgerecht')) return 'Voorgerecht'
     if (lower.includes('hoofd')) return 'Hoofdgerecht'
     return 'Voorgerecht'
   }
@@ -283,19 +294,16 @@ export default function ProposalEditorPage() {
     setSuggestingFor(null)
   }
 
-  // Handle dish selection from swap modal
   const handleSwapSelect = (dish: { name: string; description: string; cost_per_person?: number | null }) => {
     if (!swapModal) return
 
     if (swapModal.mode === 'replace' && swapModal.itemId) {
-      // Replace existing dish
       setItems(prev => prev.map(item =>
         item.id === swapModal.itemId
           ? { ...item, dish_name: dish.name, dish_description: dish.description || '', cost_per_person: dish.cost_per_person ?? null, source_type: 'swap' }
           : item
       ))
     } else {
-      // Add new dish to course
       const newItem: MenuItem = {
         id: `swap-${Date.now()}`,
         course: swapModal.course,
@@ -850,7 +858,6 @@ export default function ProposalEditorPage() {
                           <span className="text-xs font-mono text-[#9E7E60]">€{Number(item.cost_per_person).toFixed(2)}</span>
                         )}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* Swap/replace knop */}
                           <button
                             onClick={() => setSwapModal({ itemId: item.id, course: item.course, mode: 'replace' })}
                             className="p-1 text-[#B8997A] hover:text-amber-500 transition-colors"

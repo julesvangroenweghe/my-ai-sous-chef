@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const maxDuration = 300
+export const maxDuration = 60
 
 function getFormatInstruction(menuType: string, numPersons: number): string {
   const instructions: Record<string, string> = {
@@ -9,7 +9,7 @@ function getFormatInstruction(menuType: string, numPersons: number): string {
 - Typisch 3-4 gangen (max 4 is het advies, op klantvraag mag 5)
 - 30 min/gerecht cadans — dit is de minimale operationele ritme
 - Gerechten zijn standalone, draagbaar of op klein bord
-- Gangvolgorde: Fingerbites/Hapjes → Voorgerecht (warm) → Hoofdgerecht → Dessert
+- Gangvolgorde: Fingerbites/Hapjes → Appetizers (verfijnd 1-hap) → Voorgerecht (warm) → Hoofdgerecht → Dessert
 - 1-2 gerechten per gang max (anders te druk voor de zaal)`,
     cocktail_dinatoire: `COCKTAIL DÎNATOIRE STRUCTUUR:
 - 12-15 stuks pp totaal (3 fases)
@@ -20,7 +20,7 @@ function getFormatInstruction(menuType: string, numPersons: number): string {
     sit_down: `ZIT DINER STRUCTUUR:
 - 3-5 gangen afhankelijk van budget
 - ${numPersons <= 50 ? '45 min/gang' : '60 min/gang'} service timing
-- Klassiek: Amuse → Voorgerecht → (Tussengerecht bij 5-gang) → Hoofdgerecht → Dessert
+- Klassiek: Amuse → Appetizers (verfijnd hapje bij tafel) → Voorgerecht → (Tussengerecht bij 5-gang) → Hoofdgerecht → Dessert
 - Amuse is altijd aanwezig, niet meetellend als officiële gang`,
     buffet: `BBQ BUFFET STRUCTUUR (schalen delen, niet borden per persoon):
 - 7 elementen: Groenten van de grill + Vlees hoofdstuk + Vis/zeevruchten + Sauzen (3 min) + Warme sides + Koud buffet / saladebar + Dessert
@@ -104,12 +104,6 @@ export async function POST(req: NextRequest) {
     .eq(currentMonthCol, 1)
     .limit(30)
 
-  // 5. Klassieke referentierecepten voor inspiratie (steekproef op categorie)
-  const { data: classicalSample } = await supabase
-    .from('classical_recipes')
-    .select('name_original, category, description')
-    .limit(10)
-
   // --- PROMPT BOUWEN ---
 
   const styleText = profile?.style_analysis
@@ -117,32 +111,28 @@ export async function POST(req: NextRequest) {
     : ''
 
   const scenarioText = scenario
-    ? `\nFORMAT SCENARIO — ${scenario.name}:
-Beschrijving: ${scenario.description || '—'}
-Porties/pp: ${scenario.portions_pp || '—'}
-Gangstructuur: ${scenario.course_structure ? JSON.stringify(scenario.course_structure) : '—'}
-Experience Arc: ${scenario.experience_arc ? JSON.stringify(scenario.experience_arc) : '—'}`
+    ? `\nFORMAT SCENARIO — ${scenario.name}:\nBeschrijving: ${scenario.description || '—'}\nPorties/pp: ${scenario.portions_pp || '—'}\nGangstructuur: ${scenario.course_structure ? JSON.stringify(scenario.course_structure) : '—'}\nExperience Arc: ${scenario.experience_arc ? JSON.stringify(scenario.experience_arc) : '—'}`
     : ''
 
   // Filter legende dishes relevant voor format
   const formatCategoryMap: Record<string, string[]> = {
-    walking_dinner: ['walking dinner', 'hapjes', 'fingerbites', 'dessert'],
+    walking_dinner: ['walking dinner', 'hapjes', 'fingerbites', 'appetizers', 'dessert'],
     cocktail_dinatoire: ['fingerbites', 'fingerfood', 'hapjes', 'mignardises'],
-    sit_down: ['voorgerecht', 'hoofdgerecht', 'dessert', 'amuse'],
+    sit_down: ['voorgerecht', 'hoofdgerecht', 'dessert', 'amuse', 'appetizers'],
     buffet: ['walking dinner', 'hapjes'],
     cocktail: ['fingerbites', 'hapjes', 'fingerfood'],
   }
   const relevantCategories = formatCategoryMap[menuType] || []
 
   const filteredLegende = legendeDishes?.filter(d => {
-    const catName = (d.category as any)?.name?.toLowerCase() || ''
+    const catName = (d.category as { name?: string })?.name?.toLowerCase() || ''
     return relevantCategories.some(rc => catName.includes(rc)) || relevantCategories.length === 0
   }).slice(0, 20) || []
 
   const legendeText = filteredLegende.length > 0
     ? `\nJULES' LEGENDE GERECHTEN (voor stijlreferentie — hertaal in zijn DNA):\n${
         filteredLegende.map(d => {
-          const elements = (d.elements as any[])?.slice(0, 3).map((e: any) => e.name).join(', ') || ''
+          const elements = (d.elements as Array<{ name: string }>)?.slice(0, 3).map((e) => e.name).join(', ') || ''
           return `• ${d.name}${d.description ? ` — ${d.description}` : ''}${elements ? ` [${elements}]` : ''}${d.price_per_person ? ` (€${d.price_per_person}/p)` : ''}`
         }).join('\n')
       }`
@@ -153,7 +143,7 @@ Experience Arc: ${scenario.experience_arc ? JSON.stringify(scenario.experience_a
     : ''
 
   const exclusionsText = exclusions.length > 0
-    ? `\nEXCLUSIES / ALLERGIEËN (STRIKT vermijden — geen sporen):\n${exclusions.map((e: string) => `✗ ${e}`).join('\n')}`
+    ? `\nEXCLUSIES / ALLERGIEËN (STRIKT vermijden — ook niet in sauzen of bereidingen):\n${exclusions.map((e: string) => `✗ ${e}`).join('\n')}`
     : ''
 
   const conceptText = concept ? `\nCONCEPT VAN DE KLANT: ${concept}` : ''
@@ -178,6 +168,17 @@ Experience Arc: ${scenario.experience_arc ? JSON.stringify(scenario.experience_a
 JULES' HANDTEKENING INGREDIËNTEN (gebruik minstens 2-3 per menu):
 lavas, dashi, forelkaviaar, gepekelde eidooier, hamachi, knolselder, zwarte look, miso, kimchi, XO-saus, zeekraal, dashi-beurre blanc, lavasvinaigrette, yuzu, bonito, zuurdesem, gepekelde groenten
 
+KRUITEN-REGEL (ABSOLUUT):
+- Lavas = 100% hartig kruid — VERBODEN in desserts
+- Verveine = dessert signatuur ✅
+- Dragon = dessert signatuur ✅
+- Desserts bouwen op: seizoensfruit + zuur-accent + textuur + verveine of dragon
+
+APPETIZERS = eigen gang-niveau tussen Fingerfood en Voorgerecht:
+- Verfijnd, 1-hap formaat
+- Alle Jules DNA toegestaan
+- Mooier dan fingerfood, kleiner dan voorgerecht
+
 HERTAALFILOSOFIE — pas toe op elk gerecht:
 1. UPGRADE het hoofdingrediënt → premium variant (aardappel → Jersey Royal; ui → charred cipollini; zalm → hamachi of zeebaars)
 2. TRANSFORMEER de saus → moderne techniek (botersaus → dashi-beurre blanc; jus → miso-glaze; mayo → lavasemulsie)
@@ -196,6 +197,7 @@ VERBODEN:
 - Geen emoji's in namen of beschrijvingen
 - Geen algemeenheden zoals "vers seizoensgebonden salade"
 - Geen generieke sauzen (geen "bruine jus", "witte saus")
+- Lavas NOOIT in desserts
 - Zorg dat exclusies NERGENS terugkomen — ook niet in sauzen of bereidingen`
 
   const userPrompt = `${previous_feedback ? '⚠️ DIT IS EEN REVISIE — verwerk de feedback van de klant!\n\n' : ''}Maak een menu voorstel voor: ${eventName || 'catering event'}
@@ -223,7 +225,7 @@ Antwoord ALLEEN als JSON (geen tekst buiten de JSON):
 {
   "courses": [
     {
-      "name": "Gang naam (bvb. Amuse, Fingerbites, Voorgerecht, Hoofdgerecht, Dessert)",
+      "name": "Gang naam (bvb. Amuse, Fingerbites, Appetizers, Voorgerecht, Hoofdgerecht, Dessert)",
       "dishes": [
         {
           "name": "Naam van het gerecht",
@@ -248,7 +250,7 @@ Antwoord ALLEEN als JSON (geen tekst buiten de JSON):
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
@@ -273,10 +275,18 @@ Antwoord ALLEEN als JSON (geen tekst buiten de JSON):
       // Bestaande items verwijderen
       await supabase.from('saved_menu_items').delete().eq('menu_id', proposalId)
 
-      const items: any[] = []
-      parsed.courses.forEach((course: any, ci: number) => {
+      const items: Array<{
+        menu_id: string
+        course: string
+        dish_name: string
+        dish_description: string | null
+        source_type: string
+        cost_per_person: number | null
+        sort_order: number
+      }> = []
+      parsed.courses.forEach((course: { name: string; dishes: Array<{ name?: string; description?: string; cost_per_person?: number }> }, ci: number) => {
         const dishes = Array.isArray(course.dishes) ? course.dishes : []
-        dishes.forEach((dish: any, di: number) => {
+        dishes.forEach((dish, di) => {
           items.push({
             menu_id: proposalId,
             course: course.name,

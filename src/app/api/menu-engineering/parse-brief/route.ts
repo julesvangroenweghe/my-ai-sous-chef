@@ -12,50 +12,58 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Geen inhoud opgegeven' }, { status: 400 })
     }
 
-    const systemPrompt = `Je bent een culinaire assistent die klantbriefings, event-opdrachten en menu-voorstellen analyseert voor professionele cateraars en chefs.
-Extraheer ALLE relevante informatie, inclusief concrete gerechten en klantfeedback.
+    const systemPrompt = `Je bent een culinaire assistent die klantbriefings analyseert voor professionele cateraars en chefs.
+Extraheer ALLE relevante informatie, inclusief concrete gerechten en tijdslijn.
 
 Retourneer ALTIJD geldig JSON in dit exacte formaat:
 {
-  "event_name": string | null,
-  "contact_person": string | null,
-  "menu_type": "walking_dinner" | "cocktail_dinatoire" | "sit_down" | "bbq_buffet" | "aperitief" | "cocktail" | "gala" | "brunch" | "high_tea" | "lunch_buffet" | "event",
-  "num_persons": number | null,
-  "budget_total": number | null,
-  "budget_pp": number | null,
-  "date_hint": string | null,
-  "location": string | null,
-  "style": "Modern" | "Klassiek" | "Seizoensgebonden" | "Fusion" | null,
-  "courses": ["AMUSE","FINGERFOOD","HAPJES","FINGERBITES","VOORGERECHT","TUSSENGERECHT","HOOFDGERECHT","KAAS","DESSERT","MIGNARDISES"],
-  "dishes_per_course": {
-    "COURSE_KEY": [
-      { "name": "string — exacte gerechtnaam", "description": "string — omschrijving of subcomponenten indien aanwezig" }
-    ]
-  },
-  "exclusions": ["lijst van uitgesloten ingrediënten of allergieën"],
-  "client_feedback": "string — als er feedback van de klant in de tekst staat, letterlijk of samengevat" | null,
-  "special_requests": string | null,
-  "summary": "Korte samenvatting van de opdracht in 1-2 zinnen"
+  "event_name": "string",
+  "contact_person": "string of null",
+  "num_persons": number of null,
+  "date_hint": "YYYY-MM-DD of null",
+  "end_date": "YYYY-MM-DD of null",
+  "location": "string of null",
+  "exclusions": ["allergieën", "uitsluitingen"],
+  "budget_total": number of null,
+  "budget_pp": number of null,
+  "timeline": [
+    {
+      "start": "18:30",
+      "end": "20:00",
+      "duration_minutes": 90,
+      "label": "Ontvangst & Apero",
+      "service": ["drinks", "fingerfood", "appetizers"],
+      "dishes": [
+        { "name": "gerechtnaam", "is_open_question": false }
+      ]
+    }
+  ],
+  "dietary_notes": "string of null",
+  "special_requests": "string of null",
+  "client_feedback": "string of null",
+  "summary": "Korte samenvatting in 1-2 zinnen"
 }
 
-Regels voor dishes_per_course:
-- COURSE_KEY moet een van deze zijn: AMUSE, FINGERFOOD, HAPJES, FINGERBITES, VOORGERECHT, TUSSENGERECHT, HOOFDGERECHT, KAAS, DESSERT, MIGNARDISES
-- Als de brief een volledig menu bevat, extraheer elk gerecht per gang
-- Maak de namen zo precies mogelijk — niet "vis" maar "tarbot met beurre blanc"
-- Als er geen gerechten vermeld worden voor een gang, laat die gang weg uit dishes_per_course
-- Als de brief een "walking dinner" formaat heeft, gebruik dan FINGERBITES of HAPJES per service
+Service types voor timeline[].service[]:
+- "drinks" — drankjes, aperitief, ontvangst
+- "fingerfood" — kleine hapjes, canapes, fingerbites
+- "appetizers" — verfijnde amuses, 1-hap gerechtjes
+- "walking" — walking dinner, staand diner
+- "sit_down" — zittend diner, gala, formeel
+- "buffet" — buffet, BBQ, zelfbediening
+- "dessert" — dessert, zoet, mignardises
+- "open_bar" — open bar, vrij drinkmoment
+- "brunch" — brunch, ontbijt-lunch
+- "cocktail" — cocktail dinatoire
 
-Regels voor menu_type mapping:
-- "walking dinner" → walking_dinner
-- "cocktail dînatoire" of "dînatoire" → cocktail_dinatoire
-- "galadineren" of "gala" → gala
-- "zitdiner" of "zittend" of "sit-down" → sit_down
-- "BBQ" of "barbecue" → bbq_buffet
-- "aperitief" of "vin d'honneur" → aperitief
-- "brunch" → brunch
-- "high tea" → high_tea
-
-Geef ALLEEN JSON terug, geen andere tekst.`
+Regels:
+- timeline[] bevat elk tijdsblok chronologisch — GEEN losse menu_type enum
+- service[] geeft aan welke service-types plaatsvinden in dat blok
+- dishes[] zijn de gerechten die in dat tijdsblok worden geserveerd
+- is_open_question=true als het gerecht nog niet bepaald is (TBC, @Jules: etc)
+- GEEN menu_type veld — gebruik uitsluitend timeline[]
+- Geef ALLEEN JSON terug, geen andere tekst
+- Als er geen tijden zijn in de brief: schat redelijke tijden op basis van context`
 
     const messages: Anthropic.MessageParam[] = []
 
@@ -75,14 +83,14 @@ Geef ALLEEN JSON terug, geen andere tekst.`
             type: 'text',
             text: text
               ? `Analyseer deze afbeelding en de volgende tekst:\n\n${text}`
-              : 'Analyseer deze afbeelding en extraheer de event/menu informatie inclusief alle gerechten.',
+              : 'Analyseer deze afbeelding en extraheer de event/menu informatie inclusief tijdslijn.',
           },
         ],
       })
     } else {
       messages.push({
         role: 'user',
-        content: `Analyseer de volgende klantbriefing en extraheer alle informatie inclusief gerechten:\n\n${text}`,
+        content: `Analyseer de volgende klantbriefing en extraheer alle informatie inclusief tijdslijn:\n\n${text}`,
       })
     }
 
@@ -94,13 +102,42 @@ Geef ALLEEN JSON terug, geen andere tekst.`
     })
 
     const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
-
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/)
+    const cleaned = rawText.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Kon geen gegevens extraheren uit de briefing' }, { status: 422 })
     }
 
     const parsed = JSON.parse(jsonMatch[0])
+
+    // Backward compatibility: afgeleid menu_type op basis van timeline services
+    if (!parsed.menu_type && Array.isArray(parsed.timeline) && parsed.timeline.length > 0) {
+      const allServices: string[] = parsed.timeline.flatMap((t: { service?: string[] }) => t.service || [])
+      if (allServices.includes('walking')) parsed.menu_type = 'walking_dinner'
+      else if (allServices.includes('sit_down')) parsed.menu_type = 'sit_down'
+      else if (allServices.includes('buffet')) parsed.menu_type = 'buffet'
+      else if (allServices.includes('cocktail')) parsed.menu_type = 'cocktail_dinatoire'
+      else if (allServices.includes('brunch')) parsed.menu_type = 'brunch'
+      else if (allServices.includes('fingerfood') || allServices.includes('appetizers')) parsed.menu_type = 'cocktail'
+      else parsed.menu_type = 'event'
+    }
+
+    // Backward compat: courses array op basis van timeline
+    if (!parsed.courses && Array.isArray(parsed.timeline)) {
+      const allServices: string[] = parsed.timeline.flatMap((t: { service?: string[] }) => t.service || [])
+      const courseMap: Record<string, string[]> = {
+        fingerfood: ['FINGERFOOD'],
+        appetizers: ['APPETIZERS'],
+        walking: ['WALKING DINNER'],
+        sit_down: ['VOORGERECHT', 'HOOFDGERECHT'],
+        dessert: ['DESSERT'],
+        buffet: ['BUFFET'],
+      }
+      const courses = new Set<string>()
+      allServices.forEach(s => (courseMap[s] || []).forEach(c => courses.add(c)))
+      if (courses.size > 0) parsed.courses = Array.from(courses)
+    }
+
     return NextResponse.json({ success: true, brief: parsed })
   } catch (err) {
     console.error('parse-brief error:', err)
