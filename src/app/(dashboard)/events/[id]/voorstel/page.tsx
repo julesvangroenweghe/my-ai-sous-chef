@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Plus, Clock, CheckCircle, Send, MessageSquare, ChefHat, Loader2, Trash2, FileText } from 'lucide-react'
+import { ArrowLeft, Plus, Clock, CheckCircle, Send, MessageSquare, ChefHat, Loader2, Trash2, Printer } from 'lucide-react'
 
 interface Proposal {
   id: string
@@ -15,7 +15,7 @@ interface Proposal {
   proposal_status: string
   revision_number: number
   client_feedback: string | null
-  event_requirements: any
+  event_requirements: Record<string, unknown>
   created_at: string
   updated_at: string
   items: { id: string; course: string; dish_name: string }[]
@@ -32,7 +32,7 @@ interface Event {
   contact_person: string | null
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   draft: { label: 'Draft', color: 'bg-stone-100 text-[#9E7E60] border border-[#E8D5B5]', icon: Clock },
   sent: { label: 'Verstuurd', color: 'bg-blue-50 text-blue-600 border border-blue-200', icon: Send },
   feedback: { label: 'Feedback ontvangen', color: 'bg-amber-50 text-amber-700 border border-amber-200', icon: MessageSquare },
@@ -52,6 +52,7 @@ export default function EventVoorstellenPage() {
 
   useEffect(() => {
     loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId])
 
   const loadData = async () => {
@@ -185,12 +186,24 @@ export default function EventVoorstellenPage() {
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => deleteProposal(proposal.id, e)}
-                    className="p-1.5 text-[#D4B896] hover:text-red-400 transition-colors shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <a
+                      href={`/events/${eventId}/voorstel/${proposal.id}/print`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="p-1.5 text-[#B8997A] hover:text-amber-600 transition-colors rounded-lg hover:bg-amber-50"
+                      title="Afdrukken / PDF"
+                    >
+                      <Printer className="w-4 h-4" />
+                    </a>
+                    <button
+                      onClick={(e) => deleteProposal(proposal.id, e)}
+                      className="p-1.5 text-[#D4B896] hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </Link>
             )
