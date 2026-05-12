@@ -9,7 +9,7 @@ import { SupplierInput } from '@/components/mep/supplier-input'
 import {
   ArrowLeft, CalendarDays, Users, MapPin, Clock, Euro,
   ChefHat, Loader2, Check, X, Pencil, Trash2,
-  AlertTriangle, ShieldCheck, Plus,
+  AlertTriangle, ShieldCheck, Plus, FileDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -143,6 +143,9 @@ const CAT_LABELS: Record<string, string> = {
   'BBQ': 'BBQ',
   'BUFFET': 'Buffet',
   'AFTER SNACKS': 'After Snacks',
+  'BROOD & BOTER': 'Brood & Boter',
+  'LATE NIGHT SNACK': 'Late Night Snack',
+  'KIDS': 'Kids',
 }
 
 function getCategoryLabel(cat: string): string {
@@ -876,7 +879,6 @@ export default function MepDetailPage() {
         return
       }
 
-      // Update local state
       setEvent((prev) => prev ? { ...prev, status: 'approved' } : prev)
       setDishes((prev) =>
         prev.map((d) => ({
@@ -962,6 +964,18 @@ export default function MepDetailPage() {
           >
             {event.status === 'approved' ? 'Goedgekeurd' : event.status === 'draft' ? 'Concept' : event.status}
           </span>
+
+          {/* PDF download button */}
+          <a
+            href={`/api/mep/pdf/${id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-[#2C1810] hover:border-[#E8A040]/50 rounded-xl text-xs font-semibold transition-all"
+            title="PDF downloaden"
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            PDF
+          </a>
 
           {event.status !== 'approved' && (
             confirmApproveEvent ? (
@@ -1106,12 +1120,12 @@ export default function MepDetailPage() {
         <div className="space-y-5">
           {sortedCategories.map(([category, categoryDishes]) => (
             <section key={category}>
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-[#5C4730] shrink-0">
+              {/* Solid green category bar */}
+              <div className="flex items-center justify-between bg-[#2d6a4f] rounded-lg px-3 py-1.5 mb-3">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-white">
                   {getCategoryLabel(category)}
                 </h2>
-                <div className="flex-1 h-px bg-[#E8D5B5]" />
-                <span className="text-xs text-[#B8997A] shrink-0">
+                <span className="text-xs text-white/60">
                   {categoryDishes.length} gerecht{categoryDishes.length !== 1 ? 'en' : ''}
                 </span>
               </div>
