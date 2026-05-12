@@ -10,7 +10,7 @@ import {
   ArrowLeft, CalendarDays, Users, MapPin, Clock, Euro,
   ChefHat, Loader2, Check, X, Pencil, Trash2,
   AlertTriangle, ShieldCheck, Plus, FileDown,
-  ChevronUp, ChevronDown, GripVertical,
+  ChevronUp, ChevronDown, GripVertical, Search,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Reorder, useDragControls } from 'framer-motion'
@@ -32,6 +32,10 @@ interface MepEvent {
   status: string
   mep_status: string
   notes: string | null
+  venue_address: string | null
+  travel_time_minutes: number | null
+  event_start_time: string | null
+  event_end_time: string | null
 }
 
 interface MepDish {
@@ -63,32 +67,43 @@ interface MepComponent {
 // ─── Category ordering ────────────────────────────────────────────────────────
 
 const CAT_ORDER: Record<string, number> = {
-  'dranken': 1, 'mocktails': 2,
-  'fingerfood middag': 3, 'fingerfood apero': 4, 'fingerfood': 5,
+  'dranken': 1, 'mocktails': 2, 'lunch': 3,
+  'fingerfood middag': 4, 'fingerfood apero': 4.5, 'fingerfood': 5,
   'fingerbites': 10, 'hapjes': 15, 'hapje_warm': 15,
-  'amuse': 20, 'appetizers': 25, 'appetizer': 25,
+  'amuse': 20, 'appetizers middag': 24, 'appetizers apero': 24.5, 'appetizers': 25, 'appetizer': 25,
   'walking voorgerecht': 28, 'walking dinner': 30, 'walking': 30,
-  'foodstand': 33, 'bbq': 34, 'voorgerecht': 35, 'buffet': 37,
-  'tussengerecht': 40, 'hoofdgerecht': 45,
-  'on the side': 50, 'sauzen': 52, 'kaas': 60,
-  'dessert middag': 63, 'dessert': 65, 'dessert avond': 66,
+  'foodstand': 33, 'bbq': 34, 'voorgerecht': 35, 'sharing voorgerecht': 36, 'buffet': 37,
+  'tussengerecht': 40, 'hoofdgerecht': 45, 'hoofdgerecht premium': 44,
+  'brood & boter': 47, 'on the side': 50, 'sauzen': 52, 'kaas': 60,
+  'dessert middag': 63, 'dessert': 65, 'dessert avond': 66, 'dessert lunch': 64,
   'walking dessert': 68, 'after snacks': 72, 'petits fours': 70,
-  'barista mignardises': 200, 'mignardises': 200, 'halfabricaat': 250,
+  'barista mignardises': 200, 'mignardises': 200,
+  'kids': 210, 'late night snack': 215, 'halfabricaat': 250,
 }
 
 function getCategoryOrder(cat: string): number {
   const lower = cat.toLowerCase().trim()
   if (CAT_ORDER[lower] !== undefined) return CAT_ORDER[lower]
+  // Partial matching — specific terms first
+  if (lower.includes('hoofdgerecht') && lower.includes('premium')) return 44
   if (lower.includes('middag')) {
-    if (lower.includes('fingerfood')) return CAT_ORDER['fingerfood middag']
-    if (lower.includes('dessert')) return CAT_ORDER['dessert middag']
+    if (lower.includes('fingerfood')) return 4
+    if (lower.includes('appetizers')) return 24
+    if (lower.includes('dessert')) return 63
     return 3
   }
   if (lower.includes('apero')) {
-    if (lower.includes('fingerfood')) return CAT_ORDER['fingerfood apero']
-    return 4
+    if (lower.includes('fingerfood')) return 4.5
+    if (lower.includes('appetizers')) return 24.5
+    return 22.5
   }
-  if (lower.includes('avond') && lower.includes('dessert')) return CAT_ORDER['dessert avond']
+  if (lower.includes('foodstand')) return 33
+  if (lower.includes('barista')) return 200
+  if (lower.includes('walking') && lower.includes('dessert')) return 68
+  if (lower.includes('walking') && lower.includes('voorgerecht')) return 28
+  if (lower.includes('walking')) return 30
+  if (lower.includes('sharing') && lower.includes('voorgerecht')) return 36
+  // Generic partial match
   const sortedKeys = Object.keys(CAT_ORDER).sort((a, b) => b.length - a.length)
   for (const key of sortedKeys) {
     if (lower.includes(key)) return CAT_ORDER[key]
@@ -97,22 +112,26 @@ function getCategoryOrder(cat: string): number {
 }
 
 const CAT_LABELS: Record<string, string> = {
-  'DRANKEN': 'Dranken', 'MOCKTAILS': 'Mocktails',
+  'DRANKEN': 'Dranken', 'MOCKTAILS': 'Mocktails', 'LUNCH': 'Lunch',
   'FINGERFOOD': 'Fingerfood',
   'FINGERFOOD MIDDAG': 'Fingerfood — Middag receptie',
   'FINGERFOOD APERO': 'Fingerfood — Avond receptie',
   'FINGERBITES': 'Fingerbites', 'HAPJES': 'Hapjes', 'HAPJE_WARM': 'Hapjes (warm)',
   'AMUSE': 'Amuse', 'APPETIZERS': 'Appetizers',
+  'APPETIZERS MIDDAG': 'Appetizers — Middag', 'APPETIZERS APERO': 'Appetizers — Avond',
   'WALKING DINNER': 'Walking Dinner', 'WALKING VOORGERECHT': 'Walking Voorgerecht',
+  'SHARING VOORGERECHT': 'Sharing Voorgerecht',
   'VOORGERECHT': 'Voorgerecht', 'TUSSENGERECHT': 'Tussengerecht',
-  'HOOFDGERECHT': 'Hoofdgerecht', 'ON THE SIDE': 'On the Side',
+  'HOOFDGERECHT': 'Hoofdgerecht', 'HOOFDGERECHT PREMIUM': 'Hoofdgerecht Premium',
+  'BROOD & BOTER': 'Brood & Boter', 'ON THE SIDE': 'On the Side',
   'SAUZEN': 'Sauzen', 'KAAS': 'Kaasgang',
   'DESSERT': 'Dessert', 'DESSERT MIDDAG': 'Dessert — Middag receptie',
-  'DESSERT AVOND': 'Dessert — Avond receptie', 'WALKING DESSERT': 'Walking Dessert',
+  'DESSERT AVOND': 'Dessert — Avond receptie', 'DESSERT LUNCH': 'Dessert — Lunch',
+  'WALKING DESSERT': 'Walking Dessert',
   'PETITS FOURS': 'Petits Fours', 'MIGNARDISES': 'Mignardises',
   'BARISTA MIGNARDISES': 'Mignardises (Barista)', 'HALFABRICAAT': 'Halfabricaten',
   'BBQ': 'BBQ', 'BUFFET': 'Buffet', 'AFTER SNACKS': 'After Snacks',
-  'BROOD & BOTER': 'Brood & Boter', 'LATE NIGHT SNACK': 'Late Night Snack', 'KIDS': 'Kids',
+  'LATE NIGHT SNACK': 'Late Night Snack', 'KIDS': 'Kids',
 }
 
 function getCategoryLabel(cat: string): string {
@@ -336,17 +355,12 @@ function ComponentRow({
 }: {
   component: MepComponent
   onApprove: () => void
-  onEdit: (updates: Partial<MepComponent>) => Promise<void>
+  onEdit: () => void
   onDelete: () => void
   dragControls?: DragControls
 }) {
-  const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const isAI = component.is_ai_suggestion
-
-  if (editing) {
-    return null // handled by parent
-  }
 
   return (
     <div
@@ -393,7 +407,7 @@ function ComponentRow({
             <Check className="w-3 h-3" />
           </button>
         )}
-        <button onClick={() => setEditing(true)}
+        <button onClick={onEdit}
           className="p-1 rounded text-[#B8997A] hover:text-[#E8A040] hover:bg-[#E8A040]/10 transition-all"
           title="Aanpassen">
           <Pencil className="w-3 h-3" />
@@ -608,7 +622,7 @@ function DishCard({
                     )}
                     <ComponentRow component={c}
                       onApprove={() => onApproveComponent(c.id)}
-                      onEdit={async () => setEditingComponentId(c.id)}
+                      onEdit={() => setEditingComponentId(c.id)}
                       onDelete={() => onDeleteComponent(c.id)}
                       dragControls={controls}
                     />
@@ -679,6 +693,13 @@ export default function MepDetailPage() {
   }, [id])
 
   useEffect(() => { loadData() }, [loadData])
+
+  // Listen for AI-triggered data updates
+  useEffect(() => {
+    const handler = () => { loadData() }
+    window.addEventListener('mep-data-updated', handler)
+    return () => window.removeEventListener('mep-data-updated', handler)
+  }, [loadData])
 
   // Collect all existing component groups for quick-pick
   const existingGroups = [...new Set(
@@ -758,7 +779,6 @@ export default function MepDetailPage() {
 
   // ── Reorder components within dish (drag & drop) ──
   const handleReorderComponents = async (dishId: string, newOrder: string[]) => {
-    // Optimistic update — assign new sort_orders based on position
     setDishes((prev) => prev.map((d) => {
       if (d.id !== dishId) return d
       const compMap = new Map(d.components.map((c) => [c.id, c]))
@@ -770,8 +790,6 @@ export default function MepDetailPage() {
         })),
       }
     }))
-
-    // Persist all new sort_orders
     await Promise.all(
       newOrder.map((id, idx) =>
         supabase.from('mep_components').update({ sort_order: idx }).eq('id', id)
@@ -784,7 +802,6 @@ export default function MepDetailPage() {
     const dish = dishes.find((d) => d.id === dishId)
     if (!dish) return
 
-    // Get dishes in same category, sorted
     const sameCat = dishes
       .filter((d) => d.category === dish.category)
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -798,7 +815,6 @@ export default function MepDetailPage() {
     const aNewOrder = b.sort_order
     const bNewOrder = a.sort_order
 
-    // Optimistic update
     setDishes((prev) => prev.map((d) => {
       if (d.id === a.id) return { ...d, sort_order: aNewOrder }
       if (d.id === b.id) return { ...d, sort_order: bNewOrder }
@@ -938,12 +954,12 @@ export default function MepDetailPage() {
               </div>
             </div>
           )}
-          {event.location && (
+          {(event.venue_address || event.location) && (
             <div className="flex items-center gap-2 min-w-0">
               <MapPin className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Locatie</div>
-                <div className="text-sm font-semibold text-[#2C1810] truncate" title={event.location}>{event.location}</div>
+                <div className="text-sm font-semibold text-[#2C1810] truncate" title={event.venue_address || event.location || ''}>{event.venue_address || event.location}</div>
               </div>
             </div>
           )}
@@ -958,21 +974,21 @@ export default function MepDetailPage() {
               </div>
             </div>
           )}
-          {event.departure_time && (
+          {event.event_start_time && (
             <div className="flex items-center gap-2 min-w-0">
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
-                <div className="text-xs text-[#B8997A]">Vertrek Mariakerke</div>
-                <div className="text-sm font-semibold text-[#2C1810]">{String(event.departure_time).slice(0, 5)}</div>
+                <div className="text-xs text-[#B8997A]">Start</div>
+                <div className="text-sm font-semibold text-[#2C1810]">{String(event.event_start_time).slice(0, 5)}</div>
               </div>
             </div>
           )}
-          {event.arrival_time && (
+          {event.event_end_time && (
             <div className="flex items-center gap-2 min-w-0">
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
-                <div className="text-xs text-[#B8997A]">Aankomst keuken</div>
-                <div className="text-sm font-semibold text-[#2C1810]">{String(event.arrival_time).slice(0, 5)}</div>
+                <div className="text-xs text-[#B8997A]">Einde</div>
+                <div className="text-sm font-semibold text-[#2C1810]">{String(event.event_end_time).slice(0, 5)}</div>
               </div>
             </div>
           )}
@@ -982,6 +998,15 @@ export default function MepDetailPage() {
               <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Contact</div>
                 <div className="text-sm font-semibold text-[#2C1810] truncate">{event.contact_person}</div>
+              </div>
+            </div>
+          )}
+          {event.travel_time_minutes && (
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-xs text-[#B8997A]">Reistijd</div>
+                <div className="text-sm font-semibold text-blue-600">{event.travel_time_minutes} min</div>
               </div>
             </div>
           )}
