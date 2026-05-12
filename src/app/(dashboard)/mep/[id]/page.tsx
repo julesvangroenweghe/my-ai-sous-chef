@@ -28,6 +28,7 @@ interface MepEvent {
   arrival_time: string | null
   price_per_person: number | null
   status: string
+  mep_status: string
   notes: string | null
 }
 
@@ -829,7 +830,7 @@ export default function MepDetailPage() {
       const res = await fetch(`/api/mep/approve/${event.id}`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok || json.error) { toast.error('Goedkeuren mislukt: ' + (json.error || res.statusText)); setApprovingEvent(false); return }
-      setEvent((prev) => prev ? { ...prev, status: 'approved' } : prev)
+      setEvent((prev) => prev ? { ...prev, mep_status: 'approved' } : prev)
       setDishes((prev) => prev.map((d) => ({
         ...d, is_ai_suggestion: false,
         components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
@@ -888,13 +889,13 @@ export default function MepDetailPage() {
 
         <div className="flex items-center gap-2 shrink-0">
           <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${
-            event.status === 'approved'
+            event.mep_status === 'approved'
               ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
-              : event.status === 'draft'
+              : event.mep_status === 'draft'
               ? 'bg-[#FDF8F2] text-[#5C4730] border-[#E8D5B5]'
               : 'bg-[#E8A040]/20 text-[#E8A040] border-[#E8A040]/30'
           }`}>
-            {event.status === 'approved' ? 'Goedgekeurd' : event.status === 'draft' ? 'Concept' : event.status}
+            {event.mep_status === 'approved' ? 'Goedgekeurd' : event.mep_status === 'draft' ? 'Concept' : event.mep_status}
           </span>
 
           <a href={`/api/mep/pdf/${id}`} target="_blank" rel="noopener noreferrer"
@@ -903,7 +904,7 @@ export default function MepDetailPage() {
             <FileDown className="w-3.5 h-3.5" />PDF
           </a>
 
-          {event.status !== 'approved' && (
+          {event.mep_status !== 'approved' && (
             confirmApproveEvent ? (
               <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5">
                 <span className="text-xs text-emerald-700 font-medium">Zeker goedkeuren?</span>
@@ -1008,7 +1009,7 @@ export default function MepDetailPage() {
             <strong>{totalAI} AI-suggestie{totalAI !== 1 ? 's' : ''}</strong> wachten op goedkeuring.
             Oranje items zijn nog niet geverifieerd.
           </p>
-          {event.status !== 'approved' && (
+          {event.mep_status !== 'approved' && (
             <button onClick={() => setConfirmApproveEvent(true)}
               className="text-xs text-emerald-700 font-semibold hover:underline shrink-0">
               Alles goedkeuren →
