@@ -41,7 +41,7 @@ export default function LandingPage() {
               <span style={{ color: '#C4703A' }}>De operatie die<br />niet meer faalt.</span>
             </h1>
             <p className="text-xl md:text-2xl leading-relaxed mb-10 max-w-2xl" style={{ color: '#9E7E60' }}>
-              My AI Sous Chef is het culinaire platform voor eventcateraars: AI-menu's die jouw stijl ademen, food cost die klopt, en een operatie die schaalt zonder chaos.
+              Het platform voor eventchefs dat de administratie van je overneemt — zodat je meer tijd hebt voor wat je écht deed voor dit allemaal: koken. En dat leert van elk event, elke keuze, elke feedback.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all shadow-lg hover:shadow-xl" style={{ background: '#E8A040', color: '#2C1810' }}>
@@ -69,26 +69,29 @@ export default function LandingPage() {
           <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#C4703A' }}>
             Uitdagingen
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-16" style={{ color: '#2C1810', fontFamily: 'Georgia, serif' }}>
-            Waar het in de keuken<br />vaak misgaat
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: '#2C1810', fontFamily: 'Georgia, serif' }}>
+            De administratie trekt je<br />weg uit de keuken
           </h2>
+          <p className="text-lg mb-16 max-w-2xl" style={{ color: '#9E7E60' }}>
+            Elke chef begon met een passie voor koken. Niet voor spreadsheets, notitieblokken en dubbel ingeven. Toch wordt steeds meer tijd opgeslokt door de operatie — en steeds minder door het vak zelf.
+          </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                title: 'Dubbel werk',
-                body: 'Menus en MEP telkens opnieuw aanpassen bij wijzigingen in aantal personen of gerechten.'
+                title: 'Je voeling met de keuken raakt weg',
+                body: 'Andere tools zijn statisch en vragen constant handmatige updates. Hoe meer je groeit, hoe meer tijd je verliest aan administratie in plaats van aan koken.'
               },
               {
                 title: 'Food cost op gevoel',
-                body: 'Inkoop zonder real-time leveranciersprijzen. Marges die je pas achteraf kent.'
+                body: 'Inkoop zonder real-time leveranciersprijzen. Marges die je pas achteraf kent — als het al te laat is.'
               },
               {
-                title: 'Verloren recepten',
-                body: 'Keukens die draaien op persoonlijke kennis. Verdwijnt een chef, verdwijnt de kennis.'
+                title: 'Kennis zit in hoofden, niet in systemen',
+                body: 'Keukens die draaien op persoonlijke kennis. Verdwijnt een chef, verdwijnt de opgebouwde recepten en werkwijze.'
               },
               {
-                title: 'Menu zonder identiteit',
-                body: 'Snel een menu samenstellen dat niet jouw stijl ademt en de klant niet raakt.'
+                title: 'Menu zonder jouw identiteit',
+                body: 'Snel een menu samenstellen dat niet jouw handtekening draagt — en de klant dat ook voelt.'
               }
             ].map((item) => (
               <div key={item.title} className="p-6 rounded-2xl border" style={{ background: 'white', borderColor: '#E8D5B5' }}>
@@ -102,7 +105,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-12 p-6 rounded-2xl" style={{ background: '#F2E8D5', borderLeft: '4px solid #C4703A' }}>
             <p className="text-lg font-medium" style={{ color: '#2C1810' }}>
-              Naarmate je meer events draait, worden dit geen incidenten meer — maar structureel verlies.
+              Waar andere tools je meer aan je scherm kluisteren, is ons doel het omgekeerde: <strong>minder administratie, meer keuken.</strong>
             </p>
           </div>
         </div>
@@ -117,13 +120,16 @@ export default function LandingPage() {
                 Het onderliggende probleem
               </p>
               <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight" style={{ color: '#FDF8F2', fontFamily: 'Georgia, serif' }}>
-                Wat misgaat op het event,<br />begint weken eerder
+                Elke minuut die je<br />spendeert aan admin,<br />is een minuut minder<br />in de keuken
               </h2>
               <p className="text-lg leading-relaxed mb-6" style={{ color: '#9E7E60' }}>
-                In de keuken stapelen kleine beslissingen zich op. Een menu dat niet uitgerekend is. Een bestelling op basis van geheugen. Een MEP die in een notitie staat, niet in een systeem.
+                Andere chefs gebruiken statische tools die meer werk vragen naarmate je groeit: bestanden kopiëren, Excel aanpassen, MEP's herschrijven bij elke wijziging. De administratie wordt een tweede job.
               </p>
-              <p className="text-lg leading-relaxed" style={{ color: '#9E7E60' }}>
-                Als er dan iets verandert — 20 gasten meer, een allergie, een laatste-minuut wijziging — blijft alleen improvisatie over.
+              <p className="text-lg leading-relaxed mb-6" style={{ color: '#9E7E60' }}>
+                My AI Sous Chef werkt omgekeerd. Één wijziging — meer gasten, een ander gerecht — en alles past zich automatisch aan. Zodat jij je energie stopt in wat je het beste kan: koken.
+              </p>
+              <p className="text-base font-semibold" style={{ color: '#E8A040' }}>
+                Minder scherm. Meer keuken. Blijven groeien in je vak.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
