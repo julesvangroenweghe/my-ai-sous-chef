@@ -13,6 +13,8 @@ import {
   ChevronUp, ChevronDown, GripVertical,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Reorder, useDragControls } from 'framer-motion'
+import type { DragControls } from 'framer-motion'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -330,16 +332,13 @@ function InlineComponentEdit({
 // ─── ComponentRow ─────────────────────────────────────────────────────────────
 
 function ComponentRow({
-  component, onApprove, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast,
+  component, onApprove, onEdit, onDelete, dragControls,
 }: {
   component: MepComponent
   onApprove: () => void
   onEdit: (updates: Partial<MepComponent>) => Promise<void>
   onDelete: () => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  isFirst: boolean
-  isLast: boolean
+  dragControls?: DragControls
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -355,18 +354,13 @@ function ComponentRow({
         isAI ? 'border-l-2 border-orange-400/60 pl-2 ml-0' : ''
       }`}
     >
-      {/* Reorder arrows */}
-      <div className="flex flex-col items-center opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity shrink-0 -mr-0.5 mt-0.5">
-        <button onClick={onMoveUp} disabled={isFirst}
-          className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
-          title="Omhoog">
-          <ChevronUp className="w-3 h-3" />
-        </button>
-        <button onClick={onMoveDown} disabled={isLast}
-          className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
-          title="Omlaag">
-          <ChevronDown className="w-3 h-3" />
-        </button>
+      {/* Drag handle */}
+      <div
+        onPointerDown={(e) => { if (dragControls) { e.preventDefault(); dragControls.start(e) } }}
+        className="flex items-center opacity-30 group-hover:opacity-70 hover:!opacity-100 transition-opacity shrink-0 mt-1 cursor-grab active:cursor-grabbing touch-none select-none"
+        title="Versleep om te herschikken"
+      >
+        <GripVertical className="w-3.5 h-3.5 text-[#B8997A]" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -429,10 +423,30 @@ function ComponentRow({
 
 // ─── DishCard ─────────────────────────────────────────────────────────────────
 
+function DraggableComponentItem({
+  compId, children,
+}: {
+  compId: string
+  children: (controls: DragControls) => React.ReactNode
+}) {
+  const controls = useDragControls()
+  return (
+    <Reorder.Item
+      value={compId}
+      dragListener={false}
+      dragControls={controls}
+      className="list-none"
+      whileDrag={{ scale: 1.02, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 50, background: 'rgba(253,248,242,0.95)', borderRadius: '8px' }}
+    >
+      {children(controls)}
+    </Reorder.Item>
+  )
+}
+
 function DishCard({
   dish, onApproveComponent, onUpdateComponent, onDeleteComponent,
   onApproveDish, onAddComponent, onEditTitle,
-  onMoveComponentInDish, onMoveDishUp, onMoveDishDown, isFirstDish, isLastDish,
+  onReorderComponents, onMoveDishUp, onMoveDishDown, isFirstDish, isLastDish,
   editingComponentId, setEditingComponentId,
   existingGroups,
 }: {
@@ -443,7 +457,7 @@ function DishCard({
   onApproveDish: (dishId: string) => void
   onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }) => Promise<void>
   onEditTitle: (dishId: string, newTitle: string) => Promise<void>
-  onMoveComponentInDish: (dishId: string, compId: string, direction: 'up' | 'down') => void
+  onReorderComponents: (dishId: string, newOrder: string[]) => void
   onMoveDishUp: () => void
   onMoveDishDown: () => void
   isFirstDish: boolean
@@ -467,16 +481,8 @@ function DishCard({
   }
 
   const sorted = [...dish.components].sort((a, b) => a.sort_order - b.sort_order)
-  const ungrouped: MepComponent[] = sorted.filter((c) => !c.component_group)
-  const groupsMap: Record<string, MepComponent[]> = {}
-  for (const c of sorted.filter((c) => c.component_group)) {
-    const g = c.component_group!
-    if (!groupsMap[g]) groupsMap[g] = []
-    groupsMap[g].push(c)
-  }
-
-  // Flat list for determining isFirst/isLast per component
-  const allComps = sorted
+  const sortedIds = sorted.map((c) => c.id)
+  const compMap = Object.fromEntries(sorted.map((c) => [c.id, c]))
 
   return (
     <div className={`bg-white/70 border rounded-xl overflow-hidden transition-all ${
@@ -559,61 +565,59 @@ function DishCard({
         </div>
       )}
 
-      <div className="px-2 py-1 space-y-0">
-        {ungrouped.map((c) => {
-          if (editingComponentId === c.id) {
-            return (
-              <InlineComponentEdit key={c.id} component={c} existingGroups={existingGroups}
-                onSave={async (updates) => { await onUpdateComponent(c.id, updates); setEditingComponentId(null) }}
-                onCancel={() => setEditingComponentId(null)} />
-            )
-          }
-          const idx = allComps.findIndex((x) => x.id === c.id)
-          return (
-            <ComponentRow key={c.id} component={c}
-              onApprove={() => onApproveComponent(c.id)}
-              onEdit={async () => setEditingComponentId(c.id)}
-              onDelete={() => onDeleteComponent(c.id)}
-              onMoveUp={() => onMoveComponentInDish(dish.id, c.id, 'up')}
-              onMoveDown={() => onMoveComponentInDish(dish.id, c.id, 'down')}
-              isFirst={idx === 0}
-              isLast={idx === allComps.length - 1}
-            />
-          )
-        })}
+      <div className="px-2 py-1">
+        <Reorder.Group
+          axis="y"
+          values={sortedIds}
+          onReorder={(newOrder) => onReorderComponents(dish.id, newOrder)}
+          className="space-y-0"
+        >
+          {sortedIds.map((id, i) => {
+            const c = compMap[id]
+            if (!c) return null
+            const prevComp = i > 0 ? compMap[sortedIds[i - 1]] : null
+            const showGroupHeader = !!c.component_group && c.component_group !== prevComp?.component_group
 
-        {Object.entries(groupsMap).map(([groupName, components]) => (
-          <div key={groupName} className="mt-2.5">
-            <div className="flex items-center gap-2 px-2 mb-1">
-              <span className="h-px flex-1 bg-[#E8D5B5]/70" />
-              <span className="text-[10px] font-semibold text-[#B8997A] uppercase tracking-wider">
-                {groupName}
-              </span>
-              <span className="h-px flex-1 bg-[#E8D5B5]/70" />
-            </div>
-            {components.map((c) => {
-              if (editingComponentId === c.id) {
-                return (
-                  <InlineComponentEdit key={c.id} component={c} existingGroups={existingGroups}
+            if (editingComponentId === c.id) {
+              return (
+                <Reorder.Item key={c.id} value={c.id} dragListener={false} className="list-none">
+                  {showGroupHeader && (
+                    <div className="flex items-center gap-2 px-2 mb-1 mt-2.5">
+                      <span className="h-px flex-1 bg-[#E8D5B5]/70" />
+                      <span className="text-[10px] font-semibold text-[#B8997A] uppercase tracking-wider">{c.component_group}</span>
+                      <span className="h-px flex-1 bg-[#E8D5B5]/70" />
+                    </div>
+                  )}
+                  <InlineComponentEdit component={c} existingGroups={existingGroups}
                     onSave={async (updates) => { await onUpdateComponent(c.id, updates); setEditingComponentId(null) }}
                     onCancel={() => setEditingComponentId(null)} />
-                )
-              }
-              const idx = allComps.findIndex((x) => x.id === c.id)
-              return (
-                <ComponentRow key={c.id} component={c}
-                  onApprove={() => onApproveComponent(c.id)}
-                  onEdit={async () => setEditingComponentId(c.id)}
-                  onDelete={() => onDeleteComponent(c.id)}
-                  onMoveUp={() => onMoveComponentInDish(dish.id, c.id, 'up')}
-                  onMoveDown={() => onMoveComponentInDish(dish.id, c.id, 'down')}
-                  isFirst={idx === 0}
-                  isLast={idx === allComps.length - 1}
-                />
+                </Reorder.Item>
               )
-            })}
-          </div>
-        ))}
+            }
+
+            return (
+              <DraggableComponentItem key={c.id} compId={c.id}>
+                {(controls) => (
+                  <>
+                    {showGroupHeader && (
+                      <div className="flex items-center gap-2 px-2 mb-1 mt-2.5">
+                        <span className="h-px flex-1 bg-[#E8D5B5]/70" />
+                        <span className="text-[10px] font-semibold text-[#B8997A] uppercase tracking-wider">{c.component_group}</span>
+                        <span className="h-px flex-1 bg-[#E8D5B5]/70" />
+                      </div>
+                    )}
+                    <ComponentRow component={c}
+                      onApprove={() => onApproveComponent(c.id)}
+                      onEdit={async () => setEditingComponentId(c.id)}
+                      onDelete={() => onDeleteComponent(c.id)}
+                      dragControls={controls}
+                    />
+                  </>
+                )}
+              </DraggableComponentItem>
+            )
+          })}
+        </Reorder.Group>
 
         {showAddForm ? (
           <AddComponentForm existingGroups={existingGroups}
@@ -752,41 +756,27 @@ export default function MepDetailPage() {
     toast.success('Titel bijgewerkt ✓')
   }
 
-  // ── Reorder component within dish ──
-  const handleMoveComponentInDish = async (dishId: string, compId: string, direction: 'up' | 'down') => {
-    const dish = dishes.find((d) => d.id === dishId)
-    if (!dish) return
-    const sorted = [...dish.components].sort((a, b) => a.sort_order - b.sort_order)
-    const idx = sorted.findIndex((c) => c.id === compId)
-    if (idx < 0) return
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (swapIdx < 0 || swapIdx >= sorted.length) return
-
-    const a = sorted[idx]
-    const b = sorted[swapIdx]
-
-    // Swap sort_orders
-    const aNewOrder = b.sort_order
-    const bNewOrder = a.sort_order
-
-    // Optimistic update
+  // ── Reorder components within dish (drag & drop) ──
+  const handleReorderComponents = async (dishId: string, newOrder: string[]) => {
+    // Optimistic update — assign new sort_orders based on position
     setDishes((prev) => prev.map((d) => {
       if (d.id !== dishId) return d
+      const compMap = new Map(d.components.map((c) => [c.id, c]))
       return {
         ...d,
-        components: d.components.map((c) => {
-          if (c.id === a.id) return { ...c, sort_order: aNewOrder }
-          if (c.id === b.id) return { ...c, sort_order: bNewOrder }
-          return c
-        }),
+        components: newOrder.map((id, idx) => ({
+          ...compMap.get(id)!,
+          sort_order: idx,
+        })),
       }
     }))
 
-    // Persist
-    await Promise.all([
-      supabase.from('mep_components').update({ sort_order: aNewOrder }).eq('id', a.id),
-      supabase.from('mep_components').update({ sort_order: bNewOrder }).eq('id', b.id),
-    ])
+    // Persist all new sort_orders
+    await Promise.all(
+      newOrder.map((id, idx) =>
+        supabase.from('mep_components').update({ sort_order: idx }).eq('id', id)
+      )
+    )
   }
 
   // ── Reorder dish within category ──
@@ -1051,7 +1041,7 @@ export default function MepDetailPage() {
                       onApproveDish={handleApproveDish}
                       onAddComponent={handleAddComponent}
                       onEditTitle={handleEditDishTitle}
-                      onMoveComponentInDish={handleMoveComponentInDish}
+                      onReorderComponents={handleReorderComponents}
                       onMoveDishUp={() => handleMoveDish(dish.id, 'up')}
                       onMoveDishDown={() => handleMoveDish(dish.id, 'down')}
                       isFirstDish={di === 0}
