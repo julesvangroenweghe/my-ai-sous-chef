@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, ArrowRight, CalendarDays, MapPin, Users, Euro, Clock,
   Plus, Trash2, ClipboardList, ChefHat, Loader2,
-  X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileText, Check, Sparkles
+  X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileText, Check, Sparkles, RefreshCw
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
@@ -149,6 +149,11 @@ export default function EventDetailPage() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
+  // Ripple effect state
+  const [rippleAvailable, setRippleAvailable] = useState(false)
+  const [rippleLoading, setRippleLoading] = useState(false)
+  const [rippleResult, setRippleResult] = useState<{ mep_dishes_updated: number; menus_updated: number } | null>(null)
+
   const fetchEvent = useCallback(async () => {
     const { data } = await supabase
       .from('events')
@@ -224,6 +229,10 @@ export default function EventDetailPage() {
   const handleSaveEdit = async () => {
     if (!event || !editForm.name || !editForm.event_date) return
     setSaving(true)
+
+    const oldNumPersons = event.num_persons
+    const newNumPersons = editForm.num_persons ? parseInt(editForm.num_persons) : null
+
     const updates: Record<string, any> = {
       name: editForm.name.trim(),
       event_date: editForm.event_date,
@@ -256,7 +265,43 @@ export default function EventDetailPage() {
         setShowMepBanner(true)
       }
 
+      // Check if num_persons changed and if MEP/menus exist → show ripple banner
+      if (oldNumPersons && newNumPersons && oldNumPersons !== newNumPersons) {
+        const { count: mepCount } = await supabase
+          .from('mep_dishes')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_id', event.id)
+        const { count: menuCount } = await supabase
+          .from('saved_menus')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_id', event.id)
+        if ((mepCount || 0) > 0 || (menuCount || 0) > 0) {
+          setRippleAvailable(true)
+          setRippleResult(null)
+        }
+      }
+
       setTimeout(() => setSaveSuccess(false), 2000)
+    }
+  }
+
+  const handleRipple = async () => {
+    if (!event?.num_persons) return
+    setRippleLoading(true)
+    try {
+      const res = await fetch(`/api/events/${eventId}/ripple-update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ num_persons: event.num_persons }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setRippleResult({ mep_dishes_updated: data.mep_dishes_updated, menus_updated: data.menus_updated })
+        setRippleAvailable(false)
+        setMepRefreshKey(k => k + 1)
+      }
+    } finally {
+      setRippleLoading(false)
     }
   }
 
@@ -578,6 +623,45 @@ export default function EventDetailPage() {
               <Plus className="w-3 h-3" /> Voorstel aanmaken
             </Link>
           )}
+        </div>
+      )}
+
+      {/* Ripple Effect Banner — shown when num_persons changed and MEP/menus exist */}
+      {rippleAvailable && (
+        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <RefreshCw className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900">Aantal personen gewijzigd</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Wil je MEP-hoeveelheden en food cost automatisch herberekenen?
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleRipple} disabled={rippleLoading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-60">
+              {rippleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              {rippleLoading ? 'Herberekenen...' : 'Herbereken alles'}
+            </button>
+            <button onClick={() => setRippleAvailable(false)} className="p-2 text-amber-400 hover:text-amber-600 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Ripple Result Banner */}
+      {rippleResult && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+          <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p className="flex-1 text-sm text-emerald-800">
+            <span className="font-semibold">{rippleResult.mep_dishes_updated} MEP-gerechten</span> en{' '}
+            <span className="font-semibold">{rippleResult.menus_updated} menu{rippleResult.menus_updated !== 1 ? "'s" : ''}</span> bijgewerkt.
+          </p>
+          <button onClick={() => setRippleResult(null)} className="p-1.5 text-emerald-400 hover:text-emerald-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
