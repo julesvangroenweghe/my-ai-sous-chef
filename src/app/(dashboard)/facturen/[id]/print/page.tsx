@@ -14,6 +14,9 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
     description: string; quantity: number; unit_price: number; vat_rate: number; total: number
   }>
 
+  const numPersons = invoice.num_persons ? Number(invoice.num_persons) : null
+  const perPersonPrice = numPersons && numPersons > 0 ? Number(invoice.total_amount) / numPersons : null
+
   return (
     <>
       <style>{`
@@ -64,6 +67,12 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
                 <span>Datum: {new Date(invoice.invoice_date).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 <br />
                 <span>Vervaldatum: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span>
+                {numPersons && (
+                  <>
+                    <br />
+                    <span>{numPersons} personen</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -148,9 +157,9 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
             </tbody>
           </table>
 
-          {/* Totals */}
+          {/* Totals + per persoon */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 44 }}>
-            <div style={{ width: 300 }}>
+            <div style={{ width: 320 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #E8D5B5', fontSize: 14 }}>
                 <span style={{ color: '#9E7E60' }}>Subtotaal (excl. BTW)</span>
                 <span style={{ color: '#2C1810', fontFamily: 'monospace' }}>€ {Number(invoice.subtotal).toFixed(2)}</span>
@@ -159,10 +168,27 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
                 <span style={{ color: '#9E7E60' }}>BTW</span>
                 <span style={{ color: '#2C1810', fontFamily: 'monospace' }}>€ {Number(invoice.vat_amount).toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', fontSize: 20, fontWeight: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', fontSize: 20, fontWeight: 700, borderBottom: perPersonPrice ? '1px solid #E8D5B5' : 'none' }}>
                 <span style={{ color: '#2C1810' }}>Totaal (incl. BTW)</span>
                 <span style={{ color: '#C4703A', fontFamily: 'monospace' }}>€ {Number(invoice.total_amount).toFixed(2)}</span>
               </div>
+              {perPersonPrice && (
+                <div style={{ background: '#FEF3E2', border: '1px solid #F6D860', borderRadius: 8, padding: '10px 14px', marginTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        Per persoon
+                      </div>
+                      <div style={{ fontSize: 10, color: '#B45309', marginTop: 2 }}>
+                        Totaal ÷ {numPersons} personen — incl. alle forfaits &amp; vaste kosten
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace' }}>
+                      € {perPersonPrice.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

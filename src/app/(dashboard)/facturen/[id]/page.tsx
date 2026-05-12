@@ -474,11 +474,20 @@ export default function FactuurDetailPage() {
                     <span style={{ color: '#C4703A', fontFamily: 'monospace' }}>€ {totals.total_amount.toFixed(2)}</span>
                   </div>
                   {numPersons && parseInt(numPersons) > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, borderTop: '1px dashed #E8D5B5', marginTop: 4 }}>
-                      <span style={{ color: '#9E7E60' }}>Per persoon ({numPersons}p)</span>
-                      <span style={{ color: '#9E7E60', fontFamily: 'monospace' }}>
-                        € {(totals.total_amount / parseInt(numPersons)).toFixed(2)}
-                      </span>
+                    <div style={{ marginTop: 8, background: '#FEF3E2', border: '1px solid #F6D860', borderRadius: 8, padding: '8px 12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <div>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                            Per persoon
+                          </span>
+                          <div style={{ fontSize: 10, color: '#B45309', marginTop: 1 }}>
+                            incl. forfaits, personeel &amp; diversen
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 18, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace' }}>
+                          € {(totals.total_amount / parseInt(numPersons)).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -570,12 +579,15 @@ export default function FactuurDetailPage() {
                 </span>
               </div>
               {numPersons && parseInt(numPersons) > 0 && (
-                <div style={{ background: '#FEF3E2', border: '1px solid #F6D860', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div style={{ background: '#FEF3E2', border: '1px solid #F6D860', borderRadius: 8, padding: '10px 14px' }}>
                   <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 2 }}>
                     Per persoon
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace', lineHeight: 1.2 }}>
                     € {(totals.total_amount / parseInt(numPersons)).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: 10, color: '#B45309', marginTop: 4 }}>
+                    Totaal ÷ {numPersons} personen — incl. alle forfaits &amp; vaste kosten
                   </div>
                 </div>
               )}
