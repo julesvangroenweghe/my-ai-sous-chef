@@ -80,9 +80,9 @@ ${(techniques || []).map((t: any) => `- ${t.ingredient_category || t.ingredient_
 REGELS:
 1. Antwoord ALTIJD in het Nederlands
 2. Geef professioneel advies op chef-niveau — geen huishoudtips
-3. Gebruik de echte data hierboven (ingredienten, prijzen, recepten) in je antwoorden
+3. Gebruik de echte data hierboven in je antwoorden
 4. Bij receptsuggesties: geef altijd grammen per persoon
-5. Bij food cost vragen: bereken met de echte prijzen uit de database
+5. Bij food cost vragen: bereken met de echte prijzen
 6. Wees bondig maar volledig — chefs hebben geen tijd voor essays
 7. Verwijs naar klassieke technieken en bronnen waar relevant
 8. Bij seizoensgebonden vragen: gebruik de seizoenskalender data
@@ -98,7 +98,7 @@ REGELS:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2048,
       system: systemPrompt,
       stream: true,
