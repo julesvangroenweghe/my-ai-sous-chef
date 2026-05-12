@@ -10,7 +10,16 @@ import { useState, useEffect } from 'react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid', sub: null },
-  { href: '/events', label: 'Events & Planning', icon: 'calendar', sub: 'Voorstellen & offertes' },
+  {
+    href: '/events',
+    label: 'Events & Planning',
+    icon: 'calendar',
+    sub: 'Voorstellen & offertes',
+    children: [
+      { href: '/events', label: 'Events', icon: 'calendar' },
+      { href: '/paklijsten', label: 'Paklijsten', icon: 'checklist' },
+    ],
+  },
   {
     href: '/mep',
     label: 'MEP',
@@ -108,6 +117,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     'recipe-db': <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
     store: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
     bell: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+    checklist: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
   }
 
   return icons[type] || icons['grid']

@@ -93,7 +93,7 @@ const eventTypeLabels: Record<string, string> = {
   daily_service: 'Dagdienst',
 }
 
-type TabId = 'menu' | 'mep' | 'shopping' | 'voorstel'
+type TabId = 'menu' | 'mep' | 'shopping' | 'voorstel' | 'paklijst'
 
 interface EditForm {
   name: string
@@ -335,6 +335,7 @@ export default function EventDetailPage() {
     { id: 'mep' as TabId, label: 'MEP Plan', icon: ClipboardList },
     { id: 'shopping' as TabId, label: 'Boodschappen', icon: ShoppingCart },
     { id: 'voorstel' as TabId, label: 'Voorstellen', icon: FileText },
+    { id: 'paklijst' as TabId, label: 'Paklijst', icon: Package },
   ]
 
   return (
@@ -737,6 +738,23 @@ export default function EventDetailPage() {
           <p className="text-[#9E7E60] text-sm mb-5">Maak en beheer menu voorstellen voor dit event. Volg revisies en klantfeedback op.</p>
           <Link href={`/events/${eventId}/voorstel`} className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-semibold text-sm rounded-xl transition-all">
             <FileText className="w-4 h-4" /> Voorstellen beheren
+          </Link>
+        </div>
+      )}
+
+      {activeTab === 'paklijst' && (
+        <div className="bg-white border border-[#E8D5B5] rounded-2xl p-8 text-center">
+          <Package className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
+          <h3 className="text-lg font-display font-semibold text-[#2C1810] mb-2">Paklijst</h3>
+          <p className="text-[#9E7E60] text-sm mb-5">
+            Beheer de volledige paklijst voor dit event op basis van de SIR Catering templates.
+            Controleer per categorie of alles meegaat: keuken, materiaal, mobiele keuken en meer.
+          </p>
+          <Link
+            href={`/events/${eventId}/paklijst`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition-all"
+          >
+            <Package className="w-4 h-4" /> Paklijst openen
           </Link>
         </div>
       )}
