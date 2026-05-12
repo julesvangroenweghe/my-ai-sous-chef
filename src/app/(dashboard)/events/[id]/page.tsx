@@ -87,7 +87,7 @@ const eventTypeLabels: Record<string, string> = {
   walking_dinner: 'Walking Dinner',
   buffet: 'Buffet',
   sit_down: 'Sit-down Diner',
-  cocktail: 'Cocktail Dînatoire',
+  cocktail: 'Cocktail Dînatoîre',
   brunch: 'Brunch',
   tasting: 'Tasting Menu',
   daily_service: 'Dagdienst',
@@ -114,6 +114,13 @@ interface MepStatus {
   mepDishCount: number
   hasProposal: boolean
   proposals: { id: string; name: string; revision_number: number; proposal_status: string }[]
+}
+
+interface RippleResult {
+  success: boolean
+  updated_mep_items: number
+  old_num_persons: number
+  new_num_persons: number
 }
 
 export default function EventDetailPage() {
@@ -148,6 +155,8 @@ export default function EventDetailPage() {
   })
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [rippleResult, setRippleResult] = useState<RippleResult | null>(null)
+  const [originalNumPersons, setOriginalNumPersons] = useState<number | null>(null)
 
   const fetchEvent = useCallback(async () => {
     const { data } = await supabase
@@ -257,6 +266,25 @@ export default function EventDetailPage() {
       }
 
       setTimeout(() => setSaveSuccess(false), 2000)
+
+      // Ripple Effect: herbereken MEP als num_persons gewijzigd is
+      const newNumPersonsVal = editForm.num_persons ? parseInt(editForm.num_persons) : null
+      if (newNumPersonsVal && originalNumPersons !== null && newNumPersonsVal !== originalNumPersons) {
+        try {
+          const rippleRes = await fetch(`/api/events/${eventId}/ripple`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ num_persons: newNumPersonsVal })
+          })
+          const rippleData = await rippleRes.json()
+          if (rippleData.success) {
+            setRippleResult(rippleData)
+            setTimeout(() => setRippleResult(null), 8000)
+          }
+        } catch (e) {
+          // Ripple mislukt — geen blocker voor de rest
+        }
+      }
     }
   }
 
@@ -462,6 +490,17 @@ export default function EventDetailPage() {
         </div>
       )}
 
+      {/* Ripple Effect Banner */}
+      {rippleResult && (
+        <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: '#FEF3E2', border: '1px solid #E8A040' }}>
+          <div className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: '#E8A040' }} />
+          <span className="text-sm font-medium flex-1" style={{ color: '#2C1810' }}>
+            Ripple Effect — {rippleResult.old_num_persons} → {rippleResult.new_num_persons} personen: {rippleResult.updated_mep_items} MEP-items automatisch herberekend
+          </span>
+          <button onClick={() => setRippleResult(null)} className="text-xs ml-2 shrink-0" style={{ color: '#9E7E60' }}>✕</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start gap-4">
         <Link href="/events" className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all mt-1">
@@ -510,7 +549,7 @@ export default function EventDetailPage() {
             )}
           </div>
         </div>
-        <button onClick={() => setShowEditModal(true)}
+        <button onClick={() => { setShowEditModal(true); setOriginalNumPersons(event.num_persons ?? null) }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] hover:border-amber-300 transition-all shrink-0 mt-1">
           <Edit2 className="w-4 h-4 text-amber-600" />
           Bewerken
