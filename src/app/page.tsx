@@ -178,7 +178,7 @@ export default function LandingPage() {
           {/* Feature callouts */}
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { title: 'AI Menu in minuten', body: 'Importeer de klantbrief, kies je stijl, en My AI Sous Chef genereert een volledig menu dat jouw DNA ademt — met seizoensproducten, food cost target en classieke referenties.' },
+              { title: 'AI Menu in minuten', body: 'Importeer de klantbrief — de AI leest context, budget en wensen, en genereert een volledig menu vanuit jouw receptenlibrary, jouw LEGENDE-gerechten en jouw culinaire handtekening. Nooit generiek, altijd herkenbaar van jou.' },
               { title: 'MEP & Inkoop op autopiloot', body: 'Van bevestigd event naar MEP-lijst en bestelorder in één klik. Hoeveelheden zijn exacte berekeningen, niet schattingen.' },
               { title: 'Factuur in één klik', body: 'Van event naar PDF-factuur met klantgegevens, BTW en betaaldeadline. Geen los Word-document meer.' },
               { title: 'Inpakken met zekerheid', body: 'Auto-gegenereerde paklijsten per event-type. Klein dingen missen nooit meer.' },
@@ -207,7 +207,7 @@ export default function LandingPage() {
                 fase: 'Voor het event',
                 kleur: '#E8A040',
                 items: [
-                  'AI menu genereren vanuit klantbrief',
+                  'Menu op maat — brief inlezen, jouw stijl toepassen',
                   'Food cost berekenen per persoon',
                   'Voorstel PDF versturen',
                   'MEP en inkoop automatisch klaarzetten',
@@ -268,7 +268,7 @@ export default function LandingPage() {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: 'AI Menu Generator', body: 'Genereer complete menu\'s vanuit een klantbrief. Jules AI kent jouw stijl, de seizoenen en de food cost target.' },
+              { title: 'AI Menu Generator', body: 'De AI leest de klantbrief en past aan op jouw stijl, jouw gekende recepten en jouw LEGENDE-gerechten. Geen generieke output — elk menu is herkenbaar van jou.' },
               { title: 'Chef DNA & Culinaire Identiteit', body: 'Een lerend profiel dat jouw signatuuringrediënten, technieken en referentiechefs vastlegt. Elk menu ademt jouw identiteit.' },
               { title: 'Auto MEP & Inkoop', body: 'Van event naar keukenlijsten en bestellijsten. Hoeveelheden berekend op basis van menu, aantal personen en diëten.' },
               { title: 'Ripple Effect', body: 'Één wijziging werkt automatisch door naar MEP, food cost, inkoop en paklijst. Nooit meer dubbel werk.' },
