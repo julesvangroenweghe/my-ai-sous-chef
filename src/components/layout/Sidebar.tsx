@@ -65,7 +65,7 @@ const navItems = [
     children: [
       { href: '/menu-engineering', label: 'Menu Engineering', icon: 'menu-eng' },
       { href: '/food-cost', label: 'Food Cost', icon: 'chart' },
-      { href: '/invoices', label: 'Facturen', icon: 'receipt' },
+      { href: '/facturen', label: 'Facturen', icon: 'receipt' },
     ],
   },
   {

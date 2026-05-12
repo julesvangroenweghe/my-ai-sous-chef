@@ -153,6 +153,7 @@ export default function EventDetailPage() {
   const [rippleAvailable, setRippleAvailable] = useState(false)
   const [rippleLoading, setRippleLoading] = useState(false)
   const [rippleResult, setRippleResult] = useState<{ mep_dishes_updated: number; menus_updated: number } | null>(null)
+  const [creatingInvoice, setCreatingInvoice] = useState(false)
 
   const fetchEvent = useCallback(async () => {
     const { data } = await supabase
@@ -302,6 +303,26 @@ export default function EventDetailPage() {
       }
     } finally {
       setRippleLoading(false)
+    }
+  }
+
+  const handleCreateInvoice = async () => {
+    if (!event) return
+    setCreatingInvoice(true)
+    try {
+      const kitchenRes = await fetch('/api/client-invoices')
+      // Get kitchen_id from existing invoices or use event's kitchen_id
+      const res = await fetch('/api/client-invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: event.id }),
+      })
+      const data = await res.json()
+      if (data.id) {
+        router.push(`/facturen/${data.id}`)
+      }
+    } finally {
+      setCreatingInvoice(false)
     }
   }
 
@@ -556,11 +577,20 @@ export default function EventDetailPage() {
             )}
           </div>
         </div>
-        <button onClick={() => setShowEditModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] hover:border-amber-300 transition-all shrink-0 mt-1">
-          <Edit2 className="w-4 h-4 text-amber-600" />
-          Bewerken
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowEditModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] hover:border-amber-300 transition-all shrink-0 mt-1">
+            <Edit2 className="w-4 h-4 text-amber-600" />
+            Bewerken
+          </button>
+          <button
+            onClick={handleCreateInvoice}
+            disabled={creatingInvoice}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-[#5C4730] text-sm font-medium hover:bg-amber-100 transition-all shrink-0 mt-1 disabled:opacity-50">
+            {creatingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-amber-600" /> : <FileText className="w-4 h-4 text-amber-600" />}
+            Factuur aanmaken
+          </button>
+        </div>
       </div>
 
       {/* MEP Auto-link Banner — shown when status just changed to confirmed */}
