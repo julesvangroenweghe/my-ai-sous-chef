@@ -10,6 +10,7 @@ import {
   ArrowLeft, CalendarDays, Users, MapPin, Clock, Euro,
   ChefHat, Loader2, Check, X, Pencil, Trash2,
   AlertTriangle, ShieldCheck, Plus, FileDown,
+  ChevronUp, ChevronDown, GripVertical,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -59,38 +60,17 @@ interface MepComponent {
 // ─── Category ordering ────────────────────────────────────────────────────────
 
 const CAT_ORDER: Record<string, number> = {
-  'dranken': 1,
-  'mocktails': 2,
-  'fingerfood middag': 3,
-  'fingerfood apero': 4,
-  'fingerfood': 5,
-  'fingerbites': 10,
-  'hapjes': 15,
-  'hapje_warm': 15,
-  'amuse': 20,
-  'appetizers': 25,
-  'appetizer': 25,
-  'walking voorgerecht': 28,
-  'walking dinner': 30,
-  'walking': 30,
-  'foodstand': 33,
-  'bbq': 34,
-  'voorgerecht': 35,
-  'buffet': 37,
-  'tussengerecht': 40,
-  'hoofdgerecht': 45,
-  'on the side': 50,
-  'sauzen': 52,
-  'kaas': 60,
-  'dessert middag': 63,
-  'dessert': 65,
-  'dessert avond': 66,
-  'walking dessert': 68,
-  'after snacks': 72,
-  'petits fours': 70,
-  'barista mignardises': 200,
-  'mignardises': 200,
-  'halfabricaat': 250,
+  'dranken': 1, 'mocktails': 2,
+  'fingerfood middag': 3, 'fingerfood apero': 4, 'fingerfood': 5,
+  'fingerbites': 10, 'hapjes': 15, 'hapje_warm': 15,
+  'amuse': 20, 'appetizers': 25, 'appetizer': 25,
+  'walking voorgerecht': 28, 'walking dinner': 30, 'walking': 30,
+  'foodstand': 33, 'bbq': 34, 'voorgerecht': 35, 'buffet': 37,
+  'tussengerecht': 40, 'hoofdgerecht': 45,
+  'on the side': 50, 'sauzen': 52, 'kaas': 60,
+  'dessert middag': 63, 'dessert': 65, 'dessert avond': 66,
+  'walking dessert': 68, 'after snacks': 72, 'petits fours': 70,
+  'barista mignardises': 200, 'mignardises': 200, 'halfabricaat': 250,
 }
 
 function getCategoryOrder(cat: string): number {
@@ -114,38 +94,22 @@ function getCategoryOrder(cat: string): number {
 }
 
 const CAT_LABELS: Record<string, string> = {
-  'DRANKEN': 'Dranken',
-  'MOCKTAILS': 'Mocktails',
+  'DRANKEN': 'Dranken', 'MOCKTAILS': 'Mocktails',
   'FINGERFOOD': 'Fingerfood',
   'FINGERFOOD MIDDAG': 'Fingerfood — Middag receptie',
   'FINGERFOOD APERO': 'Fingerfood — Avond receptie',
-  'FINGERBITES': 'Fingerbites',
-  'HAPJES': 'Hapjes',
-  'HAPJE_WARM': 'Hapjes (warm)',
-  'AMUSE': 'Amuse',
-  'APPETIZERS': 'Appetizers',
-  'WALKING DINNER': 'Walking Dinner',
-  'WALKING VOORGERECHT': 'Walking Voorgerecht',
-  'VOORGERECHT': 'Voorgerecht',
-  'TUSSENGERECHT': 'Tussengerecht',
-  'HOOFDGERECHT': 'Hoofdgerecht',
-  'ON THE SIDE': 'On the Side',
-  'SAUZEN': 'Sauzen',
-  'KAAS': 'Kaasgang',
-  'DESSERT': 'Dessert',
-  'DESSERT MIDDAG': 'Dessert — Middag receptie',
-  'DESSERT AVOND': 'Dessert — Avond receptie',
-  'WALKING DESSERT': 'Walking Dessert',
-  'PETITS FOURS': 'Petits Fours',
-  'MIGNARDISES': 'Mignardises',
-  'BARISTA MIGNARDISES': 'Mignardises (Barista)',
-  'HALFABRICAAT': 'Halfabricaten',
-  'BBQ': 'BBQ',
-  'BUFFET': 'Buffet',
-  'AFTER SNACKS': 'After Snacks',
-  'BROOD & BOTER': 'Brood & Boter',
-  'LATE NIGHT SNACK': 'Late Night Snack',
-  'KIDS': 'Kids',
+  'FINGERBITES': 'Fingerbites', 'HAPJES': 'Hapjes', 'HAPJE_WARM': 'Hapjes (warm)',
+  'AMUSE': 'Amuse', 'APPETIZERS': 'Appetizers',
+  'WALKING DINNER': 'Walking Dinner', 'WALKING VOORGERECHT': 'Walking Voorgerecht',
+  'VOORGERECHT': 'Voorgerecht', 'TUSSENGERECHT': 'Tussengerecht',
+  'HOOFDGERECHT': 'Hoofdgerecht', 'ON THE SIDE': 'On the Side',
+  'SAUZEN': 'Sauzen', 'KAAS': 'Kaasgang',
+  'DESSERT': 'Dessert', 'DESSERT MIDDAG': 'Dessert — Middag receptie',
+  'DESSERT AVOND': 'Dessert — Avond receptie', 'WALKING DESSERT': 'Walking Dessert',
+  'PETITS FOURS': 'Petits Fours', 'MIGNARDISES': 'Mignardises',
+  'BARISTA MIGNARDISES': 'Mignardises (Barista)', 'HALFABRICAAT': 'Halfabricaten',
+  'BBQ': 'BBQ', 'BUFFET': 'Buffet', 'AFTER SNACKS': 'After Snacks',
+  'BROOD & BOTER': 'Brood & Boter', 'LATE NIGHT SNACK': 'Late Night Snack', 'KIDS': 'Kids',
 }
 
 function getCategoryLabel(cat: string): string {
@@ -153,24 +117,17 @@ function getCategoryLabel(cat: string): string {
 }
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
-  walking_dinner: 'Walking Dinner',
-  buffet: 'Buffet',
-  sit_down: 'Diner aan tafel',
-  seated_dinner: 'Diner aan tafel',
-  cocktail: 'Cocktailreceptie',
-  brunch: 'Brunch',
-  tasting: 'Proeverijtje',
-  daily_service: 'Dagdienst',
+  walking_dinner: 'Walking Dinner', buffet: 'Buffet',
+  sit_down: 'Diner aan tafel', seated_dinner: 'Diner aan tafel',
+  cocktail: 'Cocktailreceptie', brunch: 'Brunch',
+  tasting: 'Proeverijtje', daily_service: 'Dagdienst',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('nl-BE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
 }
 
@@ -183,27 +140,31 @@ function formatQty(qty: number | null, unit: string | null): string {
   return `${qty % 1 === 0 ? qty : qty.toFixed(1)} ${u}`.trim()
 }
 
+const COMMON_GROUPS = ['Garnituur', 'Saus', 'Afwerking', 'Bijgerecht', 'Dressing', 'Topping']
+
 // ─── AddComponentForm ─────────────────────────────────────────────────────────
 
 function AddComponentForm({
   onSave,
   onCancel,
+  existingGroups,
 }: {
   onSave: (data: {
-    name: string
-    qty: number | null
-    unit: string | null
-    prep: string | null
-    supplier: string | null
+    name: string; qty: number | null; unit: string | null
+    prep: string | null; supplier: string | null; component_group: string | null
   }) => Promise<void>
   onCancel: () => void
+  existingGroups: string[]
 }) {
   const [name, setName] = useState('')
   const [qty, setQty] = useState('')
   const [unit, setUnit] = useState('')
   const [prep, setPrep] = useState('')
   const [supplier, setSupplier] = useState('')
+  const [group, setGroup] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
   const handleSave = async () => {
     if (!name.trim()) return
@@ -214,6 +175,7 @@ function AddComponentForm({
       unit: unit.trim() || null,
       prep: prep.trim() || null,
       supplier: supplier.trim() || null,
+      component_group: group.trim() || null,
     })
     setSaving(false)
   }
@@ -225,55 +187,50 @@ function AddComponentForm({
         <span className="text-xs font-semibold text-emerald-700">Nieuw component</span>
       </div>
       <input
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        autoFocus value={name} onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
         placeholder="Naam component *"
       />
       <div className="flex gap-2">
-        <input
-          type="number"
-          step="any"
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
+        <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
           className="w-20 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
-          placeholder="Qty"
-        />
-        <input
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
+          placeholder="Qty" />
+        <input value={unit} onChange={(e) => setUnit(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
           className="w-16 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
-          placeholder="Unit"
-        />
-        <input
-          value={prep}
-          onChange={(e) => setPrep(e.target.value)}
+          placeholder="Unit" />
+        <input value={prep} onChange={(e) => setPrep(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
           className="flex-1 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
-          placeholder="Bereiding (optioneel)"
-        />
+          placeholder="Bereiding (optioneel)" />
       </div>
-      <SupplierInput
-        value={supplier}
-        onChange={(val) => { setSupplier(val) }}
-        placeholder="Leverancier (optioneel)"
-      />
+      {/* Sub-groep */}
+      <div className="flex gap-2 items-center">
+        <span className="text-xs text-emerald-600 font-medium shrink-0">Sub-groep:</span>
+        <div className="flex gap-1 flex-wrap flex-1">
+          {allGroups.map((g) => (
+            <button key={g} type="button"
+              onClick={() => setGroup(group === g ? '' : g)}
+              className={`px-2 py-0.5 rounded text-xs transition-all ${
+                group === g
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+              }`}
+            >{g}</button>
+          ))}
+          <input value={allGroups.includes(group) ? '' : group}
+            onChange={(e) => setGroup(e.target.value)}
+            className="w-24 px-2 py-0.5 bg-white border border-emerald-200 rounded text-xs text-[#2C1810] focus:border-emerald-400 focus:outline-none"
+            placeholder="Of typ..." />
+        </div>
+      </div>
+      <SupplierInput value={supplier} onChange={(val) => { setSupplier(val) }} placeholder="Leverancier (optioneel)" />
       <div className="flex gap-2 justify-end pt-1">
-        <button
-          onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors"
-        >
-          Annuleren
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving || !name.trim()}
-          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50"
-        >
+        <button onClick={onCancel} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
+        <button onClick={handleSave} disabled={saving || !name.trim()}
+          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50">
           {saving ? 'Toevoegen...' : '+ Toevoegen'}
         </button>
       </div>
@@ -284,21 +241,23 @@ function AddComponentForm({
 // ─── InlineComponentEdit ──────────────────────────────────────────────────────
 
 function InlineComponentEdit({
-  component,
-  onSave,
-  onCancel,
+  component, onSave, onCancel, existingGroups,
 }: {
   component: MepComponent
   onSave: (updates: Partial<MepComponent>) => Promise<void>
   onCancel: () => void
+  existingGroups: string[]
 }) {
   const [name, setName] = useState(component.component_name)
   const [qty, setQty] = useState(component.quantity?.toString() || '')
   const [unit, setUnit] = useState(component.unit || '')
   const [prep, setPrep] = useState(component.preparation || '')
   const [supplier, setSupplier] = useState(component.supplier || '')
+  const [group, setGroup] = useState(component.component_group || '')
   const [matchedProductId, setMatchedProductId] = useState<string | null>(component.matched_product_id || null)
   const [saving, setSaving] = useState(false)
+
+  const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
   const handleSave = async () => {
     if (!name.trim()) return
@@ -310,67 +269,56 @@ function InlineComponentEdit({
       preparation: prep.trim() || null,
       supplier: supplier.trim() || null,
       matched_product_id: matchedProductId,
+      component_group: group.trim() || null,
     })
     setSaving(false)
   }
 
   return (
     <div className="bg-[#FDF8F2]/80 border border-[#E8A040]/30 rounded-xl p-3 space-y-2 my-1">
-      <input
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
-        placeholder="Naam component"
-      />
+        placeholder="Naam component" />
       <div className="flex gap-2">
-        <input
-          type="number"
-          step="any"
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
+        <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)}
           className="w-20 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
-          placeholder="Qty"
-        />
-        <input
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
+          placeholder="Qty" />
+        <input value={unit} onChange={(e) => setUnit(e.target.value)}
           className="w-16 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
-          placeholder="Unit"
-        />
-        <input
-          value={prep}
-          onChange={(e) => setPrep(e.target.value)}
+          placeholder="Unit" />
+        <input value={prep} onChange={(e) => setPrep(e.target.value)}
           className="flex-1 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
-          placeholder="Bereiding / instructie"
-        />
+          placeholder="Bereiding / instructie" />
       </div>
-      <SupplierInput
-        value={supplier}
-        onChange={(val) => { setSupplier(val); if (val !== supplier) setMatchedProductId(null) }}
-      />
-      <ProductMatcher
-        supplier={supplier}
-        componentName={name}
-        matchedProductId={matchedProductId}
-        onMatch={(id, suggestedUnit) => {
-          setMatchedProductId(id)
-          if (suggestedUnit && !unit) setUnit(suggestedUnit)
-        }}
-      />
+      {/* Sub-groep tags */}
+      <div className="flex gap-2 items-center">
+        <span className="text-xs text-[#9E7E60] font-medium shrink-0">Sub-groep:</span>
+        <div className="flex gap-1 flex-wrap flex-1">
+          {allGroups.map((g) => (
+            <button key={g} type="button"
+              onClick={() => setGroup(group === g ? '' : g)}
+              className={`px-2 py-0.5 rounded text-xs transition-all ${
+                group === g
+                  ? 'bg-[#E8A040] text-white'
+                  : 'bg-[#E8A040]/10 text-[#9E7E60] hover:bg-[#E8A040]/20'
+              }`}
+            >{g}</button>
+          ))}
+          <input value={allGroups.includes(group) ? '' : group}
+            onChange={(e) => setGroup(e.target.value)}
+            className="w-24 px-2 py-0.5 bg-white border border-[#E8D5B5] rounded text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+            placeholder="Of typ..." />
+        </div>
+      </div>
+      <SupplierInput value={supplier}
+        onChange={(val) => { setSupplier(val); if (val !== supplier) setMatchedProductId(null) }} />
+      <ProductMatcher supplier={supplier} componentName={name} matchedProductId={matchedProductId}
+        onMatch={(id, suggestedUnit) => { setMatchedProductId(id); if (suggestedUnit && !unit) setUnit(suggestedUnit) }} />
       <div className="flex gap-2 justify-end pt-1">
-        <button
-          onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors"
-        >
-          Annuleren
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving || !name.trim()}
-          className="px-3 py-1.5 bg-[#E8A040] hover:bg-[#d4922e] text-stone-900 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
-        >
+        <button onClick={onCancel} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
+        <button onClick={handleSave} disabled={saving || !name.trim()}
+          className="px-3 py-1.5 bg-[#E8A040] hover:bg-[#d4922e] text-stone-900 text-xs font-bold rounded-lg transition-all disabled:opacity-50">
           {saving ? 'Opslaan...' : 'Opslaan'}
         </button>
       </div>
@@ -381,39 +329,45 @@ function InlineComponentEdit({
 // ─── ComponentRow ─────────────────────────────────────────────────────────────
 
 function ComponentRow({
-  component,
-  onApprove,
-  onEdit,
-  onDelete,
+  component, onApprove, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast,
 }: {
   component: MepComponent
   onApprove: () => void
   onEdit: (updates: Partial<MepComponent>) => Promise<void>
   onDelete: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  isFirst: boolean
+  isLast: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const isAI = component.is_ai_suggestion
 
   if (editing) {
-    return (
-      <InlineComponentEdit
-        component={component}
-        onSave={async (updates) => {
-          await onEdit(updates)
-          setEditing(false)
-        }}
-        onCancel={() => setEditing(false)}
-      />
-    )
+    return null // handled by parent
   }
 
   return (
     <div
-      className={`group flex items-start gap-2 py-0.5 px-2 rounded hover:bg-[#FDF8F2]/60 transition-all ${
-        isAI ? 'border-l-2 border-orange-400/60 pl-3 ml-0' : ''
+      className={`group flex items-start gap-1 py-0.5 px-1 rounded hover:bg-[#FDF8F2]/60 transition-all ${
+        isAI ? 'border-l-2 border-orange-400/60 pl-2 ml-0' : ''
       }`}
     >
+      {/* Reorder arrows */}
+      <div className="flex flex-col items-center opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity shrink-0 -mr-0.5 mt-0.5">
+        <button onClick={onMoveUp} disabled={isFirst}
+          className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
+          title="Omhoog">
+          <ChevronUp className="w-3 h-3" />
+        </button>
+        <button onClick={onMoveDown} disabled={isLast}
+          className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
+          title="Omlaag">
+          <ChevronDown className="w-3 h-3" />
+        </button>
+      </div>
+
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1 flex-wrap">
           <span className={`text-sm ${isAI ? 'text-orange-700' : 'text-[#2C1810]'}`}>
@@ -435,45 +389,35 @@ function ComponentRow({
         </div>
       </div>
 
-      {/* Action buttons — always slightly visible, full on hover */}
+      {/* Action buttons */}
       <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
         {isAI && (
-          <button
-            onClick={onApprove}
+          <button onClick={onApprove}
             className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"
-            title="Goedkeuren"
-          >
+            title="Goedkeuren">
             <Check className="w-3 h-3" />
           </button>
         )}
-        <button
-          onClick={() => setEditing(true)}
+        <button onClick={() => setEditing(true)}
           className="p-1 rounded text-[#B8997A] hover:text-[#E8A040] hover:bg-[#E8A040]/10 transition-all"
-          title="Aanpassen"
-        >
+          title="Aanpassen">
           <Pencil className="w-3 h-3" />
         </button>
         {confirmDelete ? (
           <>
-            <button
-              onClick={onDelete}
-              className="px-2 py-0.5 rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 text-xs font-medium transition-all"
-            >
+            <button onClick={onDelete}
+              className="px-2 py-0.5 rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 text-xs font-medium transition-all">
               Ja
             </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="p-1 rounded text-[#9E7E60] hover:text-[#3D2810] transition-all"
-            >
+            <button onClick={() => setConfirmDelete(false)}
+              className="p-1 rounded text-[#9E7E60] hover:text-[#3D2810] transition-all">
               <X className="w-3 h-3" />
             </button>
           </>
         ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
+          <button onClick={() => setConfirmDelete(true)}
             className="p-1 rounded text-[#B8997A] hover:text-red-500 hover:bg-red-500/10 transition-all"
-            title="Verwijderen"
-          >
+            title="Verwijderen">
             <Trash2 className="w-3 h-3" />
           </button>
         )}
@@ -485,21 +429,27 @@ function ComponentRow({
 // ─── DishCard ─────────────────────────────────────────────────────────────────
 
 function DishCard({
-  dish,
-  onApproveComponent,
-  onUpdateComponent,
-  onDeleteComponent,
-  onApproveDish,
-  onAddComponent,
-  onEditTitle,
+  dish, onApproveComponent, onUpdateComponent, onDeleteComponent,
+  onApproveDish, onAddComponent, onEditTitle,
+  onMoveComponentInDish, onMoveDishUp, onMoveDishDown, isFirstDish, isLastDish,
+  editingComponentId, setEditingComponentId,
+  existingGroups,
 }: {
   dish: MepDish
   onApproveComponent: (componentId: string) => void
   onUpdateComponent: (componentId: string, updates: Partial<MepComponent>) => Promise<void>
   onDeleteComponent: (componentId: string) => void
   onApproveDish: (dishId: string) => void
-  onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null }) => Promise<void>
+  onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }) => Promise<void>
   onEditTitle: (dishId: string, newTitle: string) => Promise<void>
+  onMoveComponentInDish: (dishId: string, compId: string, direction: 'up' | 'down') => void
+  onMoveDishUp: () => void
+  onMoveDishDown: () => void
+  isFirstDish: boolean
+  isLastDish: boolean
+  editingComponentId: string | null
+  setEditingComponentId: (id: string | null) => void
+  existingGroups: string[]
 }) {
   const isAI = dish.is_ai_suggestion
   const [showAddForm, setShowAddForm] = useState(false)
@@ -508,10 +458,7 @@ function DishCard({
   const [savingTitle, setSavingTitle] = useState(false)
 
   const handleSaveTitle = async () => {
-    if (!titleValue.trim() || titleValue === dish.title) {
-      setEditingTitle(false)
-      return
-    }
+    if (!titleValue.trim() || titleValue === dish.title) { setEditingTitle(false); return }
     setSavingTitle(true)
     await onEditTitle(dish.id, titleValue.trim())
     setSavingTitle(false)
@@ -527,18 +474,31 @@ function DishCard({
     groupsMap[g].push(c)
   }
 
+  // Flat list for determining isFirst/isLast per component
+  const allComps = sorted
+
   return (
-    <div
-      className={`bg-white/70 border rounded-xl overflow-hidden transition-all ${
-        isAI ? 'border-orange-300/60 shadow-orange-100/50 shadow-sm' : 'border-[#E8D5B5]'
-      }`}
-    >
+    <div className={`bg-white/70 border rounded-xl overflow-hidden transition-all ${
+      isAI ? 'border-orange-300/60 shadow-orange-100/50 shadow-sm' : 'border-[#E8D5B5]'
+    }`}>
       {/* Dish header */}
-      <div
-        className={`px-3 py-1.5 flex items-center justify-between gap-3 ${
-          isAI ? 'bg-orange-50/60' : 'bg-[#FDFAF6]/90'
-        }`}
-      >
+      <div className={`px-3 py-1.5 flex items-center justify-between gap-2 ${
+        isAI ? 'bg-orange-50/60' : 'bg-[#FDFAF6]/90'
+      }`}>
+        {/* Dish reorder arrows */}
+        <div className="flex flex-col items-center shrink-0 opacity-40 hover:opacity-100 transition-opacity">
+          <button onClick={onMoveDishUp} disabled={isFirstDish}
+            className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
+            title="Gerecht omhoog">
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={onMoveDishDown} disabled={isLastDish}
+            className="p-0 text-[#B8997A] hover:text-[#2C1810] disabled:opacity-20 disabled:cursor-default transition-colors"
+            title="Gerecht omlaag">
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isAI && (
             <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-md font-semibold shrink-0 border border-orange-200">
@@ -548,46 +508,31 @@ function DishCard({
 
           {editingTitle ? (
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <input
-                autoFocus
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
+              <input autoFocus value={titleValue} onChange={(e) => setTitleValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSaveTitle()
                   if (e.key === 'Escape') { setTitleValue(dish.title); setEditingTitle(false) }
                 }}
-                className="flex-1 px-2 py-0.5 text-sm font-semibold bg-white border border-[#E8A040]/50 rounded focus:outline-none text-[#2C1810]"
-              />
-              <button
-                onClick={handleSaveTitle}
-                disabled={savingTitle}
-                className="p-1 rounded bg-[#E8A040]/20 text-[#E8A040] hover:bg-[#E8A040]/30 transition-all"
-              >
+                className="flex-1 px-2 py-0.5 text-sm font-semibold bg-white border border-[#E8A040]/50 rounded focus:outline-none text-[#2C1810]" />
+              <button onClick={handleSaveTitle} disabled={savingTitle}
+                className="p-1 rounded bg-[#E8A040]/20 text-[#E8A040] hover:bg-[#E8A040]/30 transition-all">
                 {savingTitle ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
               </button>
-              <button
-                onClick={() => { setTitleValue(dish.title); setEditingTitle(false) }}
-                className="p-1 rounded text-[#9E7E60] hover:text-[#3D2810] transition-all"
-              >
+              <button onClick={() => { setTitleValue(dish.title); setEditingTitle(false) }}
+                className="p-1 rounded text-[#9E7E60] hover:text-[#3D2810] transition-all">
                 <X className="w-3 h-3" />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 flex-1 min-w-0 group/title">
-              <h4
-                className={`text-sm font-semibold truncate cursor-pointer hover:underline decoration-dotted ${
-                  isAI ? 'text-orange-700' : 'text-[#2C1810]'
-                }`}
-                onClick={() => setEditingTitle(true)}
-                title="Klik om te bewerken"
-              >
+              <h4 className={`text-sm font-semibold truncate cursor-pointer hover:underline decoration-dotted ${
+                isAI ? 'text-orange-700' : 'text-[#2C1810]'
+              }`} onClick={() => setEditingTitle(true)} title="Klik om te bewerken">
                 {dish.title}
               </h4>
-              <button
-                onClick={() => setEditingTitle(true)}
+              <button onClick={() => setEditingTitle(true)}
                 className="opacity-0 group-hover/title:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] transition-all"
-                title="Titel bewerken"
-              >
+                title="Titel bewerken">
                 <Pencil className="w-3 h-3" />
               </button>
             </div>
@@ -595,18 +540,14 @@ function DishCard({
 
           {dish.timing_label && (
             <span className="text-xs text-[#B8997A] shrink-0 flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {dish.timing_label}
+              <Clock className="w-3 h-3" />{dish.timing_label}
             </span>
           )}
         </div>
         {isAI && (
-          <button
-            onClick={() => onApproveDish(dish.id)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 rounded-lg transition-all font-semibold shrink-0 border border-emerald-500/20"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            Goedkeuren
+          <button onClick={() => onApproveDish(dish.id)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 rounded-lg transition-all font-semibold shrink-0 border border-emerald-500/20">
+            <ShieldCheck className="w-3.5 h-3.5" />Goedkeuren
           </button>
         )}
       </div>
@@ -618,15 +559,27 @@ function DishCard({
       )}
 
       <div className="px-2 py-1 space-y-0">
-        {ungrouped.map((c) => (
-          <ComponentRow
-            key={c.id}
-            component={c}
-            onApprove={() => onApproveComponent(c.id)}
-            onEdit={(updates) => onUpdateComponent(c.id, updates)}
-            onDelete={() => onDeleteComponent(c.id)}
-          />
-        ))}
+        {ungrouped.map((c) => {
+          if (editingComponentId === c.id) {
+            return (
+              <InlineComponentEdit key={c.id} component={c} existingGroups={existingGroups}
+                onSave={async (updates) => { await onUpdateComponent(c.id, updates); setEditingComponentId(null) }}
+                onCancel={() => setEditingComponentId(null)} />
+            )
+          }
+          const idx = allComps.findIndex((x) => x.id === c.id)
+          return (
+            <ComponentRow key={c.id} component={c}
+              onApprove={() => onApproveComponent(c.id)}
+              onEdit={async () => setEditingComponentId(c.id)}
+              onDelete={() => onDeleteComponent(c.id)}
+              onMoveUp={() => onMoveComponentInDish(dish.id, c.id, 'up')}
+              onMoveDown={() => onMoveComponentInDish(dish.id, c.id, 'down')}
+              isFirst={idx === 0}
+              isLast={idx === allComps.length - 1}
+            />
+          )
+        })}
 
         {Object.entries(groupsMap).map(([groupName, components]) => (
           <div key={groupName} className="mt-2.5">
@@ -637,33 +590,38 @@ function DishCard({
               </span>
               <span className="h-px flex-1 bg-[#E8D5B5]/70" />
             </div>
-            {components.map((c) => (
-              <ComponentRow
-                key={c.id}
-                component={c}
-                onApprove={() => onApproveComponent(c.id)}
-                onEdit={(updates) => onUpdateComponent(c.id, updates)}
-                onDelete={() => onDeleteComponent(c.id)}
-              />
-            ))}
+            {components.map((c) => {
+              if (editingComponentId === c.id) {
+                return (
+                  <InlineComponentEdit key={c.id} component={c} existingGroups={existingGroups}
+                    onSave={async (updates) => { await onUpdateComponent(c.id, updates); setEditingComponentId(null) }}
+                    onCancel={() => setEditingComponentId(null)} />
+                )
+              }
+              const idx = allComps.findIndex((x) => x.id === c.id)
+              return (
+                <ComponentRow key={c.id} component={c}
+                  onApprove={() => onApproveComponent(c.id)}
+                  onEdit={async () => setEditingComponentId(c.id)}
+                  onDelete={() => onDeleteComponent(c.id)}
+                  onMoveUp={() => onMoveComponentInDish(dish.id, c.id, 'up')}
+                  onMoveDown={() => onMoveComponentInDish(dish.id, c.id, 'down')}
+                  isFirst={idx === 0}
+                  isLast={idx === allComps.length - 1}
+                />
+              )
+            })}
           </div>
         ))}
 
         {showAddForm ? (
-          <AddComponentForm
-            onSave={async (data) => {
-              await onAddComponent(dish.id, data)
-              setShowAddForm(false)
-            }}
-            onCancel={() => setShowAddForm(false)}
-          />
+          <AddComponentForm existingGroups={existingGroups}
+            onSave={async (data) => { await onAddComponent(dish.id, data); setShowAddForm(false) }}
+            onCancel={() => setShowAddForm(false)} />
         ) : (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="w-full mt-1.5 py-1.5 flex items-center justify-center gap-1.5 text-xs text-[#B8997A] hover:text-[#E8A040] hover:bg-[#E8A040]/5 rounded-lg border border-dashed border-[#E8D5B5] hover:border-[#E8A040]/40 transition-all"
-          >
-            <Plus className="w-3 h-3" />
-            Component toevoegen
+          <button onClick={() => setShowAddForm(true)}
+            className="w-full mt-1.5 py-1.5 flex items-center justify-center gap-1.5 text-xs text-[#B8997A] hover:text-[#E8A040] hover:bg-[#E8A040]/5 rounded-lg border border-dashed border-[#E8D5B5] hover:border-[#E8A040]/40 transition-all">
+            <Plus className="w-3 h-3" />Component toevoegen
           </button>
         )}
       </div>
@@ -684,42 +642,26 @@ export default function MepDetailPage() {
   const [loading, setLoading] = useState(true)
   const [approvingEvent, setApprovingEvent] = useState(false)
   const [confirmApproveEvent, setConfirmApproveEvent] = useState(false)
+  const [editingComponentId, setEditingComponentId] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     if (!id) return
     setLoading(true)
 
     const { data: eventData, error: eventError } = await supabase
-      .from('events')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from('events').select('*').eq('id', id).single()
 
-    if (eventError || !eventData) {
-      setLoading(false)
-      return
-    }
+    if (eventError || !eventData) { setLoading(false); return }
     setEvent(eventData)
 
     const { data: dishData } = await supabase
-      .from('mep_dishes')
-      .select('*')
-      .eq('event_id', id)
-      .order('sort_order')
+      .from('mep_dishes').select('*').eq('event_id', id).order('sort_order')
 
-    if (!dishData || dishData.length === 0) {
-      setDishes([])
-      setLoading(false)
-      return
-    }
+    if (!dishData || dishData.length === 0) { setDishes([]); setLoading(false); return }
 
     const dishIds = dishData.map((d: any) => d.id)
-
     const { data: componentData } = await supabase
-      .from('mep_components')
-      .select('*')
-      .in('dish_id', dishIds)
-      .order('sort_order')
+      .from('mep_components').select('*').in('dish_id', dishIds).order('sort_order')
 
     const componentsByDish: Record<string, MepComponent[]> = {}
     for (const c of componentData || []) {
@@ -727,193 +669,190 @@ export default function MepDetailPage() {
       componentsByDish[c.dish_id].push(c)
     }
 
-    setDishes(
-      dishData.map((d: any) => ({
-        ...d,
-        components: componentsByDish[d.id] || [],
-      }))
-    )
+    setDishes(dishData.map((d: any) => ({ ...d, components: componentsByDish[d.id] || [] })))
     setLoading(false)
   }, [id])
 
-  useEffect(() => {
-    loadData()
-  }, [loadData])
+  useEffect(() => { loadData() }, [loadData])
+
+  // Collect all existing component groups for quick-pick
+  const existingGroups = [...new Set(
+    dishes.flatMap((d) => d.components.map((c) => c.component_group).filter(Boolean) as string[])
+  )]
 
   // ── Handlers ──
 
   const handleApproveComponent = async (componentId: string) => {
-    const { error } = await supabase
-      .from('mep_components')
-      .update({ is_ai_suggestion: false })
-      .eq('id', componentId)
+    const { error } = await supabase.from('mep_components').update({ is_ai_suggestion: false }).eq('id', componentId)
     if (error) { toast.error('Goedkeuren mislukt'); return }
-    setDishes((prev) =>
-      prev.map((d) => ({
-        ...d,
-        components: d.components.map((c) =>
-          c.id === componentId ? { ...c, is_ai_suggestion: false } : c
-        ),
-      }))
-    )
+    setDishes((prev) => prev.map((d) => ({
+      ...d, components: d.components.map((c) => c.id === componentId ? { ...c, is_ai_suggestion: false } : c),
+    })))
     toast.success('Component goedgekeurd ✓')
   }
 
   const handleUpdateComponent = async (componentId: string, updates: Partial<MepComponent>) => {
-    const { error } = await supabase
-      .from('mep_components')
-      .update(updates)
-      .eq('id', componentId)
+    const { error } = await supabase.from('mep_components').update(updates).eq('id', componentId)
     if (error) { toast.error('Opslaan mislukt'); return }
-    setDishes((prev) =>
-      prev.map((d) => ({
-        ...d,
-        components: d.components.map((c) =>
-          c.id === componentId ? { ...c, ...updates } : c
-        ),
-      }))
-    )
+    setDishes((prev) => prev.map((d) => ({
+      ...d, components: d.components.map((c) => c.id === componentId ? { ...c, ...updates } : c),
+    })))
     toast.success('Component bijgewerkt ✓')
   }
 
   const handleDeleteComponent = async (componentId: string) => {
-    const { error } = await supabase
-      .from('mep_components')
-      .delete()
-      .eq('id', componentId)
+    const { error } = await supabase.from('mep_components').delete().eq('id', componentId)
     if (error) { toast.error('Verwijderen mislukt'); return }
-    setDishes((prev) =>
-      prev.map((d) => ({
-        ...d,
-        components: d.components.filter((c) => c.id !== componentId),
-      }))
-    )
+    setDishes((prev) => prev.map((d) => ({
+      ...d, components: d.components.filter((c) => c.id !== componentId),
+    })))
     toast.success('Component verwijderd')
   }
 
   const handleApproveDish = async (dishId: string) => {
-    const { error: dishErr } = await supabase
-      .from('mep_dishes')
-      .update({ is_ai_suggestion: false })
-      .eq('id', dishId)
-    const { error: compErr } = await supabase
-      .from('mep_components')
-      .update({ is_ai_suggestion: false })
-      .eq('dish_id', dishId)
+    const { error: dishErr } = await supabase.from('mep_dishes').update({ is_ai_suggestion: false }).eq('id', dishId)
+    const { error: compErr } = await supabase.from('mep_components').update({ is_ai_suggestion: false }).eq('dish_id', dishId)
     if (dishErr || compErr) { toast.error('Goedkeuren mislukt'); return }
-    setDishes((prev) =>
-      prev.map((d) =>
-        d.id === dishId
-          ? {
-              ...d,
-              is_ai_suggestion: false,
-              components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
-            }
-          : d
-      )
-    )
+    setDishes((prev) => prev.map((d) =>
+      d.id === dishId
+        ? { ...d, is_ai_suggestion: false, components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })) }
+        : d
+    ))
     toast.success('Gerecht goedgekeurd ✓')
   }
 
   const handleAddComponent = async (
     dishId: string,
-    data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null }
+    data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }
   ) => {
     const dish = dishes.find((d) => d.id === dishId)
-    const maxOrder = dish
-      ? Math.max(0, ...dish.components.map((c) => c.sort_order)) + 1
-      : 1
+    const maxOrder = dish ? Math.max(0, ...dish.components.map((c) => c.sort_order)) + 1 : 1
 
     const { data: newComp, error } = await supabase
       .from('mep_components')
       .insert({
-        dish_id: dishId,
-        component_name: data.name,
-        quantity: data.qty,
-        unit: data.unit,
-        preparation: data.prep,
-        supplier: data.supplier,
-        sort_order: maxOrder,
-        is_ai_suggestion: false,
-        component_group: null,
+        dish_id: dishId, component_name: data.name, quantity: data.qty,
+        unit: data.unit, preparation: data.prep, supplier: data.supplier,
+        sort_order: maxOrder, is_ai_suggestion: false, component_group: data.component_group,
       })
-      .select()
-      .single()
+      .select().single()
 
     if (error || !newComp) { toast.error('Toevoegen mislukt'); return }
-
-    setDishes((prev) =>
-      prev.map((d) =>
-        d.id === dishId
-          ? { ...d, components: [...d.components, newComp as MepComponent] }
-          : d
-      )
-    )
+    setDishes((prev) => prev.map((d) =>
+      d.id === dishId ? { ...d, components: [...d.components, newComp as MepComponent] } : d
+    ))
     toast.success(`${data.name} toegevoegd ✓`)
   }
 
   const handleEditDishTitle = async (dishId: string, newTitle: string) => {
-    const { error } = await supabase
-      .from('mep_dishes')
-      .update({ title: newTitle })
-      .eq('id', dishId)
+    const { error } = await supabase.from('mep_dishes').update({ title: newTitle }).eq('id', dishId)
     if (error) { toast.error('Opslaan mislukt'); return }
-    setDishes((prev) =>
-      prev.map((d) => (d.id === dishId ? { ...d, title: newTitle } : d))
-    )
+    setDishes((prev) => prev.map((d) => (d.id === dishId ? { ...d, title: newTitle } : d)))
     toast.success('Titel bijgewerkt ✓')
   }
 
-  // ── Approve event via server API (bypasses RLS) ──
+  // ── Reorder component within dish ──
+  const handleMoveComponentInDish = async (dishId: string, compId: string, direction: 'up' | 'down') => {
+    const dish = dishes.find((d) => d.id === dishId)
+    if (!dish) return
+    const sorted = [...dish.components].sort((a, b) => a.sort_order - b.sort_order)
+    const idx = sorted.findIndex((c) => c.id === compId)
+    if (idx < 0) return
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= sorted.length) return
+
+    const a = sorted[idx]
+    const b = sorted[swapIdx]
+
+    // Swap sort_orders
+    const aNewOrder = b.sort_order
+    const bNewOrder = a.sort_order
+
+    // Optimistic update
+    setDishes((prev) => prev.map((d) => {
+      if (d.id !== dishId) return d
+      return {
+        ...d,
+        components: d.components.map((c) => {
+          if (c.id === a.id) return { ...c, sort_order: aNewOrder }
+          if (c.id === b.id) return { ...c, sort_order: bNewOrder }
+          return c
+        }),
+      }
+    }))
+
+    // Persist
+    await Promise.all([
+      supabase.from('mep_components').update({ sort_order: aNewOrder }).eq('id', a.id),
+      supabase.from('mep_components').update({ sort_order: bNewOrder }).eq('id', b.id),
+    ])
+  }
+
+  // ── Reorder dish within category ──
+  const handleMoveDish = async (dishId: string, direction: 'up' | 'down') => {
+    const dish = dishes.find((d) => d.id === dishId)
+    if (!dish) return
+
+    // Get dishes in same category, sorted
+    const sameCat = dishes
+      .filter((d) => d.category === dish.category)
+      .sort((a, b) => a.sort_order - b.sort_order)
+
+    const idx = sameCat.findIndex((d) => d.id === dishId)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= sameCat.length) return
+
+    const a = sameCat[idx]
+    const b = sameCat[swapIdx]
+    const aNewOrder = b.sort_order
+    const bNewOrder = a.sort_order
+
+    // Optimistic update
+    setDishes((prev) => prev.map((d) => {
+      if (d.id === a.id) return { ...d, sort_order: aNewOrder }
+      if (d.id === b.id) return { ...d, sort_order: bNewOrder }
+      return d
+    }))
+
+    await Promise.all([
+      supabase.from('mep_dishes').update({ sort_order: aNewOrder }).eq('id', a.id),
+      supabase.from('mep_dishes').update({ sort_order: bNewOrder }).eq('id', b.id),
+    ])
+    toast.success('Volgorde aangepast ✓')
+  }
+
+  // ── Approve event ──
   const handleApproveEvent = async () => {
     if (!event) return
     setApprovingEvent(true)
-
     try {
       const res = await fetch(`/api/mep/approve/${event.id}`, { method: 'POST' })
       const json = await res.json()
-
-      if (!res.ok || json.error) {
-        toast.error('Goedkeuren mislukt: ' + (json.error || res.statusText))
-        setApprovingEvent(false)
-        return
-      }
-
+      if (!res.ok || json.error) { toast.error('Goedkeuren mislukt: ' + (json.error || res.statusText)); setApprovingEvent(false); return }
       setEvent((prev) => prev ? { ...prev, status: 'approved' } : prev)
-      setDishes((prev) =>
-        prev.map((d) => ({
-          ...d,
-          is_ai_suggestion: false,
-          components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
-        }))
-      )
+      setDishes((prev) => prev.map((d) => ({
+        ...d, is_ai_suggestion: false,
+        components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })),
+      })))
       setConfirmApproveEvent(false)
       toast.success('Event goedgekeurd ✓ — staat nu in planning')
-    } catch (err) {
-      toast.error('Netwerkfout bij goedkeuren')
-    } finally {
-      setApprovingEvent(false)
-    }
+    } catch { toast.error('Netwerkfout bij goedkeuren') }
+    finally { setApprovingEvent(false) }
   }
 
   // ── Group by category ──
-
-  const categorized = dishes.reduce(
-    (acc, dish) => {
-      const cat = dish.category || 'OVERIG'
-      if (!acc[cat]) acc[cat] = []
-      acc[cat].push(dish)
-      return acc
-    },
-    {} as Record<string, MepDish[]>
-  )
+  const categorized = dishes.reduce((acc, dish) => {
+    const cat = dish.category || 'OVERIG'
+    if (!acc[cat]) acc[cat] = []
+    acc[cat].push(dish)
+    return acc
+  }, {} as Record<string, MepDish[]>)
 
   const sortedCategories = Object.entries(categorized).sort(
     ([a], [b]) => getCategoryOrder(a) - getCategoryOrder(b)
   )
 
-  const totalAI =
-    dishes.filter((d) => d.is_ai_suggestion).length +
+  const totalAI = dishes.filter((d) => d.is_ai_suggestion).length +
     dishes.flatMap((d) => d.components).filter((c) => c.is_ai_suggestion).length
 
   // ── Render ──
@@ -930,9 +869,7 @@ export default function MepDetailPage() {
     return (
       <div className="text-center py-16">
         <p className="text-[#9E7E60] mb-2">Event niet gevonden</p>
-        <Link href="/mep" className="text-[#E8A040] text-sm hover:underline">
-          ← Terug naar planning
-        </Link>
+        <Link href="/mep" className="text-[#E8A040] text-sm hover:underline">← Terug naar planning</Link>
       </div>
     )
   }
@@ -941,10 +878,7 @@ export default function MepDetailPage() {
     <div className="space-y-6 pb-16">
       {/* Header row */}
       <div className="flex items-center gap-3">
-        <Link
-          href="/mep"
-          className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
-        >
+        <Link href="/mep" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div className="flex-1 min-w-0">
@@ -953,55 +887,39 @@ export default function MepDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full border ${
-              event.status === 'approved'
-                ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
-                : event.status === 'draft'
-                ? 'bg-[#FDF8F2] text-[#5C4730] border-[#E8D5B5]'
-                : 'bg-[#E8A040]/20 text-[#E8A040] border-[#E8A040]/30'
-            }`}
-          >
+          <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${
+            event.status === 'approved'
+              ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
+              : event.status === 'draft'
+              ? 'bg-[#FDF8F2] text-[#5C4730] border-[#E8D5B5]'
+              : 'bg-[#E8A040]/20 text-[#E8A040] border-[#E8A040]/30'
+          }`}>
             {event.status === 'approved' ? 'Goedgekeurd' : event.status === 'draft' ? 'Concept' : event.status}
           </span>
 
-          {/* PDF download button */}
-          <a
-            href={`/api/mep/pdf/${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <a href={`/api/mep/pdf/${id}`} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-[#2C1810] hover:border-[#E8A040]/50 rounded-xl text-xs font-semibold transition-all"
-            title="PDF downloaden"
-          >
-            <FileDown className="w-3.5 h-3.5" />
-            PDF
+            title="PDF downloaden">
+            <FileDown className="w-3.5 h-3.5" />PDF
           </a>
 
           {event.status !== 'approved' && (
             confirmApproveEvent ? (
               <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5">
                 <span className="text-xs text-emerald-700 font-medium">Zeker goedkeuren?</span>
-                <button
-                  onClick={handleApproveEvent}
-                  disabled={approvingEvent}
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50"
-                >
+                <button onClick={handleApproveEvent} disabled={approvingEvent}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50">
                   {approvingEvent ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Ja'}
                 </button>
-                <button
-                  onClick={() => setConfirmApproveEvent(false)}
-                  className="p-1 text-[#9E7E60] hover:text-[#3D2810] transition-colors"
-                >
+                <button onClick={() => setConfirmApproveEvent(false)}
+                  className="p-1 text-[#9E7E60] hover:text-[#3D2810] transition-colors">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setConfirmApproveEvent(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Event goedkeuren
+              <button onClick={() => setConfirmApproveEvent(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all">
+                <ShieldCheck className="w-3.5 h-3.5" />Event goedkeuren
               </button>
             )
           )}
@@ -1025,9 +943,7 @@ export default function MepDetailPage() {
               <Euro className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Prijs p.p.</div>
-                <div className="text-sm font-semibold text-[#2C1810]">
-                  €{Number(event.price_per_person).toFixed(2)}
-                </div>
+                <div className="text-sm font-semibold text-[#2C1810]">€{Number(event.price_per_person).toFixed(2)}</div>
               </div>
             </div>
           )}
@@ -1056,9 +972,7 @@ export default function MepDetailPage() {
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Vertrek Mariakerke</div>
-                <div className="text-sm font-semibold text-[#2C1810]">
-                  {String(event.departure_time).slice(0, 5)}
-                </div>
+                <div className="text-sm font-semibold text-[#2C1810]">{String(event.departure_time).slice(0, 5)}</div>
               </div>
             </div>
           )}
@@ -1067,9 +981,7 @@ export default function MepDetailPage() {
               <Clock className="w-4 h-4 text-[#E8A040] shrink-0" />
               <div className="min-w-0">
                 <div className="text-xs text-[#B8997A]">Aankomst keuken</div>
-                <div className="text-sm font-semibold text-[#2C1810]">
-                  {String(event.arrival_time).slice(0, 5)}
-                </div>
+                <div className="text-sm font-semibold text-[#2C1810]">{String(event.arrival_time).slice(0, 5)}</div>
               </div>
             </div>
           )}
@@ -1084,9 +996,7 @@ export default function MepDetailPage() {
           )}
         </div>
         {event.notes && (
-          <p className="mt-3 text-sm text-[#9E7E60] italic border-t border-[#E8D5B5]/60 pt-3">
-            {event.notes}
-          </p>
+          <p className="mt-3 text-sm text-[#9E7E60] italic border-t border-[#E8D5B5]/60 pt-3">{event.notes}</p>
         )}
       </div>
 
@@ -1099,10 +1009,8 @@ export default function MepDetailPage() {
             Oranje items zijn nog niet geverifieerd.
           </p>
           {event.status !== 'approved' && (
-            <button
-              onClick={() => setConfirmApproveEvent(true)}
-              className="text-xs text-emerald-700 font-semibold hover:underline shrink-0"
-            >
+            <button onClick={() => setConfirmApproveEvent(true)}
+              className="text-xs text-emerald-700 font-semibold hover:underline shrink-0">
               Alles goedkeuren →
             </button>
           )}
@@ -1118,22 +1026,21 @@ export default function MepDetailPage() {
         </div>
       ) : (
         <div className="space-y-5">
-          {sortedCategories.map(([category, categoryDishes]) => (
-            <section key={category}>
-              {/* Solid green category bar */}
-              <div className="flex items-center justify-between bg-[#2d6a4f] rounded-lg px-3 py-1.5 mb-3">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-white">
-                  {getCategoryLabel(category)}
-                </h2>
-                <span className="text-xs text-white/60">
-                  {categoryDishes.length} gerecht{categoryDishes.length !== 1 ? 'en' : ''}
-                </span>
-              </div>
+          {sortedCategories.map(([category, categoryDishes]) => {
+            const sortedCatDishes = [...categoryDishes].sort((a, b) => a.sort_order - b.sort_order)
+            return (
+              <section key={category}>
+                <div className="flex items-center justify-between bg-[#2d6a4f] rounded-lg px-3 py-1.5 mb-3">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-white">
+                    {getCategoryLabel(category)}
+                  </h2>
+                  <span className="text-xs text-white/60">
+                    {categoryDishes.length} gerecht{categoryDishes.length !== 1 ? 'en' : ''}
+                  </span>
+                </div>
 
-              <div className="space-y-2">
-                {[...categoryDishes]
-                  .sort((a, b) => a.sort_order - b.sort_order)
-                  .map((dish) => (
+                <div className="space-y-2">
+                  {sortedCatDishes.map((dish, di) => (
                     <DishCard
                       key={dish.id}
                       dish={dish}
@@ -1143,11 +1050,20 @@ export default function MepDetailPage() {
                       onApproveDish={handleApproveDish}
                       onAddComponent={handleAddComponent}
                       onEditTitle={handleEditDishTitle}
+                      onMoveComponentInDish={handleMoveComponentInDish}
+                      onMoveDishUp={() => handleMoveDish(dish.id, 'up')}
+                      onMoveDishDown={() => handleMoveDish(dish.id, 'down')}
+                      isFirstDish={di === 0}
+                      isLastDish={di === sortedCatDishes.length - 1}
+                      editingComponentId={editingComponentId}
+                      setEditingComponentId={setEditingComponentId}
+                      existingGroups={existingGroups}
                     />
                   ))}
-              </div>
-            </section>
-          ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
       )}
     </div>
