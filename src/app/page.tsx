@@ -198,40 +198,42 @@ export default function LandingPage() {
           <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#C4703A' }}>
             De cyclus
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-16" style={{ color: '#2C1810', fontFamily: 'Georgia, serif' }}>
-            My AI Sous Chef voor,<br />tijdens en na het event
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: '#2C1810', fontFamily: 'Georgia, serif' }}>
+            Goeie voorbereiding is al<br />half gewonnen
           </h2>
+          <p className="text-lg mb-16 max-w-2xl mx-auto" style={{ color: '#9E7E60' }}>
+            Op het event sta je in de keuken — niet achter een scherm. My AI Sous Chef doet het zware werk ruim op voorhand, zodat je op de dag zelf gewoon kunt koken.
+          </p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                fase: 'Voor het event',
+                fase: 'Weken op voorhand',
                 kleur: '#E8A040',
                 items: [
-                  'Menu op maat — brief inlezen, jouw stijl toepassen',
-                  'Food cost berekenen per persoon',
-                  'Voorstel PDF versturen',
-                  'MEP en inkoop automatisch klaarzetten',
-                  'Paklijst genereren per event-type',
+                  'Menu bouwen vanuit klantbrief — in jouw stijl, met jouw recepten',
+                  'Food cost per persoon berekenen en bewaken',
+                  'Voorstel PDF opmaken en versturen naar klant',
+                  'Versies bijhouden tot bevestiging',
                 ]
               },
               {
-                fase: 'Tijdens het event',
+                fase: 'Dagen voor vertrek',
                 kleur: '#C4703A',
                 items: [
-                  'Draaiboek op telefoon — timing per gang',
-                  'MEP-checklist afvinken in de keuken',
-                  'Last-minute wijzigingen doorvoeren',
-                  'Paklijst controleren bij vertrek',
+                  'MEP-fiches automatisch klaarzetten per gerecht',
+                  'Inkooplijst per leverancier genereren',
+                  'Paklijst afdrukken — keukenmateriaal + logistiek',
+                  'Allergenen nalopen per gast',
                 ]
               },
               {
-                fase: 'Na het event',
+                fase: 'Na afloop',
                 kleur: '#9E7E60',
                 items: [
                   'Factuur genereren in één klik',
-                  'Food cost analyseren vs. target',
-                  'Sterkste gerechten opslaan in LEGENDE',
-                  'AI leert van jouw keuzes voor de volgende keer',
+                  'Werkelijke food cost vergelijken met target',
+                  'Topgerechten opslaan in je LEGENDE-bibliotheek',
+                  'AI verfijnt jouw profiel voor het volgende event',
                 ]
               }
             ].map((fase) => (
