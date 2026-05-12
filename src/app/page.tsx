@@ -128,10 +128,10 @@ export default function LandingPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: 'Events per maand', value: '60+', sub: 'draait Kolenboertje met ons systeem' },
-                { label: 'Tijdsbesparing', value: '4u', sub: 'per event op MEP en inkoop' },
-                { label: 'Recepten kennisbank', value: '9.492', sub: 'klassieke recepten direct beschikbaar' },
-                { label: 'Leverancierproducten', value: '6.289', sub: 'real-time prijzen in de app' },
+                { label: 'Tijdsbesparing', value: '4u+', sub: 'minder per event op MEP en inkoop' },
+                { label: 'Food cost precisie', value: '±2%', sub: 'marge-afwijking versus target' },
+                { label: 'Kennisbank recepten', value: '9.000+', sub: 'professionele klassieke recepten' },
+                { label: 'Leveranciersproducten', value: '6.000+', sub: 'real-time prijzen per kg in de app' },
               ].map((stat) => (
                 <div key={stat.label} className="p-6 rounded-2xl" style={{ background: '#3D2518', border: '1px solid #5C3D2A' }}>
                   <div className="text-3xl font-bold mb-1" style={{ color: '#E8A040' }}>{stat.value}</div>
@@ -274,9 +274,9 @@ export default function LandingPage() {
               { title: 'Ripple Effect', body: 'Één wijziging werkt automatisch door naar MEP, food cost, inkoop en paklijst. Nooit meer dubbel werk.' },
               { title: 'Paklijst & Draaiboek', body: 'Auto-gegenereerde paklijsten per event-type. Tijdlijn-gebaseerd draaiboek voor je team op locatie.' },
               { title: 'Facturatie', body: 'Van bevestigd event naar PDF-factuur met BTW, klantgegevens en betaaldeadline. In één klik.' },
-              { title: 'Food Cost Intelligence', body: 'Real-time food cost op basis van 6.289 leveranciersproducten. Marge per gerecht, per gang, per persoon.' },
+              { title: 'Food Cost Intelligence', body: 'Real-time food cost op basis van 6.000+ leveranciersproducten. Marge per gerecht, per gang, per persoon.' },
               { title: 'OCR Scanning', body: 'Scan facturen, prijslijsten, recepten en MEP-lijsten. AI verwerkt en slaat alles automatisch op.' },
-              { title: '9.492 Klassieke Recepten', body: 'Professionele kennisbank als referentie en inspiratie. Combineer met jouw LEGENDE-gerechten.' },
+              { title: '9.000+ Klassieke Recepten', body: 'Professionele kennisbank als referentie en inspiratie. Combineer met jouw LEGENDE-gerechten.' },
             ].map((feature) => (
               <div key={feature.title} className="p-6 rounded-2xl border hover:shadow-md transition-shadow" style={{ background: 'white', borderColor: '#E8D5B5' }}>
                 <h3 className="font-bold text-base mb-2" style={{ color: '#2C1810' }}>{feature.title}</h3>
@@ -292,43 +292,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* CASE STUDY — SIR CATERING */}
       <section id="klanten" className="py-24" style={{ background: '#2C1810' }}>
         <div className="max-w-6xl mx-auto px-6">
           <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#E8A040' }}>
-            Klanten
+            In de praktijk
           </p>
           <h2 className="text-4xl md:text-5xl font-bold mb-16" style={{ color: '#FDF8F2', fontFamily: 'Georgia, serif' }}>
-            Ervaringen uit de praktijk
+            Gebouwd door een chef.<br />Getest op echte events.
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: 'Ik had vroeger 3 uur nodig voor een MEP. Nu druk ik op één knop en het is klaar. De AI kent mijn stijl beter dan ik soms zelf dacht.',
-                name: 'Jules Van Groenweghe',
-                role: 'Chef-eigenaar, SIR Catering'
-              },
-              {
-                quote: 'Eindelijk een systeem dat meedenkt over het gerecht zelf, niet alleen de logistiek. De kennisbank + seizoenskalender zijn goud waard.',
-                name: 'Mehdi Hermans',
-                role: 'Head Chef, Restaurant'
-              },
-              {
-                quote: 'De food cost klopt nu voor het eerst echt. Ik zie per gerecht waar mijn marge zit. Dat had ik jarenlang op gevoel gedaan.',
-                name: 'Lisa Benali',
-                role: 'Head Chef, Brasserie'
-              }
-            ].map((t) => (
-              <div key={t.name} className="p-8 rounded-2xl" style={{ background: '#3D2518', border: '1px solid #5C3D2A' }}>
-                <p className="text-lg leading-relaxed mb-6" style={{ color: '#E8D5B5', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                  "{t.quote}"
-                </p>
-                <div>
-                  <div className="font-bold text-sm" style={{ color: '#E8A040' }}>{t.name}</div>
-                  <div className="text-xs" style={{ color: '#9E7E60' }}>{t.role}</div>
-                </div>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-6" style={{ background: '#3D2518', color: '#E8A040', border: '1px solid #5C3D2A' }}>
+                SIR Catering — Gent
               </div>
-            ))}
+              <blockquote className="text-2xl leading-relaxed mb-8" style={{ color: '#E8D5B5', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                "Ik bouwde dit systeem omdat het niet bestond. Een tool die meedenkt als sous chef — niet alleen over de logistiek, maar over het gerecht zelf."
+              </blockquote>
+              <div className="mb-8">
+                <div className="font-bold" style={{ color: '#E8A040' }}>Jules Van Groenweghe</div>
+                <div className="text-sm" style={{ color: '#9E7E60' }}>Chef-eigenaar, SIR Catering — Gent</div>
+              </div>
+              <p className="leading-relaxed" style={{ color: '#9E7E60' }}>
+                SIR Catering is een Gents eventcateringbedrijf met focus op gastronomische beleving. Van cocktaildînatoires voor 30 personen tot walking dinners voor 300. My AI Sous Chef werd ontwikkeld vanuit de dagelijkse operationele noden van dit bedrijf.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: 'MEP in minuten', label: 'Vroeger 2–3 uur handmatig. Nu gegenereerd vanuit het event.' },
+                { value: 'Altijd op maat', label: 'Elk menu ademt het DNA van de chef en de brief van de klant.' },
+                { value: 'Food cost klopt', label: 'Marges zichtbaar per gerecht, per gang, per persoon.' },
+                { value: 'Schaalbaar', label: 'Van 1 event naar meerdere events tegelijk — zonder extra chaos.' },
+              ].map((item) => (
+                <div key={item.value} className="p-6 rounded-2xl" style={{ background: '#3D2518', border: '1px solid #5C3D2A' }}>
+                  <div className="font-bold text-sm mb-2" style={{ color: '#E8A040' }}>{item.value}</div>
+                  <div className="text-xs leading-relaxed" style={{ color: '#9E7E60' }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
