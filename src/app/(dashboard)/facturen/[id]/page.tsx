@@ -30,6 +30,7 @@ interface ClientInvoice {
   bank_account: string | null
   notes: string | null
   event_id: string | null
+  num_persons: number | null
 }
 
 const statusConfig: Record<string, { label: string; bg: string; color: string; border: string }> = {
@@ -39,31 +40,34 @@ const statusConfig: Record<string, { label: string; bg: string; color: string; b
   geannuleerd: { label: 'Geannuleerd', bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
 }
 
-function LabeledField({
-  label, value, onChange, multiline = false, placeholder = ''
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '9px 12px',
+  background: '#FAF6EF', border: '1px solid #E8D5B5',
+  borderRadius: 8, color: '#2C1810', fontSize: 14,
+  outline: 'none', fontFamily: 'inherit',
+}
+
+function LabeledInput({
+  label, value, onChange, type = 'text', placeholder = '', multiline = false
 }: {
   label: string
   value: string
   onChange: (v: string) => void
-  multiline?: boolean
+  type?: string
   placeholder?: string
+  multiline?: boolean
 }) {
-  const base: React.CSSProperties = {
-    width: '100%', padding: '9px 12px',
-    background: '#FAF6EF', border: '1px solid #E8D5B5',
-    borderRadius: 8, color: '#2C1810', fontSize: 14,
-    outline: 'none', fontFamily: 'inherit',
-    resize: multiline ? 'vertical' : 'none',
-  }
   return (
     <div>
       <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: '#9E7E60', display: 'block', marginBottom: 6 }}>
         {label}
       </label>
       {multiline ? (
-        <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3} style={base} />
+        <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
+          style={{ ...inputStyle, resize: 'vertical' }} />
       ) : (
-        <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={base} />
+        <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          style={inputStyle} />
       )}
     </div>
   )
@@ -82,7 +86,11 @@ export default function FactuurDetailPage() {
   const [showDelete, setShowDelete] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Editable form state
+  // Editable state
+  const [invoiceNumber, setInvoiceNumber] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [numPersons, setNumPersons] = useState('')
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientAddress, setClientAddress] = useState('')
@@ -96,8 +104,12 @@ export default function FactuurDetailPage() {
   useEffect(() => {
     fetch(`/api/client-invoices/${id}`)
       .then(r => r.json())
-      .then(data => {
+      .then((data: ClientInvoice) => {
         setInvoice(data)
+        setInvoiceNumber(data.invoice_number || '')
+        setInvoiceDate(data.invoice_date ? data.invoice_date.substring(0, 10) : '')
+        setDueDate(data.due_date ? data.due_date.substring(0, 10) : '')
+        setNumPersons(data.num_persons != null ? String(data.num_persons) : '')
         setClientName(data.client_name || '')
         setClientEmail(data.client_email || '')
         setClientAddress(data.client_address || '')
@@ -118,7 +130,7 @@ export default function FactuurDetailPage() {
     return { subtotal, vat_amount, total_amount: subtotal + vat_amount }
   }
 
-  const debouncedSave = useCallback((patch: Record<string, any>) => {
+  const debouncedSave = useCallback((patch: Record<string, unknown>) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       setSaving(true)
@@ -131,15 +143,11 @@ export default function FactuurDetailPage() {
         const updated = await res.json()
         setInvoice(updated)
         setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
+        setTimeout(() => setSaved(false), 2500)
       }
       setSaving(false)
-    }, 2000)
+    }, 1500)
   }, [id])
-
-  const triggerSave = useCallback((patch: Record<string, any>) => {
-    debouncedSave(patch)
-  }, [debouncedSave])
 
   const handleLineItemChange = (index: number, field: keyof LineItem, value: string | number) => {
     const updated = lineItems.map((item, i) => {
@@ -152,21 +160,20 @@ export default function FactuurDetailPage() {
     })
     setLineItems(updated)
     const totals = computeTotals(updated)
-    triggerSave({ line_items: updated, ...totals })
+    debouncedSave({ line_items: updated, ...totals })
   }
 
   const addLineItem = () => {
     const newItem: LineItem = { description: '', quantity: 1, unit_price: 0, vat_rate: 6, total: 0 }
     const updated = [...lineItems, newItem]
     setLineItems(updated)
-    triggerSave({ line_items: updated, ...computeTotals(updated) })
+    debouncedSave({ line_items: updated, ...computeTotals(updated) })
   }
 
   const removeLineItem = (index: number) => {
     const updated = lineItems.filter((_, i) => i !== index)
     setLineItems(updated)
-    const totals = computeTotals(updated)
-    triggerSave({ line_items: updated, ...totals })
+    debouncedSave({ line_items: updated, ...computeTotals(updated) })
   }
 
   const handleStatusChange = async (newStatus: ClientInvoice['status']) => {
@@ -181,7 +188,7 @@ export default function FactuurDetailPage() {
       const updated = await res.json()
       setInvoice(updated)
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      setTimeout(() => setSaved(false), 2500)
     }
     setSaving(false)
   }
@@ -194,9 +201,7 @@ export default function FactuurDetailPage() {
 
   const totals = computeTotals(lineItems)
 
-  if (loading) {
-    return <div style={{ padding: 60, textAlign: 'center', color: '#9E7E60' }}>Laden...</div>
-  }
+  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: '#9E7E60' }}>Laden...</div>
 
   if (!invoice) {
     return (
@@ -210,7 +215,7 @@ export default function FactuurDetailPage() {
   const sc = statusConfig[status] || statusConfig.concept
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ maxWidth: 960, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 28 }}>
         <Link href="/facturen" style={{
@@ -225,7 +230,7 @@ export default function FactuurDetailPage() {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 24, fontWeight: 700, color: '#2C1810', margin: 0 }}>
-              {invoice.invoice_number}
+              {invoiceNumber || 'Nieuwe factuur'}
             </h1>
             <span style={{
               padding: '4px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600,
@@ -243,10 +248,6 @@ export default function FactuurDetailPage() {
               </span>
             )}
           </div>
-          <p style={{ color: '#9E7E60', fontSize: 13, marginTop: 4 }}>
-            Datum: {new Date(invoice.invoice_date).toLocaleDateString('nl-BE')}
-            {invoice.due_date && ` · Vervaldatum: ${new Date(invoice.due_date).toLocaleDateString('nl-BE')}`}
-          </p>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
           <a
@@ -257,7 +258,6 @@ export default function FactuurDetailPage() {
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '9px 18px', background: '#E8A040', color: '#2C1810',
               borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: 'none',
-              border: 'none',
             }}
           >
             <svg width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -268,10 +268,7 @@ export default function FactuurDetailPage() {
           </a>
           <button
             onClick={() => setShowDelete(true)}
-            style={{
-              padding: '9px 14px', background: 'white', border: '1px solid #E8D5B5',
-              borderRadius: 9, color: '#9E7E60', cursor: 'pointer',
-            }}
+            style={{ padding: '9px 14px', background: 'white', border: '1px solid #E8D5B5', borderRadius: 9, color: '#9E7E60', cursor: 'pointer' }}
           >
             <svg width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -283,9 +280,7 @@ export default function FactuurDetailPage() {
       {/* Delete confirm */}
       {showDelete && (
         <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <p style={{ flex: 1, color: '#991B1B', fontSize: 14, fontWeight: 600 }}>
-            Factuur definitief verwijderen?
-          </p>
+          <p style={{ flex: 1, color: '#991B1B', fontSize: 14, fontWeight: 600 }}>Factuur definitief verwijderen?</p>
           <button onClick={handleDelete} disabled={deleting} style={{ padding: '7px 18px', background: '#EF4444', color: 'white', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
             {deleting ? 'Verwijderen...' : 'Ja, verwijder'}
           </button>
@@ -295,9 +290,57 @@ export default function FactuurDetailPage() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20 }}>
-        {/* Main content */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 290px', gap: 20 }}>
+        {/* Main */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Factuurgegevens (bewerkbaar) */}
+          <div style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E8D5B5', background: '#F5EDE0' }}>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 16, fontWeight: 700, color: '#2C1810', margin: 0 }}>
+                Factuurgegevens
+              </h2>
+            </div>
+            <div style={{ padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <LabeledInput
+                  label="Factuurnummer"
+                  value={invoiceNumber}
+                  placeholder="SIR-2026-0001"
+                  onChange={v => { setInvoiceNumber(v); debouncedSave({ invoice_number: v }) }}
+                />
+              </div>
+              <div>
+                <LabeledInput
+                  label="Factuurdatum"
+                  type="date"
+                  value={invoiceDate}
+                  onChange={v => { setInvoiceDate(v); debouncedSave({ invoice_date: v || null }) }}
+                />
+              </div>
+              <div>
+                <LabeledInput
+                  label="Vervaldatum"
+                  type="date"
+                  value={dueDate}
+                  onChange={v => { setDueDate(v); debouncedSave({ due_date: v || null }) }}
+                />
+              </div>
+              <div>
+                <LabeledInput
+                  label="Aantal personen"
+                  type="number"
+                  value={numPersons}
+                  placeholder="bv. 80"
+                  onChange={v => {
+                    setNumPersons(v)
+                    debouncedSave({ num_persons: v ? parseInt(v) : null })
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Klantgegevens */}
           <div style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #E8D5B5', background: '#F5EDE0' }}>
@@ -307,16 +350,16 @@ export default function FactuurDetailPage() {
             </div>
             <div style={{ padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div style={{ gridColumn: 'span 2' }}>
-                <LabeledField label="Naam" value={clientName} placeholder="Naam klant of bedrijf"
-                  onChange={v => { setClientName(v); triggerSave({ client_name: v }) }} />
+                <LabeledInput label="Naam / Bedrijf" value={clientName} placeholder="Naam klant of bedrijf"
+                  onChange={v => { setClientName(v); debouncedSave({ client_name: v }) }} />
               </div>
-              <LabeledField label="E-mailadres" value={clientEmail} placeholder="email@bedrijf.be"
-                onChange={v => { setClientEmail(v); triggerSave({ client_email: v }) }} />
-              <LabeledField label="BTW-nummer" value={clientVat} placeholder="BE0xxx.xxx.xxx"
-                onChange={v => { setClientVat(v); triggerSave({ client_vat: v }) }} />
+              <LabeledInput label="E-mailadres" value={clientEmail} placeholder="email@bedrijf.be"
+                onChange={v => { setClientEmail(v); debouncedSave({ client_email: v }) }} />
+              <LabeledInput label="BTW-nummer" value={clientVat} placeholder="BE0xxx.xxx.xxx"
+                onChange={v => { setClientVat(v); debouncedSave({ client_vat: v }) }} />
               <div style={{ gridColumn: 'span 2' }}>
-                <LabeledField label="Adres" value={clientAddress} placeholder="Straat nr, Postcode Gemeente" multiline
-                  onChange={v => { setClientAddress(v); triggerSave({ client_address: v }) }} />
+                <LabeledInput label="Adres" value={clientAddress} placeholder="Straat nr, Postcode Gemeente" multiline
+                  onChange={v => { setClientAddress(v); debouncedSave({ client_address: v }) }} />
               </div>
             </div>
           </div>
@@ -355,8 +398,8 @@ export default function FactuurDetailPage() {
                 <tbody>
                   {lineItems.length === 0 && (
                     <tr>
-                      <td colSpan={6} style={{ padding: '20px 10px', textAlign: 'center', color: '#B8997A', fontStyle: 'italic', fontSize: 14 }}>
-                        Geen regels — klik op &ldquo;Regel toevoegen&rdquo;
+                      <td colSpan={6} style={{ padding: '24px 10px', textAlign: 'center', color: '#B8997A', fontStyle: 'italic', fontSize: 14 }}>
+                        Nog geen regels — klik op &ldquo;Regel toevoegen&rdquo;
                       </td>
                     </tr>
                   )}
@@ -413,11 +456,10 @@ export default function FactuurDetailPage() {
                 </tbody>
               </table>
             </div>
-
             {/* Totals */}
             <div style={{ padding: '16px 20px', borderTop: '1px solid #E8D5B5', background: '#FAF6EF' }}>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ width: 260 }}>
+                <div style={{ width: 280 }}>
                   {[
                     { label: 'Subtotaal', value: totals.subtotal },
                     { label: 'BTW', value: totals.vat_amount },
@@ -431,6 +473,14 @@ export default function FactuurDetailPage() {
                     <span style={{ color: '#2C1810' }}>Totaal</span>
                     <span style={{ color: '#C4703A', fontFamily: 'monospace' }}>€ {totals.total_amount.toFixed(2)}</span>
                   </div>
+                  {numPersons && parseInt(numPersons) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, borderTop: '1px dashed #E8D5B5', marginTop: 4 }}>
+                      <span style={{ color: '#9E7E60' }}>Per persoon ({numPersons}p)</span>
+                      <span style={{ color: '#9E7E60', fontFamily: 'monospace' }}>
+                        € {(totals.total_amount / parseInt(numPersons)).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -445,13 +495,13 @@ export default function FactuurDetailPage() {
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <LabeledField label="Rekeningnummer" value={bankAccount} placeholder="BE00 0000 0000 0000"
-                  onChange={v => { setBankAccount(v); triggerSave({ bank_account: v }) }} />
-                <LabeledField label="Betalingsvoorwaarden" value={paymentTerms} placeholder="30 dagen netto"
-                  onChange={v => { setPaymentTerms(v); triggerSave({ payment_terms: v }) }} />
+                <LabeledInput label="Rekeningnummer" value={bankAccount} placeholder="BE00 0000 0000 0000"
+                  onChange={v => { setBankAccount(v); debouncedSave({ bank_account: v }) }} />
+                <LabeledInput label="Betalingsvoorwaarden" value={paymentTerms} placeholder="30 dagen netto"
+                  onChange={v => { setPaymentTerms(v); debouncedSave({ payment_terms: v }) }} />
               </div>
-              <LabeledField label="Notities" value={notes} multiline placeholder="Extra informatie voor de klant..."
-                onChange={v => { setNotes(v); triggerSave({ notes: v }) }} />
+              <LabeledInput label="Notities" value={notes} multiline placeholder="Extra informatie voor de klant..."
+                onChange={v => { setNotes(v); debouncedSave({ notes: v }) }} />
             </div>
           </div>
         </div>
@@ -490,31 +540,49 @@ export default function FactuurDetailPage() {
             </div>
           </div>
 
-          {/* Factuurinfo */}
+          {/* Samenvatting (live berekend) */}
           <div style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #E8D5B5', background: '#F5EDE0' }}>
-              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 700, color: '#2C1810', margin: 0 }}>Factuurinfo</h3>
+              <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 700, color: '#2C1810', margin: 0 }}>Samenvatting</h3>
             </div>
             <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'Nummer', value: invoice.invoice_number },
-                { label: 'Datum', value: new Date(invoice.invoice_date).toLocaleDateString('nl-BE') },
-                { label: 'Vervaldatum', value: invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('nl-BE') : '—' },
-                { label: 'Totaal', value: `€ ${Number(invoice.total_amount).toFixed(2)}` },
+                { label: 'Nummer', value: invoiceNumber || '—' },
+                { label: 'Datum', value: invoiceDate ? new Date(invoiceDate).toLocaleDateString('nl-BE') : '—' },
+                { label: 'Vervaldatum', value: dueDate ? new Date(dueDate).toLocaleDateString('nl-BE') : '—' },
+                { label: 'Personen', value: numPersons ? `${numPersons} personen` : '—' },
+                { label: 'Subtotaal', value: `€ ${totals.subtotal.toFixed(2)}` },
+                { label: 'BTW', value: `€ ${totals.vat_amount.toFixed(2)}` },
               ].map(row => (
-                <div key={row.label}>
-                  <div style={{ fontSize: 11, color: '#9E7E60', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, marginBottom: 2 }}>
+                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#9E7E60', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 700 }}>
                     {row.label}
-                  </div>
-                  <div style={{ fontSize: 14, color: '#2C1810', fontWeight: row.label === 'Totaal' ? 700 : 400, fontFamily: row.label === 'Nummer' || row.label === 'Totaal' ? 'monospace' : 'inherit' }}>
+                  </span>
+                  <span style={{ fontSize: 13, color: '#2C1810', fontFamily: row.label === 'Nummer' || row.label.includes('€') || row.label === 'Subtotaal' || row.label === 'BTW' ? 'monospace' : 'inherit' }}>
                     {row.value}
-                  </div>
+                  </span>
                 </div>
               ))}
+              <div style={{ borderTop: '2px solid #E8D5B5', paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#2C1810' }}>Totaal</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace' }}>
+                  € {totals.total_amount.toFixed(2)}
+                </span>
+              </div>
+              {numPersons && parseInt(numPersons) > 0 && (
+                <div style={{ background: '#FEF3E2', border: '1px solid #F6D860', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 2 }}>
+                    Per persoon
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#C4703A', fontFamily: 'monospace' }}>
+                    € {(totals.total_amount / parseInt(numPersons)).toFixed(2)}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* PDF */}
+          {/* Acties */}
           <a
             href={`/facturen/${id}/print`}
             target="_blank"
