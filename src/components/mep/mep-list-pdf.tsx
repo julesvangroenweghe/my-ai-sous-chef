@@ -293,21 +293,23 @@ const S = StyleSheet.create({
     flex: 1,
   },
 
-  // Category header
+  // Category header — volle kleurenbalk, wit tekst
   categoryBlock: {
-    marginTop: 5,
-    marginBottom: 3,
+    marginTop: 10,
+    marginBottom: 4,
   },
   categoryHeader: {
-    fontSize: 12,
+    fontSize: 9,
     fontFamily: 'Helvetica-Bold',
-    color: '#1a1a2e',
+    color: '#ffffff',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    paddingBottom: 2,
-    borderBottomWidth: 0.8,
-    borderBottomColor: '#2d6a4f',
-    marginBottom: 3,
+    letterSpacing: 1.0,
+    backgroundColor: '#2d6a4f',
+    paddingTop: 3,
+    paddingBottom: 3,
+    paddingLeft: 6,
+    paddingRight: 6,
+    marginBottom: 4,
   },
 
   // Dish block
@@ -479,7 +481,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
 
   // Sequential column filling with height estimation
   function estimateHeight(item: RenderItem): number {
-    if (item.type === 'category') return 22
+    if (item.type === 'category') return 24
     const d = item.dish
     let h = 18
     if (d.notes) h += 10
