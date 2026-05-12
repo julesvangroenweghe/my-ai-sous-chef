@@ -168,6 +168,19 @@ function getCategoryLabel(cat: string): string {
   return CATEGORY_LABELS[upper] || cat
 }
 
+// ─── Small categories that should NOT force a new column ──────────────────────
+// These flow in the same column as their neighbour (e.g. DRANKEN + FINGERFOOD)
+const SMALL_CATS = new Set([
+  'DRANKEN', 'MOCKTAILS', 'BROOD & BOTER', 'KAAS',
+  'MIGNARDISES', 'PETITS FOURS', 'PETIT FOURS', 'NIGHT SNACK',
+  'LATE NIGHT SNACK', 'KIDS', 'KINDERMENU', 'KIDS MENU',
+  'HALFABRICAAT', 'ON THE SIDE', 'SAUZEN', 'AFTER SNACKS',
+])
+
+function isSmallCategory(cat: string): boolean {
+  return SMALL_CATS.has((cat || '').toUpperCase().trim())
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
@@ -277,7 +290,6 @@ const S = StyleSheet.create({
   column: {
     flex: 1,
   },
-  // Category header — solid green bar with white text
   categoryBlock: {
     marginBottom: 4,
   },
@@ -443,61 +455,43 @@ export function MepListDocument({ data }: { data: MepListData }) {
   catGroups.sort((a, b) => a.order - b.order)
 
   // ─── CATEGORY-PER-COLUMN layout ───
-  // Each category starts at the top of a new column.
-  // If more categories than columns, remaining categories share the last column.
+  // Major categories start at the top of a new column.
+  // Small categories (DRANKEN, MIGNARDISES, etc.) share a column with their neighbour.
+  function estimateCatHeight(group: CatGroup): number {
+    let h = 24 // category header
+    for (const dish of group.dishes) {
+      h += 18 // dish title
+      if (dish.notes) h += 10
+      const comps = dish.components || []
+      const groups = new Set(comps.map(c => c.component_group || null))
+      const numGroups = [...groups].filter(g => g !== null).length
+      h += numGroups * 12
+      h += comps.length * 11
+      h += 8 // spacer
+    }
+    return h
+  }
+
   const columns: CatGroup[][] = Array.from({ length: numCols }, () => [])
+  let colIdx = 0
+  let colH = 0
+  const heights = catGroups.map(estimateCatHeight)
+  const totalH = heights.reduce((s, h) => s + h, 0)
+  const targetPerCol = totalH / numCols
 
-  if (catGroups.length <= numCols) {
-    // Perfect fit or fewer categories than columns — one per column
-    catGroups.forEach((group, i) => {
-      columns[i].push(group)
-    })
-  } else {
-    // More categories than columns — distribute smartly
-    // First (numCols - 1) columns get one category each,
-    // last column gets the rest. This keeps the main categories
-    // each at the top of their own column.
-    // Better: estimate heights and balance
-    function estimateCatHeight(group: CatGroup): number {
-      let h = 24 // category header
-      for (const dish of group.dishes) {
-        h += 18 // dish title
-        if (dish.notes) h += 10
-        const comps = dish.components || []
-        const groups = new Set(comps.map(c => c.component_group || null))
-        const numGroups = [...groups].filter(g => g !== null).length
-        h += numGroups * 12
-        h += comps.length * 11
-        h += 8 // spacer
-      }
-      return h
+  for (let i = 0; i < catGroups.length; i++) {
+    const h = heights[i]
+    const isMajor = !isSmallCategory(catGroups[i].category)
+
+    // Major categories start a new column (if current column has content)
+    // Small categories just flow into the current column
+    if (i > 0 && isMajor && colH > 0 && colIdx < numCols - 1) {
+      colIdx++
+      colH = 0
     }
 
-    const heights = catGroups.map(estimateCatHeight)
-    const totalH = heights.reduce((s, h) => s + h, 0)
-    const targetPerCol = totalH / numCols
-
-    let colIdx = 0
-    let colH = 0
-
-    for (let i = 0; i < catGroups.length; i++) {
-      const h = heights[i]
-
-      // Start new column for each category if possible,
-      // but only if current column has content and we haven't used all columns
-      if (i > 0 && colIdx < numCols - 1) {
-        // Always start a new column for a new category
-        // unless the current column would be underfilled (< 40% of target)
-        // and this category is small enough to fit
-        if (colH > 0) {
-          colIdx++
-          colH = 0
-        }
-      }
-
-      columns[colIdx].push(catGroups[i])
-      colH += h
-    }
+    columns[colIdx].push(catGroups[i])
+    colH += h
   }
 
   // Reistijd
@@ -534,7 +528,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
           )}
         </View>
 
-        {/* ── Columns — each category starts at top of new column ── */}
+        {/* ── Columns — major categories start at top of new column ── */}
         <View style={S.columnContainer}>
           {columns.map((col, ci) => (
             <View key={ci} style={S.column}>
