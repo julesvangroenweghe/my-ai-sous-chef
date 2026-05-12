@@ -76,13 +76,13 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
         )}
       </button>
 
-      {/* ALWAYS-VISIBLE floating Scan button — bottom right */}
+      {/* Floating Scan button — ABOVE JulesAI button */}
       <a
         href="/scan"
         aria-label="Scan & OCR"
         style={{
           position: 'fixed',
-          bottom: 24,
+          bottom: 88,
           right: 20,
           zIndex: 50,
           display: 'flex',
