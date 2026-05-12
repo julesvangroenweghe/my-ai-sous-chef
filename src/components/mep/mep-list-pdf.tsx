@@ -42,13 +42,11 @@ export interface MepListData {
 }
 
 // ─── Category ordering ────────────────────────────────────────────────────────
-// CRITICAL: MIDDAG session scores 4-92, APERO session scores 110-145
-// This ensures APERO never interleaves with MIDDAG/seated courses
 
 function getCategoryOrder(cat: string): number {
   const c = (cat || '').toUpperCase().trim()
 
-  // === MIDDAG SESSION (lunch/middag receptie) ===
+  // === MIDDAG SESSION ===
   if (c.includes('MIDDAG') || c === 'DESSERT LUNCH' || (c.includes('LUNCH') && c.includes('DESSERT'))) {
     if (c.includes('FINGERFOOD')) return 4
     if (c.includes('FINGERBITES')) return 5
@@ -58,7 +56,7 @@ function getCategoryOrder(cat: string): number {
     if (c.includes('TUSSEN')) return 72
     if (c.includes('HOOFD')) return 82
     if (c.includes('DESSERT') || c.includes('LUNCH')) return 91
-    return 6  // overige MIDDAG
+    return 6
   }
 
   // === WALKING variants ===
@@ -66,7 +64,7 @@ function getCategoryOrder(cat: string): number {
     if (c.includes('VOOR')) return 63
     if (c.includes('HOOFD')) return 83
     if (c.includes('DESSERT')) return 94
-    return 75  // WALKING DINNER generiek
+    return 75
   }
 
   // === SHARING variants ===
@@ -77,7 +75,7 @@ function getCategoryOrder(cat: string): number {
     return 76
   }
 
-  // === APERO SESSION (avond receptie, na dessert middag) ===
+  // === APERO SESSION ===
   if (c.includes('APERO')) {
     if (c.includes('FINGERFOOD')) return 110
     if (c.includes('FINGERBITES')) return 115
@@ -87,22 +85,14 @@ function getCategoryOrder(cat: string): number {
     if (c.includes('TUSSEN')) return 135
     if (c.includes('HOOFD')) return 140
     if (c.includes('DESSERT')) return 145
-    return 112  // overige APERO
+    return 112
   }
 
-  // === LUNCH (broodjeslunch, tasting lunch) ===
   if (c === 'LUNCH') return 18
-
-  // === HOOFDGERECHT PREMIUM ===
   if (c.includes('HOOFDGERECHT') && c.includes('PREMIUM')) return 81
-
-  // === FOODSTAND (stands/stations) ===
   if (c.includes('FOODSTAND')) return 150
-
-  // === BARISTA (altijd net voor MIGNARDISES) ===
   if (c.includes('BARISTA')) return 201
 
-  // === Standaard exacte matches ===
   if (c === 'DRANKEN' || c.includes('MOCKTAIL') || c.includes('COCKTAIL')) return 10
   if (c === 'ONTVANGST') return 15
   if (c === 'FINGERFOOD') return 20
@@ -143,6 +133,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'SHARING VOORGERECHT': 'Sharing voorgerecht',
   TUSSENGERECHT: 'Tussengerecht',
   HOOFDGERECHT: 'Hoofdgerecht',
+  'HOOFDGERECHT PREMIUM': 'Hoofdgerecht Premium (+)',
   'WALKING DINNER': 'Walking dinner',
   'ON THE SIDE': 'On the side',
   SAUZEN: 'Sauzen',
@@ -161,7 +152,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   LUNCH: 'Lunch',
   BROOD: 'Brood',
   'BROOD & BOTER': 'Brood & boter',
-  'HOOFDGERECHT PREMIUM': 'Hoofdgerecht Premium (+)',
   KIDS: 'Kids menu',
   KINDERMENU: 'Kids menu',
   'KIDS MENU': 'Kids menu',
@@ -244,8 +234,6 @@ const S = StyleSheet.create({
     fontSize: 8,
     color: '#1C1008',
   },
-
-  // Header — alles left-aligned, geen space-between
   header: {
     marginBottom: 8,
     paddingBottom: 7,
@@ -275,15 +263,12 @@ const S = StyleSheet.create({
     color: '#888888',
     marginTop: 2,
   },
-  // Reistijd op één regel, blauw bold
   headerTravelLine: {
     fontSize: 7.5,
     color: '#1d4ed8',
     fontFamily: 'Helvetica-Bold',
     marginTop: 3,
   },
-
-  // Columns
   columnContainer: {
     flexDirection: 'row',
     gap: 8,
@@ -292,10 +277,8 @@ const S = StyleSheet.create({
   column: {
     flex: 1,
   },
-
-  // Category header — volle kleurenbalk, wit tekst
+  // Category header — solid green bar with white text
   categoryBlock: {
-    marginTop: 10,
     marginBottom: 4,
   },
   categoryHeader: {
@@ -311,8 +294,6 @@ const S = StyleSheet.create({
     paddingRight: 6,
     marginBottom: 4,
   },
-
-  // Dish block
   dishBlock: {
     marginBottom: 5,
   },
@@ -333,8 +314,6 @@ const S = StyleSheet.create({
     color: '#888888',
     marginBottom: 2,
   },
-
-  // Components
   componentGroup: {
     marginTop: 2,
     marginBottom: 1,
@@ -356,7 +335,6 @@ const S = StyleSheet.create({
     marginRight: 2,
     width: 8,
   },
-  // Component name + grammage + bereiding all inline
   componentText: {
     fontSize: 10,
     color: '#1a1a2e',
@@ -370,8 +348,6 @@ const S = StyleSheet.create({
   dishSpacer: {
     height: 8,
   },
-
-  // Footer
   footer: {
     marginTop: 10,
     fontSize: 6.5,
@@ -406,7 +382,6 @@ function DishCard({ dish }: { dish: MepListDish }) {
           )}
           {group.items.map((comp, ci) => {
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
-            // Bouw inline tekst: naam (grammage) (bereiding)
             const suffix: string[] = []
             if (qtyStr) suffix.push(`(${qtyStr})`)
             if (comp.preparation) suffix.push(`(${comp.preparation})`)
@@ -442,6 +417,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
     return (a.sort_order || 0) - (b.sort_order || 0)
   })
 
+  // Group dishes by category
   interface CatGroup {
     category: string
     label: string
@@ -450,7 +426,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   const catGroups: CatGroup[] = []
   for (const dish of sortedDishes) {
-    // Skip Koffie & Thee — niet op MEP lijst
     const skipCheck = (dish.category || '').toUpperCase()
     if (skipCheck.includes('KOFFIE') || skipCheck === 'THEE') continue
     const existing = catGroups.find((g) => g.category === dish.category)
@@ -467,60 +442,65 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   catGroups.sort((a, b) => a.order - b.order)
 
-  type RenderItem =
-    | { type: 'category'; label: string }
-    | { type: 'dish'; dish: MepListDish }
+  // ─── CATEGORY-PER-COLUMN layout ───
+  // Each category starts at the top of a new column.
+  // If more categories than columns, remaining categories share the last column.
+  const columns: CatGroup[][] = Array.from({ length: numCols }, () => [])
 
-  const items: RenderItem[] = []
-  for (const group of catGroups) {
-    items.push({ type: 'category', label: group.label })
-    for (const dish of group.dishes) {
-      items.push({ type: 'dish', dish })
-    }
-  }
-
-  // Sequential column filling with height estimation
-  function estimateHeight(item: RenderItem): number {
-    if (item.type === 'category') return 24
-    const d = item.dish
-    let h = 18
-    if (d.notes) h += 10
-    const comps = d.components || []
-    const groups = new Set(comps.map((c: MepListComponent) => c.component_group || null))
-    const numGroups = [...groups].filter(g => g !== null).length
-    h += numGroups * 12
-    h += comps.length * 11  // iets meer ruimte per comp (inline bereiding)
-    return h + 8
-  }
-
-  const totalH = items.reduce((s, it) => s + estimateHeight(it), 0)
-  const targetPerCol = totalH / numCols
-
-  const columns: RenderItem[][] = Array.from({ length: numCols }, () => [])
-  let colIdx = 0
-  let colH = 0
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i]
-    const h = estimateHeight(item)
-
-    if (colH + h > targetPerCol && colIdx < numCols - 1) {
-      if (item.type === 'category') {
-        colIdx++
-        colH = 0
-      } else if (item.type === 'dish' && i > 0 && items[i - 1].type === 'category') {
-        // keep first dish together with its category header
-      } else {
-        colIdx++
-        colH = 0
+  if (catGroups.length <= numCols) {
+    // Perfect fit or fewer categories than columns — one per column
+    catGroups.forEach((group, i) => {
+      columns[i].push(group)
+    })
+  } else {
+    // More categories than columns — distribute smartly
+    // First (numCols - 1) columns get one category each,
+    // last column gets the rest. This keeps the main categories
+    // each at the top of their own column.
+    // Better: estimate heights and balance
+    function estimateCatHeight(group: CatGroup): number {
+      let h = 24 // category header
+      for (const dish of group.dishes) {
+        h += 18 // dish title
+        if (dish.notes) h += 10
+        const comps = dish.components || []
+        const groups = new Set(comps.map(c => c.component_group || null))
+        const numGroups = [...groups].filter(g => g !== null).length
+        h += numGroups * 12
+        h += comps.length * 11
+        h += 8 // spacer
       }
+      return h
     }
 
-    columns[colIdx].push(item)
-    colH += h
+    const heights = catGroups.map(estimateCatHeight)
+    const totalH = heights.reduce((s, h) => s + h, 0)
+    const targetPerCol = totalH / numCols
+
+    let colIdx = 0
+    let colH = 0
+
+    for (let i = 0; i < catGroups.length; i++) {
+      const h = heights[i]
+
+      // Start new column for each category if possible,
+      // but only if current column has content and we haven't used all columns
+      if (i > 0 && colIdx < numCols - 1) {
+        // Always start a new column for a new category
+        // unless the current column would be underfilled (< 40% of target)
+        // and this category is small enough to fit
+        if (colH > 0) {
+          colIdx++
+          colH = 0
+        }
+      }
+
+      columns[colIdx].push(catGroups[i])
+      colH += h
+    }
   }
 
-  // Reistijd — gebruik departure_time als beschikbaar, anders berekenen
+  // Reistijd
   const departure = event.departure_time || calcDeparture(event.kitchen_arrival_time, event.travel_time_minutes)
   const travelParts: string[] = []
   if (departure) travelParts.push(`Vertrek Mariakerke: ${departure}`)
@@ -539,44 +519,40 @@ export function MepListDocument({ data }: { data: MepListData }) {
   return (
     <Document>
       <Page size="A4" orientation="portrait" style={S.page}>
-        {/* ── Header — client naam + datum links uitgelijnd ── */}
+        {/* ── Header ── */}
         <View style={S.header}>
           <Text style={S.clientName}>{event.name}</Text>
           <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
-
           {infoParts.length > 0 && (
             <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
           )}
           {event.contact_person && (
             <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
           )}
-          {/* Reistijd op één regel in blauw bold */}
           {travelParts.length > 0 && (
             <Text style={S.headerTravelLine}>{travelParts.join('  ·  ')}</Text>
           )}
         </View>
 
-        {/* ── Kolommen ── */}
+        {/* ── Columns — each category starts at top of new column ── */}
         <View style={S.columnContainer}>
           {columns.map((col, ci) => (
             <View key={ci} style={S.column}>
-              {col.map((item, ii) => {
-                if (item.type === 'category') {
-                  return (
-                    <View key={ii} style={S.categoryBlock}>
-                      <Text style={S.categoryHeader}>{item.label.toUpperCase()}</Text>
-                    </View>
-                  )
-                }
-                return <DishCard key={ii} dish={item.dish} />
-              })}
+              {col.map((group, gi) => (
+                <View key={gi} style={S.categoryBlock}>
+                  <Text style={S.categoryHeader}>{group.label.toUpperCase()}</Text>
+                  {group.dishes.map((dish, di) => (
+                    <DishCard key={di} dish={dish} />
+                  ))}
+                </View>
+              ))}
             </View>
           ))}
         </View>
 
         {/* ── Footer ── */}
         <Text style={S.footer} fixed>
-          pagina {'{pageNumber}'} / {'{totalPages}'}  ·  SIR Catering
+          SIR Catering  ·  MEP
         </Text>
       </Page>
     </Document>
