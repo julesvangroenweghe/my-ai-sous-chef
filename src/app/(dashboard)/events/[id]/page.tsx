@@ -132,6 +132,9 @@ export default function EventDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('menu')
   const [mepRefreshKey, setMepRefreshKey] = useState(0)
 
+  // MEP dish count (direct from DB, no status restriction)
+  const [mepDishCount, setMepDishCount] = useState<number>(0)
+
   // MEP auto-link state
   const [mepStatus, setMepStatus] = useState<MepStatus | null>(null)
   const [showMepBanner, setShowMepBanner] = useState(false)
@@ -193,6 +196,15 @@ export default function EventDetailPage() {
     }
   }, [eventId])
 
+  // Direct check: how many MEP dishes exist for this event?
+  const fetchMepDishCount = useCallback(async () => {
+    const { count } = await supabase
+      .from('mep_dishes')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+    setMepDishCount(count || 0)
+  }, [eventId])
+
   const fetchRecipes = useCallback(async () => {
     const { data } = await supabase
       .from('recipes')
@@ -206,7 +218,8 @@ export default function EventDetailPage() {
     fetchEvent()
     fetchRecipes()
     fetchMepStatus()
-  }, [fetchEvent, fetchRecipes, fetchMepStatus])
+    fetchMepDishCount()
+  }, [fetchEvent, fetchRecipes, fetchMepStatus, fetchMepDishCount])
 
   // Populate edit form when event loads
   useEffect(() => {
@@ -261,12 +274,10 @@ export default function EventDetailPage() {
       await fetchEvent()
       await fetchMepStatus()
 
-      // Show MEP banner when transitioning to confirmed
       if (wasNotConfirmed && nowConfirmed) {
         setShowMepBanner(true)
       }
 
-      // Check if num_persons changed and if MEP/menus exist → show ripple banner
       if (oldNumPersons && newNumPersons && oldNumPersons !== newNumPersons) {
         const { count: mepCount } = await supabase
           .from('mep_dishes')
@@ -310,8 +321,6 @@ export default function EventDetailPage() {
     if (!event) return
     setCreatingInvoice(true)
     try {
-      const kitchenRes = await fetch('/api/client-invoices')
-      // Get kitchen_id from existing invoices or use event's kitchen_id
       const res = await fetch('/api/client-invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -335,7 +344,7 @@ export default function EventDetailPage() {
         setMepCreated(true)
         setShowMepBanner(false)
         await fetchMepStatus()
-        // Navigate to MEP page after short delay
+        await fetchMepDishCount()
         setTimeout(() => router.push(`/mep/${eventId}`), 800)
       }
     } finally {
@@ -395,6 +404,8 @@ export default function EventDetailPage() {
 
   const status = statusConfig[event.status] || statusConfig.draft
   const isConfirmed = event.status === 'confirmed' || event.status === 'in_prep' || event.status === 'approved'
+  // MEP is accessible whenever there are MEP dishes, regardless of event status
+  const hasMep = mepDishCount > 0 || (mepStatus?.hasMep ?? false)
 
   const tabs = [
     { id: 'menu' as TabId, label: 'Menu', icon: ChefHat, count: event.menu_items.length },
@@ -551,10 +562,14 @@ export default function EventDetailPage() {
                 <ClipboardList className="w-3 h-3" /> MEP aangemaakt
               </span>
             )}
-            {isConfirmed && mepStatus?.hasMep && !mepCreated && (
-              <Link href={`/mep/${eventId}`}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
-                <ClipboardList className="w-3 h-3" /> MEP bekijken
+            {/* MEP link — always visible when MEP dishes exist, regardless of event status */}
+            {hasMep && (
+              <Link
+                href={`/mep/${eventId}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
+              >
+                <ClipboardList className="w-3 h-3" />
+                MEP bekijken ({mepDishCount > 0 ? mepDishCount : mepStatus?.mepDishCount || 0} gerechten)
               </Link>
             )}
           </div>
@@ -593,7 +608,7 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* MEP Auto-link Banner — shown when status just changed to confirmed */}
+      {/* MEP Auto-link Banner */}
       {showMepBanner && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
@@ -602,13 +617,9 @@ export default function EventDetailPage() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-emerald-800">Event bevestigd!</p>
             {mepStatus?.hasProposal ? (
-              <p className="text-xs text-emerald-600 mt-0.5">
-                Importeer voorstel V{mepStatus.proposals[0]?.revision_number || 1} naar de MEP productielijst.
-              </p>
+              <p className="text-xs text-emerald-600 mt-0.5">Importeer voorstel V{mepStatus.proposals[0]?.revision_number || 1} naar de MEP productielijst.</p>
             ) : (
-              <p className="text-xs text-emerald-600 mt-0.5">
-                Nog geen voorstel gevonden — maak eerst een voorstel aan.
-              </p>
+              <p className="text-xs text-emerald-600 mt-0.5">Nog geen voorstel gevonden — maak eerst een voorstel aan.</p>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -632,16 +643,16 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      {/* MEP CTA banner — always visible when confirmed & no MEP yet */}
-      {isConfirmed && mepStatus && !mepStatus.hasMep && !showMepBanner && (
+      {/* MEP CTA banner — only when confirmed & no MEP yet */}
+      {isConfirmed && !hasMep && !showMepBanner && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
           <ClipboardList className="w-5 h-5 text-amber-600 shrink-0" />
           <p className="flex-1 text-sm text-amber-800">
-            {mepStatus.hasProposal
+            {mepStatus?.hasProposal
               ? `Voorstel aanwezig — importeer naar MEP om de productielijst klaar te maken.`
               : `Event is bevestigd maar heeft nog geen MEP. Maak eerst een voorstel aan.`}
           </p>
-          {mepStatus.hasProposal ? (
+          {mepStatus?.hasProposal ? (
             <button onClick={handleCreateMep} disabled={creatingMep}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-60 shrink-0">
               {creatingMep ? <Loader2 className="w-3 h-3 animate-spin" /> : <ClipboardList className="w-3 h-3" />}
@@ -656,7 +667,7 @@ export default function EventDetailPage() {
         </div>
       )}
 
-      {/* Ripple Effect Banner — shown when num_persons changed and MEP/menus exist */}
+      {/* Ripple Effect Banner */}
       {rippleAvailable && (
         <div className="bg-amber-50 border border-amber-300 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
@@ -664,9 +675,7 @@ export default function EventDetailPage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-amber-900">Aantal personen gewijzigd</p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              Wil je MEP-hoeveelheden en food cost automatisch herberekenen?
-            </p>
+            <p className="text-xs text-amber-700 mt-0.5">Wil je MEP-hoeveelheden en food cost automatisch herberekenen?</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={handleRipple} disabled={rippleLoading}
@@ -849,7 +858,7 @@ export default function EventDetailPage() {
         <div className="bg-white border border-[#E8D5B5] rounded-2xl p-8 text-center">
           <FileText className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
           <h3 className="text-lg font-display font-semibold text-[#2C1810] mb-2">Menu Voorstellen</h3>
-          <p className="text-[#9E7E60] text-sm mb-5">Maak en beheer menu voorstellen voor dit event. Volg revisies en klantfeedback op.</p>
+          <p className="text-[#9E7E60] text-sm mb-5">Maak en beheer menu voorstellen voor dit event.</p>
           <Link href={`/events/${eventId}/voorstel`} className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-[#2C1810] font-semibold text-sm rounded-xl transition-all">
             <FileText className="w-4 h-4" /> Voorstellen beheren
           </Link>
@@ -860,35 +869,30 @@ export default function EventDetailPage() {
         <div className="bg-white border border-[#E8D5B5] rounded-2xl p-8 text-center">
           <Package className="w-10 h-10 text-[#D4B896] mx-auto mb-3" />
           <h3 className="text-lg font-display font-semibold text-[#2C1810] mb-2">Paklijst</h3>
-          <p className="text-[#9E7E60] text-sm mb-5">
-            Beheer de volledige paklijst voor dit event op basis van de SIR Catering templates.
-            Controleer per categorie of alles meegaat: keuken, materiaal, mobiele keuken en meer.
-          </p>
-          <Link
-            href={`/events/${eventId}/paklijst`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition-all"
-          >
+          <p className="text-[#9E7E60] text-sm mb-5">Beheer de volledige paklijst voor dit event.</p>
+          <Link href={`/events/${eventId}/paklijst`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition-all">
             <Package className="w-4 h-4" /> Paklijst openen
           </Link>
         </div>
       )}
 
-      {/* Link naar MEP module */}
+      {/* Link naar MEP module — altijd zichtbaar onderaan menu tab */}
       {activeTab === 'menu' && (
         <div className="bg-[#FAF6EF] border border-[#E8D5B5] rounded-2xl p-5 flex items-center gap-4">
           <ClipboardList className="w-6 h-6 text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[#2C1810]">MEP Productielijst</p>
             <p className="text-xs text-[#9E7E60] mt-0.5">
-              {mepStatus?.hasMep
-                ? `${mepStatus.mepDishCount} gerechten in de MEP — bekijk of bewerk de productielijst.`
+              {hasMep
+                ? `${mepDishCount > 0 ? mepDishCount : mepStatus?.mepDishCount || 0} gerechten in de MEP — bekijk of bewerk de productielijst.`
                 : 'Beheer de volledige MEP lijst met gerechten en componenten.'}
             </p>
           </div>
           <Link href={`/mep/${eventId}`}
             className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-all whitespace-nowrap shrink-0">
             <ArrowRight className="w-4 h-4" />
-            {mepStatus?.hasMep ? 'MEP bekijken' : 'Open MEP'}
+            {hasMep ? 'MEP bekijken' : 'Open MEP'}
           </Link>
         </div>
       )}
