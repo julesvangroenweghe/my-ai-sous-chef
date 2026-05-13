@@ -1,9 +1,19 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+
+interface Event {
+  id: string
+  name: string
+  event_date: string
+  event_type: string
+  num_persons: number | null
+  location: string | null
+  status: string
+}
 
 interface PacklistItem {
   id: string
@@ -14,309 +24,284 @@ interface PacklistItem {
   item_name: string
   quantity: number | null
   unit: string | null
-  supplier: string
+  supplier: string | null
   notes: string | null
   checked: boolean
   sort_order: number
-  created_at: string
-  updated_at: string
 }
 
-type TabCategory = 'keuken' | 'materiaal' | 'mobiele_keuken' | 'techniek' | 'logistiek' | 'locatie'
-
-const TABS: { id: TabCategory; label: string }[] = [
-  { id: 'keuken', label: 'Keuken' },
-  { id: 'materiaal', label: 'Materiaal' },
-  { id: 'mobiele_keuken', label: 'Mobiele keuken' },
-  { id: 'techniek', label: 'Techniek' },
-  { id: 'logistiek', label: 'Logistiek' },
-  { id: 'locatie', label: 'Locatie' },
+const CATEGORIES = [
+  { key: 'keuken', label: 'Keuken & Materiaal', color: '#E8A040', bg: '#FEF3E2', border: '#F6D860' },
+  { key: 'logistiek', label: 'Logistiek & Transport', color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE' },
+  { key: 'personeel', label: 'Personeel & Diensten', color: '#8B5CF6', bg: '#F5F3FF', border: '#C4B5FD' },
+  { key: 'drank', label: 'Dranken', color: '#10B981', bg: '#ECFDF5', border: '#6EE7B7' },
+  { key: 'diversen', label: 'Diversen', color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
 ]
 
-const SUPPLIER_BADGE: Record<string, string> = {
-  SIR: 'bg-amber-100 text-amber-800 border border-amber-200',
-  Levi: 'bg-blue-100 text-blue-800 border border-blue-200',
-  klant: 'bg-green-100 text-green-800 border border-green-200',
-}
+const DEFAULT_ITEMS: Omit<PacklistItem, 'id' | 'event_id' | 'kitchen_id'>[] = [
+  // Keuken
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Gastronormbakken GN 1/1', quantity: 6, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 1 },
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Gastronormbakken GN 1/2', quantity: 8, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 2 },
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Sauteerpannen groot', quantity: 4, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 3 },
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Snijplanken (kleurcode)', quantity: 6, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 4 },
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Messenset (koksmes, fileermes, schilmes)', quantity: 1, unit: 'set', supplier: null, notes: null, checked: false, sort_order: 5 },
+  { category: 'keuken', subcategory: 'Bereidingsmateriaal', item_name: 'Thermometers', quantity: 3, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 6 },
+  { category: 'keuken', subcategory: 'Service', item_name: 'Serveerplanken / -borden (groot)', quantity: 10, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 7 },
+  { category: 'keuken', subcategory: 'Service', item_name: 'Amuse-lepels / -glazen', quantity: null, unit: 'stuks', supplier: null, notes: 'Aantal = gasten + 10%', checked: false, sort_order: 8 },
+  { category: 'keuken', subcategory: 'Warmhouden', item_name: 'Chafing dishes', quantity: 4, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 9 },
+  { category: 'keuken', subcategory: 'Warmhouden', item_name: 'Brandstofreservoirs (chafing)', quantity: 8, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 10 },
+  // Logistiek
+  { category: 'logistiek', subcategory: 'Transport', item_name: 'Koelbox groot', quantity: 2, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 20 },
+  { category: 'logistiek', subcategory: 'Transport', item_name: 'Koelelementen (bevroren)', quantity: 10, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 21 },
+  { category: 'logistiek', subcategory: 'Transport', item_name: 'Vrachtwagen / bestelwagen geboekt', quantity: 1, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 22 },
+  { category: 'logistiek', subcategory: 'Locatie', item_name: 'Stroomvoorziening bevestigd', quantity: null, unit: null, supplier: null, notes: 'Spanning + ampères checken', checked: false, sort_order: 23 },
+  { category: 'logistiek', subcategory: 'Locatie', item_name: 'Verlengkabels (16A)', quantity: 3, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 24 },
+  { category: 'logistiek', subcategory: 'Locatie', item_name: 'Tafelopstelling bevestigd', quantity: null, unit: null, supplier: null, notes: null, checked: false, sort_order: 25 },
+  // Personeel
+  { category: 'personeel', subcategory: 'Team', item_name: 'Koks bevestigd', quantity: null, unit: 'personen', supplier: null, notes: '1 kok / 40 personen (standaard)', checked: false, sort_order: 30 },
+  { category: 'personeel', subcategory: 'Team', item_name: 'Bediening bevestigd', quantity: null, unit: 'personen', supplier: null, notes: null, checked: false, sort_order: 31 },
+  { category: 'personeel', subcategory: 'Uniform', item_name: 'Koksuniform + schorten mee', quantity: null, unit: 'sets', supplier: null, notes: null, checked: false, sort_order: 32 },
+  // Diversen
+  { category: 'diversen', subcategory: 'Admin', item_name: 'Menukaarten afgedrukt', quantity: null, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 40 },
+  { category: 'diversen', subcategory: 'Admin', item_name: 'Allergenenlijst mee', quantity: 1, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 41 },
+  { category: 'diversen', subcategory: 'Hygiëne', item_name: 'Vuilzakken groot', quantity: 10, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 42 },
+  { category: 'diversen', subcategory: 'Hygiëne', item_name: 'Handzeep + desinfectie', quantity: 2, unit: 'stuks', supplier: null, notes: null, checked: false, sort_order: 43 },
+  { category: 'diversen', subcategory: 'Hygiëne', item_name: 'Handschoenen (M + L)', quantity: 2, unit: 'dozen', supplier: null, notes: null, checked: false, sort_order: 44 },
+]
 
-function getSupplierBadge(supplier: string) {
-  return SUPPLIER_BADGE[supplier] || 'bg-stone-100 text-stone-700 border border-stone-200'
-}
-
-function subcategoryLabel(sub: string | null): string {
-  if (!sub) return 'Overig'
-  const labels: Record<string, string> = {
-    keukenbak: 'Keukenbak',
-    ordo: 'Ordo bak',
-    planken: 'Planken',
-    klein: 'Klein materiaal',
-    folie: 'Folie & papier',
-    spuitzak: 'Spuitzak',
-    vuur: 'Vuur',
-    machines: 'Machines',
-    messen: 'Messen',
-    lepels: 'Lepels & gereedschap',
-    containers: 'Containers & potten',
-    zaal: 'Zaal',
-    personeel: 'Personeel',
-    apparatuur: 'Apparatuur (SIR)',
-    huur: 'Huur (Levi)',
-    stroom: 'Stroom & water',
-    diversen: 'Diversen',
-    kuis: 'Kuismateriaal',
-    opbouw: 'Opbouw',
-    check: 'Locatiechecklist',
-  }
-  return labels[sub] || sub.charAt(0).toUpperCase() + sub.slice(1)
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M19 12H5M12 5l-7 7 7 7" />
-    </svg>
-  )
-}
-
-function PlusIcon() {
-  return (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  )
-}
-
-function PrinterIcon() {
-  return (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <rect x="6" y="14" width="12" height="8" />
-    </svg>
-  )
-}
-
-function ResetIcon() {
-  return (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
-    </svg>
-  )
-}
-
-function EditIcon() {
-  return (
-    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  )
-}
-
-function SpinIcon() {
-  return (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="animate-spin">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  )
-}
-
-export default function PaklijstPage() {
+export default function PaklijstDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const eventId = params.id as string
   const supabase = createClient()
 
-  const [eventName, setEventName] = useState('')
+  const [event, setEvent] = useState<Event | null>(null)
   const [items, setItems] = useState<PacklistItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabCategory>('keuken')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editNote, setEditNote] = useState('')
-  const [editQty, setEditQty] = useState('')
-  const [addingCategory, setAddingCategory] = useState<string | null>(null)
-  const [newItemName, setNewItemName] = useState('')
-  const [newItemQty, setNewItemQty] = useState('')
-  const [newItemSupplier, setNewItemSupplier] = useState('SIR')
-  const [saving, setSaving] = useState(false)
-
-  const getToken = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    return session?.access_token || ''
-  }, [supabase])
-
-  const fetchItems = useCallback(async () => {
-    const token = await getToken()
-    const res = await fetch(`/api/events/${eventId}/paklijst`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    if (res.ok) {
-      const data = await res.json()
-      setItems(data.items || [])
-    }
-    setLoading(false)
-  }, [eventId, getToken])
-
-  const fetchEvent = useCallback(async () => {
-    const { data } = await supabase
-      .from('events')
-      .select('name')
-      .eq('id', eventId)
-      .single()
-    if (data) setEventName(data.name)
-  }, [eventId, supabase])
+  const [generating, setGenerating] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('keuken')
+  const [editingItem, setEditingItem] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchEvent()
-    fetchItems()
-  }, [fetchEvent, fetchItems])
+    load()
+  }, [eventId])
 
-  const toggleItem = useCallback(async (item: PacklistItem) => {
-    // Optimistic update
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, checked: !i.checked } : i))
-    const token = await getToken()
-    const res = await fetch(`/api/events/${eventId}/paklijst/${item.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ checked: !item.checked })
-    })
-    if (!res.ok) {
-      // Revert on error
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, checked: item.checked } : i))
+  async function load() {
+    const { data: ev } = await supabase
+      .from('events')
+      .select('id, name, event_date, event_type, num_persons, location, status')
+      .eq('id', eventId)
+      .single()
+
+    if (!ev) { router.push('/paklijsten'); return }
+    setEvent(ev as Event)
+
+    const { data: kitchenData } = await supabase.rpc('get_my_kitchen_ids')
+    const kitchenId = kitchenData?.[0]
+
+    const { data: existingItems } = await supabase
+      .from('event_packlist_items')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('sort_order', { ascending: true })
+
+    if (existingItems && existingItems.length > 0) {
+      setItems(existingItems as PacklistItem[])
+    } else if (kitchenId) {
+      // Genereer standaard paklijst op basis van SIR templates
+      await generateDefaultPacklist(kitchenId)
     }
-  }, [eventId, getToken])
-
-  const saveEdit = useCallback(async (item: PacklistItem) => {
-    const token = await getToken()
-    const updates: Record<string, unknown> = {}
-    if (editNote !== (item.notes || '')) updates.notes = editNote || null
-    if (editQty !== String(item.quantity ?? '')) updates.quantity = editQty ? Number(editQty) : null
-    if (Object.keys(updates).length === 0) { setEditingId(null); return }
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, ...updates } : i))
-    setEditingId(null)
-    await fetch(`/api/events/${eventId}/paklijst/${item.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(updates)
-    })
-  }, [editNote, editQty, eventId, getToken])
-
-  const addItem = useCallback(async () => {
-    if (!newItemName.trim()) return
-    setSaving(true)
-    const token = await getToken()
-    const body = {
-      category: activeTab,
-      item_name: newItemName.trim(),
-      quantity: newItemQty ? Number(newItemQty) : null,
-      supplier: newItemSupplier,
-      checked: false,
-    }
-    const res = await fetch(`/api/events/${eventId}/paklijst`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body)
-    })
-    if (res.ok) {
-      const newItem = await res.json()
-      setItems(prev => [...prev, newItem])
-    }
-    setNewItemName('')
-    setNewItemQty('')
-    setNewItemSupplier('SIR')
-    setAddingCategory(null)
-    setSaving(false)
-  }, [newItemName, newItemQty, newItemSupplier, activeTab, eventId, getToken])
-
-  const resetTab = useCallback(async () => {
-    if (!confirm('Alle vinkjes in dit tabblad resetten?')) return
-    const token = await getToken()
-    const tabItems = items.filter(i => i.category === activeTab && i.checked)
-    setItems(prev => prev.map(i => i.category === activeTab ? { ...i, checked: false } : i))
-    await Promise.all(tabItems.map(item =>
-      fetch(`/api/events/${eventId}/paklijst/${item.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ checked: false })
-      })
-    ))
-  }, [items, activeTab, eventId, getToken])
-
-  const tabItems = items.filter(i => i.category === activeTab)
-  const checkedCount = tabItems.filter(i => i.checked).length
-  const progress = tabItems.length > 0 ? Math.round((checkedCount / tabItems.length) * 100) : 0
-
-  // Group by subcategory, preserving insertion order
-  const grouped: Record<string, PacklistItem[]> = {}
-  for (const item of tabItems) {
-    const key = item.subcategory || '__none__'
-    if (!grouped[key]) grouped[key] = []
-    grouped[key].push(item)
+    setLoading(false)
   }
 
-  if (loading) {
+  async function generateDefaultPacklist(kitchenId: string) {
+    setGenerating(true)
+    const toInsert = DEFAULT_ITEMS.map(item => ({
+      ...item,
+      event_id: eventId,
+      kitchen_id: kitchenId,
+    }))
+
+    const { data, error } = await supabase
+      .from('event_packlist_items')
+      .insert(toInsert)
+      .select()
+
+    if (!error && data) {
+      setItems(data as PacklistItem[])
+    }
+    setGenerating(false)
+  }
+
+  async function toggleCheck(item: PacklistItem) {
+    const newChecked = !item.checked
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, checked: newChecked } : i))
+    await supabase
+      .from('event_packlist_items')
+      .update({ checked: newChecked, updated_at: new Date().toISOString() })
+      .eq('id', item.id)
+  }
+
+  async function addItem(category: string) {
+    const { data: kitchenData } = await supabase.rpc('get_my_kitchen_ids')
+    const kitchenId = kitchenData?.[0]
+    if (!kitchenId) return
+
+    const maxOrder = Math.max(...items.filter(i => i.category === category).map(i => i.sort_order), 0)
+    const { data, error } = await supabase
+      .from('event_packlist_items')
+      .insert({
+        event_id: eventId,
+        kitchen_id: kitchenId,
+        category,
+        subcategory: null,
+        item_name: 'Nieuw item',
+        quantity: null,
+        unit: null,
+        supplier: null,
+        notes: null,
+        checked: false,
+        sort_order: maxOrder + 1,
+      })
+      .select()
+      .single()
+
+    if (!error && data) {
+      setItems(prev => [...prev, data as PacklistItem])
+      setEditingItem(data.id)
+    }
+  }
+
+  async function updateItem(id: string, field: keyof PacklistItem, value: string | number | boolean | null) {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i))
+    await supabase
+      .from('event_packlist_items')
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq('id', id)
+  }
+
+  async function deleteItem(id: string) {
+    setItems(prev => prev.filter(i => i.id !== id))
+    await supabase.from('event_packlist_items').delete().eq('id', id)
+  }
+
+  const progress = {
+    total: items.length,
+    checked: items.filter(i => i.checked).length,
+  }
+  const pct = progress.total > 0 ? Math.round((progress.checked / progress.total) * 100) : 0
+
+  const catItems = items.filter(i => i.category === activeCategory)
+  const subcats = [...new Set(catItems.map(i => i.subcategory || 'Overige'))]
+
+  if (loading || generating) {
     return (
-      <div className="flex items-center justify-center py-20 text-amber-500">
-        <SpinIcon />
+      <div style={{ padding: 60, textAlign: 'center', color: '#9E7E60' }}>
+        {generating ? 'Paklijst genereren op basis van SIR templates...' : 'Laden...'}
       </div>
     )
   }
 
+  if (!event) return null
+
   return (
-    <div className="space-y-5">
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {/* Header */}
-      <div className="flex items-center gap-4 print:hidden">
-        <Link
-          href={`/events/${eventId}`}
-          className="p-2 rounded-xl bg-[#FAF6EF] border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all"
-        >
-          <ArrowLeftIcon />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24 }}>
+        <Link href="/paklijsten" style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 36, height: 36, borderRadius: 8, border: '1px solid #E8D5B5',
+          background: 'white', color: '#9E7E60', textDecoration: 'none', marginTop: 4,
+        }}>
+          <svg width={16} height={16} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+          </svg>
         </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-display font-bold text-[#2C1810]">Paklijst</h1>
-          <p className="text-sm text-[#9E7E60] truncate">{eventName}</p>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 24, fontWeight: 700, color: '#2C1810', margin: '0 0 4px 0' }}>
+            Paklijst — {event.name}
+          </h1>
+          <p style={{ color: '#9E7E60', fontSize: 13, margin: 0 }}>
+            {new Date(event.event_date).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {event.location && ` · ${event.location}`}
+            {event.num_persons && ` · ${event.num_persons} personen`}
+          </p>
         </div>
         <button
-          onClick={resetTab}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-[#E8D5B5] rounded-xl bg-white text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5] transition-all"
-        >
-          <ResetIcon />
-          Reset vinkjes
-        </button>
-        <button
           onClick={() => window.print()}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-[#E8D5B5] rounded-xl bg-white text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5] transition-all"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '9px 18px', background: '#E8A040', color: '#2C1810',
+            border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+          }}
         >
-          <PrinterIcon />
+          <svg width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+            <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
           Afdrukken
         </button>
       </div>
 
-      {/* Tab navigation */}
-      <div className="flex items-center gap-1 bg-white border border-[#E8D5B5] rounded-xl p-1 overflow-x-auto print:hidden">
-        {TABS.map(tab => {
-          const tabCount = items.filter(i => i.category === tab.id).length
-          const tabChecked = items.filter(i => i.category === tab.id && i.checked).length
-          const pct = tabCount > 0 ? Math.round((tabChecked / tabCount) * 100) : 0
-          const isActive = activeTab === tab.id
+      {/* Progress */}
+      <div style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#2C1810' }}>Voortgang</span>
+              <span style={{ fontSize: 13, color: '#9E7E60', fontFamily: 'monospace' }}>
+                {progress.checked}/{progress.total} items
+              </span>
+            </div>
+            <div style={{ height: 8, background: '#E8D5B5', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 4,
+                background: pct === 100 ? '#10B981' : '#E8A040',
+                width: `${pct}%`,
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+          </div>
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%',
+            background: pct === 100 ? '#D1FAE5' : '#FEF3E2',
+            border: `2px solid ${pct === 100 ? '#6EE7B7' : '#F6D860'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 15, fontWeight: 700,
+            color: pct === 100 ? '#065F46' : '#92400E',
+          }}>
+            {pct}%
+          </div>
+        </div>
+      </div>
+
+      {/* Category tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+        {CATEGORIES.map(cat => {
+          const catCount = items.filter(i => i.category === cat.key)
+          const catChecked = catCount.filter(i => i.checked).length
+          const isActive = activeCategory === cat.key
           return (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-1 justify-center ${
-                isActive
-                  ? 'bg-amber-100 text-amber-800 border border-amber-200 shadow-sm'
-                  : 'text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5]'
-              }`}
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              style={{
+                padding: '8px 16px', borderRadius: 20, border: `1.5px solid ${isActive ? cat.color : '#E8D5B5'}`,
+                background: isActive ? cat.bg : 'white',
+                color: isActive ? cat.color : '#9E7E60',
+                fontWeight: isActive ? 700 : 500, fontSize: 13,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'all 0.15s',
+              }}
             >
-              {tab.label}
-              {tabCount > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  pct === 100
-                    ? 'bg-green-100 text-green-700'
-                    : isActive
-                    ? 'bg-amber-200 text-amber-800'
-                    : 'bg-stone-100 text-stone-600'
-                }`}>
-                  {pct}%
+              {cat.label}
+              {catCount.length > 0 && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+                  color: catChecked === catCount.length ? '#065F46' : cat.color,
+                }}>
+                  {catChecked}/{catCount.length}
                 </span>
               )}
             </button>
@@ -324,188 +309,146 @@ export default function PaklijstPage() {
         })}
       </div>
 
-      {/* Progress bar */}
-      <div className="bg-white border border-[#E8D5B5] rounded-xl p-4 print:hidden">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-[#2C1810]">
-            {TABS.find(t => t.id === activeTab)?.label}
-          </span>
-          <span className="text-sm text-[#9E7E60]">{checkedCount} / {tabItems.length} items</span>
-        </div>
-        <div className="h-2 bg-[#F0E8D8] rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-amber-400'}`}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        {progress === 100 && tabItems.length > 0 && (
-          <p className="text-xs text-green-600 mt-1.5 font-medium">Alles aangevinkt!</p>
-        )}
-      </div>
-
-      {/* Checklist */}
-      <div className="bg-white border border-[#E8D5B5] rounded-2xl overflow-hidden shadow-sm">
-        {Object.keys(grouped).length === 0 ? (
-          <div className="p-8 text-center text-[#9E7E60] text-sm">
-            Geen items in deze categorie
-          </div>
-        ) : (
-          Object.entries(grouped).map(([subcategory, subItems]) => (
-            <div key={subcategory}>
-              {/* Subcategory header */}
-              <div className="px-5 py-2 bg-[#F5EDE0] border-b border-[#E8D5B5]">
-                <span className="text-xs font-semibold text-[#9E7E60] uppercase tracking-wider">
-                  {subcategoryLabel(subcategory === '__none__' ? null : subcategory)}
+      {/* Items per subcategorie */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {subcats.map(subcat => {
+          const subItems = catItems.filter(i => (i.subcategory || 'Overige') === subcat)
+          const catConfig = CATEGORIES.find(c => c.key === activeCategory)!
+          return (
+            <div key={subcat} style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{
+                padding: '10px 16px', background: '#F5EDE0',
+                borderBottom: '1px solid #E8D5B5',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#9E7E60' }}>
+                  {subcat}
+                </span>
+                <span style={{ fontSize: 11, color: '#B8997A' }}>
+                  {subItems.filter(i => i.checked).length}/{subItems.length}
                 </span>
               </div>
-
-              {subItems.map(item => (
-                <div
-                  key={item.id}
-                  className={`border-b border-[#F0E8D8] last:border-b-0 transition-colors ${
-                    item.checked ? 'bg-[#FAFAF8]' : 'bg-white hover:bg-[#FDF8F4]'
-                  }`}
-                >
-                  {editingId === item.id ? (
-                    // Edit mode
-                    <div className="px-5 py-3 flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={item.checked}
-                        onChange={() => toggleItem(item)}
-                        className="mt-1 w-4 h-4 rounded border-[#E8D5B5] cursor-pointer accent-amber-500 shrink-0"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <span className={`text-sm font-medium block ${item.checked ? 'line-through text-[#B8997A]' : 'text-[#2C1810]'}`}>
-                          {item.item_name}
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          <input
-                            type="number"
-                            value={editQty}
-                            onChange={e => setEditQty(e.target.value)}
-                            placeholder="Hoeveelheid"
-                            className="w-28 px-2 py-1.5 text-xs border border-[#E8D5B5] rounded-lg bg-[#FAF6EF] text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
-                          />
-                          <input
-                            type="text"
-                            value={editNote}
-                            onChange={e => setEditNote(e.target.value)}
-                            placeholder="Notitie..."
-                            className="flex-1 min-w-32 px-2 py-1.5 text-xs border border-[#E8D5B5] rounded-lg bg-[#FAF6EF] text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
-                          />
-                          <button
-                            onClick={() => saveEdit(item)}
-                            className="px-3 py-1.5 bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-600 transition-colors"
-                          >
-                            Opslaan
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="px-3 py-1.5 border border-[#E8D5B5] text-[#9E7E60] text-xs rounded-lg hover:bg-[#F2E8D5] transition-colors"
-                          >
-                            Annuleren
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    // View mode
-                    <div className="px-5 py-3 flex items-center gap-3 group">
-                      <input
-                        type="checkbox"
-                        checked={item.checked}
-                        onChange={() => toggleItem(item)}
-                        className="w-4 h-4 rounded border-[#E8D5B5] cursor-pointer accent-amber-500 shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className={`text-sm ${item.checked ? 'line-through text-[#B8997A]' : 'text-[#2C1810]'}`}>
-                          {item.item_name}
-                        </span>
-                        {item.notes && (
-                          <p className="text-xs text-[#9E7E60] mt-0.5 truncate">{item.notes}</p>
-                        )}
-                      </div>
-                      {item.quantity != null && (
-                        <span className="text-xs text-[#9E7E60] font-mono shrink-0">
-                          {item.quantity}{item.unit ? ` ${item.unit}` : ''}
-                        </span>
+              <div>
+                {subItems.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '11px 16px',
+                      borderBottom: idx < subItems.length - 1 ? '1px solid #F2E8D5' : 'none',
+                      background: item.checked ? '#F9FAF9' : 'white',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <button
+                      onClick={() => toggleCheck(item)}
+                      style={{
+                        width: 22, height: 22, borderRadius: 6,
+                        border: `2px solid ${item.checked ? catConfig.color : '#D1C4B0'}`,
+                        background: item.checked ? catConfig.bg : 'white',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, transition: 'all 0.15s',
+                      }}
+                    >
+                      {item.checked && (
+                        <svg width={12} height={12} fill="none" stroke={catConfig.color} strokeWidth="2.5" viewBox="0 0 24 24">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
                       )}
-                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${getSupplierBadge(item.supplier)}`}>
-                        {item.supplier}
-                      </span>
-                      <button
-                        onClick={() => {
-                          setEditingId(item.id)
-                          setEditNote(item.notes || '')
-                          setEditQty(item.quantity != null ? String(item.quantity) : '')
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#9E7E60] hover:text-[#2C1810] hover:bg-[#F2E8D5] transition-all shrink-0"
-                        title="Bewerken"
-                      >
-                        <EditIcon />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))
-        )}
+                    </button>
 
-        {/* Add item */}
-        {addingCategory === activeTab ? (
-          <div className="px-5 py-3 bg-[#FAF6EF] border-t border-[#E8D5B5] flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              value={newItemName}
-              onChange={e => setNewItemName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addItem()}
-              placeholder="Naam item..."
-              autoFocus
-              className="flex-1 min-w-40 px-3 py-2 text-sm border border-[#E8D5B5] rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-amber-400"
-            />
-            <input
-              type="number"
-              value={newItemQty}
-              onChange={e => setNewItemQty(e.target.value)}
-              placeholder="Qty"
-              className="w-20 px-3 py-2 text-sm border border-[#E8D5B5] rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-amber-400"
-            />
-            <select
-              value={newItemSupplier}
-              onChange={e => setNewItemSupplier(e.target.value)}
-              className="px-3 py-2 text-sm border border-[#E8D5B5] rounded-lg bg-white text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-amber-400"
-            >
-              <option>SIR</option>
-              <option>Levi</option>
-              <option>klant</option>
-            </select>
-            <button
-              onClick={addItem}
-              disabled={saving || !newItemName.trim()}
-              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
-            >
-              {saving ? '...' : 'Toevoegen'}
-            </button>
-            <button
-              onClick={() => setAddingCategory(null)}
-              className="px-3 py-2 border border-[#E8D5B5] text-[#9E7E60] text-sm rounded-lg hover:bg-[#F2E8D5] transition-colors"
-            >
-              Annuleren
-            </button>
-          </div>
-        ) : (
-          <div className="px-5 py-3 border-t border-[#E8D5B5]">
-            <button
-              onClick={() => setAddingCategory(activeTab)}
-              className="flex items-center gap-2 text-sm text-[#9E7E60] hover:text-amber-600 transition-colors"
-            >
-              <PlusIcon />
-              Item toevoegen
-            </button>
-          </div>
-        )}
+                    {/* Naam — inline bewerkbaar */}
+                    {editingItem === item.id ? (
+                      <input
+                        autoFocus
+                        value={item.item_name}
+                        onChange={e => updateItem(item.id, 'item_name', e.target.value)}
+                        onBlur={() => setEditingItem(null)}
+                        onKeyDown={e => e.key === 'Enter' && setEditingItem(null)}
+                        style={{
+                          flex: 1, padding: '4px 8px', border: `1px solid ${catConfig.color}`,
+                          borderRadius: 6, fontSize: 13, color: '#2C1810', outline: 'none',
+                          background: '#FAF6EF',
+                        }}
+                      />
+                    ) : (
+                      <span
+                        onClick={() => setEditingItem(item.id)}
+                        style={{
+                          flex: 1, fontSize: 14, cursor: 'text',
+                          color: item.checked ? '#9E7E60' : '#2C1810',
+                          textDecoration: item.checked ? 'line-through' : 'none',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {item.item_name}
+                      </span>
+                    )}
+
+                    {/* Hoeveelheid */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input
+                        type="number"
+                        value={item.quantity ?? ''}
+                        onChange={e => updateItem(item.id, 'quantity', e.target.value ? Number(e.target.value) : null)}
+                        placeholder="Aantal"
+                        style={{
+                          width: 60, padding: '4px 6px', border: '1px solid #E8D5B5',
+                          borderRadius: 6, fontSize: 12, textAlign: 'right', color: '#2C1810', outline: 'none',
+                          background: '#FAF6EF',
+                        }}
+                      />
+                      <input
+                        value={item.unit ?? ''}
+                        onChange={e => updateItem(item.id, 'unit', e.target.value || null)}
+                        placeholder="eenheid"
+                        style={{
+                          width: 64, padding: '4px 6px', border: '1px solid #E8D5B5',
+                          borderRadius: 6, fontSize: 12, color: '#9E7E60', outline: 'none',
+                          background: '#FAF6EF',
+                        }}
+                      />
+                    </div>
+
+                    {/* Notitie */}
+                    {item.notes && (
+                      <span style={{ fontSize: 11, color: '#B45309', background: '#FEF3E2', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                        {item.notes}
+                      </span>
+                    )}
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => deleteItem(item.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D1C4B0', padding: 4, borderRadius: 4, flexShrink: 0 }}
+                    >
+                      <svg width={14} height={14} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Item toevoegen */}
+        <button
+          onClick={() => addItem(activeCategory)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '11px 18px', background: 'white', border: '2px dashed #E8D5B5',
+            borderRadius: 12, color: '#9E7E60', fontWeight: 600, fontSize: 13,
+            cursor: 'pointer', width: '100%', transition: 'all 0.15s',
+          }}
+        >
+          <svg width={14} height={14} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Item toevoegen aan {CATEGORIES.find(c => c.key === activeCategory)?.label.toLowerCase()}
+        </button>
       </div>
     </div>
   )
