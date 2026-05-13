@@ -98,6 +98,8 @@ function getCategoryOrder(cat: string): number {
   if (c === 'FINGERFOOD') return 20
   if (c === 'FINGERBITES') return 30
   if (c === 'HAPJES' || c === 'HAPJE' || c === 'HAPJES_WARM' || c === 'APPETIZERS') return 40
+  // KIDS: altijd tijdens hapjesfase, vóór volwassenen gaan zitten
+  if (c === 'KIDS' || c === 'KINDERMENU' || c === 'KIDS MENU') return 45
   if (c === 'AMUSE') return 50
   if (c === 'VOORGERECHT') return 60
   if (c === 'TUSSENGERECHT') return 70
@@ -111,7 +113,6 @@ function getCategoryOrder(cat: string): number {
   if (c === 'AFTER SNACKS' || c.includes('NIGHT SNACK') || c.includes('LATE NIGHT') || c === 'BBQ' || c === 'BUFFET') return 98
   if (c === 'MIGNARDISES') return 200
   if (c === 'HALFABRICAAT') return 250
-  if (c === 'KIDS' || c === 'KINDERMENU' || c === 'KIDS MENU') return 210
   return 99
 }
 
