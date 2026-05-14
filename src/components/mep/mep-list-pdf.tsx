@@ -46,7 +46,6 @@ export interface MepListData {
 function getCategoryOrder(cat: string): number {
   const c = (cat || '').toUpperCase().trim()
 
-  // === MIDDAG SESSION ===
   if (c.includes('MIDDAG') || c === 'DESSERT LUNCH' || (c.includes('LUNCH') && c.includes('DESSERT'))) {
     if (c.includes('FINGERFOOD')) return 4
     if (c.includes('FINGERBITES')) return 5
@@ -59,7 +58,6 @@ function getCategoryOrder(cat: string): number {
     return 6
   }
 
-  // === WALKING variants ===
   if (c.includes('WALKING')) {
     if (c.includes('VOOR')) return 63
     if (c.includes('HOOFD')) return 83
@@ -67,7 +65,6 @@ function getCategoryOrder(cat: string): number {
     return 75
   }
 
-  // === SHARING variants ===
   if (c.includes('SHARING')) {
     if (c.includes('VOOR')) return 64
     if (c.includes('HOOFD')) return 84
@@ -75,7 +72,6 @@ function getCategoryOrder(cat: string): number {
     return 76
   }
 
-  // === APERO SESSION ===
   if (c.includes('APERO')) {
     if (c.includes('FINGERFOOD')) return 110
     if (c.includes('FINGERBITES')) return 115
@@ -98,7 +94,6 @@ function getCategoryOrder(cat: string): number {
   if (c === 'FINGERFOOD') return 20
   if (c === 'FINGERBITES') return 30
   if (c === 'HAPJES' || c === 'HAPJE' || c === 'HAPJES_WARM' || c === 'APPETIZERS') return 40
-  // KIDS: altijd tijdens hapjesfase, vóór volwassenen gaan zitten
   if (c === 'KIDS' || c === 'KINDERMENU' || c === 'KIDS MENU') return 45
   if (c === 'AMUSE') return 50
   if (c === 'VOORGERECHT') return 60
@@ -169,8 +164,7 @@ function getCategoryLabel(cat: string): string {
   return CATEGORY_LABELS[upper] || cat
 }
 
-// ─── Small categories that should NOT force a new column ──────────────────────
-// These flow in the same column as their neighbour (e.g. DRANKEN + FINGERFOOD)
+// Small categories flow in the same column as their neighbour
 const SMALL_CATS = new Set([
   'DRANKEN', 'MOCKTAILS', 'BROOD & BOTER', 'KAAS',
   'MIGNARDISES', 'PETITS FOURS', 'PETIT FOURS', 'NIGHT SNACK',
@@ -242,50 +236,50 @@ const S = StyleSheet.create({
   page: {
     fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',
-    paddingTop: 22,
-    paddingBottom: 26,
-    paddingHorizontal: 18,
-    fontSize: 8,
+    paddingTop: 20,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+    fontSize: 7.5,
     color: '#1C1008',
   },
   header: {
-    marginBottom: 8,
-    paddingBottom: 7,
+    marginBottom: 7,
+    paddingBottom: 6,
     borderBottomWidth: 1.5,
     borderBottomColor: '#2d6a4f',
   },
   clientName: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
     letterSpacing: 0.3,
     marginBottom: 2,
   },
   headerDate: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     color: '#2d6a4f',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   headerMeta: {
-    fontSize: 8.5,
+    fontSize: 8,
     color: '#4A3728',
     marginTop: 1,
   },
   headerContact: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#888888',
-    marginTop: 2,
+    marginTop: 1,
   },
   headerTravelLine: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#1d4ed8',
     fontFamily: 'Helvetica-Bold',
-    marginTop: 3,
+    marginTop: 2,
   },
   columnContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 7,
     alignItems: 'flex-start',
   },
   column: {
@@ -295,77 +289,80 @@ const S = StyleSheet.create({
     marginBottom: 4,
   },
   categoryHeader: {
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     textTransform: 'uppercase',
-    letterSpacing: 1.0,
+    letterSpacing: 0.8,
     backgroundColor: '#2d6a4f',
-    paddingTop: 3,
-    paddingBottom: 3,
-    paddingLeft: 6,
-    paddingRight: 6,
-    marginBottom: 4,
+    paddingTop: 2.5,
+    paddingBottom: 2.5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginBottom: 3,
   },
   dishBlock: {
-    marginBottom: 5,
+    marginBottom: 4,
   },
   dishNotes: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#b45309',
     fontFamily: 'Helvetica-Oblique',
     marginBottom: 1,
   },
   dishTitle: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontFamily: 'Helvetica-Bold',
     color: '#1a1a2e',
-    marginBottom: 2,
+    marginBottom: 1.5,
   },
   dishTiming: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: '#888888',
-    marginBottom: 2,
+    marginBottom: 1.5,
   },
   componentGroup: {
-    marginTop: 2,
+    marginTop: 1.5,
     marginBottom: 1,
   },
   componentGroupHeader: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     color: '#888888',
     fontFamily: 'Helvetica-BoldOblique',
     paddingBottom: 1,
-    marginBottom: 2,
+    marginBottom: 1.5,
   },
   componentRow: {
     flexDirection: 'row',
-    marginBottom: 1.5,
+    marginBottom: 1.2,
   },
   componentBullet: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#1a1a2e',
     marginRight: 2,
-    width: 8,
+    width: 7,
   },
   componentText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#1a1a2e',
     flex: 1,
     flexWrap: 'wrap',
   },
   componentGray: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#888888',
   },
   dishSpacer: {
-    height: 8,
+    height: 5,
   },
   footer: {
-    marginTop: 10,
-    fontSize: 6.5,
+    marginTop: 8,
+    fontSize: 6,
     color: '#B8997A',
     textAlign: 'center',
+  },
+  pageBreakSpacer: {
+    height: 14,
   },
 })
 
@@ -384,7 +381,8 @@ function DishCard({ dish }: { dish: MepListDish }) {
   }
 
   return (
-    <View style={S.dishBlock}>
+    // wrap={false} keeps the entire dish together — never splits across columns/pages
+    <View style={S.dishBlock} wrap={false}>
       {dish.notes && <Text style={S.dishNotes}>⚑ {dish.notes}</Text>}
       <Text style={S.dishTitle}>{dish.title}</Text>
       {dish.timing_label && <Text style={S.dishTiming}>{dish.timing_label}</Text>}
@@ -417,6 +415,91 @@ function DishCard({ dish }: { dish: MepListDish }) {
   )
 }
 
+// ─── Column distribution across pages ────────────────────────────────────────
+//
+// A4 portrait = 841.89pt height
+// paddingTop=20, paddingBottom=24 → usable = ~798pt
+// Header ≈ 85pt → column space ≈ 710pt per page
+//
+// We distribute categories into (numCols × numPages) slots.
+// Each column slot has a max height of MAX_COL_H.
+// Major categories always start a new column (unless first).
+// Small categories flow into the current column.
+// When a column is full, we spill to the next column (or next page).
+
+const MAX_COL_H = 660 // conservative page column budget in pt
+
+function estimateCatHeight(group: { dishes: MepListDish[] }): number {
+  let h = 20 // category header bar
+  for (const dish of group.dishes) {
+    h += 14 // dish title
+    if (dish.notes) h += 9
+    if (dish.timing_label) h += 9
+    const comps = dish.components || []
+    const groups = new Set(comps.map(c => c.component_group || null))
+    const numGroups = [...groups].filter(g => g !== null).length
+    h += numGroups * 11 // group headers
+    h += comps.length * 10 // component rows
+    h += 5 // spacer
+  }
+  return h
+}
+
+interface PageColumns {
+  columns: { category: string; label: string; order: number; dishes: MepListDish[] }[][]
+}
+
+function distributeToPages(
+  catGroups: { category: string; label: string; order: number; dishes: MepListDish[] }[],
+  numCols: number
+): PageColumns[] {
+  const pages: PageColumns[] = []
+  let currentPage: PageColumns = { columns: Array.from({ length: numCols }, () => []) }
+  pages.push(currentPage)
+  let colIdx = 0
+  let colH = 0
+
+  for (let i = 0; i < catGroups.length; i++) {
+    const group = catGroups[i]
+    const h = estimateCatHeight(group)
+    const isMajor = !isSmallCategory(group.category)
+
+    // Major category → try to start a new column
+    if (i > 0 && isMajor) {
+      if (colIdx < numCols - 1) {
+        // Move to next column on current page
+        colIdx++
+        colH = 0
+      } else if (colH > 0) {
+        // All columns used → start a new page
+        currentPage = { columns: Array.from({ length: numCols }, () => []) }
+        pages.push(currentPage)
+        colIdx = 0
+        colH = 0
+      }
+    }
+
+    // If adding this category would overflow the column height budget → next column/page
+    if (colH > 0 && colH + h > MAX_COL_H) {
+      if (colIdx < numCols - 1) {
+        colIdx++
+        colH = 0
+      } else {
+        // Need a new page
+        currentPage = { columns: Array.from({ length: numCols }, () => []) }
+        pages.push(currentPage)
+        colIdx = 0
+        colH = 0
+      }
+    }
+
+    currentPage.columns[colIdx].push(group)
+    colH += h
+  }
+
+  return pages
+}
+
 // ─── Main PDF Document ────────────────────────────────────────────────────────
 
 export function MepListDocument({ data }: { data: MepListData }) {
@@ -430,14 +513,8 @@ export function MepListDocument({ data }: { data: MepListData }) {
     return (a.sort_order || 0) - (b.sort_order || 0)
   })
 
-  // Group dishes by category
-  interface CatGroup {
-    category: string
-    label: string
-    order: number
-    dishes: MepListDish[]
-  }
-  const catGroups: CatGroup[] = []
+  // Group dishes by category (skip koffie)
+  const catGroups: { category: string; label: string; order: number; dishes: MepListDish[] }[] = []
   for (const dish of sortedDishes) {
     const skipCheck = (dish.category || '').toUpperCase()
     if (skipCheck.includes('KOFFIE') || skipCheck === 'THEE') continue
@@ -455,54 +532,16 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   catGroups.sort((a, b) => a.order - b.order)
 
-  // ─── CATEGORY-PER-COLUMN layout ───
-  // Major categories start at the top of a new column.
-  // Small categories (DRANKEN, MIGNARDISES, etc.) share a column with their neighbour.
-  function estimateCatHeight(group: CatGroup): number {
-    let h = 24 // category header
-    for (const dish of group.dishes) {
-      h += 18 // dish title
-      if (dish.notes) h += 10
-      const comps = dish.components || []
-      const groups = new Set(comps.map(c => c.component_group || null))
-      const numGroups = [...groups].filter(g => g !== null).length
-      h += numGroups * 12
-      h += comps.length * 11
-      h += 8 // spacer
-    }
-    return h
-  }
+  // Distribute into pages × columns
+  const pages = distributeToPages(catGroups, numCols)
 
-  const columns: CatGroup[][] = Array.from({ length: numCols }, () => [])
-  let colIdx = 0
-  let colH = 0
-  const heights = catGroups.map(estimateCatHeight)
-  const totalH = heights.reduce((s, h) => s + h, 0)
-  const targetPerCol = totalH / numCols
-
-  for (let i = 0; i < catGroups.length; i++) {
-    const h = heights[i]
-    const isMajor = !isSmallCategory(catGroups[i].category)
-
-    // Major categories start a new column (if current column has content)
-    // Small categories just flow into the current column
-    if (i > 0 && isMajor && colH > 0 && colIdx < numCols - 1) {
-      colIdx++
-      colH = 0
-    }
-
-    columns[colIdx].push(catGroups[i])
-    colH += h
-  }
-
-  // Reistijd
+  // Header info
   const departure = event.departure_time || calcDeparture(event.kitchen_arrival_time, event.travel_time_minutes)
   const travelParts: string[] = []
   if (departure) travelParts.push(`Vertrek Mariakerke: ${departure}`)
   if (event.kitchen_arrival_time) travelParts.push(`Aankomst keuken: ${formatTime(event.kitchen_arrival_time)}`)
   if (event.venue_address) travelParts.push(event.venue_address)
 
-  // Info line
   const infoParts: string[] = []
   if (event.num_persons) infoParts.push(`${event.num_persons} personen`)
   if (event.event_start_time && event.event_end_time)
@@ -513,43 +552,56 @@ export function MepListDocument({ data }: { data: MepListData }) {
 
   return (
     <Document>
-      <Page size="A4" orientation="portrait" style={S.page}>
-        {/* ── Header ── */}
-        <View style={S.header}>
-          <Text style={S.clientName}>{event.name}</Text>
-          <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
-          {infoParts.length > 0 && (
-            <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
-          )}
-          {event.contact_person && (
-            <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
-          )}
-          {travelParts.length > 0 && (
-            <Text style={S.headerTravelLine}>{travelParts.join('  ·  ')}</Text>
-          )}
-        </View>
-
-        {/* ── Columns — major categories start at top of new column ── */}
-        <View style={S.columnContainer}>
-          {columns.map((col, ci) => (
-            <View key={ci} style={S.column}>
-              {col.map((group, gi) => (
-                <View key={gi} style={S.categoryBlock}>
-                  <Text style={S.categoryHeader}>{group.label.toUpperCase()}</Text>
-                  {group.dishes.map((dish, di) => (
-                    <DishCard key={di} dish={dish} />
-                  ))}
-                </View>
-              ))}
+      {pages.map((page, pageIdx) => (
+        <Page key={pageIdx} size="A4" orientation="portrait" style={S.page}>
+          {/* ── Header: only on first page ── */}
+          {pageIdx === 0 && (
+            <View style={S.header}>
+              <Text style={S.clientName}>{event.name}</Text>
+              <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
+              {infoParts.length > 0 && (
+                <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
+              )}
+              {event.contact_person && (
+                <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
+              )}
+              {travelParts.length > 0 && (
+                <Text style={S.headerTravelLine}>{travelParts.join('  ·  ')}</Text>
+              )}
             </View>
-          ))}
-        </View>
+          )}
 
-        {/* ── Footer ── */}
-        <Text style={S.footer} fixed>
-          SIR Catering  ·  MEP
-        </Text>
-      </Page>
+          {/* Continuation header for page 2+ */}
+          {pageIdx > 0 && (
+            <View style={{ marginBottom: 8, paddingBottom: 5, borderBottomWidth: 1, borderBottomColor: '#2d6a4f' }}>
+              <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1a1a2e' }}>
+                {event.name} <Text style={{ fontSize: 8, color: '#888888', fontFamily: 'Helvetica' }}>(vervolg)</Text>
+              </Text>
+            </View>
+          )}
+
+          {/* ── Columns ── */}
+          <View style={S.columnContainer}>
+            {page.columns.map((col, ci) => (
+              <View key={ci} style={S.column}>
+                {col.map((group, gi) => (
+                  <View key={gi} style={S.categoryBlock}>
+                    <Text style={S.categoryHeader}>{group.label.toUpperCase()}</Text>
+                    {group.dishes.map((dish, di) => (
+                      <DishCard key={di} dish={dish} />
+                    ))}
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+
+          {/* ── Footer ── */}
+          <Text style={S.footer} fixed>
+            SIR Catering  ·  MEP
+          </Text>
+        </Page>
+      ))}
     </Document>
   )
 }
