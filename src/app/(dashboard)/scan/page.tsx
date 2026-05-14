@@ -1,24 +1,30 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
-import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
-type ScanState = 'idle' | 'uploading' | 'processing' | 'results' | 'saved' | 'error'
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist'
+type ScanState = 'idle' | 'uploading' | 'processing' | 'results' | 'error'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
 
 interface ScanResultData {
   type: DocumentType
   data: Record<string, unknown>
   confidence: number
+  saved?: boolean
+  saved_id?: string
+  auto_imported?: boolean
+  import_result?: Record<string, unknown>
 }
 
-interface ScanHistoryItem {
+interface ScannedDoc {
   id: string
-  type: DocumentType
+  document_type: DocumentType
   title: string
-  date: string
   confidence: number
+  auto_imported: boolean
+  import_summary: Record<string, unknown> | null
+  created_at: string
 }
 
 const typeLabels: Record<DocumentType, string> = {
@@ -26,6 +32,7 @@ const typeLabels: Record<DocumentType, string> = {
   mep: 'MEP Lijst',
   recipe: 'Recept',
   pricelist: 'Prijslijst',
+  other: 'Document',
 }
 
 const typeColors: Record<DocumentType, string> = {
@@ -33,6 +40,15 @@ const typeColors: Record<DocumentType, string> = {
   mep: 'bg-emerald-50 text-emerald-700',
   recipe: 'bg-amber-50 text-amber-700',
   pricelist: 'bg-violet-50 text-violet-700',
+  other: 'bg-stone-50 text-stone-600',
+}
+
+const typeIcons: Record<DocumentType, React.ReactNode> = {
+  invoice: <FileText className="w-4 h-4" />,
+  mep: <ClipboardList className="w-4 h-4" />,
+  recipe: <BookOpen className="w-4 h-4" />,
+  pricelist: <Package className="w-4 h-4" />,
+  other: <FileText className="w-4 h-4" />,
 }
 
 const docTypeOptions: { value: DocumentType | 'auto'; label: string }[] = [
@@ -43,18 +59,77 @@ const docTypeOptions: { value: DocumentType | 'auto'; label: string }[] = [
   { value: 'recipe', label: 'Recept' },
 ]
 
+function ImportFeedback({ result }: { result: ScanResultData }) {
+  if (!result.auto_imported || !result.import_result) return null
+
+  const r = result.import_result
+
+  if (result.type === 'pricelist') {
+    return (
+      <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+          <Check className="w-4 h-4 text-emerald-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-emerald-800">Automatisch geïmporteerd</p>
+          <p className="text-xs text-emerald-600 mt-0.5">
+            {r.imported as number} producten bijgewerkt bij <strong>{r.supplier_name as string}</strong>
+            {(r.skipped as number) > 0 && ` · ${r.skipped as number} overgeslagen`}
+          </p>
+          <a href="/mep/leveranciers" className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium mt-2 hover:underline">
+            Bekijk leverancier <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (result.type === 'recipe' && r.recipe_id) {
+    return (
+      <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+          <Check className="w-4 h-4 text-emerald-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-emerald-800">Recept opgeslagen</p>
+          <p className="text-xs text-emerald-600 mt-0.5">
+            <strong>{r.recipe_name as string}</strong> is toegevoegd aan je receptenbibliotheek
+          </p>
+          <a href="/recepten" className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium mt-2 hover:underline">
+            Bekijk recepten <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
 export default function ScanPage() {
   const [state, setState] = useState<ScanState>('idle')
   const [result, setResult] = useState<ScanResultData | null>(null)
   const [error, setError] = useState<string>('')
   const [dragOver, setDragOver] = useState(false)
-  const [history, setHistory] = useState<ScanHistoryItem[]>([])
+  const [history, setHistory] = useState<ScannedDoc[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
   const [expandedDishes, setExpandedDishes] = useState<Set<number>>(new Set())
   const [docType, setDocType] = useState<DocumentType | 'auto'>('auto')
   const [importing, setImporting] = useState(false)
   const [importDone, setImportDone] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  // Laad persistente history uit DB
+  useEffect(() => {
+    fetch('/api/scan/history')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setHistory(data)
+      })
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false))
+  }, [])
 
   const processFile = useCallback(async (file: File) => {
     setState('uploading')
@@ -65,7 +140,6 @@ export default function ScanPage() {
     try {
       setState('processing')
 
-      // Use FormData - works in browser without Buffer polyfill
       const formData = new FormData()
       formData.append('file', file)
       if (docType !== 'auto') {
@@ -86,27 +160,17 @@ export default function ScanPage() {
       setResult(data)
       setState('results')
 
-      const historyItem: ScanHistoryItem = {
-        id: Date.now().toString(),
-        type: data.type,
-        title: getResultTitle(data),
-        date: new Date().toISOString(),
-        confidence: data.confidence,
-      }
-      setHistory(prev => [historyItem, ...prev].slice(0, 10))
+      // History herladen uit DB (nu bevat het de nieuwe scan)
+      fetch('/api/scan/history')
+        .then(r => r.json())
+        .then(histData => { if (Array.isArray(histData)) setHistory(histData) })
+        .catch(() => {})
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Onbekende fout')
       setState('error')
     }
   }, [docType])
-
-  const getResultTitle = (data: ScanResultData): string => {
-    if (data.type === 'invoice') return (data.data.supplier_name as string) || 'Factuur'
-    if (data.type === 'mep') return (data.data.title as string) || 'MEP Lijst'
-    if (data.type === 'recipe') return (data.data.name as string) || 'Recept'
-    if (data.type === 'pricelist') return (data.data.supplier_name as string) || 'Prijslijst'
-    return 'Document'
-  }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -134,6 +198,8 @@ export default function ScanPage() {
     setResult(null)
     setError('')
     setImportDone(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
   const handleImportPricelist = async () => {
@@ -145,12 +211,24 @@ export default function ScanPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(result.data),
       })
-      if (response.ok) setImportDone(true)
+      if (response.ok) {
+        setImportDone(true)
+        // Refresh history
+        fetch('/api/scan/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
+      }
     } catch (err) {
       console.error('Import error:', err)
     } finally {
       setImporting(false)
     }
+  }
+
+  const getImportSummary = (doc: ScannedDoc): string => {
+    if (!doc.auto_imported || !doc.import_summary) return 'Opgeslagen'
+    const s = doc.import_summary
+    if (doc.document_type === 'pricelist') return `${s.imported} producten bij ${s.supplier_name}`
+    if (doc.document_type === 'recipe') return `Opgeslagen als recept`
+    return 'Automatisch geïmporteerd'
   }
 
   return (
@@ -163,7 +241,7 @@ export default function ScanPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Scanner</h1>
-            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten of recepten met AI-herkenning</p>
+            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten of recepten — automatisch verwerkt en opgeslagen</p>
           </div>
         </div>
       </div>
@@ -228,7 +306,7 @@ export default function ScanPage() {
                   Camera
                 </button>
               </div>
-              <p className="text-[11px] text-[#5C4730] mt-2">JPG, PNG, HEIC, PDF - max 10MB</p>
+              <p className="text-[11px] text-[#5C4730] mt-2">JPG, PNG, PDF — max 10MB · Geen HEIC</p>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileSelect} className="hidden" />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
@@ -258,7 +336,7 @@ export default function ScanPage() {
                 {state === 'uploading' ? 'Document uploaden...' : 'AI analyseert je document...'}
               </p>
               <p className="text-[#9E7E60] text-sm mt-1">
-                {state === 'processing' && 'Tekst herkennen, producten extraheren en prijzen matchen'}
+                {state === 'processing' && 'Tekst herkennen, producten extraheren en automatisch opslaan'}
               </p>
             </div>
           </div>
@@ -267,7 +345,11 @@ export default function ScanPage() {
 
       {/* Results */}
       {state === 'results' && result && (
-        <div className="space-y-6 animate-slide-up">
+        <div className="space-y-4 animate-slide-up">
+
+          {/* Auto-import feedback banner */}
+          <ImportFeedback result={result} />
+
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -275,6 +357,11 @@ export default function ScanPage() {
                   {typeLabels[result.type]}
                 </span>
                 <span className="text-xs text-[#9E7E60]">Betrouwbaarheid: {Math.round(result.confidence * 100)}%</span>
+                {result.saved && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-500 bg-stone-50 px-2 py-0.5 rounded-full border border-stone-100">
+                    <Check className="w-3 h-3" /> Opgeslagen
+                  </span>
+                )}
               </div>
               <button onClick={resetScan} className="text-[#9E7E60] hover:text-[#5C4730] transition-colors">
                 <X className="w-5 h-5" />
@@ -327,26 +414,31 @@ export default function ScanPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleImportPricelist}
-                    disabled={importing || importDone}
-                    className="btn-primary flex-1 justify-center"
-                  >
-                    {importing ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Importeren...</>
-                    ) : importDone ? (
-                      <><Check className="w-4 h-4" /> Prijzen geïmporteerd</>
-                    ) : (
-                      <><Tag className="w-4 h-4" /> Prijzen importeren naar leveranciers</>
-                    )}
-                  </button>
-                  <button onClick={resetScan} className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">
+                {/* Toon import knop enkel als NIET auto-geïmporteerd */}
+                {!result.auto_imported && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleImportPricelist}
+                      disabled={importing || importDone}
+                      className="btn-primary flex-1 justify-center"
+                    >
+                      {importing ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Importeren...</>
+                      ) : importDone ? (
+                        <><Check className="w-4 h-4" /> Prijzen geïmporteerd</>
+                      ) : (
+                        <><Tag className="w-4 h-4" /> Prijzen importeren naar leveranciers</>
+                      )}
+                    </button>
+                    <button onClick={resetScan} className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">
+                      Nieuwe scan
+                    </button>
+                  </div>
+                )}
+                {result.auto_imported && (
+                  <button onClick={resetScan} className="w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">
                     Nieuwe scan
                   </button>
-                </div>
-                {importDone && (
-                  <p className="text-xs text-emerald-600 text-center">Prijzen zijn bijgewerkt in de leveranciersmodule</p>
                 )}
               </div>
             )}
@@ -410,10 +502,7 @@ export default function ScanPage() {
                     </tfoot>
                   </table>
                 </div>
-                <button className="btn-primary w-full justify-center">
-                  <FileText className="w-4 h-4" />
-                  Import prijzen
-                </button>
+                <p className="text-xs text-[#9E7E60] text-center">Factuur opgeslagen in scanhistorie</p>
               </div>
             )}
 
@@ -446,10 +535,10 @@ export default function ScanPage() {
                     )}
                   </div>
                 ))}
-                <button className="btn-primary w-full justify-center">
-                  <FileText className="w-4 h-4" />
-                  Import naar MEP
-                </button>
+                <a href="/mep" className="btn-primary w-full justify-center flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" />
+                  Bekijk MEP module
+                </a>
               </div>
             )}
 
@@ -485,41 +574,75 @@ export default function ScanPage() {
                     </ol>
                   </div>
                 </div>
-                <button className="btn-primary w-full justify-center">
-                  <Check className="w-4 h-4" />
-                  Opslaan als recept
-                </button>
+                {result.auto_imported ? (
+                  <a href="/recepten" className="btn-primary w-full justify-center flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Bekijk in receptenbibliotheek
+                  </a>
+                ) : (
+                  <p className="text-xs text-[#9E7E60] text-center">Opgeslagen in scanhistorie</p>
+                )}
               </div>
             )}
           </div>
+
+          <button onClick={resetScan} className="w-full px-4 py-3 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors flex items-center justify-center gap-2">
+            <ScanLine className="w-4 h-4" />
+            Nieuw document scannen
+          </button>
         </div>
       )}
 
-      {/* Scan Geschiedenis */}
-      {history.length > 0 && (
-        <div className="animate-fade-in">
-          <h2 className="font-display font-semibold text-stone-900 mb-4">Recente scans</h2>
+      {/* Scan Geschiedenis — persistent uit DB */}
+      <div className="animate-fade-in">
+        <h2 className="font-display font-semibold text-stone-900 mb-4">Scanhistorie</h2>
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-8 text-[#9E7E60]">
+            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            <span className="text-sm">Laden...</span>
+          </div>
+        ) : history.length === 0 ? (
+          <div className="card p-8 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center mx-auto mb-3">
+              <ScanLine className="w-6 h-6 text-[#9E7E60]" />
+            </div>
+            <p className="text-sm font-medium text-stone-700">Nog geen documenten gescand</p>
+            <p className="text-xs text-[#9E7E60] mt-1">Gescande documenten verschijnen hier en blijven bewaard</p>
+          </div>
+        ) : (
           <div className="space-y-2">
             {history.map(item => (
               <div key={item.id} className="card p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${typeColors[item.type]}`}>
-                    {typeLabels[item.type]}
-                  </span>
-                  <span className="text-sm font-medium text-stone-900">{item.title}</span>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${typeColors[item.document_type as DocumentType] || 'bg-stone-50 text-stone-600'}`}>
+                    {typeIcons[item.document_type as DocumentType]}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-stone-900">{item.title}</p>
+                    <p className="text-xs text-[#9E7E60] mt-0.5">
+                      {item.auto_imported ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-600">
+                          <Check className="w-3 h-3" />
+                          {getImportSummary(item)}
+                        </span>
+                      ) : (
+                        'Opgeslagen'
+                      )}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-[#9E7E60]">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {formatDate(item.date)}
+                    {formatDate(item.created_at)}
                   </span>
                   <span>{Math.round(item.confidence * 100)}%</span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
