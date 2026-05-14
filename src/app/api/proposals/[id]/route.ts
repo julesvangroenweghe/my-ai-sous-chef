@@ -11,10 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { data, error } = await supabase
     .from('saved_menus')
-    .select(`
-      *,
-      items:saved_menu_items(*)
-    `)
+    .select(`*, items:saved_menu_items(*)`)
     .eq('id', id)
     .single()
 
@@ -31,13 +28,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const body = await req.json()
   const { items, ...menuData } = body
 
-  // Update menu
+  // Update menu (incl. crew_persons als aanwezig)
   const { data: menu, error: menuError } = await supabase
     .from('saved_menus')
-    .update({
-      ...menuData,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ ...menuData, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
@@ -46,12 +40,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     console.error('[proposals PUT] update error:', menuError)
     return NextResponse.json({ error: menuError.message }, { status: 500 })
   }
+  if (!menu) return NextResponse.json({ error: 'Voorstel niet gevonden of geen toegang' }, { status: 404 })
 
-  if (!menu) {
-    return NextResponse.json({ error: 'Voorstel niet gevonden of geen toegang' }, { status: 404 })
-  }
-
-  // Replace items if provided
+  // Replace items if provided (incl. crew food items met is_crew_food flag)
   if (items !== undefined) {
     await supabase.from('saved_menu_items').delete().eq('menu_id', id)
     if (items.length > 0) {
@@ -65,6 +56,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           source_id: item.source_id || null,
           cost_per_person: item.cost_per_person || null,
           sort_order: item.sort_order ?? index,
+          is_crew_food: item.is_crew_food || false,
         }))
       )
       if (itemsError) {

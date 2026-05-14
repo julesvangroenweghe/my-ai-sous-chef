@@ -7,7 +7,7 @@ import {
   ArrowLeft, Plus, Sparkles, Save, Send, MessageSquare,
   CheckCircle, X, Loader2, ChevronDown, ChevronUp,
   GripVertical, Trash2, Edit2, Check, RefreshCw,
-  Info, ChefHat, Shuffle, Printer
+  Info, ChefHat, Shuffle, Printer, Users
 } from 'lucide-react'
 import { SwapDishModal } from '@/components/proposals/swap-dish-modal'
 
@@ -44,6 +44,7 @@ interface MenuItem {
   source_type: string
   cost_per_person: number | null
   sort_order: number
+  is_crew_food?: boolean
 }
 
 interface ProposalData {
@@ -52,6 +53,7 @@ interface ProposalData {
   menu_type: string
   event_id: string | null
   num_persons: number | null
+  crew_persons: number | null
   price_per_person: number | null
   target_food_cost_pct: number | null
   proposal_status: string
@@ -94,6 +96,9 @@ export default function ProposalEditorPage() {
     exclusions: [], preferences: {}, concept: '', special_requests: '', contact_person: ''
   })
   const [items, setItems] = useState<MenuItem[]>([])
+  const [crewItems, setCrewItems] = useState<MenuItem[]>([])
+  const [crewPersons, setCrewPersons] = useState<number>(0)
+  const [editingCrewPersons, setEditingCrewPersons] = useState(false)
   const [newExclusion, setNewExclusion] = useState('')
   const [suggestingFor, setSuggestingFor] = useState<string | null>(null)
   const [editingItem, setEditingItem] = useState<string | null>(null)
@@ -108,6 +113,7 @@ export default function ProposalEditorPage() {
   const [generatingFull, setGeneratingFull] = useState(false)
   const [creatingNewVersion, setCreatingNewVersion] = useState(false)
   const [showOpenQuestions, setShowOpenQuestions] = useState(true)
+  const [showCrewSection, setShowCrewSection] = useState(true)
 
   const [swapModal, setSwapModal] = useState<{
     itemId: string | null
@@ -125,7 +131,10 @@ export default function ProposalEditorPage() {
         exclusions: [], preferences: {}, concept: '', special_requests: '', contact_person: ''
       }
       setRequirements(reqs)
-      setItems((data.items || []).sort((a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order))
+      const allItems = (data.items || []).sort((a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order)
+      setItems(allItems.filter((i: MenuItem) => !i.is_crew_food))
+      setCrewItems(allItems.filter((i: MenuItem) => i.is_crew_food))
+      setCrewPersons(data.crew_persons || 0)
       setProposalName(data.name)
     }
     setLoading(false)
@@ -142,6 +151,10 @@ export default function ProposalEditorPage() {
   const save = async (opts?: { silent?: boolean }) => {
     if (!proposal) return
     if (!opts?.silent) setSaving(true)
+    const allItems = [
+      ...items.map((item, i) => ({ ...item, sort_order: i, is_crew_food: false })),
+      ...crewItems.map((item, i) => ({ ...item, sort_order: i, is_crew_food: true })),
+    ]
     await fetch(`/api/proposals/${proposalId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -149,7 +162,8 @@ export default function ProposalEditorPage() {
         name: proposalName,
         event_requirements: requirements,
         proposal_status: proposal.proposal_status,
-        items: items.map((item, i) => ({ ...item, sort_order: i })),
+        crew_persons: crewPersons,
+        items: allItems,
       }),
     })
     if (!opts?.silent) {
@@ -307,6 +321,37 @@ export default function ProposalEditorPage() {
 
   const removeExclusion = (idx: number) => {
     setRequirements(prev => ({ ...prev, exclusions: prev.exclusions.filter((_, i) => i !== idx) }))
+  }
+
+  // Crew food helpers
+  const addCrewDish = () => {
+    const newItem: MenuItem = {
+      id: `crew-${Date.now()}`, course: 'Crewfood', dish_name: '', dish_description: '',
+      source_type: 'custom', cost_per_person: null, sort_order: crewItems.length, is_crew_food: true,
+    }
+    setCrewItems(prev => [...prev, newItem])
+    setEditingItem(newItem.id)
+    setEditValue('')
+  }
+
+  const saveCrewItemName = (itemId: string) => {
+    if (!editValue.trim()) {
+      setCrewItems(prev => prev.filter(i => i.id !== itemId))
+    } else {
+      setCrewItems(prev => prev.map(i => i.id === itemId ? { ...i, dish_name: editValue.trim() } : i))
+    }
+    setEditingItem(null)
+    setEditValue('')
+  }
+
+  const saveCrewItemDesc = (itemId: string) => {
+    setCrewItems(prev => prev.map(i => i.id === itemId ? { ...i, dish_description: editDescValue } : i))
+    setEditingDesc(null)
+    setEditDescValue('')
+  }
+
+  const removeCrewItem = (itemId: string) => {
+    setCrewItems(prev => prev.filter(i => i.id !== itemId))
   }
 
   const courses = [...new Set(items.map(i => i.course))].sort((a, b) => {
@@ -514,7 +559,7 @@ export default function ProposalEditorPage() {
           </button>
           {showConceptNote && (
             <div className="px-5 pb-4 space-y-2">
-              <p className="text-sm text-[#5C4730] italic">"{conceptNote}"</p>
+              <p className="text-sm text-[#5C4730] italic">&ldquo;{conceptNote}&rdquo;</p>
               {chefNote && (
                 <p className="text-xs text-[#9E7E60] border-t border-[#F0E8D8] pt-2">{chefNote}</p>
               )}
@@ -683,6 +728,28 @@ export default function ProposalEditorPage() {
               <div className="flex justify-between">
                 <span className="text-[#9E7E60]">Personen</span>
                 <span className="font-semibold text-[#2C1810]">{proposal.num_persons || '—'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#9E7E60]">Crew</span>
+                {editingCrewPersons ? (
+                  <input
+                    type="number"
+                    value={crewPersons}
+                    onChange={e => setCrewPersons(Number(e.target.value))}
+                    onBlur={() => setEditingCrewPersons(false)}
+                    onKeyDown={e => e.key === 'Enter' && setEditingCrewPersons(false)}
+                    className="w-16 text-right font-semibold text-[#2C1810] bg-transparent border-b border-brand-400 outline-none text-sm"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => setEditingCrewPersons(true)}
+                    className="font-semibold text-[#2C1810] hover:text-brand-400 transition-colors flex items-center gap-1"
+                  >
+                    {crewPersons || 0} pers.
+                    <Edit2 className="w-3 h-3 text-[#D4B896]" />
+                  </button>
+                )}
               </div>
               <div className="flex justify-between">
                 <span className="text-[#9E7E60]">Prijs/persoon</span>
@@ -884,6 +951,126 @@ export default function ProposalEditorPage() {
                 <span className="text-xs text-[#D4B896]">Alle gangen aanwezig</span>
               )}
             </div>
+          </div>
+
+          {/* ─── CREWFOOD SECTIE ─── */}
+          <div className="bg-[#F3F7F0] border border-[#C4D9B8] rounded-2xl overflow-hidden">
+            <button
+              onClick={() => setShowCrewSection(!showCrewSection)}
+              className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#EAF2E5] transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#C4D9B8] text-[#3A5C3A]">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="text-xs font-bold text-[#3A5C3A] uppercase tracking-widest">Crewfood</span>
+                  {crewPersons > 0 && (
+                    <span className="ml-2 text-xs text-[#5A8A5A] font-medium">{crewPersons} personen</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {crewItems.length > 0 && (
+                  <span className="text-xs bg-[#C4D9B8] text-[#3A5C3A] px-2 py-0.5 rounded-full font-semibold">
+                    {crewItems.length}
+                  </span>
+                )}
+                {showCrewSection
+                  ? <ChevronUp className="w-4 h-4 text-[#5A8A5A]" />
+                  : <ChevronDown className="w-4 h-4 text-[#5A8A5A]" />}
+              </div>
+            </button>
+
+            {showCrewSection && (
+              <>
+                <div className="border-t border-[#C4D9B8] divide-y divide-[#D8EAD0]">
+                  {crewItems.map(item => (
+                    <div key={item.id} className="flex items-start gap-3 px-5 py-3 hover:bg-[#EAF2E5] group">
+                      <GripVertical className="w-4 h-4 text-[#9AC09A] shrink-0 mt-1" />
+                      <div className="flex-1 min-w-0">
+                        {editingItem === item.id ? (
+                          <input
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') saveCrewItemName(item.id)
+                              if (e.key === 'Escape') { setEditingItem(null); setEditValue('') }
+                            }}
+                            onBlur={() => saveCrewItemName(item.id)}
+                            placeholder="Naam crewmaaltijd..."
+                            className="w-full bg-transparent border-b border-[#3A5C3A] text-sm font-medium text-[#2C3C28] outline-none pb-0.5"
+                            autoFocus
+                          />
+                        ) : (
+                          <div
+                            className="text-sm font-semibold text-[#2C3C28] cursor-pointer hover:text-[#3A5C3A] transition-colors"
+                            onClick={() => { setEditingItem(item.id); setEditValue(item.dish_name) }}
+                          >
+                            <span className={item.dish_name ? '' : 'text-[#9AC09A] italic font-normal'}>
+                              {item.dish_name || 'Klik om maaltijd in te vullen...'}
+                            </span>
+                          </div>
+                        )}
+                        {editingDesc === item.id ? (
+                          <input
+                            value={editDescValue}
+                            onChange={e => setEditDescValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') saveCrewItemDesc(item.id)
+                              if (e.key === 'Escape') { setEditingDesc(null); setEditDescValue('') }
+                            }}
+                            onBlur={() => saveCrewItemDesc(item.id)}
+                            placeholder="Korte notitie..."
+                            className="w-full mt-0.5 bg-transparent border-b border-[#C4D9B8] text-xs text-[#5A8A5A] outline-none pb-0.5"
+                            autoFocus
+                          />
+                        ) : (
+                          item.dish_description ? (
+                            <p
+                              className="text-xs text-[#5A8A5A] mt-0.5 cursor-pointer italic"
+                              onClick={() => { setEditingDesc(item.id); setEditDescValue(item.dish_description) }}
+                            >
+                              {item.dish_description}
+                            </p>
+                          ) : (
+                            <button
+                              onClick={() => { setEditingDesc(item.id); setEditDescValue('') }}
+                              className="text-xs text-[#9AC09A] hover:text-[#5A8A5A] mt-0.5 opacity-0 group-hover:opacity-100 transition-all italic"
+                            >
+                              + notitie
+                            </button>
+                          )
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeCrewItem(item.id)}
+                        className="p-1 text-[#9AC09A] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {crewItems.length === 0 && (
+                    <div className="px-5 py-4 text-center text-xs text-[#9AC09A]">
+                      Nog geen crewmaaltijden toegevoegd
+                    </div>
+                  )}
+                </div>
+                <div className="px-5 py-3 border-t border-[#C4D9B8] flex items-center justify-between">
+                  <button
+                    onClick={addCrewDish}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C4D9B8] hover:bg-[#B0CC9E] text-[#3A5C3A] text-xs font-semibold rounded-lg transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Maaltijd toevoegen
+                  </button>
+                  <span className="text-[10px] text-[#7AA87A] italic">
+                    Verschijnt apart op de PDF &mdash; niet zichtbaar voor klant
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
