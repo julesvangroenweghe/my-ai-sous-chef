@@ -11,7 +11,7 @@ import {
   ChefHat, Loader2, Check, X, Pencil, Trash2,
   AlertTriangle, ShieldCheck, Plus, FileDown,
   ChevronUp, ChevronDown, GripVertical, Search,
-  StickyNote, Edit2, Save,
+  StickyNote, Edit2, Save, AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Reorder, useDragControls } from 'framer-motion'
@@ -58,6 +58,7 @@ interface MepComponent {
   quantity: number | null
   unit: string | null
   preparation: string | null
+  allergens: string | null
   sort_order: number
   is_ai_suggestion: boolean
   component_group: string | null
@@ -71,6 +72,7 @@ const CAT_ORDER: Record<string, number> = {
   'dranken': 1, 'mocktails': 2, 'lunch': 3,
   'fingerfood middag': 4, 'fingerfood apero': 4.5, 'fingerfood': 5,
   'fingerbites': 10, 'hapjes': 15, 'hapje_warm': 15,
+  'kids': 16,
   'amuse': 20, 'appetizers middag': 24, 'appetizers apero': 24.5, 'appetizers': 25, 'appetizer': 25,
   'walking voorgerecht': 28, 'walking dinner': 30, 'walking': 30,
   'foodstand': 33, 'bbq': 34, 'voorgerecht': 35, 'sharing voorgerecht': 36, 'buffet': 37,
@@ -79,7 +81,7 @@ const CAT_ORDER: Record<string, number> = {
   'dessert middag': 63, 'dessert': 65, 'dessert avond': 66, 'dessert lunch': 64,
   'walking dessert': 68, 'after snacks': 72, 'petits fours': 70,
   'barista mignardises': 200, 'mignardises': 200,
-  'kids': 45, 'late night snack': 215, 'halfabricaat': 250,
+  'late night snack': 215, 'halfabricaat': 250,
 }
 
 function getCategoryOrder(cat: string): number {
@@ -144,6 +146,42 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   tasting: 'Proeverijtje', daily_service: 'Dagdienst',
 }
 
+// ─── Allergen constants ───────────────────────────────────────────────────────
+
+const EU_ALLERGENS = [
+  'Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Pinda\'s',
+  'Soja', 'Melk', 'Noten', 'Selderij', 'Mosterd',
+  'Sesam', 'Sulfiet', 'Lupine', 'Weekdieren',
+]
+
+function AllergenPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const selected = value ? value.split(',').map(s => s.trim()).filter(Boolean) : []
+  const toggle = (a: string) => {
+    const next = selected.includes(a) ? selected.filter(x => x !== a) : [...selected, a]
+    onChange(next.join(', '))
+  }
+  return (
+    <div className="space-y-1.5">
+      <span className="text-xs text-red-600 font-semibold flex items-center gap-1"><AlertCircle className="w-3 h-3" />Allergenen</span>
+      <div className="flex flex-wrap gap-1">
+        {EU_ALLERGENS.map(a => (
+          <button key={a} type="button" onClick={() => toggle(a)}
+            className={`px-2 py-0.5 rounded text-xs font-medium transition-all border ${
+              selected.includes(a)
+                ? 'bg-red-500 text-white border-red-500'
+                : 'bg-white text-[#9E7E60] border-[#E8D5B5] hover:border-red-300 hover:text-red-600'
+            }`}>
+            {a}
+          </button>
+        ))}
+      </div>
+      {selected.length > 0 && (
+        <p className="text-xs text-red-600 font-medium">Geselecteerd: {selected.join(' · ')}</p>
+      )}
+    </div>
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string) {
@@ -168,7 +206,7 @@ const COMMON_GROUPS = ['Garnituur', 'Saus', 'Afwerking', 'Bijgerecht', 'Dressing
 function AddComponentForm({
   onSave, onCancel, existingGroups,
 }: {
-  onSave: (data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }) => Promise<void>
+  onSave: (data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null; allergens: string | null }) => Promise<void>
   onCancel: () => void
   existingGroups: string[]
 }) {
@@ -178,32 +216,56 @@ function AddComponentForm({
   const [prep, setPrep] = useState('')
   const [supplier, setSupplier] = useState('')
   const [group, setGroup] = useState('')
+  const [allergens, setAllergens] = useState('')
   const [saving, setSaving] = useState(false)
   const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
-    await onSave({ name: name.trim(), qty: qty ? parseFloat(qty) : null, unit: unit.trim() || null, prep: prep.trim() || null, supplier: supplier.trim() || null, component_group: group.trim() || null })
+    await onSave({
+      name: name.trim(),
+      qty: qty ? parseFloat(qty) : null,
+      unit: unit.trim() || null,
+      prep: prep.trim() || null,
+      supplier: supplier.trim() || null,
+      component_group: group.trim() || null,
+      allergens: allergens.trim() || null,
+    })
     setSaving(false)
   }
 
   return (
-    <div className="bg-emerald-50/60 border border-emerald-200/60 rounded-xl p-3 space-y-2 mt-2">
+    <div className="bg-emerald-50/60 border border-emerald-200/60 rounded-xl p-3 space-y-2.5 mt-2">
       <div className="flex items-center gap-1.5 mb-1">
         <Plus className="w-3 h-3 text-emerald-600" />
         <span className="text-xs font-semibold text-emerald-700">Nieuw component</span>
       </div>
+
+      {/* Naam */}
       <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Naam component *" />
+
+      {/* Qty + Unit + Bereiding */}
       <div className="flex gap-2">
-        <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
-          className="w-20 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Qty" />
-        <input value={unit} onChange={(e) => setUnit(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
-          className="w-16 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Unit" />
-        <input value={prep} onChange={(e) => setPrep(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
-          className="flex-1 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Bereiding (optioneel)" />
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[10px] text-emerald-600 font-medium">Aantal</label>
+          <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+            className="w-20 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="bv. 25" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[10px] text-emerald-600 font-medium">Eenheid</label>
+          <input value={unit} onChange={(e) => setUnit(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+            className="w-16 px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="g / st" />
+        </div>
+        <div className="flex flex-col gap-0.5 flex-1">
+          <label className="text-[10px] text-emerald-600 font-medium">Bereiding</label>
+          <input value={prep} onChange={(e) => setPrep(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+            className="w-full px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="bv. geschild, geblancheerd" />
+        </div>
       </div>
+
+      {/* Sub-groep */}
       <div className="flex gap-2 items-center">
         <span className="text-xs text-emerald-600 font-medium shrink-0">Sub-groep:</span>
         <div className="flex gap-1 flex-wrap flex-1">
@@ -215,7 +277,13 @@ function AddComponentForm({
             className="w-24 px-2 py-0.5 bg-white border border-emerald-200 rounded text-xs text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Of typ..." />
         </div>
       </div>
+
+      {/* Allergenen */}
+      <AllergenPicker value={allergens} onChange={setAllergens} />
+
+      {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val) }} placeholder="Leverancier (optioneel)" />
+
       <div className="flex gap-2 justify-end pt-1">
         <button onClick={onCancel} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
         <button onClick={handleSave} disabled={saving || !name.trim()}
@@ -238,6 +306,7 @@ function InlineComponentEdit({
   const [qty, setQty] = useState(component.quantity?.toString() || '')
   const [unit, setUnit] = useState(component.unit || '')
   const [prep, setPrep] = useState(component.preparation || '')
+  const [allergens, setAllergens] = useState(component.allergens || '')
   const [supplier, setSupplier] = useState(component.supplier || '')
   const [group, setGroup] = useState(component.component_group || '')
   const [matchedProductId, setMatchedProductId] = useState<string | null>(component.matched_product_id || null)
@@ -247,22 +316,45 @@ function InlineComponentEdit({
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
-    await onSave({ component_name: name.trim(), quantity: qty ? parseFloat(qty) : null, unit: unit.trim() || null, preparation: prep.trim() || null, supplier: supplier.trim() || null, matched_product_id: matchedProductId, component_group: group.trim() || null })
+    await onSave({
+      component_name: name.trim(),
+      quantity: qty ? parseFloat(qty) : null,
+      unit: unit.trim() || null,
+      preparation: prep.trim() || null,
+      allergens: allergens.trim() || null,
+      supplier: supplier.trim() || null,
+      matched_product_id: matchedProductId,
+      component_group: group.trim() || null,
+    })
     setSaving(false)
   }
 
   return (
-    <div className="bg-[#FDF8F2]/80 border border-[#E8A040]/30 rounded-xl p-3 space-y-2 my-1">
+    <div className="bg-[#FDF8F2]/80 border border-[#E8A040]/30 rounded-xl p-3 space-y-2.5 my-1">
+      {/* Naam */}
       <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Naam component" />
+
+      {/* Qty + Unit + Bereiding */}
       <div className="flex gap-2">
-        <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)}
-          className="w-20 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Qty" />
-        <input value={unit} onChange={(e) => setUnit(e.target.value)}
-          className="w-16 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Unit" />
-        <input value={prep} onChange={(e) => setPrep(e.target.value)}
-          className="flex-1 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Bereiding / instructie" />
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[10px] text-[#9E7E60] font-medium">Aantal</label>
+          <input type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)}
+            className="w-20 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="bv. 25" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <label className="text-[10px] text-[#9E7E60] font-medium">Eenheid</label>
+          <input value={unit} onChange={(e) => setUnit(e.target.value)}
+            className="w-16 px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="g / st" />
+        </div>
+        <div className="flex flex-col gap-0.5 flex-1">
+          <label className="text-[10px] text-[#9E7E60] font-medium">Bereiding</label>
+          <input value={prep} onChange={(e) => setPrep(e.target.value)}
+            className="w-full px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="bv. geschild, geblancheerd" />
+        </div>
       </div>
+
+      {/* Sub-groep */}
       <div className="flex gap-2 items-center">
         <span className="text-xs text-[#9E7E60] font-medium shrink-0">Sub-groep:</span>
         <div className="flex gap-1 flex-wrap flex-1">
@@ -274,9 +366,15 @@ function InlineComponentEdit({
             className="w-24 px-2 py-0.5 bg-white border border-[#E8D5B5] rounded text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Of typ..." />
         </div>
       </div>
+
+      {/* Allergenen */}
+      <AllergenPicker value={allergens} onChange={setAllergens} />
+
+      {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val); if (val !== supplier) setMatchedProductId(null) }} />
       <ProductMatcher supplier={supplier} componentName={name} matchedProductId={matchedProductId}
         onMatch={(id, suggestedUnit) => { setMatchedProductId(id); if (suggestedUnit && !unit) setUnit(suggestedUnit) }} />
+
       <div className="flex gap-2 justify-end pt-1">
         <button onClick={onCancel} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
         <button onClick={handleSave} disabled={saving || !name.trim()}
@@ -297,6 +395,7 @@ function ComponentRow({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const isAI = component.is_ai_suggestion
+  const allergenList = component.allergens ? component.allergens.split(',').map(s => s.trim()).filter(Boolean) : []
 
   return (
     <div className={`group flex items-start gap-1 py-0.5 px-1 rounded hover:bg-[#FDF8F2]/60 transition-all ${isAI ? 'border-l-2 border-orange-400/60 pl-2 ml-0' : ''}`}>
@@ -317,6 +416,14 @@ function ComponentRow({
             <span className="text-xs text-[#B8997A] shrink-0">· {component.supplier}</span>
           )}
         </div>
+        {allergenList.length > 0 && (
+          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+            <AlertCircle className="w-2.5 h-2.5 text-red-400 shrink-0" />
+            {allergenList.map(a => (
+              <span key={a} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-1.5 py-0 rounded font-medium">{a}</span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
         {isAI && (
@@ -360,7 +467,7 @@ function DishCard({
 }: {
   dish: MepDish; onApproveComponent: (id: string) => void; onUpdateComponent: (id: string, updates: Partial<MepComponent>) => Promise<void>
   onDeleteComponent: (id: string) => void; onApproveDish: (id: string) => void
-  onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }) => Promise<void>
+  onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null; allergens: string | null }) => Promise<void>
   onEditTitle: (dishId: string, newTitle: string) => Promise<void>; onReorderComponents: (dishId: string, newOrder: string[]) => void
   onMoveDishUp: () => void; onMoveDishDown: () => void; isFirstDish: boolean; isLastDish: boolean
   editingComponentId: string | null; setEditingComponentId: (id: string | null) => void; existingGroups: string[]
@@ -552,10 +659,21 @@ export default function MepDetailPage() {
     toast.success('Gerecht goedgekeurd ✓')
   }
 
-  const handleAddComponent = async (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null }) => {
+  const handleAddComponent = async (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null; allergens: string | null }) => {
     const dish = dishes.find((d) => d.id === dishId)
     const maxOrder = dish ? Math.max(0, ...dish.components.map((c) => c.sort_order)) + 1 : 1
-    const { data: newComp, error } = await supabase.from('mep_components').insert({ dish_id: dishId, component_name: data.name, quantity: data.qty, unit: data.unit, preparation: data.prep, supplier: data.supplier, sort_order: maxOrder, is_ai_suggestion: false, component_group: data.component_group }).select().single()
+    const { data: newComp, error } = await supabase.from('mep_components').insert({
+      dish_id: dishId,
+      component_name: data.name,
+      quantity: data.qty,
+      unit: data.unit,
+      preparation: data.prep,
+      supplier: data.supplier,
+      sort_order: maxOrder,
+      is_ai_suggestion: false,
+      component_group: data.component_group,
+      allergens: data.allergens,
+    }).select().single()
     if (error || !newComp) { toast.error('Toevoegen mislukt'); return }
     setDishes((prev) => prev.map((d) => d.id === dishId ? { ...d, components: [...d.components, newComp as MepComponent] } : d))
     toast.success(`${data.name} toegevoegd ✓`)
