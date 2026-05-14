@@ -15,14 +15,15 @@ function getDept(pathname: string): Department {
 }
 
 const TOGGLE_COLORS: Record<Department, { bg: string; shadow: string; scan: string; scanShadow: string }> = {
-  keuken: { bg: '#E8A040', shadow: 'rgba(232,160,64,0.4)', scan: '#C4703A', scanShadow: 'rgba(196,112,58,0.4)' },
-  sales:  { bg: '#2D6A1E', shadow: 'rgba(45,106,30,0.4)',  scan: '#2D6A1E', scanShadow: 'rgba(45,106,30,0.35)' },
-  logistiek: { bg: '#1E3F8A', shadow: 'rgba(30,63,138,0.4)', scan: '#1E3F8A', scanShadow: 'rgba(30,63,138,0.35)' },
+  keuken:    { bg: '#E8A040', shadow: 'rgba(232,160,64,0.4)',  scan: '#C4703A', scanShadow: 'rgba(196,112,58,0.4)' },
+  sales:     { bg: '#2D6A1E', shadow: 'rgba(45,106,30,0.4)',   scan: '#2D6A1E', scanShadow: 'rgba(45,106,30,0.35)' },
+  logistiek: { bg: '#1E3F8A', shadow: 'rgba(30,63,138,0.4)',   scan: '#1E3F8A', scanShadow: 'rgba(30,63,138,0.35)' },
 }
 
 export function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [isWide, setIsWide] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const dept = getDept(pathname)
   const colors = TOGGLE_COLORS[dept]
@@ -30,7 +31,9 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   useEffect(() => {
     const check = () => {
       const wide = window.innerWidth >= 1024
+      const mobile = window.innerWidth < 640
       setIsWide(wide)
+      setIsMobile(mobile)
       if (wide) setOpen(true)
     }
     check()
@@ -51,7 +54,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
 
       <Sidebar isOpen={open} onClose={() => setOpen(false)} />
 
-      {/* Toggle button — kleur volgt afdeling */}
+      {/* Toggle button */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={open ? 'Sluit menu' : 'Open menu'}
@@ -63,7 +66,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
           border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 2px 10px ${colors.shadow}`,
-          transition: 'left 280ms ease-in-out, background-color 200ms ease, box-shadow 200ms ease',
+          transition: 'left 280ms ease-in-out, background-color 200ms ease',
         }}
       >
         {open ? (
@@ -77,15 +80,25 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
         )}
       </button>
 
-      {/* Floating Scan button */}
+      {/* Floating Scan button
+          Desktop: bottom-right naast Jules AI
+          Mobile:  bottom-left zodat Jules (rechts) niet overlapt
+      */}
       <a
         href="/scan"
         aria-label="Scan & OCR"
         style={{
-          position: 'fixed', bottom: 88, right: 20, zIndex: 50,
+          position: 'fixed',
+          bottom: isMobile ? 20 : 28,
+          // Mobile: links — Jules AI staat rechts
+          left: isMobile ? 20 : 'auto',
+          right: isMobile ? 'auto' : 84,
+          zIndex: 48,
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 16px', borderRadius: 24,
-          backgroundColor: colors.scan, textDecoration: 'none',
+          padding: isMobile ? '10px 14px' : '10px 16px',
+          borderRadius: 24,
+          backgroundColor: colors.scan,
+          textDecoration: 'none',
           boxShadow: `0 4px 16px ${colors.scanShadow}`,
           transition: 'background-color 200ms ease',
         }}
@@ -102,13 +115,15 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
       <div style={{
         paddingTop: 64,
         paddingLeft: isWide && open ? 248 : 16,
-        paddingRight: 16, paddingBottom: 100,
+        paddingRight: 16,
+        paddingBottom: isMobile ? 80 : 100,
         transition: 'padding-left 280ms ease-in-out',
         minHeight: '100dvh',
       }}>
         <PageTransition>{children}</PageTransition>
       </div>
 
+      {/* Jules AI — staat altijd rechtsonder */}
       <JulesAI />
     </div>
   )

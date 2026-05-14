@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { X, Send, ChefHat, Loader2, Sparkles, AlertTriangle, History, Plus, Trash2, ChevronLeft } from 'lucide-react'
+import { X, Send, ChefHat, Loader2, Sparkles, AlertTriangle, History, Plus, Trash2 } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -53,12 +53,10 @@ export default function JulesAI() {
   const abortRef = useRef<AbortController | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Detect MEP detail page
   const mepMatch = pathname?.match(/\/mep\/([a-f0-9-]{36})$/)
   const eventId = mepMatch?.[1] || null
   const isMepMode = !!eventId
 
-  // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
     check()
@@ -74,14 +72,12 @@ export default function JulesAI() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamText])
 
-  // Reset when navigating to different event
   useEffect(() => {
     setMessages([])
     setWarnings([])
     setCurrentConvId(null)
   }, [eventId])
 
-  // Load history when tab opens
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true)
     try {
@@ -90,9 +86,7 @@ export default function JulesAI() {
         const data = await res.json()
         setConversations(data.conversations || [])
       }
-    } catch {
-      // silent
-    }
+    } catch { /* silent */ }
     setLoadingHistory(false)
   }, [])
 
@@ -100,9 +94,8 @@ export default function JulesAI() {
     if (tab === 'history') loadHistory()
   }, [tab, loadHistory])
 
-  // Auto-save conversation after messages change
   const saveConversation = useCallback(async (msgs: Message[], convId: string | null) => {
-    if (msgs.length < 2) return // don't save empty conversations
+    if (msgs.length < 2) return
     const title = msgs.find(m => m.role === 'user')?.content?.slice(0, 60) || 'Gesprek'
     try {
       if (convId) {
@@ -116,8 +109,7 @@ export default function JulesAI() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            messages: msgs,
-            title,
+            messages: msgs, title,
             context: isMepMode ? 'mep' : 'general',
             context_id: eventId || null,
           }),
@@ -127,9 +119,7 @@ export default function JulesAI() {
           setCurrentConvId(data.id)
         }
       }
-    } catch {
-      // silent
-    }
+    } catch { /* silent */ }
   }, [isMepMode, eventId])
 
   const send = async (text?: string) => {
@@ -140,7 +130,6 @@ export default function JulesAI() {
     setMessages(newMessages)
     setLoading(true)
     setStreamText('')
-
     abortRef.current = new AbortController()
 
     try {
@@ -151,16 +140,13 @@ export default function JulesAI() {
           body: JSON.stringify({ messages: newMessages, eventId }),
           signal: abortRef.current.signal,
         })
-
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}))
-          const errMsg = errData.error || 'Er ging iets mis. Probeer opnieuw.'
-          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: errMsg }]
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: errData.error || 'Er ging iets mis.' }]
           setMessages(finalMsgs)
           setLoading(false)
           return
         }
-
         const data = await res.json()
         const reply = data.response || 'Klaar!'
         const finalMsgs = [...newMessages, { role: 'assistant' as const, content: reply }]
@@ -170,7 +156,6 @@ export default function JulesAI() {
           router.refresh()
           window.dispatchEvent(new CustomEvent('mep-data-updated'))
         }
-        // Save after reply
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
       } else {
@@ -180,36 +165,32 @@ export default function JulesAI() {
           body: JSON.stringify({ messages: newMessages }),
           signal: abortRef.current.signal,
         })
-
         if (!res.ok || !res.body) {
           const finalMsgs = [...newMessages, { role: 'assistant' as const, content: 'Er ging iets mis. Probeer opnieuw.' }]
           setMessages(finalMsgs)
           setLoading(false)
           return
         }
-
         const contentType = res.headers.get('content-type') || ''
         if (contentType.includes('text/event-stream') || contentType.includes('text/plain')) {
           const reader = res.body.getReader()
           const decoder = new TextDecoder()
           let accumulated = ''
-
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
             const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split('\n')
-            for (const line of lines) {
+            for (const line of chunk.split('\n')) {
               if (line.startsWith('data: ')) {
-                const data = line.slice(6)
-                if (data === '[DONE]') continue
+                const d = line.slice(6)
+                if (d === '[DONE]') continue
                 try {
-                  const parsed = JSON.parse(data)
+                  const parsed = JSON.parse(d)
                   const delta = parsed.delta?.text || parsed.choices?.[0]?.delta?.content || ''
                   accumulated += delta
                   setStreamText(accumulated)
                 } catch {
-                  accumulated += data
+                  accumulated += d
                   setStreamText(accumulated)
                 }
               }
@@ -218,7 +199,6 @@ export default function JulesAI() {
           const finalMsgs = [...newMessages, { role: 'assistant' as const, content: accumulated }]
           setMessages(finalMsgs)
           setStreamText('')
-          // Save after streaming done
           if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
           saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
         } else {
@@ -249,10 +229,7 @@ export default function JulesAI() {
     e.stopPropagation()
     await fetch(`/api/ai-conversations/${id}`, { method: 'DELETE' })
     setConversations(prev => prev.filter(c => c.id !== id))
-    if (currentConvId === id) {
-      setMessages([])
-      setCurrentConvId(null)
-    }
+    if (currentConvId === id) { setMessages([]); setCurrentConvId(null) }
   }
 
   const startNewConversation = () => {
@@ -264,51 +241,33 @@ export default function JulesAI() {
 
   const quickActions = isMepMode ? MEP_ACTIONS : GENERAL_ACTIONS
 
-  // Panel dimensions — mobile: nearly full screen, desktop: fixed width
-  const panelStyle: React.CSSProperties = isMobile
-    ? {
-        position: 'fixed',
-        bottom: 80,
-        left: 12,
-        right: 12,
-        maxHeight: 'calc(100dvh - 120px)',
-        zIndex: 50,
-      }
-    : {
-        position: 'fixed',
-        bottom: 88,
-        right: 24,
-        width: 420,
-        maxHeight: 640,
-        zIndex: 50,
-      }
+  // Jules AI knop: rechtsonder, boven eventueel keyboard op mobile
+  // Panel: op mobile bijna full-screen, op desktop vaste breedte
+  const BTN_BOTTOM = isMobile ? 20 : 28
+  const BTN_RIGHT = isMobile ? 20 : 24
+  const PANEL_BOTTOM = isMobile ? 76 : 84  // net boven de knop
 
-  // Button position — mobile: above scan button
-  const buttonStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: isMobile ? 136 : 24,
-    right: isMobile ? 16 : 24,
-    zIndex: 50,
-    width: 48,
-    height: 48,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'all 200ms ease',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-    backgroundColor: open ? '#FDF8F2' : isMepMode ? '#059669' : '#2C3E2D',
-  }
+  const accentColor = isMepMode ? '#065F46' : '#2C3E2D'
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button — rechts, Scan staat links op mobile */}
       <button
         onClick={() => setOpen(o => !o)}
-        style={buttonStyle}
-        title={isMepMode ? 'MEP Assistent' : 'Jules AI'}
+        aria-label={isMepMode ? 'MEP Assistent' : 'Jules AI'}
+        style={{
+          position: 'fixed',
+          bottom: BTN_BOTTOM,
+          right: BTN_RIGHT,
+          zIndex: 50,
+          width: 48, height: 48,
+          borderRadius: '50%',
+          border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.22)',
+          backgroundColor: open ? '#FDF8F2' : accentColor,
+          transition: 'all 200ms ease',
+        }}
       >
         {open
           ? <X style={{ width: 20, height: 20, color: '#2C1810' }} />
@@ -322,7 +281,14 @@ export default function JulesAI() {
       {open && (
         <div
           style={{
-            ...panelStyle,
+            position: 'fixed',
+            bottom: PANEL_BOTTOM,
+            // Mobile: full-width met kleine marge; Desktop: vaste breedte rechts
+            ...(isMobile
+              ? { left: 8, right: 8, maxHeight: 'calc(100dvh - 100px)' }
+              : { right: 24, width: 420, maxHeight: 640 }
+            ),
+            zIndex: 49,
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#FAFAF8',
@@ -334,15 +300,11 @@ export default function JulesAI() {
         >
           {/* Header */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '12px 16px',
-            borderBottom: '1px solid #E8D5B5',
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 16px', borderBottom: '1px solid #E8D5B5',
             backgroundColor: isMepMode ? '#065F46' : '#FFFFFF',
             flexShrink: 0,
           }}>
-            {/* Tab: Chat */}
             <button
               onClick={() => setTab('chat')}
               style={{
@@ -360,7 +322,6 @@ export default function JulesAI() {
               {isMepMode ? 'MEP' : 'Jules AI'}
             </button>
 
-            {/* Tab: History */}
             <button
               onClick={() => setTab('history')}
               style={{
@@ -377,11 +338,9 @@ export default function JulesAI() {
 
             <div style={{ flex: 1 }} />
 
-            {/* New conversation */}
             {tab === 'chat' && messages.length > 0 && (
               <button
                 onClick={startNewConversation}
-                title="Nieuw gesprek"
                 style={{
                   padding: '4px 8px', borderRadius: 7, border: 'none',
                   backgroundColor: isMepMode ? 'rgba(255,255,255,0.15)' : '#F2E8D5',
@@ -395,7 +354,6 @@ export default function JulesAI() {
               </button>
             )}
 
-            {/* Close */}
             <button
               onClick={() => setOpen(false)}
               style={{
@@ -410,12 +368,7 @@ export default function JulesAI() {
 
           {/* Warnings */}
           {warnings.length > 0 && tab === 'chat' && messages.length > 0 && (
-            <div style={{
-              padding: '8px 12px',
-              backgroundColor: '#FFFBEB',
-              borderBottom: '1px solid #FDE68A',
-              flexShrink: 0,
-            }}>
+            <div style={{ padding: '8px 12px', backgroundColor: '#FFFBEB', borderBottom: '1px solid #FDE68A', flexShrink: 0 }}>
               {warnings.map((w, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 11, color: '#92400E' }}>
                   <AlertTriangle style={{ width: 12, height: 12, flexShrink: 0, marginTop: 1 }} />
@@ -428,27 +381,23 @@ export default function JulesAI() {
           {/* CHAT TAB */}
           {tab === 'chat' && (
             <>
-              {/* Messages */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {messages.length === 0 && !loading && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <p style={{ fontSize: 11, color: '#B8997A', textAlign: 'center', paddingTop: 8 }}>
-                      {isMepMode
-                        ? 'Zeg wat je wilt — ik pas het direct aan in de database'
-                        : 'Stel een vraag of kies een snelle actie'}
+                      {isMepMode ? 'Zeg wat je wilt — ik pas het direct aan in de database' : 'Stel een vraag of kies een snelle actie'}
                     </p>
                     {isMepMode && (
                       <div style={{
                         fontSize: 11, color: '#B8997A',
                         backgroundColor: 'white', borderRadius: 12,
-                        padding: '10px 12px', border: '1px solid #E8D5B5',
-                        lineHeight: 1.6,
+                        padding: '10px 12px', border: '1px solid #E8D5B5', lineHeight: 1.6,
                       }}>
                         <div style={{ fontWeight: 600, color: '#9E7E60', marginBottom: 4 }}>Voorbeelden:</div>
-                        <div>"pas aantallen aan: 135 personen, crew 6, 1x veggie"</div>
-                        <div>"voeg mignardises toe"</div>
-                        <div>"zet de makreel op 15g"</div>
-                        <div>"starttijd is 19:30, eindtijd 23:00"</div>
+                        <div>\"pas aantallen aan: 135 personen, crew 6\"</div>
+                        <div>\"voeg mignardises toe\"</div>
+                        <div>\"zet de makreel op 15g\"</div>
+                        <div>\"starttijd is 19:30, eindtijd 23:00\"</div>
                       </div>
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -457,14 +406,11 @@ export default function JulesAI() {
                           key={i}
                           onClick={() => send(qa.prompt)}
                           style={{
-                            padding: '10px 12px',
-                            backgroundColor: 'white',
-                            border: '1px solid #E8D5B5',
-                            borderRadius: 12,
+                            padding: '10px 12px', backgroundColor: 'white',
+                            border: '1px solid #E8D5B5', borderRadius: 12,
                             fontSize: 11, color: '#9E7E60',
                             textAlign: 'left', cursor: 'pointer',
-                            transition: 'all 150ms ease',
-                            fontFamily: 'inherit',
+                            transition: 'all 150ms ease', fontFamily: 'inherit',
                           }}
                           onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FDF8F2')}
                           onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'white')}
@@ -479,15 +425,10 @@ export default function JulesAI() {
                 {messages.map((m, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                     <div style={{
-                      maxWidth: '88%',
-                      padding: '8px 12px',
+                      maxWidth: '88%', padding: '8px 12px',
                       borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      fontSize: 13,
-                      lineHeight: 1.55,
-                      whiteSpace: 'pre-wrap',
-                      backgroundColor: m.role === 'user'
-                        ? (isMepMode ? '#065F46' : '#2C3E2D')
-                        : 'white',
+                      fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                      backgroundColor: m.role === 'user' ? accentColor : 'white',
                       color: m.role === 'user' ? 'white' : '#3D2810',
                       border: m.role === 'user' ? 'none' : '1px solid #E8D5B5',
                     }}>
@@ -496,7 +437,6 @@ export default function JulesAI() {
                   </div>
                 ))}
 
-                {/* Streaming */}
                 {streamText && (
                   <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                     <div style={{
@@ -515,7 +455,6 @@ export default function JulesAI() {
                   </div>
                 )}
 
-                {/* Loading */}
                 {loading && !streamText && (
                   <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                     <div style={{
@@ -558,7 +497,7 @@ export default function JulesAI() {
                     disabled={!input.trim() || loading}
                     style={{
                       width: 30, height: 30, borderRadius: 8, border: 'none',
-                      backgroundColor: !input.trim() || loading ? '#F2E8D5' : (isMepMode ? '#065F46' : '#2C3E2D'),
+                      backgroundColor: !input.trim() || loading ? '#F2E8D5' : accentColor,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
                       transition: 'all 150ms ease', flexShrink: 0,
@@ -579,11 +518,9 @@ export default function JulesAI() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 14px', borderRadius: 10,
-                  border: '1.5px dashed #E8D5B5',
-                  backgroundColor: 'transparent', cursor: 'pointer',
-                  color: '#9E7E60', fontSize: 13, fontWeight: 600,
-                  fontFamily: 'inherit',
-                  transition: 'all 150ms ease',
+                  border: '1.5px dashed #E8D5B5', backgroundColor: 'transparent',
+                  cursor: 'pointer', color: '#9E7E60', fontSize: 13, fontWeight: 600,
+                  fontFamily: 'inherit', transition: 'all 150ms ease',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FDF8F2'; e.currentTarget.style.borderColor = '#C4703A' }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#E8D5B5' }}
@@ -631,17 +568,14 @@ export default function JulesAI() {
                       </span>
                       {conv.context && (
                         <span style={{
-                          fontSize: 10, fontWeight: 600, padding: '1px 6px',
-                          borderRadius: 4,
+                          fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
                           backgroundColor: conv.context === 'mep' ? '#D1FAE5' : '#F2E8D5',
                           color: conv.context === 'mep' ? '#065F46' : '#9E7E60',
                         }}>
                           {conv.context === 'mep' ? 'MEP' : 'Algemeen'}
                         </span>
                       )}
-                      <span style={{ fontSize: 11, color: '#B8997A' }}>
-                        {conv.messages.length} berichten
-                      </span>
+                      <span style={{ fontSize: 11, color: '#B8997A' }}>{conv.messages.length} berichten</span>
                     </div>
                   </div>
                   <button
