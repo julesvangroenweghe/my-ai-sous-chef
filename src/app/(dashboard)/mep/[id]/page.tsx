@@ -11,7 +11,7 @@ import {
   ChefHat, Loader2, Check, X, Pencil, Trash2,
   AlertTriangle, ShieldCheck, Plus, FileDown,
   ChevronUp, ChevronDown, GripVertical, Search,
-  StickyNote, Edit2, Save, AlertCircle,
+  StickyNote, Edit2, Save, AlertCircle, Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Reorder, useDragControls } from 'framer-motion'
@@ -146,23 +146,92 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   tasting: 'Proeverijtje', daily_service: 'Dagdienst',
 }
 
-// ─── Allergen constants ───────────────────────────────────────────────────────
+// ─── Allergen detection ───────────────────────────────────────────────────────
 
 const EU_ALLERGENS = [
-  'Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Pinda\'s',
+  'Gluten', 'Schaaldieren', 'Eieren', 'Vis', "Pinda's",
   'Soja', 'Melk', 'Noten', 'Selderij', 'Mosterd',
   'Sesam', 'Sulfiet', 'Lupine', 'Weekdieren',
 ]
 
-function AllergenPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+const ALLERGEN_KEYWORDS: Record<string, string[]> = {
+  'Gluten': ['brood', 'bloem', 'tarwe', 'pasta', 'brioche', 'bun', 'rogge', 'gerst', 'spelt', 'crackers', 'crouton', 'croutons', 'panko', 'paneermeel', 'sojasaus', 'taco', 'tortilla', 'baguette', 'ciabatta', 'focaccia', 'seitan', 'tempura', 'wafels', 'koek', 'cake', 'blini', 'toast', 'crostini', 'pitabrood', 'krokant', 'croûton'],
+  'Schaaldieren': ['garnaal', 'kreeft', 'krab', 'langoustine', 'scampi', 'rivierkreeft', 'shrimp', 'gamba'],
+  'Eieren': ['ei', 'eigeel', 'eiwit', 'mayo', 'mayonaise', 'hollandaise', 'aioli', 'béarnaise', 'bearnaise', 'meringue', 'crème brûlée', 'custard', 'soufflé', 'souffle', 'omelet', 'frittata', 'lemon curd', 'eiersalade'],
+  'Vis': ['zalm', 'kabeljauw', 'tonijn', 'makreel', 'forel', 'ansjovis', 'sgombro', 'tarbot', 'zeebaars', 'dorade', 'rog', 'heilbot', 'haring', 'sardine', 'snoekbaars', 'tuna', 'salmon', 'kaviaar', 'bottarga', 'brandade', 'gravlax', 'boquerones'],
+  "Pinda's": ['pinda', 'satay', 'arachide', 'peanut'],
+  'Soja': ['tofu', 'edamame', 'tempeh', 'miso', 'sojasaus', 'ponzu', 'soja'],
+  'Melk': ['melk', 'boter', 'room', 'kaas', 'brie', 'camembert', 'ricotta', 'parmezaan', 'parmesan', 'mozzarella', 'grana', 'pecorino', 'gruyère', 'gruyere', 'cheddar', 'burrata', 'mascarpone', 'crème fraîche', 'creme fraiche', 'yoghurt', 'ghee', 'kwark', 'fromage', 'comté', 'comte', 'emmental', 'raclette', 'roomboter', 'roomkaas', 'beurre blanc', 'velouté', 'bechamel', 'béchamel', 'beurre', 'crème', 'dulce de leche', 'dulce', 'stilton', 'gorgonzola', 'roquefort', 'fourme', 'munster', 'taleggio', 'époisses', 'beaufort', 'raclette', 'vacherin', 'fleur de sel boter'],
+  'Noten': ['amandel', 'hazelnoot', 'walnoot', 'pistache', 'cashew', 'pecan', 'macadamia', 'praline', 'praliné', 'marsepein', 'pesto', 'pijnboom', 'pine nut', 'paranoot', 'kokos'],
+  'Selderij': ['selderij', 'selderie', 'knolselderij', 'celeriac'],
+  'Mosterd': ['mosterd', 'moutarde', 'dijon', 'mustard', 'ravigote'],
+  'Sesam': ['sesam', 'tahini', 'hummus', 'sesamzaad', 'sesamolie'],
+  'Sulfiet': ['gedroogde abrikoos', 'rozijnen', 'balsamico', 'gedroogd fruit'],
+  'Lupine': ['lupine'],
+  'Weekdieren': ['inktvis', 'oester', 'mossel', 'sint-jakobsschelp', 'jacobsschelp', 'pijlinktvis', 'octopus', 'coquille', 'venusschelp', 'palourde'],
+}
+
+function detectAllergens(name: string): string[] {
+  const lower = name.toLowerCase()
+  const detected: string[] = []
+  for (const [allergen, keywords] of Object.entries(ALLERGEN_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) {
+      detected.push(allergen)
+    }
+  }
+  return detected
+}
+
+// ─── AllergenPicker ───────────────────────────────────────────────────────────
+
+function AllergenPicker({
+  value, onChange, suggested = [], onApproveSuggestion, onDismissSuggestion,
+}: {
+  value: string
+  onChange: (v: string) => void
+  suggested?: string[]
+  onApproveSuggestion?: (a: string) => void
+  onDismissSuggestion?: (a: string) => void
+}) {
   const selected = value ? value.split(',').map(s => s.trim()).filter(Boolean) : []
   const toggle = (a: string) => {
     const next = selected.includes(a) ? selected.filter(x => x !== a) : [...selected, a]
     onChange(next.join(', '))
   }
+  const pendingSuggestions = suggested.filter(s => !selected.includes(s))
+
   return (
-    <div className="space-y-1.5">
-      <span className="text-xs text-red-600 font-semibold flex items-center gap-1"><AlertCircle className="w-3 h-3" />Allergenen</span>
+    <div className="space-y-2">
+      <span className="text-xs text-red-600 font-semibold flex items-center gap-1">
+        <AlertCircle className="w-3 h-3" />Allergenen
+        {pendingSuggestions.length > 0 && (
+          <span className="ml-1 text-orange-500 font-normal text-[11px]">— {pendingSuggestions.length} suggestie{pendingSuggestions.length > 1 ? 's' : ''} gedetecteerd</span>
+        )}
+      </span>
+
+      {/* AI-suggesties in oranje */}
+      {pendingSuggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1 p-2 bg-orange-50 rounded-lg border border-orange-200">
+          <div className="w-full flex items-center gap-1 mb-1">
+            <Sparkles className="w-3 h-3 text-orange-500" />
+            <span className="text-[10px] text-orange-600 font-semibold">AI detecteerde mogelijk:</span>
+          </div>
+          {pendingSuggestions.map(a => (
+            <div key={a} className="flex items-center">
+              <button type="button" onClick={() => onApproveSuggestion?.(a)} title="Bevestigen"
+                className="px-2 py-0.5 rounded-l text-xs font-medium bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-500 hover:text-white transition-all">
+                {a}
+              </button>
+              <button type="button" onClick={() => onDismissSuggestion?.(a)} title="Negeren"
+                className="px-1.5 py-0.5 rounded-r text-[10px] font-bold bg-orange-100 text-orange-400 border border-l-0 border-orange-300 hover:bg-red-100 hover:text-red-500 transition-all">
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Handmatige selectie */}
       <div className="flex flex-wrap gap-1">
         {EU_ALLERGENS.map(a => (
           <button key={a} type="button" onClick={() => toggle(a)}
@@ -176,7 +245,7 @@ function AllergenPicker({ value, onChange }: { value: string; onChange: (v: stri
         ))}
       </div>
       {selected.length > 0 && (
-        <p className="text-xs text-red-600 font-medium">Geselecteerd: {selected.join(' · ')}</p>
+        <p className="text-xs text-red-600 font-medium">✓ {selected.join(' · ')}</p>
       )}
     </div>
   )
@@ -217,12 +286,25 @@ function AddComponentForm({
   const [supplier, setSupplier] = useState('')
   const [group, setGroup] = useState('')
   const [allergens, setAllergens] = useState('')
+  const [dismissed, setDismissed] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
+
+  // Auto-detect allergens from ingredient name
+  const autoDetected = detectAllergens(name).filter(a => !dismissed.includes(a))
+
+  const handleApproveSuggestion = (a: string) => {
+    const current = allergens ? allergens.split(',').map(s => s.trim()).filter(Boolean) : []
+    if (!current.includes(a)) setAllergens([...current, a].join(', '))
+  }
+  const handleDismissSuggestion = (a: string) => setDismissed(prev => [...prev, a])
 
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
+    // Auto-approve remaining suggestions on save
+    const confirmed = allergens ? allergens.split(',').map(s => s.trim()).filter(Boolean) : []
+    const finalAllergens = [...new Set([...confirmed, ...autoDetected])].join(', ') || null
     await onSave({
       name: name.trim(),
       qty: qty ? parseFloat(qty) : null,
@@ -230,7 +312,7 @@ function AddComponentForm({
       prep: prep.trim() || null,
       supplier: supplier.trim() || null,
       component_group: group.trim() || null,
-      allergens: allergens.trim() || null,
+      allergens: finalAllergens,
     })
     setSaving(false)
   }
@@ -278,8 +360,14 @@ function AddComponentForm({
         </div>
       </div>
 
-      {/* Allergenen */}
-      <AllergenPicker value={allergens} onChange={setAllergens} />
+      {/* Allergenen met AI-detectie */}
+      <AllergenPicker
+        value={allergens}
+        onChange={setAllergens}
+        suggested={autoDetected}
+        onApproveSuggestion={handleApproveSuggestion}
+        onDismissSuggestion={handleDismissSuggestion}
+      />
 
       {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val) }} placeholder="Leverancier (optioneel)" />
@@ -307,21 +395,33 @@ function InlineComponentEdit({
   const [unit, setUnit] = useState(component.unit || '')
   const [prep, setPrep] = useState(component.preparation || '')
   const [allergens, setAllergens] = useState(component.allergens || '')
+  const [dismissed, setDismissed] = useState<string[]>([])
   const [supplier, setSupplier] = useState(component.supplier || '')
   const [group, setGroup] = useState(component.component_group || '')
   const [matchedProductId, setMatchedProductId] = useState<string | null>(component.matched_product_id || null)
   const [saving, setSaving] = useState(false)
   const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
+  // Auto-detect allergens from ingredient name
+  const autoDetected = detectAllergens(name).filter(a => !dismissed.includes(a))
+
+  const handleApproveSuggestion = (a: string) => {
+    const current = allergens ? allergens.split(',').map(s => s.trim()).filter(Boolean) : []
+    if (!current.includes(a)) setAllergens([...current, a].join(', '))
+  }
+  const handleDismissSuggestion = (a: string) => setDismissed(prev => [...prev, a])
+
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
+    const confirmed = allergens ? allergens.split(',').map(s => s.trim()).filter(Boolean) : []
+    const finalAllergens = [...new Set([...confirmed, ...autoDetected])].join(', ') || null
     await onSave({
       component_name: name.trim(),
       quantity: qty ? parseFloat(qty) : null,
       unit: unit.trim() || null,
       preparation: prep.trim() || null,
-      allergens: allergens.trim() || null,
+      allergens: finalAllergens,
       supplier: supplier.trim() || null,
       matched_product_id: matchedProductId,
       component_group: group.trim() || null,
@@ -367,8 +467,14 @@ function InlineComponentEdit({
         </div>
       </div>
 
-      {/* Allergenen */}
-      <AllergenPicker value={allergens} onChange={setAllergens} />
+      {/* Allergenen met AI-detectie */}
+      <AllergenPicker
+        value={allergens}
+        onChange={setAllergens}
+        suggested={autoDetected}
+        onApproveSuggestion={handleApproveSuggestion}
+        onDismissSuggestion={handleDismissSuggestion}
+      />
 
       {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val); if (val !== supplier) setMatchedProductId(null) }} />
@@ -792,38 +898,29 @@ export default function MepDetailPage() {
         </div>
       )}
 
-      {/* Notities bewerken */}
       {editingNotes && (
         <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl px-5 py-4 space-y-3">
           <div className="flex items-center gap-2">
             <StickyNote className="w-4 h-4 text-amber-600" />
             <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Aandachtspunten bewerken</span>
           </div>
-          <textarea
-            autoFocus
-            value={notesValue}
-            onChange={(e) => setNotesValue(e.target.value)}
-            rows={3}
+          <textarea autoFocus value={notesValue} onChange={(e) => setNotesValue(e.target.value)} rows={3}
             className="w-full px-3 py-2 bg-white border border-amber-200 rounded-xl text-sm text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-            placeholder="bv. Kids eten vroeg · Vegetarische gasten tafel 3 · Allergeen check met zaalverantwoordelijke..."
-          />
+            placeholder="bv. Kids eten vroeg · Vegetarische gasten tafel 3 · Allergeen check met zaalverantwoordelijke..." />
           <div className="flex gap-2 justify-end">
             <button onClick={() => setEditingNotes(false)} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
             <button onClick={handleSaveNotes} disabled={savingNotes}
               className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50">
-              {savingNotes ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-              Opslaan
+              {savingNotes ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}Opslaan
             </button>
           </div>
         </div>
       )}
 
-      {/* Knopje om notitie toe te voegen als er nog geen is */}
       {!event.notes && !editingNotes && (
         <button onClick={() => setEditingNotes(true)}
           className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-dashed border-amber-300 rounded-xl text-xs text-amber-600 hover:bg-amber-50 hover:border-amber-400 transition-all">
-          <StickyNote className="w-3.5 h-3.5" />
-          Aandachtspunt toevoegen
+          <StickyNote className="w-3.5 h-3.5" />Aandachtspunt toevoegen
         </button>
       )}
 
