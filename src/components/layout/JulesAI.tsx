@@ -1,59 +1,136 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { X, Send, ChefHat, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
+import { X, Send, ChefHat, Loader2, Sparkles, AlertTriangle, History, Plus, Trash2, ChevronLeft } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
+interface Conversation {
+  id: string
+  title: string
+  context: string | null
+  context_id: string | null
+  messages: Message[]
+  updated_at: string
+}
+
 const GENERAL_ACTIONS = [
-  { label: '🌱 Seizoen mei', prompt: 'Welke ingrediënten zijn nu in seizoen in mei in België? Geef een overzicht per categorie.' },
-  { label: '💰 Food cost', prompt: 'Hoe bereken ik de food cost van een gerecht? Geef een praktisch voorbeeld.' },
-  { label: '🌡️ Sous vide gids', prompt: 'Geef me de sous vide parameters voor gevogelte: kip, parelhoen en eend.' },
-  { label: '🔪 Mise en place', prompt: 'Wat zijn de belangrijkste mise-en-place taken voor een walking dinner van 50 personen?' },
+  { label: 'Seizoen mei', prompt: 'Welke ingrediënten zijn nu in seizoen in mei in België? Geef een overzicht per categorie.' },
+  { label: 'Food cost', prompt: 'Hoe bereken ik de food cost van een gerecht? Geef een praktisch voorbeeld.' },
+  { label: 'Sous vide gids', prompt: 'Geef me de sous vide parameters voor gevogelte: kip, parelhoen en eend.' },
+  { label: 'Mise en place', prompt: 'Wat zijn de belangrijkste mise-en-place taken voor een walking dinner van 50 personen?' },
 ]
 
 const MEP_ACTIONS = [
-  { label: '🍞 Brood & boter', prompt: 'Voeg brood & boter toe (artisanaal zuurdesembrood, roomboter, fleur de sel)' },
-  { label: '🍫 Mignardises', prompt: 'Voeg mignardises toe met standaard componenten (canelé, madeleine, financier)' },
-  { label: '📋 Samenvatting', prompt: 'Geef een korte samenvatting van alle gerechten op deze MEP' },
-  { label: '✅ Check volledigheid', prompt: 'Check of de MEP compleet is: missen er categorieën? Zijn er gerechten zonder componenten? Moeten er brood of mignardises bij?' },
+  { label: 'Brood & boter', prompt: 'Voeg brood & boter toe (artisanaal zuurdesembrood, roomboter, fleur de sel)' },
+  { label: 'Mignardises', prompt: 'Voeg mignardises toe met standaard componenten (canelé, madeleine, financier)' },
+  { label: 'Samenvatting', prompt: 'Geef een korte samenvatting van alle gerechten op deze MEP' },
+  { label: 'Check volledigheid', prompt: 'Check of de MEP compleet is: missen er categorieën? Zijn er gerechten zonder componenten?' },
 ]
+
+type Tab = 'chat' | 'history'
 
 export default function JulesAI() {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<Tab>('chat')
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [streamText, setStreamText] = useState('')
   const [warnings, setWarnings] = useState<string[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Detect MEP detail page
   const mepMatch = pathname?.match(/\/mep\/([a-f0-9-]{36})$/)
   const eventId = mepMatch?.[1] || null
   const isMepMode = !!eventId
 
+  // Detect mobile
   useEffect(() => {
-    if (open && inputRef.current) inputRef.current.focus()
-  }, [open])
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    if (open && tab === 'chat' && inputRef.current) inputRef.current.focus()
+  }, [open, tab])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamText])
 
-  // Reset messages when navigating to different event
+  // Reset when navigating to different event
   useEffect(() => {
     setMessages([])
     setWarnings([])
+    setCurrentConvId(null)
   }, [eventId])
+
+  // Load history when tab opens
+  const loadHistory = useCallback(async () => {
+    setLoadingHistory(true)
+    try {
+      const res = await fetch('/api/ai-conversations')
+      if (res.ok) {
+        const data = await res.json()
+        setConversations(data.conversations || [])
+      }
+    } catch {
+      // silent
+    }
+    setLoadingHistory(false)
+  }, [])
+
+  useEffect(() => {
+    if (tab === 'history') loadHistory()
+  }, [tab, loadHistory])
+
+  // Auto-save conversation after messages change
+  const saveConversation = useCallback(async (msgs: Message[], convId: string | null) => {
+    if (msgs.length < 2) return // don't save empty conversations
+    const title = msgs.find(m => m.role === 'user')?.content?.slice(0, 60) || 'Gesprek'
+    try {
+      if (convId) {
+        await fetch(`/api/ai-conversations/${convId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: msgs, title }),
+        })
+      } else {
+        const res = await fetch('/api/ai-conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: msgs,
+            title,
+            context: isMepMode ? 'mep' : 'general',
+            context_id: eventId || null,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setCurrentConvId(data.id)
+        }
+      }
+    } catch {
+      // silent
+    }
+  }, [isMepMode, eventId])
 
   const send = async (text?: string) => {
     const msg = (text ?? input).trim()
@@ -68,7 +145,6 @@ export default function JulesAI() {
 
     try {
       if (isMepMode) {
-        // MEP edit mode — non-streaming, tool use
         const res = await fetch('/api/mep/ai-edit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,27 +155,25 @@ export default function JulesAI() {
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}))
           const errMsg = errData.error || 'Er ging iets mis. Probeer opnieuw.'
-          setMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: errMsg }]
+          setMessages(finalMsgs)
           setLoading(false)
           return
         }
 
         const data = await res.json()
         const reply = data.response || 'Klaar!'
-        setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-
-        // Show proactive warnings
-        if (data.warnings?.length) {
-          setWarnings(data.warnings)
-        }
-
-        // If mutations were made, refresh the page data
+        const finalMsgs = [...newMessages, { role: 'assistant' as const, content: reply }]
+        setMessages(finalMsgs)
+        if (data.warnings?.length) setWarnings(data.warnings)
         if (data.mutationsCount > 0) {
           router.refresh()
           window.dispatchEvent(new CustomEvent('mep-data-updated'))
         }
+        // Save after reply
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
       } else {
-        // General chat mode — streaming via jules/chat
         const res = await fetch('/api/jules/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -108,7 +182,8 @@ export default function JulesAI() {
         })
 
         if (!res.ok || !res.body) {
-          setMessages(prev => [...prev, { role: 'assistant', content: 'Er ging iets mis. Probeer opnieuw.' }])
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: 'Er ging iets mis. Probeer opnieuw.' }]
+          setMessages(finalMsgs)
           setLoading(false)
           return
         }
@@ -140,12 +215,19 @@ export default function JulesAI() {
               }
             }
           }
-          setMessages(prev => [...prev, { role: 'assistant', content: accumulated }])
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: accumulated }]
+          setMessages(finalMsgs)
           setStreamText('')
+          // Save after streaming done
+          if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+          saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
         } else {
           const data = await res.json()
           const reply = data.response || data.content || data.message || 'Geen antwoord'
-          setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+          const finalMsgs = [...newMessages, { role: 'assistant' as const, content: reply }]
+          setMessages(finalMsgs)
+          if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+          saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
         }
       }
     } catch (err: unknown) {
@@ -157,162 +239,428 @@ export default function JulesAI() {
     setStreamText('')
   }
 
+  const loadConversation = (conv: Conversation) => {
+    setMessages(conv.messages)
+    setCurrentConvId(conv.id)
+    setTab('chat')
+  }
+
+  const deleteConversation = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    await fetch(`/api/ai-conversations/${id}`, { method: 'DELETE' })
+    setConversations(prev => prev.filter(c => c.id !== id))
+    if (currentConvId === id) {
+      setMessages([])
+      setCurrentConvId(null)
+    }
+  }
+
+  const startNewConversation = () => {
+    setMessages([])
+    setCurrentConvId(null)
+    setWarnings([])
+    setTab('chat')
+  }
+
   const quickActions = isMepMode ? MEP_ACTIONS : GENERAL_ACTIONS
+
+  // Panel dimensions — mobile: nearly full screen, desktop: fixed width
+  const panelStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
+        bottom: 80,
+        left: 12,
+        right: 12,
+        maxHeight: 'calc(100dvh - 120px)',
+        zIndex: 50,
+      }
+    : {
+        position: 'fixed',
+        bottom: 88,
+        right: 24,
+        width: 420,
+        maxHeight: 640,
+        zIndex: 50,
+      }
+
+  // Button position — mobile: above scan button
+  const buttonStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: isMobile ? 136 : 24,
+    right: isMobile ? 16 : 24,
+    zIndex: 50,
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 200ms ease',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    backgroundColor: open ? '#FDF8F2' : isMepMode ? '#059669' : '#2C3E2D',
+  }
 
   return (
     <>
       {/* Floating button */}
       <button
         onClick={() => setOpen(o => !o)}
-        className={`fixed z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
-          open ? 'bg-[#FDF8F2] rotate-12' : isMepMode ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-brand-700 hover:bg-brand-600'
-        }`}
-        style={{ bottom: '24px', right: '24px' }}
+        style={buttonStyle}
         title={isMepMode ? 'MEP Assistent' : 'Jules AI'}
       >
         {open
-          ? <X className="w-5 h-5 text-[#2C1810]" />
+          ? <X style={{ width: 20, height: 20, color: '#2C1810' }} />
           : isMepMode
-            ? <Sparkles className="w-5 h-5 text-white" />
-            : <ChefHat className="w-5 h-5 text-[#2C1810]" />
+            ? <Sparkles style={{ width: 20, height: 20, color: 'white' }} />
+            : <ChefHat style={{ width: 20, height: 20, color: 'white' }} />
         }
       </button>
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-20 right-6 z-50 w-[420px] max-h-[640px] flex flex-col bg-[#FAFAF8] border border-[#E8D5B5] rounded-2xl shadow-2xl overflow-hidden">
+        <div
+          style={{
+            ...panelStyle,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#FAFAF8',
+            border: '1px solid #E8D5B5',
+            borderRadius: 16,
+            boxShadow: '0 8px 40px rgba(44,24,16,0.18)',
+            overflow: 'hidden',
+          }}
+        >
           {/* Header */}
-          <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#E8D5B5] ${isMepMode ? 'bg-emerald-700' : 'bg-white/90'}`}>
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isMepMode ? 'bg-emerald-500' : 'bg-brand-700'}`}>
-              {isMepMode ? <Sparkles className="w-4 h-4 text-white" /> : <ChefHat className="w-4 h-4 text-[#2C1810]" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className={`text-sm font-semibold ${isMepMode ? 'text-white' : 'text-[#2C1810]'}`}>
-                {isMepMode ? 'MEP Assistent' : 'Jules AI'}
-              </div>
-              <div className={`text-[10px] truncate ${isMepMode ? 'text-emerald-200' : 'text-[#B8997A]'}`}>
-                {isMepMode ? '✏️ Zeg wat je wilt aanpassen' : 'Culinaire assistent'}
-              </div>
-            </div>
-            {isMepMode && (
-              <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-medium rounded-full">
-                MEP MODE
-              </span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 16px',
+            borderBottom: '1px solid #E8D5B5',
+            backgroundColor: isMepMode ? '#065F46' : '#FFFFFF',
+            flexShrink: 0,
+          }}>
+            {/* Tab: Chat */}
+            <button
+              onClick={() => setTab('chat')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 10px', borderRadius: 8, border: 'none',
+                backgroundColor: tab === 'chat' ? (isMepMode ? '#059669' : '#F2E8D5') : 'transparent',
+                color: isMepMode ? 'white' : (tab === 'chat' ? '#2C1810' : '#9E7E60'),
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              {isMepMode
+                ? <Sparkles style={{ width: 13, height: 13 }} />
+                : <ChefHat style={{ width: 13, height: 13 }} />
+              }
+              {isMepMode ? 'MEP' : 'Jules AI'}
+            </button>
+
+            {/* Tab: History */}
+            <button
+              onClick={() => setTab('history')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 10px', borderRadius: 8, border: 'none',
+                backgroundColor: tab === 'history' ? (isMepMode ? '#059669' : '#F2E8D5') : 'transparent',
+                color: isMepMode ? 'white' : (tab === 'history' ? '#2C1810' : '#9E7E60'),
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              <History style={{ width: 13, height: 13 }} />
+              Gesprekken
+            </button>
+
+            <div style={{ flex: 1 }} />
+
+            {/* New conversation */}
+            {tab === 'chat' && messages.length > 0 && (
+              <button
+                onClick={startNewConversation}
+                title="Nieuw gesprek"
+                style={{
+                  padding: '4px 8px', borderRadius: 7, border: 'none',
+                  backgroundColor: isMepMode ? 'rgba(255,255,255,0.15)' : '#F2E8D5',
+                  color: isMepMode ? 'white' : '#9E7E60',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                <Plus style={{ width: 12, height: 12 }} />
+                Nieuw
+              </button>
             )}
+
+            {/* Close */}
             <button
               onClick={() => setOpen(false)}
-              className={`p-1 rounded-lg transition-colors ${isMepMode ? 'hover:bg-emerald-600 text-emerald-200 hover:text-white' : 'hover:bg-white text-[#B8997A] hover:text-[#5C4730]'}`}
+              style={{
+                padding: 4, borderRadius: 7, border: 'none',
+                backgroundColor: 'transparent', cursor: 'pointer',
+                color: isMepMode ? 'rgba(255,255,255,0.7)' : '#B8997A',
+              }}
             >
-              <X className="w-4 h-4" />
+              <X style={{ width: 16, height: 16 }} />
             </button>
           </div>
 
-          {/* Proactive warnings */}
-          {warnings.length > 0 && messages.length > 0 && (
-            <div className="px-3 py-2 bg-amber-50 border-b border-amber-200">
+          {/* Warnings */}
+          {warnings.length > 0 && tab === 'chat' && messages.length > 0 && (
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: '#FFFBEB',
+              borderBottom: '1px solid #FDE68A',
+              flexShrink: 0,
+            }}>
               {warnings.map((w, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-[10px] text-amber-700">
-                  <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 11, color: '#92400E' }}>
+                  <AlertTriangle style={{ width: 12, height: 12, flexShrink: 0, marginTop: 1 }} />
                   <span>{w.replace('⚠️ ', '')}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
-            {messages.length === 0 && !loading && (
-              <div className="space-y-3">
-                <p className="text-xs text-[#B8997A] text-center pt-2">
-                  {isMepMode
-                    ? 'Zeg wat je wilt — ik pas het direct aan in de database'
-                    : 'Stel een vraag of kies een snelle actie'}
-                </p>
-                {isMepMode && (
-                  <div className="text-[10px] text-[#B8997A] bg-white rounded-xl p-2.5 border border-[#E8D5B5] space-y-1">
-                    <div className="font-medium text-[#9E7E60] mb-1">Voorbeelden:</div>
-                    <div>"pas aantallen aan: 135 personen, crew 6, 1x veggie"</div>
-                    <div>"voeg mignardises toe"</div>
-                    <div>"zet de makreel op 15g"</div>
-                    <div>"starttijd is 19:30, eindtijd 23:00"</div>
-                    <div>"contactpersoon is Jan Peeters"</div>
-                    <div>"noteer: 2x lactose-intolerant, 1x noten-allergie"</div>
+          {/* CHAT TAB */}
+          {tab === 'chat' && (
+            <>
+              {/* Messages */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {messages.length === 0 && !loading && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <p style={{ fontSize: 11, color: '#B8997A', textAlign: 'center', paddingTop: 8 }}>
+                      {isMepMode
+                        ? 'Zeg wat je wilt — ik pas het direct aan in de database'
+                        : 'Stel een vraag of kies een snelle actie'}
+                    </p>
+                    {isMepMode && (
+                      <div style={{
+                        fontSize: 11, color: '#B8997A',
+                        backgroundColor: 'white', borderRadius: 12,
+                        padding: '10px 12px', border: '1px solid #E8D5B5',
+                        lineHeight: 1.6,
+                      }}>
+                        <div style={{ fontWeight: 600, color: '#9E7E60', marginBottom: 4 }}>Voorbeelden:</div>
+                        <div>"pas aantallen aan: 135 personen, crew 6, 1x veggie"</div>
+                        <div>"voeg mignardises toe"</div>
+                        <div>"zet de makreel op 15g"</div>
+                        <div>"starttijd is 19:30, eindtijd 23:00"</div>
+                      </div>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {quickActions.map((qa, i) => (
+                        <button
+                          key={i}
+                          onClick={() => send(qa.prompt)}
+                          style={{
+                            padding: '10px 12px',
+                            backgroundColor: 'white',
+                            border: '1px solid #E8D5B5',
+                            borderRadius: 12,
+                            fontSize: 11, color: '#9E7E60',
+                            textAlign: 'left', cursor: 'pointer',
+                            transition: 'all 150ms ease',
+                            fontFamily: 'inherit',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FDF8F2')}
+                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'white')}
+                        >
+                          {qa.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-2">
-                  {quickActions.map((qa, i) => (
-                    <button
-                      key={i}
-                      onClick={() => send(qa.prompt)}
-                      className="px-3 py-2.5 bg-white hover:bg-[#FDF8F2] border border-[#E8D5B5] rounded-xl text-xs text-[#9E7E60] hover:text-[#3D2810] text-left transition-all"
-                    >
-                      {qa.label}
-                    </button>
-                  ))}
+
+                {messages.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                    <div style={{
+                      maxWidth: '88%',
+                      padding: '8px 12px',
+                      borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      fontSize: 13,
+                      lineHeight: 1.55,
+                      whiteSpace: 'pre-wrap',
+                      backgroundColor: m.role === 'user'
+                        ? (isMepMode ? '#065F46' : '#2C3E2D')
+                        : 'white',
+                      color: m.role === 'user' ? 'white' : '#3D2810',
+                      border: m.role === 'user' ? 'none' : '1px solid #E8D5B5',
+                    }}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Streaming */}
+                {streamText && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <div style={{
+                      maxWidth: '88%', padding: '8px 12px',
+                      borderRadius: '16px 16px 16px 4px',
+                      fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                      backgroundColor: 'white', border: '1px solid #E8D5B5', color: '#3D2810',
+                    }}>
+                      {streamText}
+                      <span style={{
+                        display: 'inline-block', width: 6, height: 14, marginLeft: 3,
+                        backgroundColor: '#E8A040', borderRadius: 2,
+                        animation: 'pulse 1s infinite',
+                      }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading */}
+                {loading && !streamText && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <div style={{
+                      padding: '8px 12px', backgroundColor: 'white',
+                      border: '1px solid #E8D5B5', borderRadius: '16px 16px 16px 4px',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                      <Loader2 style={{ width: 14, height: 14, color: '#B8997A', animation: 'spin 1s linear infinite' }} />
+                      <span style={{ fontSize: 11, color: '#B8997A' }}>
+                        {isMepMode ? 'Aanpassingen doorvoeren...' : 'Denken...'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input */}
+              <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #E8D5B5', flexShrink: 0 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  backgroundColor: 'white', border: '1px solid #E8D5B5',
+                  borderRadius: 12, padding: '8px 12px',
+                }}>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                    placeholder={isMepMode ? 'bv. "135 personen, starttijd 19:00"' : 'Stel een vraag...'}
+                    style={{
+                      flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                      fontSize: 13, color: '#3D2810', fontFamily: 'inherit',
+                    }}
+                  />
+                  <button
+                    onClick={() => send()}
+                    disabled={!input.trim() || loading}
+                    style={{
+                      width: 30, height: 30, borderRadius: 8, border: 'none',
+                      backgroundColor: !input.trim() || loading ? '#F2E8D5' : (isMepMode ? '#065F46' : '#2C3E2D'),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
+                      transition: 'all 150ms ease', flexShrink: 0,
+                    }}
+                  >
+                    <Send style={{ width: 13, height: 13, color: !input.trim() || loading ? '#B8997A' : 'white' }} />
+                  </button>
                 </div>
               </div>
-            )}
+            </>
+          )}
 
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[88%] px-3 py-2 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
-                  m.role === 'user'
-                    ? isMepMode ? 'bg-emerald-600 text-white rounded-br-md' : 'bg-brand-700 text-[#2C1810] rounded-br-md'
-                    : 'bg-white border border-[#E8D5B5] text-[#3D2810] rounded-bl-md'
-                }`}>
-                  {m.content}
-                </div>
-              </div>
-            ))}
-
-            {/* Streaming text */}
-            {streamText && (
-              <div className="flex justify-start">
-                <div className="max-w-[88%] px-3 py-2 rounded-2xl rounded-bl-md bg-white border border-[#E8D5B5] text-[#3D2810] text-xs leading-relaxed whitespace-pre-wrap">
-                  {streamText}
-                  <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-500 animate-pulse rounded-sm" />
-                </div>
-              </div>
-            )}
-
-            {/* Loading indicator */}
-            {loading && !streamText && (
-              <div className="flex justify-start">
-                <div className="px-3 py-2 bg-white border border-[#E8D5B5] rounded-2xl rounded-bl-md flex items-center gap-2">
-                  <Loader2 className="w-3.5 h-3.5 text-[#B8997A] animate-spin" />
-                  <span className="text-[10px] text-[#B8997A]">
-                    {isMepMode ? 'Aanpassingen doorvoeren...' : 'Denken...'}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input area */}
-          <div className="px-3 pb-3 pt-2 border-t border-[#E8D5B5]">
-            <div className="flex items-center gap-2 bg-white border border-[#E8D5B5] rounded-xl px-3 py-2 focus-within:border-brand-600 transition-colors">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-                placeholder={isMepMode ? 'bv. "135 personen, starttijd 19:00, 1x veggie"' : 'Stel een vraag...'}
-                className="flex-1 bg-transparent text-sm text-[#3D2810] placeholder:text-[#B8997A] outline-none"
-              />
+          {/* HISTORY TAB */}
+          {tab === 'history' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
-                onClick={() => send()}
-                disabled={!input.trim() || loading}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
-                  isMepMode ? 'bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-200' : 'bg-brand-700 hover:bg-brand-600 disabled:bg-white'
-                }`}
+                onClick={startNewConversation}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 14px', borderRadius: 10,
+                  border: '1.5px dashed #E8D5B5',
+                  backgroundColor: 'transparent', cursor: 'pointer',
+                  color: '#9E7E60', fontSize: 13, fontWeight: 600,
+                  fontFamily: 'inherit',
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FDF8F2'; e.currentTarget.style.borderColor = '#C4703A' }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#E8D5B5' }}
               >
-                <Send className={`w-3.5 h-3.5 ${isMepMode ? 'text-white' : 'text-[#2C1810]'}`} />
+                <Plus style={{ width: 16, height: 16 }} />
+                Nieuw gesprek starten
               </button>
+
+              {loadingHistory && (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}>
+                  <Loader2 style={{ width: 20, height: 20, color: '#B8997A', animation: 'spin 1s linear infinite' }} />
+                </div>
+              )}
+
+              {!loadingHistory && conversations.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '32px 16px', color: '#B8997A', fontSize: 13 }}>
+                  <History style={{ width: 28, height: 28, margin: '0 auto 8px', opacity: 0.4 }} />
+                  <div>Nog geen eerdere gesprekken</div>
+                  <div style={{ fontSize: 11, marginTop: 4 }}>Gesprekken worden automatisch opgeslagen</div>
+                </div>
+              )}
+
+              {conversations.map(conv => (
+                <button
+                  key={conv.id}
+                  onClick={() => loadConversation(conv)}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '10px 12px', borderRadius: 10,
+                    border: `1px solid ${currentConvId === conv.id ? '#E8A040' : '#E8D5B5'}`,
+                    backgroundColor: currentConvId === conv.id ? '#FEF3E2' : 'white',
+                    cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                    transition: 'all 150ms ease',
+                  }}
+                  onMouseEnter={e => { if (currentConvId !== conv.id) e.currentTarget.style.backgroundColor = '#FDF8F2' }}
+                  onMouseLeave={e => { if (currentConvId !== conv.id) e.currentTarget.style.backgroundColor = 'white' }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#2C1810', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {conv.title}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                      <span style={{ fontSize: 11, color: '#B8997A' }}>
+                        {new Date(conv.updated_at).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      {conv.context && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 600, padding: '1px 6px',
+                          borderRadius: 4,
+                          backgroundColor: conv.context === 'mep' ? '#D1FAE5' : '#F2E8D5',
+                          color: conv.context === 'mep' ? '#065F46' : '#9E7E60',
+                        }}>
+                          {conv.context === 'mep' ? 'MEP' : 'Algemeen'}
+                        </span>
+                      )}
+                      <span style={{ fontSize: 11, color: '#B8997A' }}>
+                        {conv.messages.length} berichten
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    title="Verwijder gesprek"
+                    style={{
+                      padding: 6, borderRadius: 6, border: 'none',
+                      backgroundColor: 'transparent', cursor: 'pointer',
+                      color: '#B8997A', flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.backgroundColor = '#FEF2F2' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#B8997A'; e.currentTarget.style.backgroundColor = 'transparent' }}
+                  >
+                    <Trash2 style={{ width: 13, height: 13 }} />
+                  </button>
+                </button>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
     </>
