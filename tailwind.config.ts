@@ -59,9 +59,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans:  ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        serif: ['Georgia', '"Times New Roman"', 'serif'],
+        sans:    ['var(--font-display)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif:   ['Georgia', '"Times New Roman"', 'serif'],
         display: ['var(--font-display)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:    ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '1.4' }],
