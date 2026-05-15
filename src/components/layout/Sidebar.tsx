@@ -340,6 +340,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const supabase = createClient()
   const { kitchen } = useKitchen()
   const [unreadAlerts, setUnreadAlerts] = useState(0)
+  const [hoveredTab, setHoveredTab] = useState<Department | null>(null)
 
   const dept = getDept(pathname)
   const theme = THEMES[dept]
@@ -520,35 +521,38 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         flexDirection: 'column',
         gap: 2,
         zIndex: 51,
-        pointerEvents: isOpen ? 'auto' : 'none',
+        pointerEvents: 'auto',
       }}>
         {([
-          { dept: 'keuken' as Department, label: 'Keuken', href: '/dashboard', activeBg: '#F2E8D5', activeBorder: '#E8A040', activeText: '#B5631A', inactiveBg: '#FDF9F4', inactiveBorder: '#DDD0B8', inactiveText: '#9E7E60' },
-          { dept: 'sales' as Department, label: 'Sales', href: '/sales/pipeline', activeBg: '#EBF4E8', activeBorder: '#2D6A1E', activeText: '#1A4510', inactiveBg: '#F4FAF2', inactiveBorder: '#C4DCC0', inactiveText: '#5A7A52' },
-          { dept: 'logistiek' as Department, label: 'Logistiek', href: '/paklijsten', activeBg: '#E8EEF8', activeBorder: '#1E3F8A', activeText: '#122660', inactiveBg: '#F2F5FB', inactiveBorder: '#BCCCE8', inactiveText: '#4A6090' },
+          { dept: 'keuken' as Department, label: 'Keuken', href: '/dashboard', activeBg: '#F2E8D5', activeBorder: '#E8A040', activeText: '#B5631A', inactiveBg: '#FDF9F4', inactiveBorder: '#DDD0B8', inactiveText: '#9E7E60', hoverBg: '#FEF3E2' },
+          { dept: 'sales' as Department, label: 'Sales', href: '/sales/pipeline', activeBg: '#EBF4E8', activeBorder: '#2D6A1E', activeText: '#1A4510', inactiveBg: '#F4FAF2', inactiveBorder: '#C4DCC0', inactiveText: '#5A7A52', hoverBg: '#E0F0DA' },
+          { dept: 'logistiek' as Department, label: 'Logistiek', href: '/paklijsten', activeBg: '#E8EEF8', activeBorder: '#1E3F8A', activeText: '#122660', inactiveBg: '#F2F5FB', inactiveBorder: '#BCCCE8', inactiveText: '#4A6090', hoverBg: '#D8E4F4' },
         ] as const).map((d) => {
           const isActive = dept === d.dept
+          const isHovered = hoveredTab === d.dept
           return (
             <Link
               key={d.dept}
               href={d.href}
-              onClick={handleNavigate}
+              onMouseEnter={() => setHoveredTab(d.dept)}
+              onMouseLeave={() => setHoveredTab(null)}
               style={{
                 writingMode: 'vertical-rl' as const,
                 padding: '12px 7px',
                 borderRadius: '0 7px 7px 0',
-                backgroundColor: isActive ? d.activeBg : d.inactiveBg,
-                border: `1px solid ${isActive ? d.activeBorder : d.inactiveBorder}`,
+                backgroundColor: isActive ? d.activeBg : isHovered ? d.hoverBg : d.inactiveBg,
+                border: `1px solid ${isActive ? d.activeBorder : isHovered ? d.activeBorder + '80' : d.inactiveBorder}`,
                 borderLeft: 'none',
-                color: isActive ? d.activeText : d.inactiveText,
+                color: isActive ? d.activeText : isHovered ? d.activeText : d.inactiveText,
                 fontSize: 10,
-                fontWeight: isActive ? 700 : 400,
+                fontWeight: isActive ? 700 : isHovered ? 600 : 400,
                 letterSpacing: '0.06em',
                 textDecoration: 'none',
                 transition: 'all 0.15s ease',
                 textTransform: 'uppercase' as const,
                 whiteSpace: 'nowrap' as const,
-                boxShadow: isActive ? '2px 1px 5px rgba(0,0,0,0.1)' : '1px 1px 3px rgba(0,0,0,0.04)',
+                boxShadow: isActive ? '2px 1px 6px rgba(0,0,0,0.12)' : isHovered ? '2px 1px 5px rgba(0,0,0,0.08)' : '1px 1px 3px rgba(0,0,0,0.04)',
+                transform: isHovered && !isActive ? 'translateX(3px)' : 'none',
                 cursor: 'pointer',
               }}
             >
