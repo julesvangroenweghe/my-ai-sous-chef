@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList } from 'lucide-react'
+import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList, CalendarDays, Users } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 type ScanState = 'idle' | 'uploading' | 'processing' | 'results' | 'error'
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'event' | 'other'
 
 interface ScanResultData {
   type: DocumentType
@@ -32,6 +32,7 @@ const typeLabels: Record<DocumentType, string> = {
   mep: 'MEP Lijst',
   recipe: 'Recept',
   pricelist: 'Prijslijst',
+  event: 'Event',
   other: 'Document',
 }
 
@@ -40,6 +41,7 @@ const typeColors: Record<DocumentType, string> = {
   mep: 'bg-emerald-50 text-emerald-700',
   recipe: 'bg-amber-50 text-amber-700',
   pricelist: 'bg-violet-50 text-violet-700',
+  event: 'bg-orange-50 text-orange-700',
   other: 'bg-stone-50 text-stone-600',
 }
 
@@ -48,11 +50,13 @@ const typeIcons: Record<DocumentType, React.ReactNode> = {
   mep: <ClipboardList className="w-4 h-4" />,
   recipe: <BookOpen className="w-4 h-4" />,
   pricelist: <Package className="w-4 h-4" />,
+  event: <CalendarDays className="w-4 h-4" />,
   other: <FileText className="w-4 h-4" />,
 }
 
 const docTypeOptions: { value: DocumentType | 'auto'; label: string }[] = [
   { value: 'auto', label: 'Automatisch detecteren' },
+  { value: 'event', label: 'Event / Aanvraag' },
   { value: 'pricelist', label: 'Prijslijst' },
   { value: 'invoice', label: 'Factuur' },
   { value: 'mep', label: 'MEP Lijst' },
@@ -97,6 +101,25 @@ function ImportFeedback({ result }: { result: ScanResultData }) {
           </p>
           <a href="/recepten" className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium mt-2 hover:underline">
             Bekijk recepten <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (result.type === 'event' && r.event_id) {
+    return (
+      <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-100 rounded-xl">
+        <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+          <CalendarDays className="w-4 h-4 text-orange-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-orange-800">Event aangemaakt</p>
+          <p className="text-xs text-orange-600 mt-0.5">
+            <strong>{r.event_name as string}</strong> is toegevoegd als draft event op {r.event_date as string}
+          </p>
+          <a href={`/events/${r.event_id}`} className="inline-flex items-center gap-1 text-xs text-orange-700 font-medium mt-2 hover:underline">
+            Bekijk event <ArrowRight className="w-3 h-3" />
           </a>
         </div>
       </div>
@@ -213,7 +236,6 @@ export default function ScanPage() {
       })
       if (response.ok) {
         setImportDone(true)
-        // Refresh history
         fetch('/api/scan/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
       }
     } catch (err) {
@@ -228,6 +250,7 @@ export default function ScanPage() {
     const s = doc.import_summary
     if (doc.document_type === 'pricelist') return `${s.imported} producten bij ${s.supplier_name}`
     if (doc.document_type === 'recipe') return `Opgeslagen als recept`
+    if (doc.document_type === 'event') return `Event aangemaakt: ${s.event_name}`
     return 'Automatisch geïmporteerd'
   }
 
@@ -241,7 +264,7 @@ export default function ScanPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Scanner</h1>
-            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten of recepten — automatisch verwerkt en opgeslagen</p>
+            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten, recepten of eventbrieven — automatisch verwerkt en opgeslagen</p>
           </div>
         </div>
       </div>
@@ -336,7 +359,7 @@ export default function ScanPage() {
                 {state === 'uploading' ? 'Document uploaden...' : 'AI analyseert je document...'}
               </p>
               <p className="text-[#9E7E60] text-sm mt-1">
-                {state === 'processing' && 'Tekst herkennen, producten extraheren en automatisch opslaan'}
+                {state === 'processing' && 'Tekst herkennen, data extraheren en automatisch opslaan'}
               </p>
             </div>
           </div>
@@ -367,6 +390,75 @@ export default function ScanPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Event Results */}
+            {result.type === 'event' && (
+              <div className="space-y-4">
+                <h3 className="font-display text-xl font-bold text-stone-900">{result.data.name as string || result.data.contact_name as string || 'Event'}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-stone-50 rounded-xl">
+                  <div>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Datum</p>
+                    <p className="font-medium text-stone-900">{result.data.event_date as string || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Locatie</p>
+                    <p className="font-medium text-stone-900">{result.data.location as string || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider flex items-center gap-1"><Users className="w-3 h-3" />Personen</p>
+                    <p className="font-medium text-stone-900">{result.data.num_persons as number || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Type</p>
+                    <p className="font-medium text-stone-900 capitalize">{result.data.event_type as string || '-'}</p>
+                  </div>
+                  {(result.data.event_time_start as string) && (
+                    <div>
+                      <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Tijdstip</p>
+                      <p className="font-medium text-stone-900">{result.data.event_time_start as string} – {result.data.event_time_end as string || '?'}</p>
+                    </div>
+                  )}
+                  {(result.data.contact_name as string) && (
+                    <div>
+                      <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Contactpersoon</p>
+                      <p className="font-medium text-stone-900">{result.data.contact_name as string}</p>
+                    </div>
+                  )}
+                  {(result.data.contact_phone as string) && (
+                    <div>
+                      <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Telefoon</p>
+                      <p className="font-medium text-stone-900">{result.data.contact_phone as string}</p>
+                    </div>
+                  )}
+                  {(result.data.budget_per_person as number) > 0 && (
+                    <div>
+                      <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider">Budget/p</p>
+                      <p className="font-medium text-stone-900">€{result.data.budget_per_person as number}</p>
+                    </div>
+                  )}
+                </div>
+                {(result.data.menu_notes as string) && (
+                  <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider mb-1">Menu wensen</p>
+                    <p className="text-sm text-stone-700">{result.data.menu_notes as string}</p>
+                  </div>
+                )}
+                {(result.data.notes as string) && (
+                  <div className="p-4 bg-stone-50 rounded-xl">
+                    <p className="text-[11px] text-[#9E7E60] uppercase tracking-wider mb-1">Opmerkingen</p>
+                    <p className="text-sm text-stone-700">{result.data.notes as string}</p>
+                  </div>
+                )}
+                {result.auto_imported && result.import_result?.event_id ? (
+                  <a href={`/events/${result.import_result.event_id}`} className="btn-primary w-full justify-center flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" />
+                    Bekijk event
+                  </a>
+                ) : (
+                  <p className="text-xs text-[#9E7E60] text-center">Opgeslagen in scanhistorie — datum ontbrak, event niet aangemaakt</p>
+                )}
+              </div>
+            )}
 
             {/* Prijslijst Results */}
             {result.type === 'pricelist' && (
@@ -414,7 +506,6 @@ export default function ScanPage() {
                     </tbody>
                   </table>
                 </div>
-                {/* Toon import knop enkel als NIET auto-geïmporteerd */}
                 {!result.auto_imported && (
                   <div className="flex items-center gap-3">
                     <button
