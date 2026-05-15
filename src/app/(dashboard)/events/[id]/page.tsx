@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
-  ArrowLeft, ArrowRight, CalendarDays, MapPin, Users, Euro, Clock,
+  ArrowLeft, ArrowRight, CalendarDays, MapPin, Users, Euro, Clock, UsersRound,
   Plus, Trash2, ClipboardList, ChefHat, Loader2,
   X, AlertTriangle, ShoppingCart, Package, Edit2, Save, FileText, Check, Sparkles, RefreshCw
 } from 'lucide-react'
 import { MepInlineEditor } from '@/components/mep/mep-inline-editor'
+import { TastingSessionsSection } from '@/components/events/tasting-sessions-section'
 import { MepShoppingAggregate } from '@/components/mep/mep-shopping-aggregate'
 import { EventAllergenSection } from '@/components/allergens/event-allergen-section'
 
@@ -61,6 +62,7 @@ interface EventDetail {
     guest_name: string | null
     notes: string | null
   }[]
+  tasting_event_id?: string | null
 }
 
 const courseLabels: Record<number, string> = {
@@ -82,7 +84,7 @@ const eventTypeLabels: Record<string, string> = {
   cocktail: 'Cocktail Dînatoire', brunch: 'Brunch', tasting: 'Tasting Menu', daily_service: 'Dagdienst',
 }
 
-type TabId = 'menu' | 'shopping' | 'voorstel' | 'paklijst'
+type TabId = 'menu' | 'shopping' | 'voorstel' | 'paklijst' | 'tasting'
 
 interface EditForm {
   name: string; event_date: string; event_type: string; num_persons: string
@@ -255,8 +257,10 @@ export default function EventDetailPage() {
   const hasMep = mepDishCount > 0 || (mepStatus?.hasMep ?? false)
 
   // MEP Plan tab removed — replaced by direct link to /mep/[id]
+  const isTastingEvent = event.event_type === 'tasting'
   const tabs = [
     { id: 'menu' as TabId, label: 'Menu', icon: ChefHat, count: event.menu_items.length },
+    ...(isTastingEvent ? [{ id: 'tasting' as TabId, label: 'Tasting Sessies', icon: UsersRound }] : []),
     { id: 'shopping' as TabId, label: 'Boodschappen', icon: ShoppingCart },
     { id: 'voorstel' as TabId, label: 'Voorstellen', icon: FileText },
     { id: 'paklijst' as TabId, label: 'Paklijst', icon: Package },
@@ -499,6 +503,10 @@ export default function EventDetailPage() {
             <Package className="w-4 h-4" />Paklijst openen
           </Link>
         </div>
+      )}
+
+      {activeTab === 'tasting' && (
+        <TastingSessionsSection tastingEventId={eventId} />
       )}
 
       {/* Link naar MEP module — altijd zichtbaar onderaan menu tab */}

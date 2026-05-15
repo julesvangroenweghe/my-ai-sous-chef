@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server'
 // Streaming response = 60s timeout op Vercel Hobby (ipv 10s)
 export const maxDuration = 60
 
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'event_brief' | 'other'
 
 interface ScanResult {
   type: DocumentType
@@ -34,7 +34,12 @@ Detecteer het type:
 - "factuur" / "invoice" / BTW-nummer / factuurnummer → "invoice"
 - "MEP" / "mise en place" / "productielijst" → "mep"
 - "recept" / bereiding / ingrediënten → "recipe"
+- Event brief / proposal / catering voorstel / menu met datum + klant + verloop → "event_brief"
 - Alles wat niet past → "other"
+
+KRITISCH voor MEP-parsing:
+- "Brood en boter" / "Pain et beurre" / "brood" / "beurre" op een menukaart = service-item/begeleidend element, GEEN gerecht — sla op als category "service_item" onder het gerecht dat het begeleidt, of als eerste item met category "begeleiding"
+- Wissel bij gang-detectie op het volgende: amuse/bouchée/mise en bouche = gang 0, voorgerecht = gang 1, tussengerecht = gang 2, hoofdgerecht/plat principal = gang 3, kaas = gang 4, dessert = gang 5, mignardises/sucreries = gang 6
 
 ${hint}
 
@@ -51,6 +56,9 @@ Voor mep:
 
 Voor recipe:
 {"type":"recipe","confidence":0.95,"data":{"name":"...","servings":4,"prep_time_minutes":30,"ingredients":[{"name":"...","quantity":"200","unit":"g"}],"method":["Stap 1","Stap 2"],"notes":""}}
+
+Voor event_brief:
+{"type":"event_brief","confidence":0.95,"data":{"event_name":"Naam event of klant","event_date":"YYYY-MM-DD","location":"locatie","num_persons":0,"price_per_person":0,"contact_person":"naam contactpersoon","timeline":[{"time":"19:00","description":"Ontvangst","duration_minutes":30}],"courses":[{"course":"Amuse","items":[{"name":"Gerechtnaam","description":""}]}],"dietary_notes":"","notes":""}}
 
 Voor other:
 {"type":"other","confidence":0.90,"data":{"description":"Korte beschrijving van wat er in het document staat","content":"Samenvatting van de inhoud"}}

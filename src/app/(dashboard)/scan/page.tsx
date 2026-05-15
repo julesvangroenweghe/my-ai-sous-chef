@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -120,6 +121,11 @@ export default function ScanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
+  const [events, setEvents] = useState<Array<{id: string; name: string; event_date: string}>>([])
+  const [linkingDoc, setLinkingDoc] = useState<string | null>(null)
+  const [linkingEventId, setLinkingEventId] = useState<string>('')
+  const [linkSaving, setLinkSaving] = useState(false)
+
   // Laad persistente history uit DB
   useEffect(() => {
     fetch('/api/scan/history')
@@ -129,7 +135,30 @@ export default function ScanPage() {
       })
       .catch(() => {})
       .finally(() => setHistoryLoading(false))
+
+    // Load events for linking
+    fetch('/api/events')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setEvents(data)
+      })
+      .catch(() => {})
   }, [])
+
+  const handleLinkToEvent = async (docId: string) => {
+    if (!linkingEventId) return
+    setLinkSaving(true)
+    await fetch(\`/api/scan/\${docId}\`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ linked_event_id: linkingEventId }),
+    })
+    setLinkSaving(false)
+    setLinkingDoc(null)
+    setLinkingEventId('')
+    // Reload history to show updated link
+    fetch('/api/scan/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
+  }
 
   const processFile = useCallback(async (file: File) => {
     setState('uploading')
@@ -637,6 +666,42 @@ export default function ScanPage() {
                     {formatDate(item.created_at)}
                   </span>
                   <span>{Math.round(item.confidence * 100)}%</span>
+                  {/* Koppel aan event */}
+                  {linkingDoc === item.id ? (
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={linkingEventId}
+                        onChange={e => setLinkingEventId(e.target.value)}
+                        className="text-xs border border-[#E8D5B5] rounded-lg px-2 py-1 bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
+                      >
+                        <option value="">Kies event...</option>
+                        {events.map(ev => (
+                          <option key={ev.id} value={ev.id}>
+                            {ev.name} ({new Date(ev.event_date + 'T12:00:00').toLocaleDateString('nl-BE', {day:'numeric', month:'short'})})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleLinkToEvent(item.id)}
+                        disabled={!linkingEventId || linkSaving}
+                        className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg transition-all disabled:opacity-50"
+                      >
+                        {linkSaving ? '...' : 'OK'}
+                      </button>
+                      <button onClick={() => { setLinkingDoc(null); setLinkingEventId('') }} className="text-[#9E7E60] hover:text-[#5C4730]">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setLinkingDoc(item.id)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#E8D5B5] bg-white hover:bg-amber-50 hover:border-amber-300 text-[#9E7E60] hover:text-amber-700 transition-all"
+                      title="Koppel aan event"
+                    >
+                      <ArrowRight className="w-3 h-3" />
+                      Event
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
