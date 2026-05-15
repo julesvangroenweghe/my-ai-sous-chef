@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
 interface Group {
@@ -31,7 +31,7 @@ const DEPARTMENT_LABELS: Record<string, { label: string; icon: string; color: st
 
 export default function WorkspacePicker() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const [groups, setGroups] = useState<Group[]>([])
   const [standaloneKitchens, setStandaloneKitchens] = useState<Kitchen[]>([])
   const [loading, setLoading] = useState(true)

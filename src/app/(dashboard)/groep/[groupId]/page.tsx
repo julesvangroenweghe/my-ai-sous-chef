@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 interface GroupData {
@@ -37,7 +37,7 @@ export default function GroupDashboard() {
   const router = useRouter()
   const params = useParams()
   const groupId = params.groupId as string
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const [data, setData] = useState<GroupData | null>(null)
   const [groupName, setGroupName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -48,7 +48,6 @@ export default function GroupDashboard() {
 
   async function loadDashboard() {
     try {
-      // Groepsnaam
       const { data: group } = await supabase
         .from('groups')
         .select('name')
@@ -56,7 +55,6 @@ export default function GroupDashboard() {
         .single()
       setGroupName(group?.name || 'Groepsoverzicht')
 
-      // Geconsolideerde data via RPC
       const { data: dashboard } = await supabase
         .rpc('get_group_dashboard', { p_group_id: groupId })
 
@@ -81,7 +79,6 @@ export default function GroupDashboard() {
 
   return (
     <div className="min-h-screen bg-[#FDF8F2]">
-      {/* Header */}
       <div className="bg-white border-b border-[#E8D5B5] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -96,17 +93,12 @@ export default function GroupDashboard() {
             Groepsoverzicht
           </span>
         </div>
-        <Link
-          href="/groep/instellingen"
-          className="text-xs text-[#9E7E60] hover:text-[#2C1810] transition-colors"
-        >
+        <Link href="/groep/instellingen" className="text-xs text-[#9E7E60] hover:text-[#2C1810] transition-colors">
           Instellingen
         </Link>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
-
-        {/* KPI Kaarten — geconsolideerd */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Totaal events', value: data?.total_events ?? 0, sub: 'alle bedrijven' },
@@ -122,7 +114,6 @@ export default function GroupDashboard() {
           ))}
         </div>
 
-        {/* Bedrijven overzicht */}
         <h2 className="text-sm font-semibold text-[#9E7E60] uppercase tracking-wide mb-4">Bedrijven</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(data?.kitchens || []).map(company => {
@@ -142,7 +133,6 @@ export default function GroupDashboard() {
                   </div>
                   <span className="text-[#9E7E60] group-hover:text-[#E8A040] transition-colors text-lg">→</span>
                 </div>
-
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <div className="text-lg font-bold text-[#2C1810]">{company.events_count}</div>
@@ -157,14 +147,11 @@ export default function GroupDashboard() {
                     <div className="text-xs text-[#9E7E60]">Te ontvangen</div>
                   </div>
                 </div>
-
                 {company.open_amount > 0 && (
                   <div className="mt-3 h-1.5 bg-[#F2E8D5] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#E8A040] rounded-full"
-                      style={{
-                        width: `${Math.min(100, (company.open_amount / (data?.open_invoice_total || 1)) * 100)}%`
-                      }}
+                      style={{ width: `${Math.min(100, (company.open_amount / (data?.open_invoice_total || 1)) * 100)}%` }}
                     />
                   </div>
                 )}
@@ -172,31 +159,21 @@ export default function GroupDashboard() {
             )
           })}
 
-          {/* Bedrijf toevoegen knop */}
           <button
             onClick={() => router.push('/groep/bedrijf-toevoegen')}
             className="text-left bg-white rounded-xl border border-dashed border-[#E8D5B5] p-5 hover:border-[#E8A040] transition-colors flex flex-col items-center justify-center gap-2 min-h-[160px]"
           >
-            <div className="w-10 h-10 rounded-full bg-[#F2E8D5] flex items-center justify-center text-[#E8A040] text-xl">
-              +
-            </div>
+            <div className="w-10 h-10 rounded-full bg-[#F2E8D5] flex items-center justify-center text-[#E8A040] text-xl">+</div>
             <span className="text-sm text-[#9E7E60]">Bedrijf toevoegen</span>
           </button>
         </div>
 
-        {/* Snelle acties */}
         <div className="mt-8 bg-white rounded-xl border border-[#E8D5B5] p-5">
           <h3 className="text-sm font-semibold text-[#2C1810] mb-4">Snelle acties</h3>
           <div className="flex flex-wrap gap-3">
-            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">
-              Alle facturen bekijken
-            </button>
-            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">
-              Events kalender
-            </button>
-            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">
-              Teamleden beheren
-            </button>
+            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">Alle facturen bekijken</button>
+            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">Events kalender</button>
+            <button className="text-sm px-4 py-2 rounded-lg bg-[#F2E8D5] text-[#2C1810] hover:bg-[#E8D5B5] transition-colors">Teamleden beheren</button>
           </div>
         </div>
       </div>

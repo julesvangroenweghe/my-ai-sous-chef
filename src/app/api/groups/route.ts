@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Haal alle groepen op waar user lid van is
   const { data: memberships, error } = await supabase
     .from('group_members')
     .select(`
@@ -24,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -33,7 +31,6 @@ export async function POST(req: NextRequest) {
 
   if (!name) return NextResponse.json({ error: 'Naam is verplicht' }, { status: 400 })
 
-  // Maak groep aan
   const { data: group, error: groupError } = await supabase
     .from('groups')
     .insert({ name, shared_kitchen, owner_user_id: user.id })
@@ -42,7 +39,6 @@ export async function POST(req: NextRequest) {
 
   if (groupError) return NextResponse.json({ error: groupError.message }, { status: 500 })
 
-  // Voeg maker toe als owner
   await supabase.from('group_members').insert({
     group_id: group.id,
     user_id: user.id,
