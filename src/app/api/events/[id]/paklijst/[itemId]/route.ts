@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // PATCH: update item (checked, quantity, notes)
 export async function PATCH(
@@ -12,6 +14,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   const { itemId } = await params
+  const supabase = getSupabase()
   const body = await req.json()
 
   const { data, error } = await supabase
@@ -31,6 +34,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   const { itemId } = await params
+  const supabase = getSupabase()
 
   const { error } = await supabase
     .from('event_packlist_items')
