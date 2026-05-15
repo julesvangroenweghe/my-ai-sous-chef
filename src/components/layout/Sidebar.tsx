@@ -385,12 +385,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       zIndex: 40, display: 'flex', flexDirection: 'column',
       backgroundColor: theme.sidebar,
       borderRight: `1px solid ${theme.border}`,
-      overflowY: 'auto', scrollbarWidth: 'none',
+      overflow: 'visible',
       transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
       transition: 'transform 280ms ease-in-out, background-color 200ms ease',
     }}>
+      {/* scrollable inner wrapper */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', scrollbarWidth: 'none' as const, height: '100%' }}>
 
-      {/* Logo + kitchen name */}
+      {/* Logo + kitchen name */
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${theme.innerBorder}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Image src="/logo-full-light.png" alt="My AI Sous Chef" width={130} height={38} style={{ objectFit: 'contain', objectPosition: 'left' }} />
@@ -414,16 +416,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <span style={{ fontSize: 10, fontWeight: 600, color: theme.accent, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             {deptConfig[dept].label}
           </span>
-          {/* Switch department links */}
-          {dept !== 'keuken' && (
-            <Link href="/dashboard" style={{ marginLeft: 'auto', fontSize: 9, color: theme.textSub, textDecoration: 'none' }}>← Keuken</Link>
-          )}
-          {dept === 'keuken' && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-              <Link href="/sales/pipeline" style={{ fontSize: 9, color: theme.textSub, textDecoration: 'none' }}>Sales</Link>
-              <Link href="/paklijsten" style={{ fontSize: 9, color: theme.textSub, textDecoration: 'none' }}>Logistiek</Link>
-            </div>
-          )}
+
         </div>
       </div>
 
@@ -433,35 +426,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <NavItemComponent key={item.href} item={item as NavItem} pathname={pathname} theme={theme} onNavigate={handleNavigate} />
         ))}
       </nav>
-
-      {/* Department switch — alleen keuken */}
-      {dept === 'keuken' && (
-        <div style={{ padding: '2px 12px 6px', flexShrink: 0 }}>
-          <div style={{ fontSize: 9, color: theme.textSub, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 5 }}>Afdelingen</div>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <Link href="/sales/pipeline" onClick={handleNavigate} style={{
-              flex: 1, padding: '7px 10px', borderRadius: 7, textDecoration: 'none',
-              backgroundColor: 'rgba(45,106,30,0.09)', border: '1px solid rgba(45,106,30,0.28)',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <svg width={13} height={13} fill="none" stroke="#2D6A1E" strokeWidth="1.5" viewBox="0 0 24 24">
-                <rect x="2" y="7" width="4" height="10" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="18" y="9" width="4" height="8" rx="1"/>
-              </svg>
-              <span style={{ fontSize: 11, color: '#2D6A1E', fontWeight: 600 }}>Sales</span>
-            </Link>
-            <Link href="/paklijsten" onClick={handleNavigate} style={{
-              flex: 1, padding: '7px 10px', borderRadius: 7, textDecoration: 'none',
-              backgroundColor: 'rgba(30,63,138,0.09)', border: '1px solid rgba(30,63,138,0.28)',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <svg width={13} height={13} fill="none" stroke="#1E3F8A" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              <span style={{ fontSize: 11, color: '#1E3F8A', fontWeight: 600 }}>Logistiek</span>
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Scan & OCR */}
       <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
@@ -545,6 +509,55 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       {dept !== 'keuken' && <div style={{ marginBottom: 16 }} />}
+      </div>{/* end scrollable wrapper */}
+
+      {/* Department tab ears — stick out to the right */}
+      <div style={{
+        position: 'absolute',
+        left: 232,
+        top: '28%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        zIndex: 51,
+        pointerEvents: isOpen ? 'auto' : 'none',
+      }}>
+        {([
+          { dept: 'keuken' as Department, label: 'Keuken', href: '/dashboard', activeBg: '#F2E8D5', activeBorder: '#E8A040', activeText: '#B5631A', inactiveBg: '#FDF9F4', inactiveBorder: '#DDD0B8', inactiveText: '#9E7E60' },
+          { dept: 'sales' as Department, label: 'Sales', href: '/sales/pipeline', activeBg: '#EBF4E8', activeBorder: '#2D6A1E', activeText: '#1A4510', inactiveBg: '#F4FAF2', inactiveBorder: '#C4DCC0', inactiveText: '#5A7A52' },
+          { dept: 'logistiek' as Department, label: 'Logistiek', href: '/paklijsten', activeBg: '#E8EEF8', activeBorder: '#1E3F8A', activeText: '#122660', inactiveBg: '#F2F5FB', inactiveBorder: '#BCCCE8', inactiveText: '#4A6090' },
+        ] as const).map((d) => {
+          const isActive = dept === d.dept
+          return (
+            <Link
+              key={d.dept}
+              href={d.href}
+              onClick={handleNavigate}
+              style={{
+                writingMode: 'vertical-rl' as const,
+                padding: '12px 7px',
+                borderRadius: '0 7px 7px 0',
+                backgroundColor: isActive ? d.activeBg : d.inactiveBg,
+                border: `1px solid ${isActive ? d.activeBorder : d.inactiveBorder}`,
+                borderLeft: 'none',
+                color: isActive ? d.activeText : d.inactiveText,
+                fontSize: 10,
+                fontWeight: isActive ? 700 : 400,
+                letterSpacing: '0.06em',
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                textTransform: 'uppercase' as const,
+                whiteSpace: 'nowrap' as const,
+                boxShadow: isActive ? '2px 1px 5px rgba(0,0,0,0.1)' : '1px 1px 3px rgba(0,0,0,0.04)',
+                cursor: 'pointer',
+              }}
+            >
+              {d.label}
+            </Link>
+          )
+        })}
+      </div>
+
     </aside>
   )
 }

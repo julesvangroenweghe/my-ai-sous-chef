@@ -2,11 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList } from 'lucide-react'
+import { Camera, Upload, FileText, Loader2, Check, AlertCircle, Clock, ChevronDown, ChevronRight, X, ScanLine, Tag, ArrowRight, Package, BookOpen, ClipboardList, Trash2, Calendar } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 type ScanState = 'idle' | 'uploading' | 'processing' | 'results' | 'error'
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'event_brief' | 'other'
 
 interface ScanResultData {
   type: DocumentType
@@ -26,6 +26,15 @@ interface ScannedDoc {
   auto_imported: boolean
   import_summary: Record<string, unknown> | null
   created_at: string
+  linked_event_id: string | null
+  extracted_date: string | null
+}
+
+interface AppEvent {
+  id: string
+  name: string
+  event_date: string
+  status: string
 }
 
 const typeLabels: Record<DocumentType, string> = {
@@ -33,6 +42,7 @@ const typeLabels: Record<DocumentType, string> = {
   mep: 'MEP Lijst',
   recipe: 'Recept',
   pricelist: 'Prijslijst',
+  event_brief: 'Event Brief',
   other: 'Document',
 }
 
@@ -41,6 +51,7 @@ const typeColors: Record<DocumentType, string> = {
   mep: 'bg-emerald-50 text-emerald-700',
   recipe: 'bg-amber-50 text-amber-700',
   pricelist: 'bg-violet-50 text-violet-700',
+  event_brief: 'bg-orange-50 text-orange-700',
   other: 'bg-stone-50 text-stone-600',
 }
 
@@ -49,6 +60,7 @@ const typeIcons: Record<DocumentType, React.ReactNode> = {
   mep: <ClipboardList className="w-4 h-4" />,
   recipe: <BookOpen className="w-4 h-4" />,
   pricelist: <Package className="w-4 h-4" />,
+  event_brief: <Calendar className="w-4 h-4" />,
   other: <FileText className="w-4 h-4" />,
 }
 
@@ -58,13 +70,12 @@ const docTypeOptions: { value: DocumentType | 'auto'; label: string }[] = [
   { value: 'invoice', label: 'Factuur' },
   { value: 'mep', label: 'MEP Lijst' },
   { value: 'recipe', label: 'Recept' },
+  { value: 'event_brief', label: 'Event Brief' },
 ]
 
 function ImportFeedback({ result }: { result: ScanResultData }) {
   if (!result.auto_imported || !result.import_result) return null
-
   const r = result.import_result
-
   if (result.type === 'pricelist') {
     return (
       <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
@@ -84,7 +95,6 @@ function ImportFeedback({ result }: { result: ScanResultData }) {
       </div>
     )
   }
-
   if (result.type === 'recipe' && r.recipe_id) {
     return (
       <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
@@ -103,8 +113,16 @@ function ImportFeedback({ result }: { result: ScanResultData }) {
       </div>
     )
   }
-
   return null
+}
+
+function formatNLDate(dateStr: string | null): string {
+  if (!dateStr) return ''
+  try {
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+  } catch {
+    return dateStr
+  }
 }
 
 export default function ScanPage() {
@@ -121,26 +139,35 @@ export default function ScanPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
-  const [events, setEvents] = useState<Array<{id: string; name: string; event_date: string}>>([])
+  const [events, setEvents] = useState<AppEvent[]>([])
   const [linkingDoc, setLinkingDoc] = useState<string | null>(null)
   const [linkingEventId, setLinkingEventId] = useState<string>('')
   const [linkSaving, setLinkSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  // Laad persistente history uit DB
-  useEffect(() => {
+  const loadHistory = () => {
     fetch('/api/scan/history')
       .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) setHistory(data)
-      })
+      .then(data => { if (Array.isArray(data)) setHistory(data) })
       .catch(() => {})
-      .finally(() => setHistoryLoading(false))
+  }
 
-    // Load events for linking
+  useEffect(() => {
+    loadHistory()
+    setHistoryLoading(false)
+
+    // Laad toekomstige events voor koppeling
     fetch('/api/events')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setEvents(data)
+        if (Array.isArray(data)) {
+          const today = new Date().toISOString().split('T')[0]
+          // Toon events tot 1 jaar vooruit, gesorteerd op datum
+          const upcoming = data
+            .filter((ev: AppEvent) => ev.event_date >= today)
+            .sort((a: AppEvent, b: AppEvent) => a.event_date.localeCompare(b.event_date))
+          setEvents(upcoming)
+        }
       })
       .catch(() => {})
   }, [])
@@ -156,8 +183,19 @@ export default function ScanPage() {
     setLinkSaving(false)
     setLinkingDoc(null)
     setLinkingEventId('')
-    // Reload history to show updated link
-    fetch('/api/scan/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
+    loadHistory()
+  }
+
+  const handleDeleteScan = async (docId: string) => {
+    if (!confirm('Scan verwijderen uit de geschiedenis?')) return
+    setDeletingId(docId)
+    await fetch('/api/scan/history', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: docId }),
+    })
+    setDeletingId(null)
+    loadHistory()
   }
 
   const processFile = useCallback(async (file: File) => {
@@ -168,33 +206,19 @@ export default function ScanPage() {
 
     try {
       setState('processing')
-
       const formData = new FormData()
       formData.append('file', file)
-      if (docType !== 'auto') {
-        formData.append('type', docType)
-      }
+      if (docType !== 'auto') formData.append('type', docType)
 
-      const response = await fetch('/api/scan', {
-        method: 'POST',
-        body: formData,
-      })
-
+      const response = await fetch('/api/scan', { method: 'POST', body: formData })
       if (!response.ok) {
         const err = await response.json()
         throw new Error(err.error || 'Scan mislukt')
       }
-
       const data: ScanResultData = await response.json()
       setResult(data)
       setState('results')
-
-      // History herladen uit DB (nu bevat het de nieuwe scan)
-      fetch('/api/scan/history')
-        .then(r => r.json())
-        .then(histData => { if (Array.isArray(histData)) setHistory(histData) })
-        .catch(() => {})
-
+      loadHistory()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Onbekende fout')
       setState('error')
@@ -216,8 +240,7 @@ export default function ScanPage() {
   const toggleDish = (index: number) => {
     setExpandedDishes(prev => {
       const next = new Set(prev)
-      if (next.has(index)) next.delete(index)
-      else next.add(index)
+      if (next.has(index)) next.delete(index); else next.add(index)
       return next
     })
   }
@@ -242,8 +265,7 @@ export default function ScanPage() {
       })
       if (response.ok) {
         setImportDone(true)
-        // Refresh history
-        fetch('/api/scan/history').then(r => r.json()).then(d => { if (Array.isArray(d)) setHistory(d) }).catch(() => {})
+        loadHistory()
       }
     } catch (err) {
       console.error('Import error:', err)
@@ -256,8 +278,14 @@ export default function ScanPage() {
     if (!doc.auto_imported || !doc.import_summary) return 'Opgeslagen'
     const s = doc.import_summary
     if (doc.document_type === 'pricelist') return `${s.imported} producten bij ${s.supplier_name}`
-    if (doc.document_type === 'recipe') return `Opgeslagen als recept`
+    if (doc.document_type === 'recipe') return 'Opgeslagen als recept'
     return 'Automatisch geïmporteerd'
+  }
+
+  const getLinkedEventName = (doc: ScannedDoc): string | null => {
+    if (!doc.linked_event_id) return null
+    const ev = events.find(e => e.id === doc.linked_event_id)
+    return ev ? ev.name : 'Gekoppeld event'
   }
 
   return (
@@ -270,7 +298,7 @@ export default function ScanPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-extrabold text-stone-900 tracking-tight">Scanner</h1>
-            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten of recepten — automatisch verwerkt en opgeslagen</p>
+            <p className="text-[#9E7E60] text-sm mt-0.5">Scan facturen, prijslijsten, MEP-lijsten of event briefs — automatisch verwerkt en opgeslagen</p>
           </div>
         </div>
       </div>
@@ -375,10 +403,7 @@ export default function ScanPage() {
       {/* Results */}
       {state === 'results' && result && (
         <div className="space-y-4 animate-slide-up">
-
-          {/* Auto-import feedback banner */}
           <ImportFeedback result={result} />
-
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -397,7 +422,7 @@ export default function ScanPage() {
               </button>
             </div>
 
-            {/* Prijslijst Results */}
+            {/* Prijslijst */}
             {result.type === 'pricelist' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 p-4 bg-stone-50 rounded-xl">
@@ -443,36 +468,21 @@ export default function ScanPage() {
                     </tbody>
                   </table>
                 </div>
-                {/* Toon import knop enkel als NIET auto-geïmporteerd */}
                 {!result.auto_imported && (
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleImportPricelist}
-                      disabled={importing || importDone}
-                      className="btn-primary flex-1 justify-center"
-                    >
-                      {importing ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Importeren...</>
-                      ) : importDone ? (
-                        <><Check className="w-4 h-4" /> Prijzen geïmporteerd</>
-                      ) : (
-                        <><Tag className="w-4 h-4" /> Prijzen importeren naar leveranciers</>
-                      )}
+                    <button onClick={handleImportPricelist} disabled={importing || importDone} className="btn-primary flex-1 justify-center">
+                      {importing ? <><Loader2 className="w-4 h-4 animate-spin" /> Importeren...</> : importDone ? <><Check className="w-4 h-4" /> Prijzen geïmporteerd</> : <><Tag className="w-4 h-4" /> Prijzen importeren naar leveranciers</>}
                     </button>
-                    <button onClick={resetScan} className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">
-                      Nieuwe scan
-                    </button>
+                    <button onClick={resetScan} className="px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">Nieuwe scan</button>
                   </div>
                 )}
                 {result.auto_imported && (
-                  <button onClick={resetScan} className="w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">
-                    Nieuwe scan
-                  </button>
+                  <button onClick={resetScan} className="w-full px-4 py-2.5 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors">Nieuwe scan</button>
                 )}
               </div>
             )}
 
-            {/* Factuur Results */}
+            {/* Factuur */}
             {result.type === 'invoice' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-xl">
@@ -512,8 +522,7 @@ export default function ScanPage() {
                           <td className="py-2.5 px-3 text-center">
                             {item.matched_ingredient_name ? (
                               <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                <Check className="w-3 h-3" />
-                                {item.matched_ingredient_name as string}
+                                <Check className="w-3 h-3" />{item.matched_ingredient_name as string}
                               </span>
                             ) : (
                               <span className="text-[10px] text-[#5C4730]">Geen match</span>
@@ -535,7 +544,7 @@ export default function ScanPage() {
               </div>
             )}
 
-            {/* MEP Results */}
+            {/* MEP */}
             {result.type === 'mep' && (
               <div className="space-y-4">
                 <h3 className="font-display font-semibold text-stone-900">{result.data.title as string}</h3>
@@ -571,7 +580,7 @@ export default function ScanPage() {
               </div>
             )}
 
-            {/* Recipe Results */}
+            {/* Recipe */}
             {result.type === 'recipe' && (
               <div className="space-y-4">
                 <h3 className="font-display text-xl font-bold text-stone-900">{result.data.name as string}</h3>
@@ -613,6 +622,39 @@ export default function ScanPage() {
                 )}
               </div>
             )}
+
+            {/* Event Brief */}
+            {result.type === 'event_brief' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-orange-50 rounded-xl">
+                  {result.data.client_name && <div>
+                    <p className="text-[11px] text-orange-600 uppercase tracking-wider">Klant</p>
+                    <p className="font-medium text-stone-900">{result.data.client_name as string}</p>
+                  </div>}
+                  {result.data.event_date && <div>
+                    <p className="text-[11px] text-orange-600 uppercase tracking-wider">Datum</p>
+                    <p className="font-medium text-stone-900">{result.data.event_date as string}</p>
+                  </div>}
+                  {result.data.num_persons && <div>
+                    <p className="text-[11px] text-orange-600 uppercase tracking-wider">Personen</p>
+                    <p className="font-medium text-stone-900">{result.data.num_persons as number}</p>
+                  </div>}
+                  {result.data.location && <div>
+                    <p className="text-[11px] text-orange-600 uppercase tracking-wider">Locatie</p>
+                    <p className="font-medium text-stone-900">{result.data.location as string}</p>
+                  </div>}
+                  {result.data.price_per_person && <div>
+                    <p className="text-[11px] text-orange-600 uppercase tracking-wider">Budget p.p.</p>
+                    <p className="font-medium text-stone-900">{formatCurrency(result.data.price_per_person as number)}</p>
+                  </div>}
+                </div>
+                <p className="text-xs text-[#9E7E60] text-center">Brief opgeslagen — koppel hieronder aan een bestaand event of maak een nieuw event aan</p>
+                <a href="/events" className="btn-primary w-full justify-center flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Naar events
+                </a>
+              </div>
+            )}
           </div>
 
           <button onClick={resetScan} className="w-full px-4 py-3 rounded-xl text-sm font-medium border border-stone-200 text-[#5C4730] hover:bg-stone-50 transition-colors flex items-center justify-center gap-2">
@@ -622,7 +664,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Scan Geschiedenis — persistent uit DB */}
+      {/* Scanhistorie */}
       <div className="animate-fade-in">
         <h2 className="font-display font-semibold text-stone-900 mb-4">Scanhistorie</h2>
         {historyLoading ? (
@@ -641,67 +683,96 @@ export default function ScanPage() {
         ) : (
           <div className="space-y-2">
             {history.map(item => (
-              <div key={item.id} className="card p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${typeColors[item.document_type as DocumentType] || 'bg-stone-50 text-stone-600'}`}>
-                    {typeIcons[item.document_type as DocumentType]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-stone-900">{item.title}</p>
-                    <p className="text-xs text-[#9E7E60] mt-0.5">
-                      {item.auto_imported ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-600">
-                          <Check className="w-3 h-3" />
-                          {getImportSummary(item)}
-                        </span>
-                      ) : (
-                        'Opgeslagen'
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#9E7E60]">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDate(item.created_at)}
-                  </span>
-                  <span>{Math.round(item.confidence * 100)}%</span>
-                  {/* Koppel aan event */}
-                  {linkingDoc === item.id ? (
-                    <div className="flex items-center gap-1">
-                      <select
-                        value={linkingEventId}
-                        onChange={e => setLinkingEventId(e.target.value)}
-                        className="text-xs border border-[#E8D5B5] rounded-lg px-2 py-1 bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400"
-                      >
-                        <option value="">Kies event...</option>
-                        {events.map(ev => (
-                          <option key={ev.id} value={ev.id}>
-                            {ev.name} ({new Date(ev.event_date + 'T12:00:00').toLocaleDateString('nl-BE', {day:'numeric', month:'short'})})
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleLinkToEvent(item.id)}
-                        disabled={!linkingEventId || linkSaving}
-                        className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg transition-all disabled:opacity-50"
-                      >
-                        {linkSaving ? '...' : 'OK'}
-                      </button>
-                      <button onClick={() => { setLinkingDoc(null); setLinkingEventId('') }} className="text-[#9E7E60] hover:text-[#5C4730]">
-                        <X className="w-3 h-3" />
-                      </button>
+              <div key={item.id} className="card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${typeColors[item.document_type as DocumentType] || 'bg-stone-50 text-stone-600'}`}>
+                      {typeIcons[item.document_type as DocumentType]}
                     </div>
-                  ) : (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-900 truncate">{item.title}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                        <span className="text-xs text-[#9E7E60] flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDate(item.created_at)}
+                        </span>
+                        <span className="text-xs text-[#9E7E60]">{Math.round(item.confidence * 100)}%</span>
+                        {item.auto_imported && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                            <Check className="w-3 h-3" />
+                            {getImportSummary(item)}
+                          </span>
+                        )}
+                        {/* Geëxtraheerde datum suggestie */}
+                        {item.extracted_date && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                            <Calendar className="w-3 h-3" />
+                            {formatNLDate(item.extracted_date)}
+                          </span>
+                        )}
+                        {/* Gekoppeld event badge */}
+                        {item.linked_event_id && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            <ArrowRight className="w-3 h-3" />
+                            {getLinkedEventName(item)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Acties rechts */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {/* Event koppelen */}
+                    {linkingDoc === item.id ? (
+                      <div className="flex items-center gap-1">
+                        <select
+                          value={linkingEventId}
+                          onChange={e => setLinkingEventId(e.target.value)}
+                          className="text-xs border border-[#E8D5B5] rounded-lg px-2 py-1.5 bg-white text-[#2C1810] focus:outline-none focus:ring-1 focus:ring-amber-400 max-w-[160px]"
+                        >
+                          <option value="">Kies event...</option>
+                          {events.map(ev => (
+                            <option key={ev.id} value={ev.id}>
+                              {ev.name} · {new Date(ev.event_date + 'T12:00:00').toLocaleDateString('nl-BE', {day:'numeric', month:'short'})}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleLinkToEvent(item.id)}
+                          disabled={!linkingEventId || linkSaving}
+                          className="px-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg transition-all disabled:opacity-50"
+                        >
+                          {linkSaving ? '...' : 'OK'}
+                        </button>
+                        <button onClick={() => { setLinkingDoc(null); setLinkingEventId('') }} className="p-1.5 text-[#9E7E60] hover:text-[#5C4730]">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setLinkingDoc(item.id)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E8D5B5] bg-white hover:bg-amber-50 hover:border-amber-300 text-[#9E7E60] hover:text-amber-700 transition-all text-xs"
+                        title="Koppel aan event"
+                      >
+                        <Calendar className="w-3 h-3" />
+                        {item.linked_event_id ? 'Wijzig' : 'Event'}
+                      </button>
+                    )}
+
+                    {/* Verwijder knop */}
                     <button
-                      onClick={() => setLinkingDoc(item.id)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#E8D5B5] bg-white hover:bg-amber-50 hover:border-amber-300 text-[#9E7E60] hover:text-amber-700 transition-all"
-                      title="Koppel aan event"
+                      onClick={() => handleDeleteScan(item.id)}
+                      disabled={deletingId === item.id}
+                      className="p-1.5 rounded-lg border border-stone-200 bg-white hover:bg-red-50 hover:border-red-200 text-[#9E7E60] hover:text-red-500 transition-all"
+                      title="Verwijder scan"
                     >
-                      <ArrowRight className="w-3 h-3" />
-                      Event
+                      {deletingId === item.id
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <Trash2 className="w-3.5 h-3.5" />
+                      }
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             ))}

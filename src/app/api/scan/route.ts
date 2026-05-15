@@ -237,7 +237,33 @@ async function processScan(request: NextRequest): Promise<Response> {
       ? `Recept — ${(parsed.data.name as string) || fileName}`
       : parsed.type === 'mep'
       ? `MEP — ${(parsed.data.title as string) || fileName}`
+      : parsed.type === 'event_brief'
+      ? `Event Brief — ${(parsed.data.client_name as string) || fileName}`
       : `Document — ${fileName}`
+
+    // Extract date from parsed data
+    let extractedDate: string | null = null
+    const d = parsed.data
+    const rawDate: string | null =
+      (d.event_date as string) ||
+      (d.invoice_date as string) ||
+      (d.price_date as string) ||
+      (d.date as string) ||
+      null
+    if (rawDate) {
+      // Try to parse various date formats (DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
+      const m1 = rawDate.match(/^(\d{2})[\-\/](\d{2})[\-\/](\d{4})$/)
+      const m2 = rawDate.match(/^(\d{4})[\-\/](\d{2})[\-\/](\d{2})$/)
+      if (m1) extractedDate = `${m1[3]}-${m1[2]}-${m1[1]}`
+      else if (m2) extractedDate = rawDate.replace(/\//g, '-')
+      else extractedDate = rawDate.slice(0, 10)
+    }
+
+    // Also add event_brief title
+    if (parsed.type === 'event_brief') {
+      const briefTitle = `${(d.client_name as string) || 'Event'} — ${(d.event_date as string) || fileName}`
+      // overwrite docTitle for event_brief
+    }
 
     const { data: savedDoc } = await supabase
       .from('scanned_documents')
@@ -248,6 +274,7 @@ async function processScan(request: NextRequest): Promise<Response> {
         raw_data: parsed.data,
         confidence: parsed.confidence || 0.85,
         auto_imported: false,
+        extracted_date: extractedDate,
       })
       .select('id')
       .single()
