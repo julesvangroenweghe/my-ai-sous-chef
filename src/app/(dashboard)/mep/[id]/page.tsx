@@ -146,6 +146,19 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   tasting: 'Proeverijtje', daily_service: 'Dagdienst',
 }
 
+const CATEGORY_OPTIONS = [
+  'DRANKEN', 'MOCKTAILS', 'LUNCH',
+  'FINGERFOOD', 'FINGERFOOD MIDDAG', 'FINGERFOOD APERO',
+  'FINGERBITES', 'HAPJES',
+  'KIDS', 'AMUSE', 'APPETIZERS', 'APPETIZERS MIDDAG', 'APPETIZERS APERO',
+  'WALKING DINNER', 'WALKING VOORGERECHT', 'SHARING VOORGERECHT',
+  'VOORGERECHT', 'TUSSENGERECHT',
+  'HOOFDGERECHT', 'HOOFDGERECHT PREMIUM',
+  'BROOD & BOTER', 'ON THE SIDE', 'SAUZEN', 'KAAS',
+  'DESSERT', 'PETITS FOURS', 'MIGNARDISES',
+  'LATE NIGHT SNACK', 'HALFABRICAAT',
+]
+
 // ─── Allergen detection ───────────────────────────────────────────────────────
 
 const EU_ALLERGENS = [
@@ -245,6 +258,96 @@ function AllergenPicker({
       {selected.length > 0 && (
         <p className="text-xs text-red-600 font-medium">✓ {selected.join(' · ')}</p>
       )}
+    </div>
+  )
+}
+
+// ─── AddDishForm ──────────────────────────────────────────────────────────────
+
+function AddDishForm({
+  onSave,
+  onCancel,
+  existingCategories,
+}: {
+  onSave: (title: string, category: string) => Promise<void>
+  onCancel: () => void
+  existingCategories: string[]
+}) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('')
+  const [customCat, setCustomCat] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const finalCategory = (category === '__custom__' ? customCat : category).toUpperCase().trim()
+
+  const handleSave = async () => {
+    if (!title.trim() || !finalCategory) return
+    setSaving(true)
+    await onSave(title.trim(), finalCategory)
+    setSaving(false)
+  }
+
+  // Combine existing categories + standard options, deduped
+  const allOptions = [...new Set([...existingCategories.map(c => c.toUpperCase()), ...CATEGORY_OPTIONS])]
+    .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b))
+
+  return (
+    <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center">
+          <Plus className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-sm font-bold text-emerald-800">Nieuw gerecht toevoegen</span>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Naam gerecht *</label>
+        <input
+          autoFocus
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          placeholder="bv. Tartelette met geitenkaas, Beef tartaar..."
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Categorie *</label>
+        <select
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+        >
+          <option value="">Kies categorie...</option>
+          {allOptions.map(opt => (
+            <option key={opt} value={opt}>{getCategoryLabel(opt) || opt}</option>
+          ))}
+          <option value="__custom__">Andere (vrij invullen)</option>
+        </select>
+        {category === '__custom__' && (
+          <input
+            autoFocus
+            value={customCat}
+            onChange={e => setCustomCat(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+            className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
+            placeholder="bv. WALKING DESSERT, FOODSTAND BURGER..."
+          />
+        )}
+      </div>
+
+      <div className="flex gap-2 justify-end pt-1">
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
+        <button
+          onClick={handleSave}
+          disabled={saving || !title.trim() || !finalCategory}
+          className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          {saving ? 'Toevoegen...' : 'Gerecht toevoegen'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -706,6 +809,7 @@ export default function MepDetailPage() {
   const [approvingEvent, setApprovingEvent] = useState(false)
   const [confirmApproveEvent, setConfirmApproveEvent] = useState(false)
   const [editingComponentId, setEditingComponentId] = useState<string | null>(null)
+  const [showAddDishForm, setShowAddDishForm] = useState(false)
 
   const [editingNotes, setEditingNotes] = useState(false)
   const [notesValue, setNotesValue] = useState('')
@@ -742,6 +846,7 @@ export default function MepDetailPage() {
   }, [loadData])
 
   const existingGroups = [...new Set(dishes.flatMap((d) => d.components.map((c) => c.component_group).filter(Boolean) as string[]))]
+  const existingCategories = [...new Set(dishes.map(d => d.category))]
 
   const handleSaveNotes = async () => {
     if (!event) return
@@ -752,6 +857,22 @@ export default function MepDetailPage() {
     setEvent(prev => prev ? { ...prev, notes: notesValue.trim() || null } : prev)
     setEditingNotes(false)
     toast.success('Notitie opgeslagen ✓')
+  }
+
+  const handleAddDish = async (title: string, category: string) => {
+    if (!event) return
+    const maxOrder = dishes.length > 0 ? Math.max(...dishes.map(d => d.sort_order)) + 10 : 10
+    const { data: newDish, error } = await supabase.from('mep_dishes').insert({
+      event_id: event.id,
+      title,
+      category,
+      sort_order: maxOrder,
+      is_ai_suggestion: false,
+    }).select().single()
+    if (error || !newDish) { toast.error('Toevoegen mislukt'); return }
+    setDishes(prev => [...prev, { ...newDish, components: [] } as MepDish])
+    setShowAddDishForm(false)
+    toast.success(`${title} toegevoegd ✓`)
   }
 
   const handleApproveComponent = async (componentId: string) => {
@@ -784,7 +905,6 @@ export default function MepDetailPage() {
   }
 
   const handleDeleteDish = async (dishId: string) => {
-    // Delete components first, then the dish
     const { error: compErr } = await supabase.from('mep_components').delete().eq('dish_id', dishId)
     if (compErr) { toast.error('Verwijderen mislukt'); return }
     const { error: dishErr } = await supabase.from('mep_dishes').delete().eq('id', dishId)
@@ -979,10 +1099,28 @@ export default function MepDetailPage() {
 
       {/* MEP content */}
       {dishes.length === 0 ? (
-        <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
-          <ChefHat className="w-10 h-10 text-[#5C4730] mx-auto mb-3 opacity-40" />
-          <h3 className="font-display font-semibold text-[#5C4730] mb-2">Nog geen MEP beschikbaar</h3>
-          <p className="text-[#B8997A] text-sm">Upload een menu PDF om de MEP automatisch te genereren.</p>
+        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
+          {showAddDishForm ? (
+            <div className="p-6">
+              <AddDishForm
+                onSave={handleAddDish}
+                onCancel={() => setShowAddDishForm(false)}
+                existingCategories={existingCategories}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-16 px-6">
+              <ChefHat className="w-10 h-10 text-[#5C4730] mx-auto mb-3 opacity-40" />
+              <h3 className="font-display font-semibold text-[#5C4730] mb-2">Nog geen MEP beschikbaar</h3>
+              <p className="text-[#B8997A] text-sm mb-6">Upload een menu PDF om de MEP automatisch te genereren, of voeg gerechten handmatig toe.</p>
+              <button
+                onClick={() => setShowAddDishForm(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+              >
+                <Plus className="w-4 h-4" />Gerecht toevoegen
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-5">
@@ -1018,6 +1156,22 @@ export default function MepDetailPage() {
               </section>
             )
           })}
+
+          {/* Add dish button at bottom — always visible when MEP has content */}
+          {showAddDishForm ? (
+            <AddDishForm
+              onSave={handleAddDish}
+              onCancel={() => setShowAddDishForm(false)}
+              existingCategories={existingCategories}
+            />
+          ) : (
+            <button
+              onClick={() => setShowAddDishForm(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#E8D5B5] hover:border-emerald-300 rounded-2xl text-sm text-[#B8997A] hover:text-emerald-700 hover:bg-emerald-50/50 transition-all"
+            >
+              <Plus className="w-4 h-4" />Gerecht toevoegen
+            </button>
+          )}
         </div>
       )}
     </div>
