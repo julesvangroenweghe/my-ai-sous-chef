@@ -392,7 +392,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* scrollable inner wrapper */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', scrollbarWidth: 'none' as const, height: '100%' }}>
 
-      {/* Logo + kitchen name */
+      {/* Logo + kitchen name */}
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${theme.innerBorder}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Image src="/logo-full-light.png" alt="My AI Sous Chef" width={130} height={38} style={{ objectFit: 'contain', objectPosition: 'left' }} />
