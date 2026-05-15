@@ -161,7 +161,7 @@ const ALLERGEN_KEYWORDS: Record<string, string[]> = {
   'Vis': ['zalm', 'kabeljauw', 'tonijn', 'makreel', 'forel', 'ansjovis', 'sgombro', 'tarbot', 'zeebaars', 'dorade', 'rog', 'heilbot', 'haring', 'sardine', 'snoekbaars', 'tuna', 'salmon', 'kaviaar', 'bottarga', 'brandade', 'gravlax', 'boquerones'],
   "Pinda's": ['pinda', 'satay', 'arachide', 'peanut'],
   'Soja': ['tofu', 'edamame', 'tempeh', 'miso', 'sojasaus', 'ponzu', 'soja'],
-  'Melk': ['melk', 'boter', 'room', 'kaas', 'brie', 'camembert', 'ricotta', 'parmezaan', 'parmesan', 'mozzarella', 'grana', 'pecorino', 'gruyère', 'gruyere', 'cheddar', 'burrata', 'mascarpone', 'crème fraîche', 'creme fraiche', 'yoghurt', 'ghee', 'kwark', 'fromage', 'comté', 'comte', 'emmental', 'raclette', 'roomboter', 'roomkaas', 'beurre blanc', 'velouté', 'bechamel', 'béchamel', 'beurre', 'crème', 'dulce de leche', 'dulce', 'stilton', 'gorgonzola', 'roquefort', 'fourme', 'munster', 'taleggio', 'époisses', 'beaufort', 'raclette', 'vacherin', 'fleur de sel boter'],
+  'Melk': ['melk', 'boter', 'room', 'kaas', 'brie', 'camembert', 'ricotta', 'parmezaan', 'parmesan', 'mozzarella', 'grana', 'pecorino', 'gruyère', 'gruyere', 'cheddar', 'burrata', 'mascarpone', 'crème fraîche', 'creme fraiche', 'yoghurt', 'ghee', 'kwark', 'fromage', 'comté', 'comte', 'emmental', 'raclette', 'roomboter', 'roomkaas', 'beurre blanc', 'velouté', 'bechamel', 'béchamel', 'beurre', 'crème', 'dulce de leche', 'dulce', 'stilton', 'gorgonzola', 'roquefort', 'fourme', 'munster', 'taleggio', 'époisses', 'beaufort', 'vacherin', 'fleur de sel boter'],
   'Noten': ['amandel', 'hazelnoot', 'walnoot', 'pistache', 'cashew', 'pecan', 'macadamia', 'praline', 'praliné', 'marsepein', 'pesto', 'pijnboom', 'pine nut', 'paranoot', 'kokos'],
   'Selderij': ['selderij', 'selderie', 'knolselderij', 'celeriac'],
   'Mosterd': ['mosterd', 'moutarde', 'dijon', 'mustard', 'ravigote'],
@@ -209,7 +209,6 @@ function AllergenPicker({
         )}
       </span>
 
-      {/* AI-suggesties in oranje */}
       {pendingSuggestions.length > 0 && (
         <div className="flex flex-wrap gap-1 p-2 bg-orange-50 rounded-lg border border-orange-200">
           <div className="w-full flex items-center gap-1 mb-1">
@@ -231,7 +230,6 @@ function AllergenPicker({
         </div>
       )}
 
-      {/* Handmatige selectie */}
       <div className="flex flex-wrap gap-1">
         {EU_ALLERGENS.map(a => (
           <button key={a} type="button" onClick={() => toggle(a)}
@@ -290,7 +288,6 @@ function AddComponentForm({
   const [saving, setSaving] = useState(false)
   const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
-  // Auto-detect allergens from ingredient name
   const autoDetected = detectAllergens(name).filter(a => !dismissed.includes(a))
 
   const handleApproveSuggestion = (a: string) => {
@@ -302,7 +299,6 @@ function AddComponentForm({
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
-    // Auto-approve remaining suggestions on save
     const confirmed = allergens ? allergens.split(',').map(s => s.trim()).filter(Boolean) : []
     const finalAllergens = [...new Set([...confirmed, ...autoDetected])].join(', ') || null
     await onSave({
@@ -324,11 +320,9 @@ function AddComponentForm({
         <span className="text-xs font-semibold text-emerald-700">Nieuw component</span>
       </div>
 
-      {/* Naam */}
       <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none" placeholder="Naam component *" />
 
-      {/* Qty + Unit + Bereiding */}
       <div className="flex gap-2">
         <div className="flex flex-col gap-0.5">
           <label className="text-[10px] text-emerald-600 font-medium">Aantal</label>
@@ -347,7 +341,6 @@ function AddComponentForm({
         </div>
       </div>
 
-      {/* Sub-groep */}
       <div className="flex gap-2 items-center">
         <span className="text-xs text-emerald-600 font-medium shrink-0">Sub-groep:</span>
         <div className="flex gap-1 flex-wrap flex-1">
@@ -360,7 +353,6 @@ function AddComponentForm({
         </div>
       </div>
 
-      {/* Allergenen met AI-detectie */}
       <AllergenPicker
         value={allergens}
         onChange={setAllergens}
@@ -369,7 +361,6 @@ function AddComponentForm({
         onDismissSuggestion={handleDismissSuggestion}
       />
 
-      {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val) }} placeholder="Leverancier (optioneel)" />
 
       <div className="flex gap-2 justify-end pt-1">
@@ -402,7 +393,6 @@ function InlineComponentEdit({
   const [saving, setSaving] = useState(false)
   const allGroups = [...new Set([...existingGroups, ...COMMON_GROUPS])]
 
-  // Auto-detect allergens from ingredient name
   const autoDetected = detectAllergens(name).filter(a => !dismissed.includes(a))
 
   const handleApproveSuggestion = (a: string) => {
@@ -431,11 +421,9 @@ function InlineComponentEdit({
 
   return (
     <div className="bg-[#FDF8F2]/80 border border-[#E8A040]/30 rounded-xl p-3 space-y-2.5 my-1">
-      {/* Naam */}
       <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
         className="w-full px-2.5 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none" placeholder="Naam component" />
 
-      {/* Qty + Unit + Bereiding */}
       <div className="flex gap-2">
         <div className="flex flex-col gap-0.5">
           <label className="text-[10px] text-[#9E7E60] font-medium">Aantal</label>
@@ -454,7 +442,6 @@ function InlineComponentEdit({
         </div>
       </div>
 
-      {/* Sub-groep */}
       <div className="flex gap-2 items-center">
         <span className="text-xs text-[#9E7E60] font-medium shrink-0">Sub-groep:</span>
         <div className="flex gap-1 flex-wrap flex-1">
@@ -467,7 +454,6 @@ function InlineComponentEdit({
         </div>
       </div>
 
-      {/* Allergenen met AI-detectie */}
       <AllergenPicker
         value={allergens}
         onChange={setAllergens}
@@ -476,7 +462,6 @@ function InlineComponentEdit({
         onDismissSuggestion={handleDismissSuggestion}
       />
 
-      {/* Leverancier */}
       <SupplierInput value={supplier} onChange={(val) => { setSupplier(val); if (val !== supplier) setMatchedProductId(null) }} />
       <ProductMatcher supplier={supplier} componentName={name} matchedProductId={matchedProductId}
         onMatch={(id, suggestedUnit) => { setMatchedProductId(id); if (suggestedUnit && !unit) setUnit(suggestedUnit) }} />
@@ -568,21 +553,32 @@ function DraggableComponentItem({ compId, children }: { compId: string; children
 }
 
 function DishCard({
-  dish, onApproveComponent, onUpdateComponent, onDeleteComponent, onApproveDish, onAddComponent, onEditTitle,
+  dish, onApproveComponent, onUpdateComponent, onDeleteComponent, onApproveDish, onDeleteDish, onAddComponent, onEditTitle,
   onReorderComponents, onMoveDishUp, onMoveDishDown, isFirstDish, isLastDish, editingComponentId, setEditingComponentId, existingGroups,
 }: {
-  dish: MepDish; onApproveComponent: (id: string) => void; onUpdateComponent: (id: string, updates: Partial<MepComponent>) => Promise<void>
-  onDeleteComponent: (id: string) => void; onApproveDish: (id: string) => void
+  dish: MepDish
+  onApproveComponent: (id: string) => void
+  onUpdateComponent: (id: string, updates: Partial<MepComponent>) => Promise<void>
+  onDeleteComponent: (id: string) => void
+  onApproveDish: (id: string) => void
+  onDeleteDish: (id: string) => void
   onAddComponent: (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null; allergens: string | null }) => Promise<void>
-  onEditTitle: (dishId: string, newTitle: string) => Promise<void>; onReorderComponents: (dishId: string, newOrder: string[]) => void
-  onMoveDishUp: () => void; onMoveDishDown: () => void; isFirstDish: boolean; isLastDish: boolean
-  editingComponentId: string | null; setEditingComponentId: (id: string | null) => void; existingGroups: string[]
+  onEditTitle: (dishId: string, newTitle: string) => Promise<void>
+  onReorderComponents: (dishId: string, newOrder: string[]) => void
+  onMoveDishUp: () => void
+  onMoveDishDown: () => void
+  isFirstDish: boolean
+  isLastDish: boolean
+  editingComponentId: string | null
+  setEditingComponentId: (id: string | null) => void
+  existingGroups: string[]
 }) {
   const isAI = dish.is_ai_suggestion
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState(dish.title)
   const [savingTitle, setSavingTitle] = useState(false)
+  const [confirmDeleteDish, setConfirmDeleteDish] = useState(false)
 
   const handleSaveTitle = async () => {
     if (!titleValue.trim() || titleValue === dish.title) { setEditingTitle(false); return }
@@ -623,11 +619,36 @@ function DishCard({
           )}
           {dish.timing_label && <span className="text-xs text-[#B8997A] shrink-0 flex items-center gap-1"><Clock className="w-3 h-3" />{dish.timing_label}</span>}
         </div>
-        {isAI && (
-          <button onClick={() => onApproveDish(dish.id)} className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 rounded-lg transition-all font-semibold shrink-0 border border-emerald-500/20">
-            <ShieldCheck className="w-3.5 h-3.5" />Goedkeuren
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isAI && (
+            <>
+              {confirmDeleteDish ? (
+                <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-2 py-1">
+                  <span className="text-xs text-red-700 font-medium">Verwijderen?</span>
+                  <button
+                    onClick={() => onDeleteDish(dish.id)}
+                    className="px-2 py-0.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded transition-all"
+                  >Ja</button>
+                  <button
+                    onClick={() => setConfirmDeleteDish(false)}
+                    className="p-0.5 text-[#9E7E60] hover:text-[#3D2810] transition-colors"
+                  ><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteDish(true)}
+                  className="p-1.5 rounded-lg text-orange-400 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                  title="Voorstel verwijderen"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button onClick={() => onApproveDish(dish.id)} className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 rounded-lg transition-all font-semibold border border-emerald-500/20">
+                <ShieldCheck className="w-3.5 h-3.5" />Goedkeuren
+              </button>
+            </>
+          )}
+        </div>
       </div>
       {dish.notes && <div className="px-4 py-1.5 text-xs italic text-[#9E7E60] border-b border-[#E8D5B5]/50 bg-[#FDF8F2]/30">{dish.notes}</div>}
       <div className="px-2 py-1">
@@ -686,7 +707,6 @@ export default function MepDetailPage() {
   const [confirmApproveEvent, setConfirmApproveEvent] = useState(false)
   const [editingComponentId, setEditingComponentId] = useState<string | null>(null)
 
-  // Notes editing
   const [editingNotes, setEditingNotes] = useState(false)
   const [notesValue, setNotesValue] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
@@ -723,7 +743,6 @@ export default function MepDetailPage() {
 
   const existingGroups = [...new Set(dishes.flatMap((d) => d.components.map((c) => c.component_group).filter(Boolean) as string[]))]
 
-  // ── Notes save ──
   const handleSaveNotes = async () => {
     if (!event) return
     setSavingNotes(true)
@@ -735,7 +754,6 @@ export default function MepDetailPage() {
     toast.success('Notitie opgeslagen ✓')
   }
 
-  // ── Handlers ──
   const handleApproveComponent = async (componentId: string) => {
     const { error } = await supabase.from('mep_components').update({ is_ai_suggestion: false }).eq('id', componentId)
     if (error) { toast.error('Goedkeuren mislukt'); return }
@@ -763,6 +781,16 @@ export default function MepDetailPage() {
     if (dishErr || compErr) { toast.error('Goedkeuren mislukt'); return }
     setDishes((prev) => prev.map((d) => d.id === dishId ? { ...d, is_ai_suggestion: false, components: d.components.map((c) => ({ ...c, is_ai_suggestion: false })) } : d))
     toast.success('Gerecht goedgekeurd ✓')
+  }
+
+  const handleDeleteDish = async (dishId: string) => {
+    // Delete components first, then the dish
+    const { error: compErr } = await supabase.from('mep_components').delete().eq('dish_id', dishId)
+    if (compErr) { toast.error('Verwijderen mislukt'); return }
+    const { error: dishErr } = await supabase.from('mep_dishes').delete().eq('id', dishId)
+    if (dishErr) { toast.error('Verwijderen mislukt'); return }
+    setDishes((prev) => prev.filter((d) => d.id !== dishId))
+    toast.success('Voorstel verwijderd')
   }
 
   const handleAddComponent = async (dishId: string, data: { name: string; qty: number | null; unit: string | null; prep: string | null; supplier: string | null; component_group: string | null; allergens: string | null }) => {
@@ -844,7 +872,7 @@ export default function MepDetailPage() {
 
   return (
     <div className="space-y-6 pb-16">
-      {/* Header row */}
+      {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/mep" className="p-2 rounded-xl bg-white border border-[#E8D5B5] text-[#9E7E60] hover:text-[#2C1810] transition-all">
           <ArrowLeft className="w-4 h-4" />
@@ -883,7 +911,7 @@ export default function MepDetailPage() {
         </div>
       </div>
 
-      {/* ── PROMINENTE NOTITIES BANNER ── */}
+      {/* Notities banner */}
       {event.notes && !editingNotes && (
         <div className="flex items-start gap-3 bg-amber-50 border-2 border-amber-300 rounded-2xl px-5 py-4">
           <StickyNote className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -924,7 +952,7 @@ export default function MepDetailPage() {
         </button>
       )}
 
-      {/* Event info card */}
+      {/* Event info */}
       <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {event.num_persons && (<div className="flex items-center gap-2 min-w-0"><Users className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Personen</div><div className="text-sm font-semibold text-[#2C1810]">{event.num_persons}</div></div></div>)}
@@ -938,7 +966,7 @@ export default function MepDetailPage() {
         </div>
       </div>
 
-      {/* AI suggestions banner */}
+      {/* AI banner */}
       {totalAI > 0 && (
         <div className="flex items-center gap-3 bg-orange-50/80 border border-orange-200/80 rounded-xl px-4 py-3">
           <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
@@ -969,14 +997,20 @@ export default function MepDetailPage() {
                 <div className="space-y-2">
                   {sortedCatDishes.map((dish, di) => (
                     <DishCard key={dish.id} dish={dish}
-                      onApproveComponent={handleApproveComponent} onUpdateComponent={handleUpdateComponent}
-                      onDeleteComponent={handleDeleteComponent} onApproveDish={handleApproveDish}
-                      onAddComponent={handleAddComponent} onEditTitle={handleEditDishTitle}
+                      onApproveComponent={handleApproveComponent}
+                      onUpdateComponent={handleUpdateComponent}
+                      onDeleteComponent={handleDeleteComponent}
+                      onApproveDish={handleApproveDish}
+                      onDeleteDish={handleDeleteDish}
+                      onAddComponent={handleAddComponent}
+                      onEditTitle={handleEditDishTitle}
                       onReorderComponents={handleReorderComponents}
                       onMoveDishUp={() => handleMoveDish(dish.id, 'up')}
                       onMoveDishDown={() => handleMoveDish(dish.id, 'down')}
-                      isFirstDish={di === 0} isLastDish={di === sortedCatDishes.length - 1}
-                      editingComponentId={editingComponentId} setEditingComponentId={setEditingComponentId}
+                      isFirstDish={di === 0}
+                      isLastDish={di === sortedCatDishes.length - 1}
+                      editingComponentId={editingComponentId}
+                      setEditingComponentId={setEditingComponentId}
                       existingGroups={existingGroups}
                     />
                   ))}
