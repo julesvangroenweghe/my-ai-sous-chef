@@ -89,6 +89,8 @@ export async function POST(req: NextRequest) {
     query = '',
     hertaalId = null as string | null,
     openQuestion = '' as string,
+    currentDishComponents = [] as string[], // componenten van het huidige gerecht
+    currentDishName = '' as string, // naam van het huidige gerecht
   } = body
 
   // --- MODE: LEGENDE ---
@@ -281,7 +283,10 @@ ABSOLUTE REGELS:
 Antwoord ALLEEN als JSON.`,
       messages: [{
         role: 'user',
-        content: `Geef 3 verschillende gerechtsuggesties voor gang: "${course}" (format: ${menuType.replace(/_/g, ' ')}, ${numPersons} personen).${openQuestion ? `\n\nOPEN VRAAG VAN CHEF: "${openQuestion}" — beantwoord dit specifiek.` : ''}
+        content: `Geef 3 VERSCHILLENDE gerechtsuggesties als VERVANGING voor gang: "${course}" (format: ${menuType.replace(/_/g, ' ')}, ${numPersons} personen).
+
+${currentDishName ? `HET HUIDIGE GERECHT DAT VERVANGEN WORDT: "${currentDishName}"` : ''}
+${currentDishComponents.length > 0 ? `HUIDIGE INGREDIËNTEN/COMPONENTEN: ${currentDishComponents.join(', ')}\n→ Suggereer iets in DEZELFDE STIJL en SFEER, maar anders. Gebruik vergelijkbare ingrediënten of technieken — geen totaal ander concept.` : ''}${openQuestion ? `\n\nOPEN VRAAG VAN CHEF: "${openQuestion}" — beantwoord dit specifiek.` : ''}
 
 CONTEXT:
 • Stijl: ${styleText || 'Belgisch-Frans, Japanse umami-accenten'}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -541,6 +541,98 @@ function ComponentRow({
   )
 }
 
+
+// ─── AddDishForm ──────────────────────────────────────────────────────────────
+
+const ALL_CATEGORIES_OPTIONS = [
+  'DRANKEN', 'FINGERFOOD', 'FINGERBITES', 'HAPJES', 'AMUSE', 'APPETIZERS',
+  'WALKING DINNER', 'VOORGERECHT', 'TUSSENGERECHT', 'HOOFDGERECHT',
+  'BROOD & BOTER', 'DESSERT', 'MIGNARDISES', 'LATE NIGHT SNACK',
+]
+
+function AddDishForm({
+  onSave, onCancel, defaultCategory, currentCategories,
+}: {
+  onSave: (data: { title: string; category: string; notes: string | null }) => Promise<void>
+  onCancel: () => void
+  defaultCategory?: string
+  currentCategories: string[]
+}) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState(defaultCategory || '')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const suggestedCats = [...new Set([...currentCategories, ...ALL_CATEGORIES_OPTIONS])]
+
+  const handleSave = async () => {
+    if (!title.trim() || !category.trim()) return
+    setSaving(true)
+    await onSave({ title: title.trim(), category: category.toUpperCase().trim(), notes: notes.trim() || null })
+    setSaving(false)
+  }
+
+  return (
+    <div className="bg-[#FEF9F2] border border-[#E8A040]/50 rounded-xl p-4 space-y-3 mt-3">
+      <div className="flex items-center gap-2">
+        <ChefHat className="w-4 h-4 text-[#E8A040]" />
+        <span className="text-sm font-semibold text-[#2C1810]">Nieuw gerecht</span>
+      </div>
+
+      <input
+        autoFocus
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel() }}
+        className="w-full px-3 py-2 bg-white border border-[#E8D5B5] rounded-lg text-sm text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+        placeholder="Naam gerecht *"
+      />
+
+      <div>
+        <label className="text-xs text-[#9E7E60] font-medium block mb-1.5">Categorie *</label>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {suggestedCats.slice(0, 12).map(cat => (
+            <button key={cat} type="button" onClick={() => setCategory(cat)}
+              className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                category === cat
+                  ? 'bg-[#E8A040] text-stone-900 border border-[#E8A040]'
+                  : 'bg-[#E8A040]/10 text-[#9E7E60] border border-[#E8D5B5] hover:bg-[#E8A040]/20'
+              }`}>
+              {getCategoryLabel(cat)}
+            </button>
+          ))}
+        </div>
+        <input
+          value={suggestedCats.includes(category.toUpperCase()) ? '' : category}
+          onChange={e => setCategory(e.target.value.toUpperCase())}
+          className="w-full px-3 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+          placeholder="Of typ een aangepaste categorie..."
+        />
+      </div>
+
+      <input
+        value={notes}
+        onChange={e => setNotes(e.target.value)}
+        className="w-full px-3 py-1.5 bg-white border border-[#E8D5B5] rounded-lg text-xs text-[#2C1810] focus:border-[#E8A040]/50 focus:outline-none"
+        placeholder="Notitie (optioneel)"
+      />
+
+      <div className="flex gap-2 justify-end pt-1">
+        <button onClick={onCancel} className="px-3 py-1.5 text-xs text-[#9E7E60] hover:text-[#3D2810] transition-colors">
+          Annuleren
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving || !title.trim() || !category.trim()}
+          className="px-4 py-1.5 bg-[#E8A040] hover:bg-[#d4922e] text-stone-900 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+        >
+          {saving ? 'Toevoegen...' : '+ Toevoegen'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── DishCard ─────────────────────────────────────────────────────────────────
 
 function DraggableComponentItem({ compId, children }: { compId: string; children: (controls: DragControls) => React.ReactNode }) {
@@ -712,6 +804,7 @@ export default function MepDetailPage() {
   const [notesValue, setNotesValue] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
   const [editingField, setEditingField] = useState<string | null>(null)
+  const [showAddDishForm, setShowAddDishForm] = useState<string | null>(null) // category string or 'new'
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [savingField, setSavingField] = useState(false)
 
@@ -756,6 +849,48 @@ export default function MepDetailPage() {
 
   const existingGroups = [...new Set(dishes.flatMap((d) => d.components.map((c) => c.component_group).filter(Boolean) as string[]))]
 
+  // Allergen conflict detection
+  const eventAllergenKeywords = useMemo(() => {
+    if (!event?.allergens) return [] as string[]
+    const text = ((event as any).allergens as string).toLowerCase()
+    const found: string[] = []
+    if (text.includes('noten') || text.includes('notenallergie')) found.push('noten')
+    if (text.includes('kiwi')) found.push('kiwi')
+    if (text.includes('gluten')) found.push('gluten')
+    if (text.includes('melk') || text.includes('lactose') || text.includes('zuivel')) found.push('melk')
+    if (text.includes('ei') && !text.includes('being')) found.push('eieren')
+    if (text.includes('vis') && !text.includes('divisie')) found.push('vis')
+    if (text.includes('schaaldier')) found.push('schaaldieren')
+    if (text.includes('soja')) found.push('soja')
+    if (text.includes('pinda')) found.push("pinda's")
+    if (text.includes('sesam')) found.push('sesam')
+    if (text.includes('mosterd')) found.push('mosterd')
+    if (text.includes('selderij') || text.includes('selderie')) found.push('selderij')
+    if (text.includes('weekdier')) found.push('weekdieren')
+    if (text.includes('lupine')) found.push('lupine')
+    if (text.includes('sulfiet')) found.push('sulfiet')
+    return found
+  }, [event])
+
+  const allergenConflicts = useMemo(() => {
+    if (!eventAllergenKeywords.length) return [] as Array<{ dishTitle: string; component: string; category: string; matched: string }>
+    return dishes.flatMap(d =>
+      d.components
+        .filter(c => {
+          const name = c.component_name.toLowerCase()
+          const compAllergens = (c.allergens || '').toLowerCase()
+          return eventAllergenKeywords.some(kw => name.includes(kw) || compAllergens.includes(kw))
+        })
+        .map(c => {
+          const matchedKw = eventAllergenKeywords.find(kw =>
+            c.component_name.toLowerCase().includes(kw) || (c.allergens || '').toLowerCase().includes(kw)
+          ) || ''
+          return { dishTitle: d.title, component: c.component_name, category: d.category, matched: matchedKw }
+        })
+    )
+  }, [dishes, eventAllergenKeywords])
+
+
   const handleUpdateEventField = async (field: string, value: string) => {
     if (!event) return
     setSavingField(true)
@@ -782,6 +917,28 @@ export default function MepDetailPage() {
     toast.success('Notitie opgeslagen ✓')
   }
 
+
+  const handleAddDish = async (data: { title: string; category: string; notes: string | null }) => {
+    const catDishes = dishes.filter(d => d.category.toUpperCase() === data.category.toUpperCase())
+    const maxOrder = catDishes.length > 0 ? Math.max(...catDishes.map(d => d.sort_order)) + 1 : 1
+    const { data: newDish, error } = await supabase
+      .from('mep_dishes')
+      .insert({
+        event_id: id,
+        title: data.title,
+        category: data.category,
+        sort_order: maxOrder,
+        is_ai_suggestion: false,
+        notes: data.notes,
+      })
+      .select()
+      .single()
+    if (error || !newDish) { toast.error('Toevoegen mislukt'); return }
+    setDishes(prev => [...prev, { ...newDish, components: [] }])
+    setShowAddDishForm(null)
+    toast.success(`${data.title} toegevoegd ✓`)
+  }
+
   const handleApproveComponent = async (componentId: string) => {
     const { error } = await supabase.from('mep_components').update({ is_ai_suggestion: false }).eq('id', componentId)
     if (error) { toast.error('Goedkeuren mislukt'); return }
@@ -794,6 +951,40 @@ export default function MepDetailPage() {
     if (error) { toast.error('Opslaan mislukt'); return }
     setDishes((prev) => prev.map((d) => ({ ...d, components: d.components.map((c) => c.id === componentId ? { ...c, ...updates } : c) })))
     toast.success('Component bijgewerkt ✓')
+
+    // Allergeenpropagatie: check of andere components met zelfde naam bestaan
+    if (updates.allergens !== undefined) {
+      const thisComp = dishes.flatMap(d => d.components).find(c => c.id === componentId)
+      if (thisComp && updates.allergens) {
+        const sameNameComps = dishes.flatMap(d => d.components).filter(c =>
+          c.id !== componentId &&
+          c.component_name.toLowerCase().trim() === thisComp.component_name.toLowerCase().trim()
+        )
+        if (sameNameComps.length > 0) {
+          toast(`"${thisComp.component_name}" komt nog ${sameNameComps.length}x voor`, {
+            description: `Wil je dezelfde allergenen (${updates.allergens}) ook toepassen op de andere?`,
+            action: {
+              label: 'Toepassen op alle',
+              onClick: async () => {
+                await Promise.all(sameNameComps.map(c =>
+                  supabase.from('mep_components').update({ allergens: updates.allergens }).eq('id', c.id)
+                ))
+                setDishes(prev => prev.map(d => ({
+                  ...d,
+                  components: d.components.map(c =>
+                    sameNameComps.some(sc => sc.id === c.id)
+                      ? { ...c, allergens: updates.allergens as string }
+                      : c
+                  )
+                })))
+                toast.success('Allergenen toegepast op alle componenten ✓')
+              },
+            },
+            duration: 8000,
+          })
+        }
+      }
+    }
   }
 
   const handleDeleteComponent = async (componentId: string) => {
@@ -1177,6 +1368,28 @@ export default function MepDetailPage() {
         </div>
       )}
 
+
+      {/* Allergeenwaarschuwing */}
+      {allergenConflicts.length > 0 && (
+        <div className="flex items-start gap-3 bg-red-50/80 border border-red-300/80 rounded-xl px-4 py-3">
+          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-red-700 font-semibold mb-1">
+              Allergeenconflict — event heeft: {(event as any).allergens}
+            </p>
+            <ul className="space-y-0.5">
+              {allergenConflicts.map((c, i) => (
+                <li key={i} className="text-xs text-red-600">
+                  <span className="font-medium">{c.dishTitle}</span>
+                  {' '}— {c.component}
+                  {' '}<span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">{c.matched}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* MEP content */}
       {dishes.length === 0 ? (
         <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
@@ -1192,8 +1405,25 @@ export default function MepDetailPage() {
               <section key={category}>
                 <div className="flex items-center justify-between bg-[#2d6a4f] rounded-lg px-3 py-1.5 mb-3">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-white">{getCategoryLabel(category)}</h2>
-                  <span className="text-xs text-white/60">{categoryDishes.length} gerecht{categoryDishes.length !== 1 ? 'en' : ''}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/60">{categoryDishes.length} gerecht{categoryDishes.length !== 1 ? 'en' : ''}</span>
+                    <button
+                      onClick={() => setShowAddDishForm(showAddDishForm === category ? null : category)}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/20 text-white/80 hover:bg-white/30 hover:text-white transition-all text-xs font-semibold"
+                      title="Gerecht toevoegen in deze categorie"
+                    >
+                      <Plus className="w-3 h-3" />Gerecht
+                    </button>
+                  </div>
                 </div>
+                {showAddDishForm === category && (
+                  <AddDishForm
+                    defaultCategory={category}
+                    currentCategories={sortedCategories.map(([c]) => c)}
+                    onSave={handleAddDish}
+                    onCancel={() => setShowAddDishForm(null)}
+                  />
+                )}
                 <div className="space-y-2">
                   {sortedCatDishes.map((dish, di) => (
                     <DishCard key={dish.id} dish={dish}
@@ -1218,6 +1448,21 @@ export default function MepDetailPage() {
               </section>
             )
           })}
+          {/* Globaal gerecht toevoegen */}
+          {showAddDishForm === 'new' ? (
+            <AddDishForm
+              currentCategories={sortedCategories.map(([c]) => c)}
+              onSave={handleAddDish}
+              onCancel={() => setShowAddDishForm(null)}
+            />
+          ) : (
+            <button
+              onClick={() => setShowAddDishForm('new')}
+              className="w-full mt-2 py-2.5 flex items-center justify-center gap-2 text-sm text-[#B8997A] hover:text-[#E8A040] hover:bg-[#E8A040]/5 rounded-xl border border-dashed border-[#E8D5B5] hover:border-[#E8A040]/40 transition-all font-medium"
+            >
+              <Plus className="w-4 h-4" />Gerecht toevoegen
+            </button>
+          )}
         </div>
       )}
     </div>
