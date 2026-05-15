@@ -11,7 +11,7 @@ import {
   ChefHat, Loader2, Check, X, Pencil, Trash2,
   AlertTriangle, ShieldCheck, Plus, FileDown,
   ChevronUp, ChevronDown, GripVertical, Search,
-  StickyNote, Edit2, Save, AlertCircle, Sparkles,
+  StickyNote, Edit2, Save, AlertCircle, Sparkles, Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Reorder, useDragControls } from 'framer-motion'
@@ -65,6 +65,8 @@ interface MepComponent {
   component_group: string | null
   supplier: string | null
   matched_product_id: string | null
+  kitchen_id?: string
+  ingredient_id?: string | null
 }
 
 // ─── Category ordering ────────────────────────────────────────────────────────
@@ -514,6 +516,9 @@ function ComponentRow({
             {allergenList.map(a => (
               <span key={a} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-1.5 py-0 rounded font-medium">{a}</span>
             ))}
+            <span className="flex items-center gap-0.5 text-[9px] text-[#B8997A] opacity-60 ml-0.5" title="Allergenen worden globaal gesynchroniseerd over alle events">
+              <Globe className="w-2.5 h-2.5" />globaal
+            </span>
           </div>
         )}
       </div>
@@ -952,36 +957,39 @@ export default function MepDetailPage() {
     setDishes((prev) => prev.map((d) => ({ ...d, components: d.components.map((c) => c.id === componentId ? { ...c, ...updates } : c) })))
     toast.success('Component bijgewerkt ✓')
 
-    // Allergeenpropagatie: check of andere components met zelfde naam bestaan
+    // Globale allergeensync: bijwerken over ALLE events
     if (updates.allergens !== undefined) {
       const thisComp = dishes.flatMap(d => d.components).find(c => c.id === componentId)
-      if (thisComp && updates.allergens) {
-        const sameNameComps = dishes.flatMap(d => d.components).filter(c =>
-          c.id !== componentId &&
-          c.component_name.toLowerCase().trim() === thisComp.component_name.toLowerCase().trim()
-        )
-        if (sameNameComps.length > 0) {
-          toast(`"${thisComp.component_name}" komt nog ${sameNameComps.length}x voor`, {
-            description: `Wil je dezelfde allergenen (${updates.allergens}) ook toepassen op de andere?`,
-            action: {
-              label: 'Toepassen op alle',
-              onClick: async () => {
-                await Promise.all(sameNameComps.map(c =>
-                  supabase.from('mep_components').update({ allergens: updates.allergens }).eq('id', c.id)
-                ))
-                setDishes(prev => prev.map(d => ({
-                  ...d,
-                  components: d.components.map(c =>
-                    sameNameComps.some(sc => sc.id === c.id)
-                      ? { ...c, allergens: updates.allergens as string }
-                      : c
-                  )
-                })))
-                toast.success('Allergenen toegepast op alle componenten ✓')
-              },
-            },
-            duration: 8000,
+      if (thisComp && thisComp.kitchen_id) {
+        try {
+          const res = await fetch('/api/mep/allergens-global', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              component_name: thisComp.component_name,
+              allergens: updates.allergens || '',
+              kitchen_id: thisComp.kitchen_id,
+            }),
           })
+          const json = await res.json()
+          if (res.ok && json.updated_count > 0) {
+            toast.success(
+              `Allergenen bijgewerkt voor ${json.updated_count} componenten in alle events`,
+              { style: { background: '#10b981', color: 'white' } }
+            )
+            // Update overige componenten met dezelfde naam in huidige weergave
+            setDishes(prev => prev.map(d => ({
+              ...d,
+              components: d.components.map(c =>
+                c.id !== componentId &&
+                c.component_name.toLowerCase().trim() === thisComp.component_name.toLowerCase().trim()
+                  ? { ...c, allergens: updates.allergens as string | null }
+                  : c
+              ),
+            })))
+          }
+        } catch {
+          // Globale sync mislukt silently — lokale update is al geslaagd
         }
       }
     }
