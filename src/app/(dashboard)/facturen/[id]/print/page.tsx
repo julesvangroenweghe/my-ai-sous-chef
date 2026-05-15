@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export default async function InvoicePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const supabase = getSupabase()
   const { data: invoice } = await supabase.from('client_invoices').select('*').eq('id', id).single()
   if (!invoice) return <div style={{ padding: 40, color: '#9E7E60' }}>Factuur niet gevonden</div>
 
