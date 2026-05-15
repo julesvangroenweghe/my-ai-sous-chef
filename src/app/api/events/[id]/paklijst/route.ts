@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // GET: haal paklijst items op, of initialiseer vanuit templates
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
+  const supabase = getSupabase()
   const authHeader = req.headers.get('authorization')
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -16,7 +19,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { data: { user } } = await supabase.auth.getUser(token)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Haal bestaande items op
   const { data: items } = await supabase
     .from('event_packlist_items')
     .select('*')
@@ -24,7 +26,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .order('category')
     .order('sort_order')
 
-  // Als geen items → initialiseer vanuit global templates
   if (!items || items.length === 0) {
     const { data: event } = await supabase
       .from('events')
@@ -72,6 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // POST: voeg item toe
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
+  const supabase = getSupabase()
   const authHeader = req.headers.get('authorization')
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
