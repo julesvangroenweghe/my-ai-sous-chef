@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 
 interface MenuItem {
   id: string
@@ -10,6 +9,7 @@ interface MenuItem {
   source_type: string
   cost_per_person: number | null
   sort_order: number
+  is_crew_food?: boolean
 }
 
 const COURSE_ORDER = [
@@ -24,7 +24,7 @@ const MENU_TYPE_LABELS: Record<string, string> = {
   sit_down: 'Zit Diner',
   buffet: 'Buffet',
   cocktail: 'Cocktail Aperitief',
-  aperitief: 'Vin d\'Honneur',
+  aperitief: "Vin d'Honneur",
   brunch: 'Brunch',
   bbq: 'BBQ',
   event: 'Event',
@@ -62,11 +62,22 @@ export default async function ProposalPrintPage({
 
   if (!proposal || !event) notFound()
 
-  const items: MenuItem[] = (proposal.items || []).sort(
+  const allItems: MenuItem[] = (proposal.items || []).sort(
     (a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order
   )
 
-  const courses = [...new Set(items.map((i: MenuItem) => i.course))].sort((a, b) => {
+  // Splits: klantmenu vs crew food
+  const menuItems = allItems.filter((i: MenuItem) => !i.is_crew_food)
+  const crewItems = allItems.filter((i: MenuItem) => i.is_crew_food)
+  const crewPersons = proposal.crew_persons || 0
+
+  const courses = [...new Set(menuItems.map((i: MenuItem) => i.course))].sort((a, b) => {
+    const ai = COURSE_ORDER.indexOf(a)
+    const bi = COURSE_ORDER.indexOf(b)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
+
+  const crewCourses = [...new Set(crewItems.map((i: MenuItem) => i.course))].sort((a, b) => {
     const ai = COURSE_ORDER.indexOf(a)
     const bi = COURSE_ORDER.indexOf(b)
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
@@ -77,7 +88,6 @@ export default async function ProposalPrintPage({
   const chefNote = reqs.chef_note
   const contactPerson = reqs.contact_person || event.contact_person
   const menuTypeLabel = MENU_TYPE_LABELS[proposal.menu_type] || proposal.menu_type?.replace(/_/g, ' ')
-  const totalCost = items.reduce((s: number, i: MenuItem) => s + (Number(i.cost_per_person) || 0), 0)
 
   return (
     <>
@@ -205,13 +215,8 @@ export default async function ProposalPrintPage({
         .dish-row {
           padding: 3mm 0;
           border-bottom: 1px solid #F5EDE0;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 4mm;
         }
         .dish-row:last-child { border-bottom: none; }
-        .dish-content { flex: 1; }
         .dish-name {
           font-size: 11.5pt;
           font-weight: 600;
@@ -225,14 +230,41 @@ export default async function ProposalPrintPage({
           font-style: italic;
           line-height: 1.5;
         }
-        .dish-cost {
+
+        /* Crew food sectie */
+        .crew-section {
+          margin-top: 10mm;
+          padding-top: 6mm;
+          border-top: 2px dashed #C4703A;
+        }
+        .crew-section-header {
+          display: flex;
+          align-items: center;
+          gap: 3mm;
+          margin-bottom: 5mm;
+        }
+        .crew-section-title {
           font-size: 9pt;
-          color: #B8997A;
-          font-weight: 500;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-          min-width: 15mm;
-          text-align: right;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          color: #C4703A;
+        }
+        .crew-badge {
+          display: inline-block;
+          padding: 2px 8px;
+          background: #FEF3E2;
+          border: 1px solid #C4703A;
+          border-radius: 20px;
+          font-size: 7.5pt;
+          color: #C4703A;
+          font-weight: 600;
+        }
+        .crew-note {
+          font-size: 8.5pt;
+          color: #9E7E60;
+          font-style: italic;
+          margin-bottom: 4mm;
         }
 
         /* Summary row */
@@ -246,9 +278,7 @@ export default async function ProposalPrintPage({
         }
         .summary-info { font-size: 9.5pt; color: #9E7E60; }
         .summary-info span { color: #2C1810; font-weight: 600; }
-        .summary-total {
-          text-align: right;
-        }
+        .summary-total { text-align: right; }
         .summary-total-label {
           font-size: 8pt;
           color: #9E7E60;
@@ -285,7 +315,7 @@ export default async function ProposalPrintPage({
         }
         .footer-brand span { color: #E8A040; }
 
-        /* Print button — hidden on print */
+        /* Print button bar */
         .print-btn-bar {
           position: fixed;
           top: 0; left: 0; right: 0;
@@ -312,20 +342,18 @@ export default async function ProposalPrintPage({
           color: #9E7E60;
           font-size: 13px;
         }
+
         @media print {
           .print-btn-bar { display: none !important; }
-          .page { padding: 14mm 16mm; }
+          .page { padding: 14mm 16mm; margin-top: 0 !important; }
           html, body { background: white; }
           @page { size: A4 portrait; margin: 0; }
         }
       `}</style>
 
-      {/* Print bar */}
       <div className="print-btn-bar">
         <span className="print-btn-bar-hint">Voorstel V{proposal.revision_number} — {event.name}</span>
-        <button className="print-btn" onClick={undefined}>
-          Afdrukken / PDF
-        </button>
+        <button className="print-btn" onClick={undefined}>Afdrukken / PDF</button>
       </div>
 
       <script dangerouslySetInnerHTML={{ __html: `
@@ -376,16 +404,14 @@ export default async function ProposalPrintPage({
         {conceptNote && (
           <div className="concept-block">
             <div className="concept-text">&ldquo;{conceptNote}&rdquo;</div>
-            {chefNote && (
-              <div className="chef-note">{chefNote}</div>
-            )}
+            {chefNote && <div className="chef-note">{chefNote}</div>}
           </div>
         )}
 
-        {/* Menu courses */}
+        {/* Klantmenu */}
         <div className="courses-section">
           {courses.map(course => {
-            const courseItems = items
+            const courseItems = menuItems
               .filter((i: MenuItem) => i.course === course)
               .sort((a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order)
             return (
@@ -396,12 +422,10 @@ export default async function ProposalPrintPage({
                 </div>
                 {courseItems.map((item: MenuItem) => (
                   <div key={item.id} className="dish-row">
-                    <div className="dish-content">
-                      <div className="dish-name">{item.dish_name}</div>
-                      {item.dish_description && (
-                        <div className="dish-desc">{item.dish_description}</div>
-                      )}
-                    </div>
+                    <div className="dish-name">{item.dish_name}</div>
+                    {item.dish_description && (
+                      <div className="dish-desc">{item.dish_description}</div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -409,14 +433,56 @@ export default async function ProposalPrintPage({
           })}
         </div>
 
+        {/* Crew Food sectie — alleen tonen als er crew items zijn */}
+        {crewItems.length > 0 && (
+          <div className="crew-section">
+            <div className="crew-section-header">
+              <span className="crew-section-title">Crew Food</span>
+              {crewPersons > 0 && (
+                <span className="crew-badge">{crewPersons} personen</span>
+              )}
+            </div>
+            <div className="crew-note">
+              Interne maaltijd voor het keukenpersoneel — niet zichtbaar voor de klant op het definitieve voorstel.
+            </div>
+            {crewCourses.map(course => {
+              const courseItems = crewItems
+                .filter((i: MenuItem) => i.course === course)
+                .sort((a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order)
+              return (
+                <div key={course} className="course-block">
+                  <div className="course-header">
+                    <span className="course-label" style={{ color: '#C4703A' }}>{course}</span>
+                    <div className="course-line" style={{ background: '#F5D5B5' }} />
+                  </div>
+                  {courseItems.map((item: MenuItem) => (
+                    <div key={item.id} className="dish-row">
+                      <div className="dish-name" style={{ color: '#5C4730' }}>{item.dish_name}</div>
+                      {item.dish_description && (
+                        <div className="dish-desc">{item.dish_description}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {/* Summary */}
         <div className="summary-block">
           <div className="summary-info">
             {event.num_persons && (
               <div>{event.num_persons} personen</div>
             )}
+            {crewPersons > 0 && (
+              <div style={{ marginTop: '2mm', color: '#C4703A' }}>+ {crewPersons} crew</div>
+            )}
             {event.price_per_person && (
-              <div>Prijs per persoon: <span>€{Number(event.price_per_person).toFixed(2)}</span></div>
+              <div style={{ marginTop: '2mm' }}>
+                Prijs per persoon: <span>€{Number(event.price_per_person).toFixed(2)}</span>
+                <span style={{ fontSize: '8pt', color: '#9E7E60', marginLeft: '2mm' }}>incl. alle forfaits & vaste kosten</span>
+              </div>
             )}
           </div>
           {event.price_per_person && (
@@ -433,7 +499,7 @@ export default async function ProposalPrintPage({
         <div className="footer">
           <div className="footer-left">
             Opgesteld met My AI Sous Chef &mdash; jules@sircatering.be<br />
-            +32 xxx xx xx xx &mdash; www.sircatering.be
+            www.sircatering.be
           </div>
           <div className="footer-brand">
             <span>Food by Jules</span> &mdash; SIR Catering
