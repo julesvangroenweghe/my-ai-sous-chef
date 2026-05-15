@@ -18,7 +18,10 @@ import {
   Download,
   CheckSquare,
   Square,
+  Trash2,
+  X,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface EventRow {
   id: string
@@ -95,24 +98,33 @@ export default function MepOverviewPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [downloading, setDownloading] = useState(false)
 
-  // Fetch all events once via API route (admin client, no RLS issues)
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch('/api/mep/events')
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        setAllEvents(data.events || [])
-      } catch (e: any) {
-        setError(e.message)
-      } finally {
-        setLoading(false)
-      }
+  const loadEvents = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/mep/events')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setAllEvents(data.events || [])
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [])
+
+  useEffect(() => { loadEvents() }, [loadEvents])
+
+  const handleDeleteEvent = async (eventId: string) => {
+    const res = await fetch(`/api/mep/events/${eventId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      toast.error('Verwijderen mislukt')
+      return false
+    }
+    setAllEvents(prev => prev.filter(e => e.id !== eventId))
+    toast.success('Event verwijderd')
+    return true
+  }
 
   // ── WEEK VIEW ──────────────────────────────────────────────────────────────
   const { start: weekStart, end: weekEnd } = getWeekDates(currentWeek, currentYear)
@@ -308,7 +320,7 @@ export default function MepOverviewPage() {
 
               {/* Event list */}
               {weekEvents.length > 0 ? (
-                <EventList events={weekEvents} selected={selected} onToggle={toggleSelect} />
+                <EventList events={weekEvents} selected={selected} onToggle={toggleSelect} onDelete={handleDeleteEvent} />
               ) : (
                 <EmptyWeek week={currentWeek} allEvents={allEvents} onJumpToWeek={(w, y) => { setCurrentWeek(w); setCurrentYear(y) }} />
               )}
@@ -341,7 +353,7 @@ export default function MepOverviewPage() {
                   <p className="text-[#9E7E60]">Geen events in {monthNames[currentMonth]} {currentMonthYear}</p>
                 </div>
               ) : (
-                <EventList events={monthEvents} selected={selected} onToggle={toggleSelect} showDate />
+                <EventList events={monthEvents} selected={selected} onToggle={toggleSelect} onDelete={handleDeleteEvent} showDate />
               )}
             </div>
           )}
@@ -426,16 +438,29 @@ export default function MepOverviewPage() {
 }
 
 // ── Reusable event list ────────────────────────────────────────────────────────
-function EventList({ events, selected, onToggle, showDate = false }: {
+function EventList({ events, selected, onToggle, onDelete, showDate = false }: {
   events: EventRow[]
   selected: Set<string>
   onToggle: (id: string) => void
+  onDelete: (id: string) => Promise<boolean>
   showDate?: boolean
 }) {
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id)
+    await onDelete(id)
+    setDeleting(null)
+    setConfirmingDelete(null)
+  }
+
   return (
     <div className="space-y-2">
       {events.map(ev => {
         const isSelected = selected.has(ev.id)
+        const isConfirming = confirmingDelete === ev.id
+        const isDeleting = deleting === ev.id
         return (
           <div key={ev.id} className={`flex items-stretch gap-2 transition-all ${selected.size > 0 && !isSelected ? 'opacity-60' : ''}`}>
             {/* Checkbox */}
@@ -487,6 +512,30 @@ function EventList({ events, selected, onToggle, showDate = false }: {
                 </div>
               </div>
             </Link>
+            {/* Delete button */}
+            {isConfirming ? (
+              <div className="flex items-center gap-1 shrink-0 bg-red-50 border border-red-200 rounded-xl px-2.5">
+                <span className="text-xs text-red-700 font-medium whitespace-nowrap">Wissen?</span>
+                <button
+                  onClick={() => handleDelete(ev.id)}
+                  disabled={isDeleting}
+                  className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-all disabled:opacity-50"
+                >
+                  {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Ja'}
+                </button>
+                <button onClick={() => setConfirmingDelete(null)} className="text-red-400 hover:text-red-700 transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingDelete(ev.id)}
+                className="shrink-0 flex items-center justify-center w-10 rounded-xl border border-[#E8D5B5] bg-white hover:border-red-300 hover:bg-red-50 text-[#B8997A] hover:text-red-500 transition-all"
+                title="Verwijderen"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )
       })}

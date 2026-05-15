@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   Inbox, Loader2, AlertTriangle, ShieldCheck, ChefHat,
-  CalendarDays, Users, MapPin, ArrowRight, Check, X, Loader, Upload,
+  CalendarDays, Users, MapPin, ArrowRight, X, Loader, Upload, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -65,12 +65,16 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 function EventCard({
   event,
   onApproveAll,
+  onDelete,
 }: {
   event: DraftEvent
   onApproveAll: (eventId: string) => Promise<void>
+  onDelete: (eventId: string) => Promise<void>
 }) {
-  const [confirming, setConfirming] = useState(false)
+  const [confirmingApprove, setConfirmingApprove] = useState(false)
   const [approving, setApproving] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const totalAI = event.aiDishes + event.aiComponents
   const hasAI = totalAI > 0
 
@@ -78,7 +82,14 @@ function EventCard({
     setApproving(true)
     await onApproveAll(event.id)
     setApproving(false)
-    setConfirming(false)
+    setConfirmingApprove(false)
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    await onDelete(event.id)
+    setDeleting(false)
+    setConfirmingDelete(false)
   }
 
   return (
@@ -124,7 +135,8 @@ function EventCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {confirming ? (
+          {/* Approve button */}
+          {confirmingApprove ? (
             <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 py-1.5">
               <span className="text-xs text-emerald-700 font-medium">Zeker?</span>
               <button
@@ -134,13 +146,13 @@ function EventCard({
               >
                 {approving ? <Loader className="w-3 h-3 animate-spin" /> : 'Ja'}
               </button>
-              <button onClick={() => setConfirming(false)} className="text-[#9E7E60] hover:text-[#3D2810] transition-colors">
+              <button onClick={() => setConfirmingApprove(false)} className="text-[#9E7E60] hover:text-[#3D2810] transition-colors">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <button
-              onClick={() => setConfirming(true)}
+              onClick={() => setConfirmingApprove(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 rounded-xl transition-all font-semibold border border-emerald-500/20"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -155,6 +167,31 @@ function EventCard({
             Bekijken
             <ArrowRight className="w-3 h-3" />
           </Link>
+
+          {/* Delete button */}
+          {confirmingDelete ? (
+            <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-xl px-2.5 py-1.5">
+              <span className="text-xs text-red-700 font-medium">Wissen?</span>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-all disabled:opacity-50"
+              >
+                {deleting ? <Loader className="w-3 h-3 animate-spin" /> : 'Ja'}
+              </button>
+              <button onClick={() => setConfirmingDelete(false)} className="text-red-400 hover:text-red-700 transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="p-1.5 text-[#B8997A] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-200"
+              title="Verwijderen"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -215,7 +252,6 @@ export default function MepInboxPage() {
   const loadDraftEvents = useCallback(async () => {
     setLoading(true)
 
-    // Filter on mep_status = 'draft' (not event booking status)
     const { data: eventData, error } = await supabase
       .from('events')
       .select('id, name, event_date, event_type, num_persons, location, mep_status')
@@ -293,22 +329,22 @@ export default function MepInboxPage() {
   }, [loadDraftEvents])
 
   const handleApproveAll = async (eventId: string) => {
-    // Get event dishes for AI suggestion cascade
-    const { data: dishes } = await supabase
-      .from('mep_dishes')
-      .select('id')
-      .eq('event_id', eventId)
-
-    const dishIds = (dishes || []).map((d: any) => d.id)
-
-    // Use API route (server-side with admin client) to avoid RLS issues
     const res = await fetch(`/api/mep/approve/${eventId}`, { method: 'POST' })
     if (!res.ok) {
       toast.error('Goedkeuren mislukt')
       return
     }
-
     toast.success('Event goedgekeurd ✓ — staat nu in planning')
+    setEvents((prev) => prev.filter((e) => e.id !== eventId))
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    const res = await fetch(`/api/mep/events/${eventId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      toast.error('Verwijderen mislukt')
+      return
+    }
+    toast.success('Event verwijderd')
     setEvents((prev) => prev.filter((e) => e.id !== eventId))
   }
 
@@ -437,7 +473,7 @@ export default function MepInboxPage() {
 
           <div className="space-y-3">
             {weekEvents.map((ev) => (
-              <EventCard key={ev.id} event={ev} onApproveAll={handleApproveAll} />
+              <EventCard key={ev.id} event={ev} onApproveAll={handleApproveAll} onDelete={handleDeleteEvent} />
             ))}
           </div>
         </section>
