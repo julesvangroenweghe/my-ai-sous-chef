@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, CalendarDays, MapPin, Users, ArrowRight, Euro, ClipboardList, AlertTriangle, FileText } from 'lucide-react'
+import { Plus, CalendarDays, MapPin, Users, ArrowRight, ClipboardList, AlertTriangle, FileText, Trash2, X, Loader2 } from 'lucide-react'
 import { ChefTip } from '@/components/ai/chef-tip'
 import ImportBriefModal from '@/components/events/import-brief-modal'
 
@@ -56,6 +56,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -70,15 +72,31 @@ export default function EventsPage() {
     load()
   }, [])
 
-  // Reload events after modal closes (new event may have been created)
-  const handleModalClose = () => {
-    setShowImportModal(false)
-    // Reload events list
+  const reloadEvents = () => {
     supabase
       .from('events')
       .select('*')
       .order('event_date', { ascending: true })
       .then(({ data }) => setEvents((data || []) as Event[]))
+  }
+
+  const handleModalClose = () => {
+    setShowImportModal(false)
+    reloadEvents()
+  }
+
+  const handleCancelEvent = async (id: string) => {
+    setDeleting(id)
+    try {
+      // DELETE = soft delete (status -> cancelled)
+      const res = await fetch(`/api/events/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setEvents(prev => prev.map(e => e.id === id ? { ...e, status: 'cancelled' } : e))
+      }
+    } finally {
+      setDeleting(null)
+      setConfirmingDelete(null)
+    }
   }
 
   const upcoming = events.filter(
@@ -104,7 +122,6 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Import Brief Modal */}
       {showImportModal && <ImportBriefModal onClose={handleModalClose} />}
 
       {/* Header */}
@@ -126,7 +143,6 @@ export default function EventsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {/* Import brief button */}
             <button
               onClick={() => setShowImportModal(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] transition-all"
@@ -198,7 +214,6 @@ export default function EventsPage() {
         </div>
       )}
 
-      {/* Smart Tip */}
       {upcoming.some((e) => !e.price_per_person) && (
         <ChefTip
           tip="Sommige events hebben nog geen prijs per persoon. Voeg deze toe voor nauwkeurige omzetberekeningen."
@@ -229,8 +244,7 @@ export default function EventsPage() {
             Nog geen events gepland
           </h3>
           <p className="text-[#9E7E60] text-sm max-w-[45ch] mx-auto mb-8 leading-relaxed">
-            Plan je eerste event of importeer een bestaande aanvraagbrief — de AI herkent automatisch
-            de data, het verloop, de dieetwensen en het menu.
+            Plan je eerste event of importeer een bestaande aanvraagbrief.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
@@ -273,86 +287,128 @@ export default function EventsPage() {
                     event.status !== 'approved' &&
                     event.status !== 'generated' &&
                     event.status !== 'completed'
+                  const isConfirming = confirmingDelete === event.id
+                  const isCurrentlyDeleting = deleting === event.id
 
                   return (
-                    <Link
+                    <div
                       key={event.id}
-                      href={`/events/${event.id}`}
-                      className="card-hover flex items-center gap-5 p-5 group animate-slide-up opacity-0"
-                      style={{
-                        animationDelay: `${i * 75}ms`,
-                        animationFillMode: 'forwards',
-                      }}
+                      className="flex items-stretch gap-2 animate-slide-up opacity-0"
+                      style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'forwards' }}
                     >
-                      {/* Date Block */}
-                      <div
-                        className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 ${
-                          relative.urgent ? 'bg-brand-600 text-[#2C1810]' : 'bg-white text-[#2C1810]'
-                        }`}
+                      {/* Main event card */}
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="card-hover flex items-center gap-5 p-5 group flex-1"
                       >
-                        <span className="text-[10px] uppercase tracking-wide opacity-70">
-                          {monthShort}
-                        </span>
-                        <span className="font-mono text-2xl font-extrabold leading-none">{dayNum}</span>
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors truncate">
-                            {event.name}
-                          </h3>
-                          <span
-                            className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${typeConfig.color}`}
-                          >
-                            {typeConfig.label}
-                          </span>
-                          {isUrgentWithoutMep && (
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                              <AlertTriangle className="w-2.5 h-2.5" />
-                              MEP nodig
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 mt-1.5 text-sm text-[#9E7E60]">
-                          <span className="flex items-center gap-1">
-                            <CalendarDays className="w-3.5 h-3.5" /> {dayName}
-                          </span>
-                          {event.num_persons && (
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3.5 h-3.5" /> {event.num_persons} pers.
-                            </span>
-                          )}
-                          {event.location && (
-                            <span className="flex items-center gap-1 truncate">
-                              <MapPin className="w-3.5 h-3.5" /> {event.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Side */}
-                      <div className="text-right shrink-0 space-y-1">
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${status.bg}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                          {status.label}
-                        </span>
+                        {/* Date Block */}
                         <div
-                          className={`text-xs font-mono ${
-                            relative.urgent ? 'text-brand-600 font-semibold' : 'text-[#9E7E60]'
+                          className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 ${
+                            relative.urgent ? 'bg-brand-600 text-[#2C1810]' : 'bg-white text-[#2C1810]'
                           }`}
                         >
-                          {relative.text}
+                          <span className="text-[10px] uppercase tracking-wide opacity-70">
+                            {monthShort}
+                          </span>
+                          <span className="font-mono text-2xl font-extrabold leading-none">{dayNum}</span>
                         </div>
-                        {event.price_per_person && (
-                          <div className="text-xs text-[#9E7E60]">€{event.price_per_person}/pp</div>
-                        )}
-                      </div>
 
-                      <ArrowRight className="w-4 h-4 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </Link>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-display font-semibold text-stone-900 group-hover:text-brand-700 transition-colors truncate">
+                              {event.name}
+                            </h3>
+                            <span
+                              className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${typeConfig.color}`}
+                            >
+                              {typeConfig.label}
+                            </span>
+                            {isUrgentWithoutMep && (
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                                <AlertTriangle className="w-2.5 h-2.5" />
+                                MEP nodig
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1.5 text-sm text-[#9E7E60]">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="w-3.5 h-3.5" /> {dayName}
+                            </span>
+                            {event.num_persons && (
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3.5 h-3.5" /> {event.num_persons} pers.
+                              </span>
+                            )}
+                            {event.location && (
+                              <span className="flex items-center gap-1 truncate">
+                                <MapPin className="w-3.5 h-3.5" /> {event.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right Side */}
+                        <div className="text-right shrink-0 space-y-1">
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${status.bg}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                            {status.label}
+                          </span>
+                          <div
+                            className={`text-xs font-mono ${
+                              relative.urgent ? 'text-brand-600 font-semibold' : 'text-[#9E7E60]'
+                            }`}
+                          >
+                            {relative.text}
+                          </div>
+                          {event.price_per_person && (
+                            <div className="text-xs text-[#9E7E60]">€{event.price_per_person}/pp</div>
+                          )}
+                        </div>
+
+                        <ArrowRight className="w-4 h-4 text-[#5C4730] group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+
+                      {/* MEP+ button */}
+                      <Link
+                        href={`/mep/${event.id}`}
+                        title="MEP bekijken / aanmaken"
+                        className="flex items-center justify-center w-11 rounded-xl border border-[#E8D5B5] bg-white hover:bg-[#FEF3E2] hover:border-[#E8A040]/50 transition-all shrink-0 group"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <ClipboardList className="w-4 h-4 text-[#9E7E60] group-hover:text-[#E8A040] transition-colors" />
+                          <span className="text-[8px] font-bold text-[#B8997A] group-hover:text-[#C4703A]">MEP</span>
+                        </div>
+                      </Link>
+
+                      {/* Cancel/Delete button */}
+                      {isConfirming ? (
+                        <div className="flex items-center gap-1 shrink-0 bg-red-50 border border-red-200 rounded-xl px-2.5">
+                          <span className="text-xs text-red-700 font-medium whitespace-nowrap">Annuleer?</span>
+                          <button
+                            onClick={() => handleCancelEvent(event.id)}
+                            disabled={isCurrentlyDeleting}
+                            className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-all disabled:opacity-50"
+                          >
+                            {isCurrentlyDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Ja'}
+                          </button>
+                          <button onClick={() => setConfirmingDelete(null)} className="text-red-400 hover:text-red-700 transition-colors">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmingDelete(event.id)}
+                          className="shrink-0 flex items-center justify-center w-11 rounded-xl border border-[#E8D5B5] bg-white hover:border-red-300 hover:bg-red-50 text-[#B8997A] hover:text-red-500 transition-all"
+                          title="Verwijderen / Annuleren"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   )
                 })}
               </div>

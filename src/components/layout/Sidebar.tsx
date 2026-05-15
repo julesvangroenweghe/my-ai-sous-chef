@@ -434,6 +434,35 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ))}
       </nav>
 
+      {/* Department switch — alleen keuken */}
+      {dept === 'keuken' && (
+        <div style={{ padding: '2px 12px 6px', flexShrink: 0 }}>
+          <div style={{ fontSize: 9, color: theme.textSub, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 5 }}>Afdelingen</div>
+          <div style={{ display: 'flex', gap: 5 }}>
+            <Link href="/sales/pipeline" onClick={handleNavigate} style={{
+              flex: 1, padding: '7px 10px', borderRadius: 7, textDecoration: 'none',
+              backgroundColor: 'rgba(45,106,30,0.09)', border: '1px solid rgba(45,106,30,0.28)',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <svg width={13} height={13} fill="none" stroke="#2D6A1E" strokeWidth="1.5" viewBox="0 0 24 24">
+                <rect x="2" y="7" width="4" height="10" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="18" y="9" width="4" height="8" rx="1"/>
+              </svg>
+              <span style={{ fontSize: 11, color: '#2D6A1E', fontWeight: 600 }}>Sales</span>
+            </Link>
+            <Link href="/paklijsten" onClick={handleNavigate} style={{
+              flex: 1, padding: '7px 10px', borderRadius: 7, textDecoration: 'none',
+              backgroundColor: 'rgba(30,63,138,0.09)', border: '1px solid rgba(30,63,138,0.28)',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <svg width={13} height={13} fill="none" stroke="#1E3F8A" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <span style={{ fontSize: 11, color: '#1E3F8A', fontWeight: 600 }}>Logistiek</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Scan & OCR */}
       <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
         <Link href="/scan" onClick={handleNavigate} style={{

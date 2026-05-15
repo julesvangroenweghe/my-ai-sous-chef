@@ -67,6 +67,13 @@ const eventTypeLabels: Record<string, string> = {
   tasting: 'Proeverij',
 }
 
+function toLocalDateStr(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 const monthNames = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december']
 const dayNames = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']
 
@@ -128,15 +135,15 @@ export default function MepOverviewPage() {
 
   // ── WEEK VIEW ──────────────────────────────────────────────────────────────
   const { start: weekStart, end: weekEnd } = getWeekDates(currentWeek, currentYear)
-  const weekStartStr = weekStart.toISOString().split('T')[0]
-  const weekEndStr = weekEnd.toISOString().split('T')[0]
+  const weekStartStr = toLocalDateStr(weekStart)
+  const weekEndStr = toLocalDateStr(weekEnd)
   const weekEvents = allEvents.filter(e => e.event_date >= weekStartStr && e.event_date <= weekEndStr)
 
   const dayGrid: Record<string, EventRow[]> = {}
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart)
     d.setDate(weekStart.getDate() + i)
-    dayGrid[d.toISOString().split('T')[0]] = []
+    dayGrid[toLocalDateStr(d)] = []
   }
   for (const ev of weekEvents) {
     if (dayGrid[ev.event_date]) dayGrid[ev.event_date].push(ev)
@@ -295,7 +302,7 @@ export default function MepOverviewPage() {
               <div className="grid grid-cols-7 gap-2">
                 {Object.entries(dayGrid).map(([dateStr, dayEvs], i) => {
                   const date = new Date(dateStr + 'T12:00:00')
-                  const isToday = dateStr === now.toISOString().split('T')[0]
+                  const isToday = dateStr === toLocalDateStr(now)
                   return (
                     <div key={dateStr} className={`rounded-xl border p-3 min-h-[100px] transition-all ${isToday ? 'border-[#E8A040]/50 bg-[#E8A040]/5' : dayEvs.length > 0 ? 'border-[#E8D5B5] bg-[#FDFAF6]/80' : 'border-[#E8D5B5]/50 bg-white/20'}`}>
                       <div className="flex items-center justify-between mb-2">
