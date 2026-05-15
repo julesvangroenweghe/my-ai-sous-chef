@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(
   req: NextRequest,
@@ -18,6 +20,7 @@ export async function POST(
       return NextResponse.json({ error: 'Ongeldig aantal personen' }, { status: 400 })
     }
 
+    const supabase = getSupabase()
     const { data, error } = await supabase.rpc('recalculate_event_ripple', {
       p_event_id: id,
       p_new_persons: num_persons
