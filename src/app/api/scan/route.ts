@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server'
 // Streaming response = 60s timeout op Vercel Hobby (ipv 10s)
 export const maxDuration = 60
 
-type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'other'
+type DocumentType = 'invoice' | 'mep' | 'recipe' | 'pricelist' | 'event' | 'other'
 
 interface ScanResult {
   type: DocumentType
@@ -29,16 +29,25 @@ function buildUserPrompt(typeHint?: string): string {
 
   return `Analyseer dit document en extraheer de data.
 
-Detecteer het type:
-- "prijslijst" / "price list" / producten met prijzen maar GEEN factuurgegevens → "pricelist"
-- "factuur" / "invoice" / BTW-nummer / factuurnummer → "invoice"
-- "MEP" / "mise en place" / "productielijst" → "mep"
-- "recept" / bereiding / ingrediënten → "recipe"
-- Alles wat niet past → "other"
+Detecteer het type op basis van de HOOFDINHOUD van het document:
+
+- "event" → een event/feestbrief, aanvraag, bestelbon voor een evenement, offerte voor een feest, tasting-aanvraag, cocktailreceptie-aanvraag — bevat: naam klant/event, datum event, locatie, aantal personen, type dienstverlening. GEEN leverancier-prijslijst.
+- "pricelist" → officiële leverancierscatalogus of prijslijst van een LEVERANCIER met productnamen + prijzen per eenheid, GEEN evenementdata
+- "invoice" → factuur of aankoopbon met BTW-nummer, factuurnummer, totaalbedrag
+- "mep" → mise en place / productielijst / keuken-werkblad met gerechten en componenten
+- "recipe" → recept met bereiding, ingrediënten, stappen
+- "other" → alles wat niet past in bovenstaande categorieën
+
+BELANGRIJK: Als het document over een EVENEMENT, FEEST, RECEPTIE, TASTING of KLANTAANVRAAG gaat → altijd "event", zelfs als er prijzen in staan.
 
 ${hint}
 
 Gebruik exact dit JSON-formaat op basis van type:
+
+Voor event:
+{"type":"event","confidence":0.95,"data":{"name":"Naam van het event of klant","event_date":"YYYY-MM-DD","event_time_start":"HH:MM","event_time_end":"HH:MM","location":"Locatie","num_persons":0,"num_persons_crew":0,"event_type":"receptie","menu_notes":"Eventuele menuomschrijving of wensen","contact_name":"Naam contactpersoon","contact_email":"","contact_phone":"","budget_per_person":0,"notes":"Overige opmerkingen"}}
+
+Geldige waarden voor event_type: "receptie", "cocktail_dinatoire", "walking_dinner", "buffet", "tasting", "bbq", "sit_down", "fingerfood", "other"
 
 Voor pricelist:
 {"type":"pricelist","confidence":0.95,"data":{"supplier_name":"Naam leverancier","price_date":"YYYY-MM-DD","products":[{"product_name":"Naam","unit":"kg","price":10.50,"price_per_kg":10.50,"category":"vlees"}]}}
@@ -55,7 +64,7 @@ Voor recipe:
 Voor other:
 {"type":"other","confidence":0.90,"data":{"description":"Korte beschrijving van wat er in het document staat","content":"Samenvatting van de inhoud"}}
 
-Extraheer ALLE producten. Bereken price_per_kg waar mogelijk. Reageer ALLEEN met JSON — begin direct met {`
+Extraheer ALLE relevante informatie. Reageer ALLEEN met JSON — begin direct met {`
 }
 
 async function processScan(request: NextRequest): Promise<Response> {
@@ -156,7 +165,6 @@ async function processScan(request: NextRequest): Promise<Response> {
     const errText = await anthropicResponse.text()
     console.error('Anthropic API error:', anthropicResponse.status, errText)
     
-    // Rate limit
     if (anthropicResponse.status === 429) {
       return new Response(JSON.stringify({
         error: 'Scanner tijdelijk bezet — wacht even en probeer opnieuw',
@@ -193,7 +201,7 @@ async function processScan(request: NextRequest): Promise<Response> {
     }), { status: 422 })
   }
 
-  // Auto-match ingrediënten in DB
+  // Auto-match ingrediënten in DB (alleen voor pricelist/invoice)
   const { data: ingredients } = await supabase.from('ingredients').select('id, name')
   if (ingredients) {
     const matchProduct = (name: string) => {
@@ -229,6 +237,8 @@ async function processScan(request: NextRequest): Promise<Response> {
       ? `Recept — ${(parsed.data.name as string) || fileName}`
       : parsed.type === 'mep'
       ? `MEP — ${(parsed.data.title as string) || fileName}`
+      : parsed.type === 'event'
+      ? `Event — ${(parsed.data.name as string) || (parsed.data.contact_name as string) || fileName}`
       : `Document — ${fileName}`
 
     const { data: savedDoc } = await supabase
@@ -275,6 +285,43 @@ async function processScan(request: NextRequest): Promise<Response> {
 
       autoImportResult = { recipe_id: newRecipe?.id, recipe_name: recipeData.name }
       if (newRecipe?.id) {
+        await supabase
+          .from('scanned_documents')
+          .update({ auto_imported: true, import_summary: autoImportResult })
+          .eq('id', savedId)
+      }
+    }
+
+    // Auto-import event — maak draft event aan
+    if (parsed.type === 'event' && parsed.data.event_date && savedId) {
+      const evData = parsed.data
+      const { data: newEvent } = await supabase
+        .from('events')
+        .insert({
+          kitchen_id: kitchenId,
+          name: (evData.name as string) || (evData.contact_name as string) || 'Nieuw event',
+          event_date: evData.event_date as string,
+          event_type: (evData.event_type as string) || 'receptie',
+          location: (evData.location as string) || null,
+          num_persons: (evData.num_persons as number) || null,
+          notes: [
+            evData.menu_notes ? `Menu: ${evData.menu_notes}` : '',
+            evData.contact_phone ? `Tel: ${evData.contact_phone}` : '',
+            evData.contact_email ? `Email: ${evData.contact_email}` : '',
+            evData.notes ? evData.notes : '',
+          ].filter(Boolean).join('\n') || null,
+          status: 'option',
+        })
+        .select('id, name')
+        .single()
+
+      autoImportResult = {
+        event_id: newEvent?.id,
+        event_name: newEvent?.name,
+        event_date: evData.event_date,
+      }
+
+      if (newEvent?.id) {
         await supabase
           .from('scanned_documents')
           .update({ auto_imported: true, import_summary: autoImportResult })

@@ -692,6 +692,94 @@ function DishCard({
   )
 }
 
+
+// ─── AddDishForm ──────────────────────────────────────────────────────────────
+
+const MEP_CATEGORIES = [
+  'FINGERFOOD', 'FINGERBITES', 'HAPJES', 'AMUSE', 'APPETIZERS',
+  'WALKING DINNER', 'VOORGERECHT', 'TUSSENGERECHT', 'HOOFDGERECHT',
+  'KAAS', 'DESSERT', 'MIGNARDISES', 'DRANKEN', 'BBQ', 'BUFFET',
+  'HALFABRICAAT', 'OVERIG',
+]
+
+function AddDishForm({
+  onSave,
+  onCancel,
+}: {
+  onSave: (data: { title: string; category: string; notes: string | null }) => Promise<void>
+  onCancel: () => void
+}) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('WALKING DINNER')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!title.trim()) return
+    setSaving(true)
+    await onSave({ title: title.trim(), category, notes: notes.trim() || null })
+    setSaving(false)
+  }
+
+  return (
+    <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Plus className="w-4 h-4 text-emerald-600" />
+        <span className="text-sm font-semibold text-emerald-700">Nieuw gerecht toevoegen</span>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs text-[#9E7E60] font-medium">Naam gerecht *</label>
+        <input
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
+          placeholder="bv. Ceviche van zeebaars"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs text-[#9E7E60] font-medium">Categorie</label>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
+        >
+          {MEP_CATEGORIES.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs text-[#9E7E60] font-medium">Notities (optioneel)</label>
+        <input
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
+          placeholder="bv. Allergeenvrij, enkel voor tafel 4"
+        />
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-[#9E7E60] hover:text-[#3D2810] transition-colors">
+          Annuleren
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving || !title.trim()}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          {saving ? 'Toevoegen...' : 'Gerecht toevoegen'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function MepDetailPage() {
@@ -707,6 +795,7 @@ export default function MepDetailPage() {
   const [confirmApproveEvent, setConfirmApproveEvent] = useState(false)
   const [editingComponentId, setEditingComponentId] = useState<string | null>(null)
 
+  const [showAddDishForm, setShowAddDishForm] = useState(false)
   const [editingNotes, setEditingNotes] = useState(false)
   const [notesValue, setNotesValue] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
@@ -752,6 +841,22 @@ export default function MepDetailPage() {
     setEvent(prev => prev ? { ...prev, notes: notesValue.trim() || null } : prev)
     setEditingNotes(false)
     toast.success('Notitie opgeslagen ✓')
+  }
+
+  const handleAddDish = async (data: { title: string; category: string; notes: string | null }) => {
+    const maxOrder = dishes.length > 0 ? Math.max(...dishes.map(d => d.sort_order)) + 10 : 0
+    const { data: newDish, error } = await supabase.from('mep_dishes').insert({
+      event_id: id,
+      title: data.title,
+      category: data.category,
+      sort_order: maxOrder,
+      is_ai_suggestion: false,
+      notes: data.notes,
+    }).select().single()
+    if (error || !newDish) { toast.error('Toevoegen mislukt'); return }
+    setDishes(prev => [...prev, { ...(newDish as any), components: [] } as MepDish])
+    setShowAddDishForm(false)
+    toast.success(`${data.title} toegevoegd ✓`)
   }
 
   const handleApproveComponent = async (componentId: string) => {
@@ -889,6 +994,13 @@ export default function MepDetailPage() {
           }`}>
             {event.mep_status === 'approved' ? 'Goedgekeurd' : event.mep_status === 'draft' ? 'Concept' : event.mep_status}
           </span>
+          <button
+            onClick={() => setShowAddDishForm(prev => !prev)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-all"
+            title="Gerecht handmatig toevoegen"
+          >
+            <Plus className="w-3.5 h-3.5" />Gerecht toevoegen
+          </button>
           <a href={`/api/mep/pdf/${id}`} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8D5B5] text-[#5C4730] hover:text-[#2C1810] hover:border-[#E8A040]/50 rounded-xl text-xs font-semibold transition-all" title="PDF downloaden">
             <FileDown className="w-3.5 h-3.5" />PDF
@@ -978,11 +1090,24 @@ export default function MepDetailPage() {
       )}
 
       {/* MEP content */}
+      {showAddDishForm && (
+        <AddDishForm
+          onSave={handleAddDish}
+          onCancel={() => setShowAddDishForm(false)}
+        />
+      )}
+
       {dishes.length === 0 ? (
         <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
           <ChefHat className="w-10 h-10 text-[#5C4730] mx-auto mb-3 opacity-40" />
           <h3 className="font-display font-semibold text-[#5C4730] mb-2">Nog geen MEP beschikbaar</h3>
-          <p className="text-[#B8997A] text-sm">Upload een menu PDF om de MEP automatisch te genereren.</p>
+          <p className="text-[#B8997A] text-sm mb-4">Upload een menu PDF of voeg een gerecht handmatig toe.</p>
+          <button
+            onClick={() => setShowAddDishForm(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all"
+          >
+            <Plus className="w-4 h-4" />Gerecht handmatig toevoegen
+          </button>
         </div>
       ) : (
         <div className="space-y-5">

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useKitchen } from '@/providers/kitchen-provider'
-import { CalendarDays, MapPin, Users, Clock, Euro, ArrowLeft, Save, FileText, Sparkles } from 'lucide-react'
+import { CalendarDays, MapPin, Users, Clock, Euro, ArrowLeft, Save, FileText, Sparkles, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { MenuPdfParser } from '@/components/events/menu-pdf-parser'
 
@@ -64,6 +64,8 @@ export default function NewEventPage() {
   const [error, setError] = useState('')
   const [parsedDishes, setParsedDishes] = useState<ApprovedDish[]>([])
   const [showParser, setShowParser] = useState(true)
+  // Track which fields were auto-filled by parser so we can warn user
+  const [parserFilledPrice, setParserFilledPrice] = useState(false)
 
   const [form, setForm] = useState({
     name: '',
@@ -80,6 +82,8 @@ export default function NewEventPage() {
   })
 
   const updateField = (field: string, value: string) => {
+    // When user manually edits price, clear the parser-filled flag
+    if (field === 'price_per_person') setParserFilledPrice(false)
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -99,11 +103,18 @@ export default function NewEventPage() {
       event_date: info.date || prev.event_date,
       event_type: info.event_type || prev.event_type,
       num_persons: info.num_persons ? String(info.num_persons) : prev.num_persons,
-      price_per_person: info.price_per_person ? String(info.price_per_person) : prev.price_per_person,
+      // CRITICAL FIX: Only set price if field is currently empty (user input wins)
+      price_per_person: (!prev.price_per_person && info.price_per_person)
+        ? String(info.price_per_person)
+        : prev.price_per_person,
       location: info.location || prev.location,
       contact_person: info.contact_person || prev.contact_person,
       notes: info.notes || prev.notes,
     }))
+    // Flag that price was auto-filled so we can show a warning
+    if (!form.price_per_person && info.price_per_person) {
+      setParserFilledPrice(true)
+    }
   }
 
   const handleDishesApproved = (dishes: ApprovedDish[]) => {
@@ -120,7 +131,6 @@ export default function NewEventPage() {
     setSaving(true)
     setError('')
 
-    // Create the event
     const { data, error: insertError } = await supabase
       .from('events')
       .insert({
@@ -146,7 +156,6 @@ export default function NewEventPage() {
       return
     }
 
-    // If we have approved dishes with matched recipes, add them as menu items
     if (parsedDishes.length > 0 && data) {
       const menuItems = parsedDishes
         .filter(d => d.matched_recipe_id)
@@ -285,14 +294,21 @@ export default function NewEventPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
-                <Euro className="w-3.5 h-3.5" /> Prijs per Persoon
+                <Euro className="w-3.5 h-3.5" /> Prijs per Persoon (€)
+                {parserFilledPrice && (
+                  <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                    <AlertTriangle className="w-2.5 h-2.5" />Automatisch ingevuld — verifieer
+                  </span>
+                )}
               </label>
               <input
                 type="number"
                 value={form.price_per_person}
                 onChange={(e) => updateField('price_per_person', e.target.value)}
                 placeholder="bv. 85"
-                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                className={`w-full px-4 py-2.5 bg-white border rounded-xl text-[#2C1810] placeholder:text-[#B8997A] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm ${
+                  parserFilledPrice ? 'border-amber-300 bg-amber-50/30' : 'border-[#E8D5B5]'
+                }`}
                 min={0}
                 step="0.01"
               />
