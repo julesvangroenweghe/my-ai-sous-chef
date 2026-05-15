@@ -1,14 +1,12 @@
-// src/app/api/sales/deals/[id]/versions/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
@@ -29,7 +27,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 });
@@ -37,7 +35,6 @@ export async function POST(
   const body = await req.json();
   const { snapshot, changed_fields, status_from, status_to, note, kitchen_id } = body;
 
-  // Haal huidig versienummer op
   const { data: lastVersion } = await supabase
     .from('deal_versions')
     .select('version_number')
