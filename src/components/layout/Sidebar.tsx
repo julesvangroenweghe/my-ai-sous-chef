@@ -393,11 +393,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Logo + kitchen name */}
       <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${theme.innerBorder}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Image src="/logo-icon.png" alt="My AI Sous Chef" width={36} height={36} style={{ objectFit: 'contain' }} />
-          <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 13, fontWeight: 700, color: theme.logoColor, letterSpacing: '0.01em', lineHeight: 1.3, flex: 1 }}>
-            My AI<br/>
-            <span style={{ fontWeight: 400, fontSize: 12, letterSpacing: '0.05em' }}>Sous Chef</span>
-          </div>
+          <Image src="/logo-full-light.png" alt="My AI Sous Chef" width={130} height={38} style={{ objectFit: 'contain', objectPosition: 'left' }} />
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Sluit menu">
             <svg width={18} height={18} fill="none" stroke={theme.textSub} strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>

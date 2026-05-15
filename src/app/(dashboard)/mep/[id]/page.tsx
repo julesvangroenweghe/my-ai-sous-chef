@@ -37,6 +37,7 @@ interface MepEvent {
   travel_time_minutes: number | null
   event_start_time: string | null
   event_end_time: string | null
+  allergens: string | null
 }
 
 interface MepDish {
@@ -146,19 +147,6 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   tasting: 'Proeverijtje', daily_service: 'Dagdienst',
 }
 
-const CATEGORY_OPTIONS = [
-  'DRANKEN', 'MOCKTAILS', 'LUNCH',
-  'FINGERFOOD', 'FINGERFOOD MIDDAG', 'FINGERFOOD APERO',
-  'FINGERBITES', 'HAPJES',
-  'KIDS', 'AMUSE', 'APPETIZERS', 'APPETIZERS MIDDAG', 'APPETIZERS APERO',
-  'WALKING DINNER', 'WALKING VOORGERECHT', 'SHARING VOORGERECHT',
-  'VOORGERECHT', 'TUSSENGERECHT',
-  'HOOFDGERECHT', 'HOOFDGERECHT PREMIUM',
-  'BROOD & BOTER', 'ON THE SIDE', 'SAUZEN', 'KAAS',
-  'DESSERT', 'PETITS FOURS', 'MIGNARDISES',
-  'LATE NIGHT SNACK', 'HALFABRICAAT',
-]
-
 // ─── Allergen detection ───────────────────────────────────────────────────────
 
 const EU_ALLERGENS = [
@@ -258,96 +246,6 @@ function AllergenPicker({
       {selected.length > 0 && (
         <p className="text-xs text-red-600 font-medium">✓ {selected.join(' · ')}</p>
       )}
-    </div>
-  )
-}
-
-// ─── AddDishForm ──────────────────────────────────────────────────────────────
-
-function AddDishForm({
-  onSave,
-  onCancel,
-  existingCategories,
-}: {
-  onSave: (title: string, category: string) => Promise<void>
-  onCancel: () => void
-  existingCategories: string[]
-}) {
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('')
-  const [customCat, setCustomCat] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const finalCategory = (category === '__custom__' ? customCat : category).toUpperCase().trim()
-
-  const handleSave = async () => {
-    if (!title.trim() || !finalCategory) return
-    setSaving(true)
-    await onSave(title.trim(), finalCategory)
-    setSaving(false)
-  }
-
-  // Combine existing categories + standard options, deduped
-  const allOptions = [...new Set([...existingCategories.map(c => c.toUpperCase()), ...CATEGORY_OPTIONS])]
-    .sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b))
-
-  return (
-    <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center">
-          <Plus className="w-4 h-4 text-white" />
-        </div>
-        <span className="text-sm font-bold text-emerald-800">Nieuw gerecht toevoegen</span>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Naam gerecht *</label>
-        <input
-          autoFocus
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
-          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-          placeholder="bv. Tartelette met geitenkaas, Beef tartaar..."
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Categorie *</label>
-        <select
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-        >
-          <option value="">Kies categorie...</option>
-          {allOptions.map(opt => (
-            <option key={opt} value={opt}>{getCategoryLabel(opt) || opt}</option>
-          ))}
-          <option value="__custom__">Andere (vrij invullen)</option>
-        </select>
-        {category === '__custom__' && (
-          <input
-            autoFocus
-            value={customCat}
-            onChange={e => setCustomCat(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
-            className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-[#2C1810] focus:border-emerald-400 focus:outline-none"
-            placeholder="bv. WALKING DESSERT, FOODSTAND BURGER..."
-          />
-        )}
-      </div>
-
-      <div className="flex gap-2 justify-end pt-1">
-        <button onClick={onCancel} className="px-4 py-2 text-sm text-[#9E7E60] hover:text-[#3D2810] transition-colors">Annuleren</button>
-        <button
-          onClick={handleSave}
-          disabled={saving || !title.trim() || !finalCategory}
-          className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-          {saving ? 'Toevoegen...' : 'Gerecht toevoegen'}
-        </button>
-      </div>
     </div>
   )
 }
@@ -809,11 +707,13 @@ export default function MepDetailPage() {
   const [approvingEvent, setApprovingEvent] = useState(false)
   const [confirmApproveEvent, setConfirmApproveEvent] = useState(false)
   const [editingComponentId, setEditingComponentId] = useState<string | null>(null)
-  const [showAddDishForm, setShowAddDishForm] = useState(false)
 
   const [editingNotes, setEditingNotes] = useState(false)
   const [notesValue, setNotesValue] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  const [savingField, setSavingField] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -822,6 +722,15 @@ export default function MepDetailPage() {
     if (eventError || !eventData) { setLoading(false); return }
     setEvent(eventData)
     setNotesValue(eventData.notes || '')
+    setFieldValues({
+      num_persons: String(eventData.num_persons ?? ''),
+      price_per_person: String(eventData.price_per_person ?? ''),
+      location: eventData.location || '',
+      event_start_time: eventData.event_start_time ? String(eventData.event_start_time).slice(0, 5) : '',
+      event_end_time: eventData.event_end_time ? String(eventData.event_end_time).slice(0, 5) : '',
+      contact_person: eventData.contact_person || '',
+      allergens: (eventData as any).allergens || '',
+    })
 
     const { data: dishData } = await supabase.from('mep_dishes').select('*').eq('event_id', id).order('sort_order')
     if (!dishData || dishData.length === 0) { setDishes([]); setLoading(false); return }
@@ -846,7 +755,21 @@ export default function MepDetailPage() {
   }, [loadData])
 
   const existingGroups = [...new Set(dishes.flatMap((d) => d.components.map((c) => c.component_group).filter(Boolean) as string[]))]
-  const existingCategories = [...new Set(dishes.map(d => d.category))]
+
+  const handleUpdateEventField = async (field: string, value: string) => {
+    if (!event) return
+    setSavingField(true)
+    const updateData: Record<string, any> = {}
+    if (field === 'num_persons') updateData[field] = value ? parseInt(value) : null
+    else if (field === 'price_per_person') updateData[field] = value ? parseFloat(value) : null
+    else updateData[field] = value.trim() || null
+    const { error } = await supabase.from('events').update(updateData).eq('id', event.id)
+    setSavingField(false)
+    if (error) { toast.error('Opslaan mislukt'); return }
+    setEvent(prev => prev ? { ...prev, ...updateData } as MepEvent : prev)
+    setEditingField(null)
+    toast.success('Opgeslagen ✓')
+  }
 
   const handleSaveNotes = async () => {
     if (!event) return
@@ -857,22 +780,6 @@ export default function MepDetailPage() {
     setEvent(prev => prev ? { ...prev, notes: notesValue.trim() || null } : prev)
     setEditingNotes(false)
     toast.success('Notitie opgeslagen ✓')
-  }
-
-  const handleAddDish = async (title: string, category: string) => {
-    if (!event) return
-    const maxOrder = dishes.length > 0 ? Math.max(...dishes.map(d => d.sort_order)) + 10 : 10
-    const { data: newDish, error } = await supabase.from('mep_dishes').insert({
-      event_id: event.id,
-      title,
-      category,
-      sort_order: maxOrder,
-      is_ai_suggestion: false,
-    }).select().single()
-    if (error || !newDish) { toast.error('Toevoegen mislukt'); return }
-    setDishes(prev => [...prev, { ...newDish, components: [] } as MepDish])
-    setShowAddDishForm(false)
-    toast.success(`${title} toegevoegd ✓`)
   }
 
   const handleApproveComponent = async (componentId: string) => {
@@ -905,6 +812,7 @@ export default function MepDetailPage() {
   }
 
   const handleDeleteDish = async (dishId: string) => {
+    // Delete components first, then the dish
     const { error: compErr } = await supabase.from('mep_components').delete().eq('dish_id', dishId)
     if (compErr) { toast.error('Verwijderen mislukt'); return }
     const { error: dishErr } = await supabase.from('mep_dishes').delete().eq('id', dishId)
@@ -1072,18 +980,190 @@ export default function MepDetailPage() {
         </button>
       )}
 
-      {/* Event info */}
+      {/* Event info — bewerkbaar */}
       <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl p-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {event.num_persons && (<div className="flex items-center gap-2 min-w-0"><Users className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Personen</div><div className="text-sm font-semibold text-[#2C1810]">{event.num_persons}</div></div></div>)}
-          {event.price_per_person && (<div className="flex items-center gap-2 min-w-0"><Euro className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Prijs p.p.</div><div className="text-sm font-semibold text-[#2C1810]">€{Number(event.price_per_person).toFixed(2)}</div></div></div>)}
-          {(event.venue_address || event.location) && (<div className="flex items-center gap-2 min-w-0"><MapPin className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Locatie</div><div className="text-sm font-semibold text-[#2C1810] truncate" title={event.venue_address || event.location || ''}>{event.venue_address || event.location}</div></div></div>)}
-          {event.event_type && (<div className="flex items-center gap-2 min-w-0"><ChefHat className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Type</div><div className="text-sm font-semibold text-[#2C1810] truncate">{EVENT_TYPE_LABELS[event.event_type] || event.event_type}</div></div></div>)}
-          {event.event_start_time && (<div className="flex items-center gap-2 min-w-0"><Clock className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Start</div><div className="text-sm font-semibold text-[#2C1810]">{String(event.event_start_time).slice(0, 5)}</div></div></div>)}
-          {event.event_end_time && (<div className="flex items-center gap-2 min-w-0"><Clock className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Einde</div><div className="text-sm font-semibold text-[#2C1810]">{String(event.event_end_time).slice(0, 5)}</div></div></div>)}
-          {event.contact_person && (<div className="flex items-center gap-2 min-w-0"><CalendarDays className="w-4 h-4 text-[#E8A040] shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Contact</div><div className="text-sm font-semibold text-[#2C1810] truncate">{event.contact_person}</div></div></div>)}
-          {event.travel_time_minutes && (<div className="flex items-center gap-2 min-w-0"><MapPin className="w-4 h-4 text-blue-500 shrink-0" /><div className="min-w-0"><div className="text-xs text-[#B8997A]">Reistijd</div><div className="text-sm font-semibold text-blue-600">{event.travel_time_minutes} min</div></div></div>)}
+          {/* Personen */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <Users className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Personen</div>
+              {editingField === 'num_persons' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus type="number" value={fieldValues.num_persons} onChange={e => setFieldValues(p => ({...p, num_persons: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('num_persons', fieldValues.num_persons); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-20 px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" />
+                  <button onClick={() => handleUpdateEventField('num_persons', fieldValues.num_persons)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810]">{event.num_persons ?? '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, num_persons: String(event.num_persons ?? '')})); setEditingField('num_persons') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Prijs p.p. */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <Euro className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Prijs p.p.</div>
+              {editingField === 'price_per_person' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus type="number" step="0.01" value={fieldValues.price_per_person} onChange={e => setFieldValues(p => ({...p, price_per_person: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('price_per_person', fieldValues.price_per_person); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-24 px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" />
+                  <button onClick={() => handleUpdateEventField('price_per_person', fieldValues.price_per_person)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810]">{event.price_per_person ? `€${Number(event.price_per_person).toFixed(2)}` : '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, price_per_person: String(event.price_per_person ?? '')})); setEditingField('price_per_person') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Locatie */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <MapPin className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Locatie</div>
+              {editingField === 'location' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus value={fieldValues.location} onChange={e => setFieldValues(p => ({...p, location: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('location', fieldValues.location); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-full px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" placeholder="Adres..." />
+                  <button onClick={() => handleUpdateEventField('location', fieldValues.location)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all shrink-0"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all shrink-0"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810] truncate">{event.venue_address || event.location || '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, location: event.venue_address || event.location || ''})); setEditingField('location') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all shrink-0"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Type */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <ChefHat className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Type</div>
+              <div className="text-sm font-semibold text-[#2C1810] truncate">{event.event_type ? (EVENT_TYPE_LABELS[event.event_type] || event.event_type) : '—'}</div>
+            </div>
+          </div>
+
+          {/* Start */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <Clock className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Start</div>
+              {editingField === 'event_start_time' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus type="time" value={fieldValues.event_start_time} onChange={e => setFieldValues(p => ({...p, event_start_time: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('event_start_time', fieldValues.event_start_time); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-28 px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" />
+                  <button onClick={() => handleUpdateEventField('event_start_time', fieldValues.event_start_time)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810]">{event.event_start_time ? String(event.event_start_time).slice(0, 5) : '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, event_start_time: event.event_start_time ? String(event.event_start_time).slice(0,5) : ''})); setEditingField('event_start_time') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Einde */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <Clock className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Einde</div>
+              {editingField === 'event_end_time' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus type="time" value={fieldValues.event_end_time} onChange={e => setFieldValues(p => ({...p, event_end_time: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('event_end_time', fieldValues.event_end_time); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-28 px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" />
+                  <button onClick={() => handleUpdateEventField('event_end_time', fieldValues.event_end_time)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810]">{event.event_end_time ? String(event.event_end_time).slice(0, 5) : '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, event_end_time: event.event_end_time ? String(event.event_end_time).slice(0,5) : ''})); setEditingField('event_end_time') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <CalendarDays className="w-4 h-4 text-[#E8A040] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Contact</div>
+              {editingField === 'contact_person' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus value={fieldValues.contact_person} onChange={e => setFieldValues(p => ({...p, contact_person: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('contact_person', fieldValues.contact_person); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-full px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" placeholder="Naam contactpersoon..." />
+                  <button onClick={() => handleUpdateEventField('contact_person', fieldValues.contact_person)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all shrink-0"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all shrink-0"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810] truncate">{event.contact_person || '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, contact_person: event.contact_person || ''})); setEditingField('contact_person') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all shrink-0"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Allergenen */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Allergenen / dieet</div>
+              {editingField === 'allergens' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus value={fieldValues.allergens} onChange={e => setFieldValues(p => ({...p, allergens: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('allergens', fieldValues.allergens); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-full px-2 py-0.5 bg-white border border-red-300 rounded text-sm text-[#2C1810] focus:outline-none" placeholder="bv. 2x noten, 1x vegan..." />
+                  <button onClick={() => handleUpdateEventField('allergens', fieldValues.allergens)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all shrink-0"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all shrink-0"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810] truncate">{(event as any).allergens || '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, allergens: (event as any).allergens || ''})); setEditingField('allergens') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-red-400 transition-all shrink-0"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
+        <p className="text-[10px] text-[#B8997A] mt-3 flex items-center gap-1 opacity-60">
+          <Pencil className="w-2.5 h-2.5" />Hover over een veld en klik het potlood-icoon om aan te passen
+        </p>
       </div>
 
       {/* AI banner */}
@@ -1099,28 +1179,10 @@ export default function MepDetailPage() {
 
       {/* MEP content */}
       {dishes.length === 0 ? (
-        <div className="bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
-          {showAddDishForm ? (
-            <div className="p-6">
-              <AddDishForm
-                onSave={handleAddDish}
-                onCancel={() => setShowAddDishForm(false)}
-                existingCategories={existingCategories}
-              />
-            </div>
-          ) : (
-            <div className="text-center py-16 px-6">
-              <ChefHat className="w-10 h-10 text-[#5C4730] mx-auto mb-3 opacity-40" />
-              <h3 className="font-display font-semibold text-[#5C4730] mb-2">Nog geen MEP beschikbaar</h3>
-              <p className="text-[#B8997A] text-sm mb-6">Upload een menu PDF om de MEP automatisch te genereren, of voeg gerechten handmatig toe.</p>
-              <button
-                onClick={() => setShowAddDishForm(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
-              >
-                <Plus className="w-4 h-4" />Gerecht toevoegen
-              </button>
-            </div>
-          )}
+        <div className="text-center py-16 bg-[#FDFAF6]/80 border border-[#E8D5B5] rounded-2xl">
+          <ChefHat className="w-10 h-10 text-[#5C4730] mx-auto mb-3 opacity-40" />
+          <h3 className="font-display font-semibold text-[#5C4730] mb-2">Nog geen MEP beschikbaar</h3>
+          <p className="text-[#B8997A] text-sm">Upload een menu PDF om de MEP automatisch te genereren.</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -1156,22 +1218,6 @@ export default function MepDetailPage() {
               </section>
             )
           })}
-
-          {/* Add dish button at bottom — always visible when MEP has content */}
-          {showAddDishForm ? (
-            <AddDishForm
-              onSave={handleAddDish}
-              onCancel={() => setShowAddDishForm(false)}
-              existingCategories={existingCategories}
-            />
-          ) : (
-            <button
-              onClick={() => setShowAddDishForm(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-[#E8D5B5] hover:border-emerald-300 rounded-2xl text-sm text-[#B8997A] hover:text-emerald-700 hover:bg-emerald-50/50 transition-all"
-            >
-              <Plus className="w-4 h-4" />Gerecht toevoegen
-            </button>
-          )}
         </div>
       )}
     </div>
