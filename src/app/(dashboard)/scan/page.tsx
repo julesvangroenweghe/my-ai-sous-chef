@@ -148,7 +148,7 @@ export default function ScanPage() {
   const handleLinkToEvent = async (docId: string) => {
     if (!linkingEventId) return
     setLinkSaving(true)
-    await fetch(\`/api/scan/\${docId}\`, {
+    await fetch(`/api/scan/${docId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ linked_event_id: linkingEventId }),
