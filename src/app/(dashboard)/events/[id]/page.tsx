@@ -343,6 +343,10 @@ export default function EventDetailPage() {
           <button onClick={handleCreateInvoice} disabled={creatingInvoice} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-[#5C4730] text-sm font-medium hover:bg-amber-100 transition-all shrink-0 mt-1 disabled:opacity-50">
             {creatingInvoice ? <Loader2 className="w-4 h-4 animate-spin text-amber-600" /> : <FileText className="w-4 h-4 text-amber-600" />}Factuur aanmaken
           </button>
+          <Link href={`/events/${eventId}/draaiboek`} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8D5B5] bg-white text-[#5C4730] text-sm font-medium hover:bg-[#F2E8D5] hover:border-amber-300 transition-all shrink-0 mt-1">
+            <svg width="16" height="16" fill="none" stroke="#E8A040" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Draaiboek
+          </Link>
         </div>
       </div>
 

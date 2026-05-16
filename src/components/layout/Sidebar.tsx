@@ -102,6 +102,7 @@ const keukentNav = [
     children: [
       { href: '/events', label: 'Events', icon: 'calendar' },
       { href: '/paklijsten', label: 'Paklijsten', icon: 'checklist' },
+      { href: '/draaiboek', label: 'Draaiboek', icon: 'timeline' },
     ],
   },
   {
@@ -230,6 +231,7 @@ function NavIcon({ type, active, theme }: { type: string; active: boolean; theme
     store: <svg width={12} height={12} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 9l1-4h16l1 4"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11"/><path d="M19 21V11"/><rect x="9" y="14" width="6" height="7"/><line x1="3" y1="21" x2="21" y2="21"/></svg>,
     bell: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
     checklist: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+    timeline: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     pipeline: <svg width={s} height={s} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="18" y="9" width="4" height="8" rx="1"/></svg>,
   }
   return icons[type] || icons['grid']
