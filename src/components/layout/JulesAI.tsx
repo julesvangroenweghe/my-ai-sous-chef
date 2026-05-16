@@ -52,6 +52,9 @@ export default function JulesAI() {
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const mepMatch = pathname?.match(/\/mep\/([a-f0-9-]{36})$/)
   const eventId = mepMatch?.[1] || null
@@ -121,6 +124,37 @@ export default function JulesAI() {
       }
     } catch { /* silent */ }
   }, [isMepMode, eventId])
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const userMsg: Message = { role: 'user', content: `[Bestand geüpload: ${file.name}]` }
+    const newMessages = [...messages, userMsg]
+    setMessages(newMessages)
+    setLoading(true)
+    
+    try {
+      const res = await fetch('/api/jules/upload', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        const reply = `**${data.filename}** geanalyseerd:\n\n${data.analysis}`
+        const finalMsgs = [...newMessages, { role: 'assistant' as const, content: reply }]
+        setMessages(finalMsgs)
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = setTimeout(() => saveConversation(finalMsgs, currentConvId), 1500)
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Kon bestand niet analyseren.' }])
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Upload mislukt.' }])
+    }
+    setUploading(false)
+    setLoading(false)
+    setUploadFile(null)
+  }
 
   const send = async (text?: string) => {
     const msg = (text ?? input).trim()
@@ -470,6 +504,12 @@ export default function JulesAI() {
                   </div>
                 )}
 
+                {uploading && (
+                  <div style={{ fontSize: 11, color: '#B8997A', textAlign: 'center', padding: '4px 0' }}>
+                    Bestand analyseren...
+                  </div>
+                )}
+
                 <div ref={bottomRef} />
               </div>
 
@@ -480,6 +520,34 @@ export default function JulesAI() {
                   backgroundColor: 'white', border: '1px solid #E8D5B5',
                   borderRadius: 12, padding: '8px 12px',
                 }}>
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) handleFileUpload(f)
+                      e.target.value = ''
+                    }}
+                  />
+                  {/* Paperclip button */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading || uploading}
+                    title="Bestand uploaden (PDF of foto)"
+                    style={{
+                      width: 30, height: 30, borderRadius: 8, border: 'none',
+                      backgroundColor: 'transparent', cursor: loading || uploading ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#B8997A', flexShrink: 0,
+                    }}
+                  >
+                    <svg width={15} height={15} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                  </button>
                   <input
                     ref={inputRef}
                     type="text"

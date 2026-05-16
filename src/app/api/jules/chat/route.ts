@@ -12,12 +12,14 @@ export async function POST(request: NextRequest) {
   const { messages } = await request.json()
 
   // Load chef context
-  const [profileRes, recipesRes, ingredientsRes, eventsRes, prepsRes] = await Promise.all([
+  const [profileRes, recipesRes, ingredientsRes, eventsRes, prepsRes, proposalsRes, packlistsRes] = await Promise.all([
     supabase.from('chef_profiles').select('*').eq('auth_user_id', user.id).single(),
     supabase.from('recipes').select('id, name, category:recipe_categories(name), total_cost_per_serving, selling_price, food_cost_percentage').eq('status', 'active').limit(50),
     supabase.from('ingredients').select('name, category, current_price, unit').order('name').limit(100),
     supabase.from('events').select('id, name, event_date, num_persons, status, event_type').order('event_date', { ascending: false }).limit(10),
     supabase.from('preparations').select('name, method, yield_amount, yield_unit, shelf_life_hours').limit(30),
+    supabase.from('saved_menus').select('id, name, menu_type, status, num_persons, price_per_person, event_id').order('created_at', { ascending: false }).limit(10),
+    supabase.from('event_packlist_items').select('id, name, event_id').limit(20),
   ])
 
   const profile = profileRes.data
@@ -25,6 +27,8 @@ export async function POST(request: NextRequest) {
   const ingredients = ingredientsRes.data || []
   const events = eventsRes.data || []
   const preparations = prepsRes.data || []
+  const proposals = proposalsRes.data || []
+  const packlists = packlistsRes.data || []
 
   // Load seasonal data
   const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -65,6 +69,12 @@ ${ingredients.filter((i: any) => i.current_price).slice(0, 50).map((i: any) => `
 KOMENDE EVENTS:
 ${events.map((e: any) => `- ${e.name} (${e.event_date}, ${e.num_persons} pax, ${e.event_type})`).join('\n')}
 
+VOORSTELLEN (recente):
+${proposals.map((p: any) => `- ${p.name} (${p.menu_type || '?'}, ${p.num_persons || '?'} pax, EUR${p.price_per_person || '?'}/pax, status: ${p.status || '?'})`).join('\n') || 'Geen voorstellen gevonden'}
+
+PAKLIJSTEN (recente):
+${packlists.map((pl: any) => `- ${pl.name} (event: ${pl.event_id || '?'})`).join('\n') || 'Geen paklijst items gevonden'}
+
 HALFFABRICATEN:
 ${preparations.map((p: any) => `- ${p.name} (${p.method || '?'}, yield: ${p.yield_amount || '?'}${p.yield_unit || ''}, houdbaarheid: ${p.shelf_life_hours ? p.shelf_life_hours + 'u' : '?'})`).join('\n')}
 
@@ -87,7 +97,10 @@ REGELS:
 7. Verwijs naar klassieke technieken en bronnen waar relevant
 8. Bij seizoensgebonden vragen: gebruik de seizoenskalender data
 9. Gebruik NOOIT emoji — professionele toon
-10. Bij sous vide of andere techniek-parameters: gebruik de exacte waarden uit de database`
+10. Bij sous vide of andere techniek-parameters: gebruik de exacte waarden uit de database
+11. Bij vragen over voorstellen/menus: gebruik de VOORSTELLEN data hierboven
+12. Bij vragen over materiaal/transport: gebruik de PAKLIJSTEN data
+13. Je kunt events, voorstellen en recepten OPVRAGEN maar NIET wijzigen via chat — verwijs door naar de juiste pagina`
 
   // Call Claude API with streaming
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -98,7 +111,7 @@ REGELS:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: systemPrompt,
       stream: true,
