@@ -1,27 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
-async function getUser(req: NextRequest) {
-  const supabase = getSupabase()
-  const authHeader = req.headers.get('authorization')
-  if (!authHeader) return null
-  const token = authHeader.replace('Bearer ', '')
-  const { data: { user } } = await supabase.auth.getUser(token)
-  return user
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // GET: haal alle runbook items op voor een event
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
-  const supabase = getSupabase()
-  const user = await getUser(req)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data: items, error } = await supabase
@@ -29,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .select('*')
     .eq('event_id', eventId)
     .order('sort_order')
-    .order('time_offset_minutes')
+    .order('time_offset_minutes', { nullsFirst: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ items: items || [] })
@@ -38,12 +25,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // POST: maak nieuw item aan
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
-  const supabase = getSupabase()
-  const user = await getUser(req)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
 
+  // Haal kitchen_id op via events
   const { data: event } = await supabase
     .from('events')
     .select('kitchen_id')
@@ -76,8 +64,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // PATCH: update item
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
-  const supabase = getSupabase()
-  const user = await getUser(req)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
@@ -107,8 +95,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 // DELETE: verwijder item via ?item_id=uuid
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
-  const supabase = getSupabase()
-  const user = await getUser(req)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
