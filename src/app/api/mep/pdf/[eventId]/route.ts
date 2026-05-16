@@ -23,7 +23,7 @@ export async function GET(
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select(
-        'id, name, event_date, num_persons, event_type, location, venue_address, price_per_person, event_start_time, event_end_time, contact_person, departure_time, kitchen_arrival_time, travel_time_minutes'
+        'id, name, event_date, num_persons, event_type, location, venue_address, price_per_person, event_start_time, event_end_time, contact_person, departure_time, kitchen_arrival_time, travel_time_minutes, crew_persons, allergens'
       )
       .eq('id', eventId)
       .single()
@@ -55,7 +55,7 @@ export async function GET(
     const dishIds = dishes.map((d) => d.id)
     const { data: components, error: compError } = await supabase
       .from('mep_components')
-      .select('id, dish_id, component_name, quantity, unit, preparation, component_group, sort_order')
+      .select('id, dish_id, component_name, quantity, unit, preparation, component_group, sort_order, allergens')
       .in('dish_id', dishIds)
       .order('sort_order')
 
@@ -86,6 +86,8 @@ export async function GET(
         departure_time: event.departure_time,
         kitchen_arrival_time: event.kitchen_arrival_time,
         travel_time_minutes: event.travel_time_minutes ? Number(event.travel_time_minutes) : null,
+        crew_persons: event.crew_persons ? Number(event.crew_persons) : null,
+        allergens: event.allergens || null,
       },
       dishes: dishes.map((dish) => ({
         id: dish.id,
@@ -101,6 +103,7 @@ export async function GET(
           preparation: c.preparation,
           component_group: c.component_group,
           sort_order: c.sort_order || 0,
+          allergens: c.allergens || null,
         })),
       })),
     }
