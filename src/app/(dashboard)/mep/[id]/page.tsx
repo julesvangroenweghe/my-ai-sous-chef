@@ -38,6 +38,7 @@ interface MepEvent {
   event_start_time: string | null
   event_end_time: string | null
   allergens: string | null
+  crew_persons: number | null
 }
 
 interface MepDish {
@@ -828,6 +829,7 @@ export default function MepDetailPage() {
       event_end_time: eventData.event_end_time ? String(eventData.event_end_time).slice(0, 5) : '',
       contact_person: eventData.contact_person || '',
       allergens: (eventData as any).allergens || '',
+      crew_persons: String(eventData.crew_persons ?? ''),
     })
 
     const { data: dishData } = await supabase.from('mep_dishes').select('*').eq('event_id', id).order('sort_order')
@@ -901,6 +903,7 @@ export default function MepDetailPage() {
     setSavingField(true)
     const updateData: Record<string, any> = {}
     if (field === 'num_persons') updateData[field] = value ? parseInt(value) : null
+    else if (field === 'crew_persons') updateData[field] = value ? parseInt(value) : null
     else if (field === 'price_per_person') updateData[field] = value ? parseFloat(value) : null
     else updateData[field] = value.trim() || null
     const { error } = await supabase.from('events').update(updateData).eq('id', event.id)
@@ -1200,6 +1203,30 @@ export default function MepDetailPage() {
                 <div className="flex items-center gap-1">
                   <div className="text-sm font-semibold text-[#2C1810]">{event.num_persons ?? '—'}</div>
                   <button onClick={() => { setFieldValues(p => ({...p, num_persons: String(event.num_persons ?? '')})); setEditingField('num_persons') }}
+                    className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Crew */}
+          <div className="flex items-start gap-2 min-w-0 group/field">
+            <ChefHat className="w-4 h-4 text-[#9E7E60] shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-[#B8997A]">Crew (eten)</div>
+              {editingField === 'crew_persons' ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input autoFocus type="number" value={fieldValues.crew_persons} onChange={e => setFieldValues(p => ({...p, crew_persons: e.target.value}))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateEventField('crew_persons', fieldValues.crew_persons); if (e.key === 'Escape') setEditingField(null) }}
+                    className="w-20 px-2 py-0.5 bg-white border border-[#E8A040]/50 rounded text-sm text-[#2C1810] focus:outline-none" />
+                  <button onClick={() => handleUpdateEventField('crew_persons', fieldValues.crew_persons)} disabled={savingField}
+                    className="p-1 rounded bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 transition-all"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => setEditingField(null)} className="p-1 rounded text-[#9E7E60] hover:text-red-500 transition-all"><X className="w-3 h-3" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm font-semibold text-[#2C1810]">{event.crew_persons ?? '—'}</div>
+                  <button onClick={() => { setFieldValues(p => ({...p, crew_persons: String(event.crew_persons ?? '')})); setEditingField('crew_persons') }}
                     className="opacity-0 group-hover/field:opacity-60 hover:!opacity-100 p-0.5 rounded text-[#B8997A] hover:text-[#E8A040] transition-all"><Pencil className="w-3 h-3" /></button>
                 </div>
               )}
