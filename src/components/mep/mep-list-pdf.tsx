@@ -10,6 +10,7 @@ export interface MepListComponent {
   preparation: string | null
   component_group: string | null
   sort_order: number
+  allergens?: string | null
 }
 
 export interface MepListDish {
@@ -37,6 +38,8 @@ export interface MepListData {
     departure_time: string | null
     kitchen_arrival_time: string | null
     travel_time_minutes: number | null
+    crew_persons?: number | null
+    allergens?: string | null
   }
   dishes: MepListDish[]
 }
@@ -199,6 +202,26 @@ function formatQtyShort(qty: number | null, unit: string | null): string {
   return unit ? `${q} ${unit}` : q
 }
 
+/**
+ * Format a total quantity with smart kg/L conversion.
+ * If total >= 1000g → show as kg (1 decimal). If total >= 1000ml → show as L.
+ */
+function formatTotalQty(qty: number | null, unit: string | null, numPersons: number): string {
+  if (!qty || !numPersons) return ''
+  const total = qty * numPersons
+  const u = (unit || '').toLowerCase().trim()
+  if ((u === 'g' || u === 'gr') && total >= 1000) {
+    const kg = total / 1000
+    return `${kg % 1 === 0 ? kg.toFixed(0) : kg.toFixed(1)} kg`
+  }
+  if ((u === 'ml' || u === 'cl') && total >= 1000) {
+    const l = u === 'cl' ? total / 100 : total / 1000
+    return `${l % 1 === 0 ? l.toFixed(0) : l.toFixed(1)} L`
+  }
+  const t = total % 1 === 0 ? total.toString() : total.toFixed(1)
+  return unit ? `${t} ${unit}` : t
+}
+
 function translateEventType(t: string): string {
   const map: Record<string, string> = {
     cocktail: 'Cocktailreceptie',
@@ -265,6 +288,12 @@ const S = StyleSheet.create({
     fontSize: 8,
     color: '#4A3728',
     marginTop: 1,
+  },
+  headerAllergen: {
+    fontSize: 7.5,
+    color: '#dc2626',
+    fontFamily: 'Helvetica-Bold',
+    marginTop: 2,
   },
   headerContact: {
     fontSize: 7,
@@ -348,9 +377,21 @@ const S = StyleSheet.create({
     flex: 1,
     flexWrap: 'wrap',
   },
+  componentQty: {
+    fontSize: 8,
+    color: '#4A3728',
+    fontFamily: 'Helvetica-Bold',
+  },
   componentGray: {
     fontSize: 8,
     color: '#888888',
+  },
+  componentAllergen: {
+    fontSize: 7,
+    color: '#dc2626',
+    fontFamily: 'Helvetica-Oblique',
+    marginLeft: 9,
+    marginBottom: 1,
   },
   dishSpacer: {
     height: 5,
@@ -368,7 +409,7 @@ const S = StyleSheet.create({
 
 // ─── Dish Component ───────────────────────────────────────────────────────────
 
-function DishCard({ dish }: { dish: MepListDish }) {
+function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number }) {
   const grouped: { groupName: string | null; items: MepListComponent[] }[] = []
   for (const comp of dish.components) {
     const g = comp.component_group || null
@@ -393,18 +434,37 @@ function DishCard({ dish }: { dish: MepListDish }) {
           )}
           {group.items.map((comp, ci) => {
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
-            const suffix: string[] = []
-            if (qtyStr) suffix.push(`(${qtyStr})`)
-            if (comp.preparation) suffix.push(`(${comp.preparation})`)
+            const totalStr = numPersons > 0 ? formatTotalQty(comp.quantity, comp.unit, numPersons) : ''
+            const compAllergens = comp.allergens
+              ? comp.allergens.split(',').map((s) => s.trim()).filter(Boolean)
+              : []
+
             return (
-              <View key={ci} style={S.componentRow}>
-                <Text style={S.componentBullet}>·</Text>
-                <Text style={S.componentText}>
-                  {comp.component_name}
-                  {suffix.length > 0 ? (
-                    <Text style={S.componentGray}>{' '}{suffix.join(' ')}</Text>
-                  ) : null}
-                </Text>
+              <View key={ci}>
+                <View style={S.componentRow}>
+                  <Text style={S.componentBullet}>·</Text>
+                  <Text style={S.componentText}>
+                    {comp.component_name}
+                    {(qtyStr || comp.preparation) && (
+                      <Text style={S.componentGray}>
+                        {' ('}
+                        {qtyStr && <Text style={S.componentQty}>{qtyStr}</Text>}
+                        {qtyStr && totalStr ? (
+                          <Text style={S.componentGray}>{`  →  ${totalStr} totaal`}</Text>
+                        ) : null}
+                        {comp.preparation ? (
+                          <Text style={S.componentGray}>{qtyStr ? ` · ${comp.preparation}` : comp.preparation}</Text>
+                        ) : null}
+                        {')'}
+                      </Text>
+                    )}
+                  </Text>
+                </View>
+                {compAllergens.length > 0 && (
+                  <Text style={S.componentAllergen}>
+                    {`⚠ ${compAllergens.join(', ')}`}
+                  </Text>
+                )}
               </View>
             )
           })}
@@ -440,6 +500,9 @@ function estimateCatHeight(group: { dishes: MepListDish[] }): number {
     const numGroups = [...groups].filter(g => g !== null).length
     h += numGroups * 11 // group headers
     h += comps.length * 10 // component rows
+    // Extra height for allergen lines
+    const allergenComps = comps.filter(c => c.allergens && c.allergens.trim())
+    h += allergenComps.length * 8
     h += 5 // spacer
   }
   return h
@@ -544,11 +607,16 @@ export function MepListDocument({ data }: { data: MepListData }) {
 
   const infoParts: string[] = []
   if (event.num_persons) infoParts.push(`${event.num_persons} personen`)
+  if (event.crew_persons && event.crew_persons > 0) infoParts.push(`${event.crew_persons} crew`)
   if (event.event_start_time && event.event_end_time)
     infoParts.push(`${formatTime(event.event_start_time)} – ${formatTime(event.event_end_time)}`)
   else if (event.event_start_time) infoParts.push(`Start: ${formatTime(event.event_start_time)}`)
   if (event.price_per_person) infoParts.push(`€${event.price_per_person} pp`)
   if (event.event_type) infoParts.push(translateEventType(event.event_type))
+
+  const allergenWarning = event.allergens && event.allergens.trim()
+    ? `⚠ Allergie: ${event.allergens.trim()}`
+    : null
 
   return (
     <Document>
@@ -561,6 +629,9 @@ export function MepListDocument({ data }: { data: MepListData }) {
               <Text style={S.headerDate}>{formatDate(event.event_date)}</Text>
               {infoParts.length > 0 && (
                 <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
+              )}
+              {allergenWarning && (
+                <Text style={S.headerAllergen}>{allergenWarning}</Text>
               )}
               {event.contact_person && (
                 <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
@@ -588,7 +659,7 @@ export function MepListDocument({ data }: { data: MepListData }) {
                   <View key={gi} style={S.categoryBlock}>
                     <Text style={S.categoryHeader}>{group.label.toUpperCase()}</Text>
                     {group.dishes.map((dish, di) => (
-                      <DishCard key={di} dish={dish} />
+                      <DishCard key={di} dish={dish} numPersons={event.num_persons || 0} />
                     ))}
                   </View>
                 ))}
