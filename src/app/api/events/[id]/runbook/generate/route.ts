@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@/lib/supabase/server'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
-async function getUser(req: NextRequest) {
-  const supabase = getSupabase()
-  const authHeader = req.headers.get('authorization')
-  if (!authHeader) return null
-  const token = authHeader.replace('Bearer ', '')
-  const { data: { user } } = await supabase.auth.getUser(token)
-  return user
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = await params
-  const supabase = getSupabase()
-  const user = await getUser(req)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Haal event op
+  // Haal event op + kitchen_id check
   const { data: event } = await supabase
     .from('events')
     .select('id, name, event_date, event_type, num_persons, location, arrival_time, departure_time, kitchen_id')
@@ -83,23 +69,29 @@ Richtlijnen per type:
 Genereer 15-25 praktische items. Antwoord ENKEL met de JSON array, geen uitleg.`
 
   try {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        system: 'Je bent een operationeel expert voor food catering events. Je maakt draaiboeken die een heel team kan volgen. Antwoord altijd met alleen geldige JSON, geen markdown code blocks.',
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 4096,
-      system: 'Je bent een operationeel expert voor food catering events. Je maakt draaiboeken die een heel team kan volgen. Antwoord altijd met alleen geldige JSON, geen markdown code blocks.',
-      messages: [
-        { role: 'user', content: prompt }
-      ]
-    })
-
-    const content = message.content[0]
-    if (content.type !== 'text') {
-      return NextResponse.json({ error: 'Geen tekst response van AI' }, { status: 500 })
+    if (!response.ok) {
+      const err = await response.text()
+      console.error('AI error:', err)
+      return NextResponse.json({ error: 'AI generatie mislukt' }, { status: 502 })
     }
+
+    const result = await response.json()
+    const text = result.content?.[0]?.text || ''
 
     let generatedItems: Array<{
       title: string
@@ -111,8 +103,7 @@ Genereer 15-25 praktische items. Antwoord ENKEL met de JSON array, geen uitleg.`
     }>
 
     try {
-      // Verwijder eventuele markdown code blocks
-      let jsonText = content.text.trim()
+      let jsonText = text.trim()
       if (jsonText.startsWith('```')) {
         jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
       }
