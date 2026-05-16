@@ -167,7 +167,6 @@ function getCategoryLabel(cat: string): string {
   return CATEGORY_LABELS[upper] || cat
 }
 
-// Small categories flow in the same column as their neighbour
 const SMALL_CATS = new Set([
   'DRANKEN', 'MOCKTAILS', 'BROOD & BOTER', 'KAAS',
   'MIGNARDISES', 'PETITS FOURS', 'PETIT FOURS', 'NIGHT SNACK',
@@ -177,6 +176,82 @@ const SMALL_CATS = new Set([
 
 function isSmallCategory(cat: string): boolean {
   return SMALL_CATS.has((cat || '').toUpperCase().trim())
+}
+
+// ─── Allergen Intelligence ─────────────────────────────────────────────────────
+//
+// Builds a map: allergen → list of dish titles that contain it.
+// Two modes:
+//   1. Event has explicit allergens (e.g. "noten, kiwi") → only map those
+//   2. No event allergens → map ALL allergens found in components (full transparency)
+
+interface AllergenDishMap {
+  allergen: string
+  dishes: string[]
+  fromEvent: boolean  // true = guest has this allergy; false = just present in menu
+}
+
+function buildAllergenMap(eventAllergens: string | null | undefined, dishes: MepListDish[]): AllergenDishMap[] {
+  // Collect all allergens from all components across all dishes
+  const allFound = new Map<string, Set<string>>() // allergen → set of dish titles
+
+  for (const dish of dishes) {
+    for (const comp of dish.components) {
+      if (!comp.allergens) continue
+      const compAllergens = comp.allergens.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      for (const a of compAllergens) {
+        if (!allFound.has(a)) allFound.set(a, new Set())
+        allFound.get(a)!.add(dish.title)
+      }
+    }
+  }
+
+  const eventAllergenList = eventAllergens
+    ? eventAllergens.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    : []
+
+  if (eventAllergenList.length > 0) {
+    // Mode 1: Guest has specific allergies — show those first (fromEvent=true),
+    // then also show any other allergens found in menu (fromEvent=false)
+    const result: AllergenDishMap[] = []
+
+    // Guest allergens first
+    for (const ea of eventAllergenList) {
+      // Fuzzy match: look for event allergen as substring in found allergens
+      const matchedDishes = new Set<string>()
+      for (const [foundA, dishSet] of allFound) {
+        if (foundA.includes(ea) || ea.includes(foundA)) {
+          dishSet.forEach(d => matchedDishes.add(d))
+        }
+      }
+      result.push({
+        allergen: ea,
+        dishes: [...matchedDishes],
+        fromEvent: true,
+      })
+    }
+
+    // Other allergens in menu (not explicitly listed by guest)
+    for (const [foundA, dishSet] of allFound) {
+      const alreadyCovered = eventAllergenList.some(ea => foundA.includes(ea) || ea.includes(foundA))
+      if (!alreadyCovered) {
+        result.push({
+          allergen: foundA,
+          dishes: [...dishSet],
+          fromEvent: false,
+        })
+      }
+    }
+
+    return result
+  } else {
+    // Mode 2: No guest allergens declared — show all allergens found in menu
+    return [...allFound.entries()].map(([a, dishSet]) => ({
+      allergen: a,
+      dishes: [...dishSet],
+      fromEvent: false,
+    }))
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -202,10 +277,6 @@ function formatQtyShort(qty: number | null, unit: string | null): string {
   return unit ? `${q} ${unit}` : q
 }
 
-/**
- * Format a total quantity with smart kg/L conversion.
- * If total >= 1000g → show as kg (1 decimal). If total >= 1000ml → show as L.
- */
 function formatTotalQty(qty: number | null, unit: string | null, numPersons: number): string {
   if (!qty || !numPersons) return ''
   const total = qty * numPersons
@@ -289,12 +360,6 @@ const S = StyleSheet.create({
     color: '#4A3728',
     marginTop: 1,
   },
-  headerAllergen: {
-    fontSize: 7.5,
-    color: '#dc2626',
-    fontFamily: 'Helvetica-Bold',
-    marginTop: 2,
-  },
   headerContact: {
     fontSize: 7,
     color: '#888888',
@@ -306,6 +371,75 @@ const S = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     marginTop: 2,
   },
+  // ── Allergen block styles ──
+  allergenBlock: {
+    marginTop: 5,
+    marginBottom: 0,
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingLeft: 7,
+    paddingRight: 7,
+    backgroundColor: '#fff5f5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#dc2626',
+  },
+  allergenBlockTitle: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#dc2626',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 4,
+  },
+  allergenRow: {
+    flexDirection: 'row',
+    marginBottom: 2.5,
+    alignItems: 'flex-start',
+  },
+  allergenBadge: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+    backgroundColor: '#dc2626',
+    paddingTop: 1.5,
+    paddingBottom: 1.5,
+    paddingLeft: 4,
+    paddingRight: 4,
+    marginRight: 5,
+    minWidth: 52,
+    textAlign: 'center',
+  },
+  allergenBadgeOrange: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+    backgroundColor: '#b45309',
+    paddingTop: 1.5,
+    paddingBottom: 1.5,
+    paddingLeft: 4,
+    paddingRight: 4,
+    marginRight: 5,
+    minWidth: 52,
+    textAlign: 'center',
+  },
+  allergenDishList: {
+    fontSize: 7.5,
+    color: '#1a1a2e',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  allergenDishNone: {
+    fontSize: 7,
+    color: '#16a34a',
+    fontFamily: 'Helvetica-Bold',
+    flex: 1,
+  },
+  allergenNoIssues: {
+    fontSize: 7.5,
+    color: '#16a34a',
+    fontFamily: 'Helvetica-Bold',
+  },
+  // ── rest ──
   columnContainer: {
     flexDirection: 'row',
     gap: 7,
@@ -386,12 +520,12 @@ const S = StyleSheet.create({
     fontSize: 8,
     color: '#888888',
   },
-  componentAllergen: {
+  componentAllergenDot: {
     fontSize: 7,
     color: '#dc2626',
-    fontFamily: 'Helvetica-Oblique',
+    fontFamily: 'Helvetica-Bold',
     marginLeft: 9,
-    marginBottom: 1,
+    marginBottom: 0.5,
   },
   dishSpacer: {
     height: 5,
@@ -407,9 +541,66 @@ const S = StyleSheet.create({
   },
 })
 
+// ─── Allergen Summary Block ────────────────────────────────────────────────────
+
+function AllergenSummary({ allergenMap }: { allergenMap: AllergenDishMap[] }) {
+  if (allergenMap.length === 0) return null
+
+  // Guest allergens that have NO matching dishes = safe
+  const guestAllergens = allergenMap.filter(a => a.fromEvent)
+  const otherAllergens = allergenMap.filter(a => !a.fromEvent)
+
+  return (
+    <View style={S.allergenBlock}>
+      <Text style={S.allergenBlockTitle}>Allergenenoverzicht</Text>
+
+      {guestAllergens.map((item, i) => (
+        <View key={i} style={S.allergenRow}>
+          <Text style={S.allergenBadge}>
+            {item.allergen.toUpperCase()}
+          </Text>
+          {item.dishes.length === 0 ? (
+            <Text style={S.allergenDishNone}>Niet aanwezig in menu</Text>
+          ) : (
+            <Text style={S.allergenDishList}>
+              {'! '}{item.dishes.join('  ·  ')}
+            </Text>
+          )}
+        </View>
+      ))}
+
+      {otherAllergens.length > 0 && (
+        <>
+          {guestAllergens.length > 0 && (
+            <View style={{ height: 3 }} />
+          )}
+          {otherAllergens.map((item, i) => (
+            <View key={i} style={S.allergenRow}>
+              <Text style={S.allergenBadgeOrange}>
+                {item.allergen.toUpperCase()}
+              </Text>
+              <Text style={S.allergenDishList}>
+                {item.dishes.join('  ·  ')}
+              </Text>
+            </View>
+          ))}
+        </>
+      )}
+    </View>
+  )
+}
+
 // ─── Dish Component ───────────────────────────────────────────────────────────
 
-function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number }) {
+function DishCard({
+  dish,
+  numPersons,
+  highlightAllergens,
+}: {
+  dish: MepListDish
+  numPersons: number
+  highlightAllergens: Set<string>
+}) {
   const grouped: { groupName: string | null; items: MepListComponent[] }[] = []
   for (const comp of dish.components) {
     const g = comp.component_group || null
@@ -422,7 +613,6 @@ function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number 
   }
 
   return (
-    // wrap={false} keeps the entire dish together — never splits across columns/pages
     <View style={S.dishBlock} wrap={false}>
       {dish.notes && <Text style={S.dishNotes}>⚑ {dish.notes}</Text>}
       <Text style={S.dishTitle}>{dish.title}</Text>
@@ -436,14 +626,18 @@ function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number 
             const qtyStr = formatQtyShort(comp.quantity, comp.unit)
             const totalStr = numPersons > 0 ? formatTotalQty(comp.quantity, comp.unit, numPersons) : ''
             const compAllergens = comp.allergens
-              ? comp.allergens.split(',').map((s) => s.trim()).filter(Boolean)
+              ? comp.allergens.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
               : []
+            // Highlight if any allergen of this component is in the highlight set
+            const hasHighlight = compAllergens.some(a =>
+              [...highlightAllergens].some(h => a.includes(h) || h.includes(a))
+            )
 
             return (
               <View key={ci}>
                 <View style={S.componentRow}>
                   <Text style={S.componentBullet}>·</Text>
-                  <Text style={S.componentText}>
+                  <Text style={[S.componentText, hasHighlight ? { color: '#dc2626', fontFamily: 'Helvetica-Bold' } : {}]}>
                     {comp.component_name}
                     {(qtyStr || comp.preparation) && (
                       <Text style={S.componentGray}>
@@ -461,8 +655,8 @@ function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number 
                   </Text>
                 </View>
                 {compAllergens.length > 0 && (
-                  <Text style={S.componentAllergen}>
-                    {`⚠ ${compAllergens.join(', ')}`}
+                  <Text style={S.componentAllergenDot}>
+                    {compAllergens.join(', ')}
                   </Text>
                 )}
               </View>
@@ -476,34 +670,23 @@ function DishCard({ dish, numPersons }: { dish: MepListDish; numPersons: number 
 }
 
 // ─── Column distribution across pages ────────────────────────────────────────
-//
-// A4 portrait = 841.89pt height
-// paddingTop=20, paddingBottom=24 → usable = ~798pt
-// Header ≈ 85pt → column space ≈ 710pt per page
-//
-// We distribute categories into (numCols × numPages) slots.
-// Each column slot has a max height of MAX_COL_H.
-// Major categories always start a new column (unless first).
-// Small categories flow into the current column.
-// When a column is full, we spill to the next column (or next page).
 
-const MAX_COL_H = 660 // conservative page column budget in pt
+const MAX_COL_H = 660
 
 function estimateCatHeight(group: { dishes: MepListDish[] }): number {
-  let h = 20 // category header bar
+  let h = 20
   for (const dish of group.dishes) {
-    h += 14 // dish title
+    h += 14
     if (dish.notes) h += 9
     if (dish.timing_label) h += 9
     const comps = dish.components || []
     const groups = new Set(comps.map(c => c.component_group || null))
     const numGroups = [...groups].filter(g => g !== null).length
-    h += numGroups * 11 // group headers
-    h += comps.length * 10 // component rows
-    // Extra height for allergen lines
+    h += numGroups * 11
+    h += comps.length * 10
     const allergenComps = comps.filter(c => c.allergens && c.allergens.trim())
     h += allergenComps.length * 8
-    h += 5 // spacer
+    h += 5
   }
   return h
 }
@@ -527,14 +710,11 @@ function distributeToPages(
     const h = estimateCatHeight(group)
     const isMajor = !isSmallCategory(group.category)
 
-    // Major category → try to start a new column
     if (i > 0 && isMajor) {
       if (colIdx < numCols - 1) {
-        // Move to next column on current page
         colIdx++
         colH = 0
       } else if (colH > 0) {
-        // All columns used → start a new page
         currentPage = { columns: Array.from({ length: numCols }, () => []) }
         pages.push(currentPage)
         colIdx = 0
@@ -542,13 +722,11 @@ function distributeToPages(
       }
     }
 
-    // If adding this category would overflow the column height budget → next column/page
     if (colH > 0 && colH + h > MAX_COL_H) {
       if (colIdx < numCols - 1) {
         colIdx++
         colH = 0
       } else {
-        // Need a new page
         currentPage = { columns: Array.from({ length: numCols }, () => []) }
         pages.push(currentPage)
         colIdx = 0
@@ -576,7 +754,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
     return (a.sort_order || 0) - (b.sort_order || 0)
   })
 
-  // Group dishes by category (skip koffie)
   const catGroups: { category: string; label: string; order: number; dishes: MepListDish[] }[] = []
   for (const dish of sortedDishes) {
     const skipCheck = (dish.category || '').toUpperCase()
@@ -595,8 +772,14 @@ export function MepListDocument({ data }: { data: MepListData }) {
   }
   catGroups.sort((a, b) => a.order - b.order)
 
-  // Distribute into pages × columns
   const pages = distributeToPages(catGroups, numCols)
+
+  // Build smart allergen map
+  const allergenMap = buildAllergenMap(event.allergens, dishes)
+  // Set of "guest" allergens for highlighting components in dishes
+  const highlightAllergens = new Set(
+    allergenMap.filter(a => a.fromEvent).map(a => a.allergen)
+  )
 
   // Header info
   const departure = event.departure_time || calcDeparture(event.kitchen_arrival_time, event.travel_time_minutes)
@@ -614,10 +797,6 @@ export function MepListDocument({ data }: { data: MepListData }) {
   if (event.price_per_person) infoParts.push(`€${event.price_per_person} pp`)
   if (event.event_type) infoParts.push(translateEventType(event.event_type))
 
-  const allergenWarning = event.allergens && event.allergens.trim()
-    ? `⚠ Allergie: ${event.allergens.trim()}`
-    : null
-
   return (
     <Document>
       {pages.map((page, pageIdx) => (
@@ -630,14 +809,15 @@ export function MepListDocument({ data }: { data: MepListData }) {
               {infoParts.length > 0 && (
                 <Text style={S.headerMeta}>{infoParts.join('  ·  ')}</Text>
               )}
-              {allergenWarning && (
-                <Text style={S.headerAllergen}>{allergenWarning}</Text>
-              )}
               {event.contact_person && (
                 <Text style={S.headerContact}>Contact: {event.contact_person}</Text>
               )}
               {travelParts.length > 0 && (
                 <Text style={S.headerTravelLine}>{travelParts.join('  ·  ')}</Text>
+              )}
+              {/* Smart allergen summary */}
+              {allergenMap.length > 0 && (
+                <AllergenSummary allergenMap={allergenMap} />
               )}
             </View>
           )}
@@ -659,7 +839,12 @@ export function MepListDocument({ data }: { data: MepListData }) {
                   <View key={gi} style={S.categoryBlock}>
                     <Text style={S.categoryHeader}>{group.label.toUpperCase()}</Text>
                     {group.dishes.map((dish, di) => (
-                      <DishCard key={di} dish={dish} numPersons={event.num_persons || 0} />
+                      <DishCard
+                        key={di}
+                        dish={dish}
+                        numPersons={event.num_persons || 0}
+                        highlightAllergens={highlightAllergens}
+                      />
                     ))}
                   </View>
                 ))}
