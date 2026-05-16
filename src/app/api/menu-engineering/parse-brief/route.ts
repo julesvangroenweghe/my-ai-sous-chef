@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
+export const maxDuration = 60
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-export async function POST(req: NextRequest) {
+async function parseBrief(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json()
     const { text, imageBase64, imageMimeType } = body
@@ -143,4 +145,30 @@ Regels:
     console.error('parse-brief error:', err)
     return NextResponse.json({ error: 'Fout bij het verwerken van de briefing' }, { status: 500 })
   }
+}
+
+export async function POST(request: NextRequest) {
+  const encoder = new TextEncoder()
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const response = await parseBrief(request)
+        const body = await response.text()
+        controller.enqueue(encoder.encode(body))
+      } catch (error) {
+        console.error('Menu generate error:', error)
+        controller.enqueue(encoder.encode(JSON.stringify({
+          error: 'Fout bij menu genereren',
+          details: error instanceof Error ? error.message : 'Onbekende fout'
+        })))
+      } finally {
+        controller.close()
+      }
+    }
+  })
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'application/json' }
+  })
 }

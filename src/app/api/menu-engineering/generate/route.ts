@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const maxDuration = 60
+
 const MONTH_NAMES: Record<number, string> = {
   1: 'jan', 2: 'feb', 3: 'mar', 4: 'apr', 5: 'may', 6: 'jun',
   7: 'jul', 8: 'aug', 9: 'sep', 10: 'oct', 11: 'nov', 12: 'dec',
@@ -195,7 +197,7 @@ function extractJSON(text: string) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function processGenerate(request: NextRequest): Promise<NextResponse> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -827,3 +829,28 @@ Bij fouten: pas het gerecht minimaal aan — enkel het foutieve element vervange
   }
 }
 
+export async function POST(request: NextRequest) {
+  const encoder = new TextEncoder()
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const response = await processGenerate(request)
+        const body = await response.text()
+        controller.enqueue(encoder.encode(body))
+      } catch (error) {
+        console.error('Menu generate error:', error)
+        controller.enqueue(encoder.encode(JSON.stringify({
+          error: 'Fout bij menu genereren',
+          details: error instanceof Error ? error.message : 'Onbekende fout'
+        })))
+      } finally {
+        controller.close()
+      }
+    }
+  })
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'application/json' }
+  })
+}
