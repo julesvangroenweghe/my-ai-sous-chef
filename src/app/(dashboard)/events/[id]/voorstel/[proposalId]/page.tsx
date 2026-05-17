@@ -142,7 +142,8 @@ export default function ProposalEditorPage() {
 
   const [eventTimeline, setEventTimeline] = useState<Array<{
     id: string; time: string; type: string; label: string; duration_minutes: number; notes?: string
-  }>>([])
+  }>>([]
+  )
   const [timelineSaving, setTimelineSaving] = useState(false)
 
 
@@ -182,7 +183,15 @@ export default function ProposalEditorPage() {
               label: formatMomentLabel(m.type || m.format || ''),
               duration_minutes: m.duration_minutes || 60,
             }))
-            setEventTimeline(converted)
+            if (converted.length > 0) {
+              setEventTimeline(converted)
+              // Auto-save zodat het volgende keer direct beschikbaar is
+              fetch(`/api/events/${eventId}/timeline`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ timeline: converted }),
+              }).catch(() => {})
+            }
           }
         })
         .catch(() => {})
@@ -644,16 +653,9 @@ export default function ProposalEditorPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Links: Intake Panel */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Event Tijdlijn */}
-          <EventTimeline
-            blocks={eventTimeline as any}
-            numPersons={proposal?.num_persons || 20}
-            mode="full"
-            onChange={saveTimeline as any}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_180px_1fr] gap-6">
+        {/* Kolom 1: Briefing + Event Params */}
+        <div className="space-y-4">
           <button
             onClick={() => setShowIntake(!showIntake)}
             className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#E8D5B5] rounded-xl text-sm font-semibold text-[#2C1810] hover:bg-[#FAF6EF] transition-all"
@@ -867,8 +869,21 @@ export default function ProposalEditorPage() {
           </div>
         </div>
 
-        {/* Rechts: Menu Canvas */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Kolom 2: Visuele Tijdlijn (sticky) */}
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <EventTimeline
+            blocks={eventTimeline as any}
+            numPersons={proposal?.num_persons || 20}
+            mode="full"
+            onChange={saveTimeline as any}
+          />
+          {timelineSaving && (
+            <p style={{ fontSize: 10, color: '#B8997A', marginTop: 4, textAlign: 'center' }}>opslaan…</p>
+          )}
+        </div>
+
+        {/* Kolom 3: Menu Canvas */}
+        <div className="space-y-4">
           {courses.map(course => {
             const courseItems = items.filter(i => i.course === course).sort((a, b) => a.sort_order - b.sort_order)
             return (

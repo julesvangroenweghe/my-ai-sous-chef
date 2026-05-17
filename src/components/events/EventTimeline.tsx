@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, Clock, ChevronDown, ChevronUp, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Reorder, useDragControls } from 'framer-motion'
+import { Plus, Clock } from 'lucide-react'
 
 interface TimelineBlock {
   id: string
@@ -19,12 +20,19 @@ interface CapacityAdvice {
   colorClass: string
 }
 
+interface EventTimelineProps {
+  blocks: TimelineBlock[]
+  numPersons?: number
+  mode?: 'full' | 'compact'
+  onChange?: (blocks: TimelineBlock[]) => void
+}
+
 function calculateCapacity(block: TimelineBlock, numPersons: number): CapacityAdvice {
   const { type, duration_minutes } = block
   if (type === 'speech' || type === 'break') {
     return { maxItems: 0, itemLabel: '', warningMessage: 'Servicepauze — geen service', colorClass: 'red' }
   }
-  if (type === 'reception' || type === 'fingerfood' || type === ('cocktail' as string)) {
+  if (type === 'reception' || type === 'fingerfood') {
     const hours = duration_minutes / 60
     let items = 0
     if (hours >= 1) items += 5
@@ -59,16 +67,16 @@ function calculateCapacity(block: TimelineBlock, numPersons: number): CapacityAd
   return { maxItems: null, itemLabel: '', colorClass: 'gray' }
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  reception: { label: 'Receptie', color: '#E8A040', bg: '#FEF3E2', border: '#E8A040' },
-  fingerfood: { label: 'Fingerfood', color: '#C4703A', bg: '#FDF2EB', border: '#C4703A' },
-  appetizers: { label: 'Appetizers', color: '#9E7E60', bg: '#F5EDE0', border: '#9E7E60' },
-  walking_dinner: { label: 'Walking Dinner', color: '#3A5C3A', bg: '#EBF4E8', border: '#3A5C3A' },
-  seated: { label: 'Zittend diner', color: '#2C1810', bg: '#F5EDE0', border: '#C4703A' },
-  dessert: { label: 'Dessert', color: '#9E7E60', bg: '#F9F6F2', border: '#E8D5B5' },
-  speech: { label: 'Speech / Toast', color: '#DC2626', bg: '#FEF2F2', border: '#DC2626' },
-  break: { label: 'Pauze', color: '#9E7E60', bg: '#F5F5F5', border: '#D1D5DB' },
-  custom: { label: 'Eigen blok', color: '#6B7280', bg: '#F9FAFB', border: '#D1D5DB' },
+const TYPE_CONFIG: Record<string, { label: string; accentColor: string; bg: string; border: string; textColor: string }> = {
+  reception:      { label: 'Receptie',        accentColor: '#E8A040', bg: '#FEF3E2', border: '#FCD34D', textColor: '#92400E' },
+  fingerfood:     { label: 'Fingerfood',       accentColor: '#C4703A', bg: '#FDF2EB', border: '#C4703A', textColor: '#9A3412' },
+  appetizers:     { label: 'Appetizers',       accentColor: '#9E7E60', bg: '#F5EDE0', border: '#C4A882', textColor: '#78350F' },
+  walking_dinner: { label: 'Walking Dinner',   accentColor: '#3A5C3A', bg: '#EBF4E8', border: '#86EFAC', textColor: '#14532D' },
+  seated:         { label: 'Zittend diner',    accentColor: '#C4703A', bg: '#FAF2EA', border: '#C4703A', textColor: '#7C2D12' },
+  dessert:        { label: 'Dessert',          accentColor: '#9E7E60', bg: '#F9F6F2', border: '#D4B896', textColor: '#78350F' },
+  speech:         { label: 'Speech / Toast',   accentColor: '#DC2626', bg: '#FEF2F2', border: '#FECACA', textColor: '#991B1B' },
+  break:          { label: 'Pauze',            accentColor: '#94A3B8', bg: '#F8FAFC', border: '#CBD5E1', textColor: '#475569' },
+  custom:         { label: 'Eigen blok',       accentColor: '#6B7280', bg: '#F9FAFB', border: '#D1D5DB', textColor: '#374151' },
 }
 
 const TYPE_OPTIONS = [
@@ -83,43 +91,180 @@ const TYPE_OPTIONS = [
   { value: 'custom', label: 'Eigen blok' },
 ]
 
-function CapacityBadge({ advice }: { advice: CapacityAdvice }) {
-  if (advice.maxItems === null) return null
-  if (advice.maxItems === 0) {
-    return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontWeight: 600 }}>
-        <AlertTriangle style={{ width: 10, height: 10 }} />
-        {advice.warningMessage}
-      </span>
-    )
-  }
-  const colorMap = {
-    red: { bg: '#FEF2F2', border: '#FECACA', color: '#DC2626' },
-    amber: { bg: '#FEF3E2', border: '#FCD34D', color: '#C4703A' },
-    green: { bg: '#F0FDF4', border: '#86EFAC', color: '#3A5C3A' },
-    gray: { bg: '#F9FAFB', border: '#E5E7EB', color: '#6B7280' },
-  }
-  const c = colorMap[advice.colorClass as keyof typeof colorMap] || colorMap.gray
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '2px 8px', borderRadius: 20, background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontWeight: 600 }}>
-      <CheckCircle style={{ width: 10, height: 10 }} />
-      max {advice.maxItems} {advice.itemLabel}
-      {advice.warningMessage && <span style={{ fontWeight: 400, opacity: 0.8 }}>&nbsp;·&nbsp;{advice.warningMessage}</span>}
-    </span>
-  )
+function blockHeight(duration_minutes: number): number {
+  return Math.max(52, Math.round(duration_minutes * 0.9))
 }
 
-interface EventTimelineProps {
-  blocks: TimelineBlock[]
-  numPersons?: number
-  mode?: 'full' | 'compact'
-  onChange?: (blocks: TimelineBlock[]) => void
+interface DraggableBlockProps {
+  block: TimelineBlock
+  numPersons: number
+  onUpdate: (id: string, updates: Partial<TimelineBlock>) => void
+  onRemove: (id: string) => void
+}
+
+function DraggableBlock({ block, numPersons, onUpdate, onRemove }: DraggableBlockProps) {
+  const controls = useDragControls()
+  const [editingTime, setEditingTime] = useState(false)
+  const [editingDuration, setEditingDuration] = useState(false)
+  const [editingLabel, setEditingLabel] = useState(false)
+  const cfg = TYPE_CONFIG[block.type] || TYPE_CONFIG.custom
+  const advice = calculateCapacity(block, numPersons)
+  const height = blockHeight(block.duration_minutes)
+
+  return (
+    <Reorder.Item value={block} dragListener={false} dragControls={controls} style={{ listStyle: 'none' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'stretch',
+        minHeight: height,
+        marginBottom: 4,
+        borderRadius: 10,
+        overflow: 'hidden',
+        border: `1px solid ${cfg.border}`,
+        background: cfg.bg,
+        position: 'relative',
+      }}>
+        {/* Linker gekleurde accentbalk — 4px breed */}
+        <div style={{
+          width: 4,
+          flexShrink: 0,
+          background: cfg.accentColor,
+          backgroundImage: (block.type === 'speech' || block.type === 'break')
+            ? `repeating-linear-gradient(to bottom, ${cfg.accentColor} 0, ${cfg.accentColor} 6px, transparent 6px, transparent 10px)`
+            : undefined,
+        }} />
+
+        {/* Drag handle */}
+        <div
+          onPointerDown={e => controls.start(e)}
+          style={{
+            width: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'grab',
+            color: '#D4B896',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
+            <circle cx="3" cy="3" r="1.5" />
+            <circle cx="7" cy="3" r="1.5" />
+            <circle cx="3" cy="8" r="1.5" />
+            <circle cx="7" cy="8" r="1.5" />
+            <circle cx="3" cy="13" r="1.5" />
+            <circle cx="7" cy="13" r="1.5" />
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, padding: '8px 10px 8px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 4 }}>
+          {/* Tijd bovenaan */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {editingTime ? (
+              <input
+                autoFocus
+                defaultValue={block.time}
+                onBlur={e => { onUpdate(block.id, { time: e.target.value }); setEditingTime(false) }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                  if (e.key === 'Escape') setEditingTime(false)
+                }}
+                style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: cfg.accentColor, width: 44, background: 'transparent', border: 'none', borderBottom: `1px solid ${cfg.accentColor}`, outline: 'none' }}
+              />
+            ) : (
+              <span
+                onClick={() => setEditingTime(true)}
+                style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: cfg.accentColor, cursor: 'pointer', minWidth: 36 }}
+                title="Klik om tijd te bewerken"
+              >
+                {block.time || '—:——'}
+              </span>
+            )}
+          </div>
+
+          {/* Label */}
+          {editingLabel ? (
+            <input
+              autoFocus
+              defaultValue={block.label}
+              onBlur={e => { onUpdate(block.id, { label: e.target.value }); setEditingLabel(false) }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                if (e.key === 'Escape') setEditingLabel(false)
+              }}
+              style={{ fontSize: 12, fontWeight: 600, color: cfg.textColor, background: 'transparent', border: 'none', borderBottom: `1px solid ${cfg.accentColor}`, outline: 'none', width: '100%' }}
+            />
+          ) : (
+            <span
+              onClick={() => setEditingLabel(true)}
+              style={{ fontSize: 12, fontWeight: 600, color: cfg.textColor, cursor: 'pointer', lineHeight: 1.3 }}
+            >
+              {block.label}
+            </span>
+          )}
+
+          {/* Duur badge + verwijder knop */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+            {editingDuration ? (
+              <input
+                autoFocus
+                type="number"
+                defaultValue={block.duration_minutes}
+                onBlur={e => { onUpdate(block.id, { duration_minutes: parseInt(e.target.value) || 60 }); setEditingDuration(false) }}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                style={{ fontSize: 10, width: 40, background: 'transparent', border: `1px solid ${cfg.accentColor}`, borderRadius: 4, padding: '1px 4px', outline: 'none', color: cfg.textColor }}
+              />
+            ) : (
+              <span
+                onClick={() => setEditingDuration(true)}
+                style={{ fontSize: 10, color: cfg.accentColor, background: 'white', border: `1px solid ${cfg.border}`, padding: '1px 6px', borderRadius: 20, cursor: 'pointer', fontWeight: 500 }}
+                title="Klik om duur te bewerken"
+              >
+                {block.duration_minutes} min
+              </span>
+            )}
+            <button
+              onClick={() => onRemove(block.id)}
+              style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: '#D4B896', padding: 0, flexShrink: 0 }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="2" y1="2" x2="8" y2="8" /><line x1="8" y1="2" x2="2" y2="8" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Capaciteitsadvies */}
+          {advice.maxItems !== null && (
+            <div style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: advice.colorClass === 'red' ? '#DC2626' : advice.colorClass === 'green' ? '#3A5C3A' : '#C4703A',
+              lineHeight: 1.3,
+            }}>
+              {advice.maxItems === 0
+                ? '! servicepauze'
+                : `max ${advice.maxItems} ${advice.itemLabel}`
+              }
+            </div>
+          )}
+        </div>
+      </div>
+    </Reorder.Item>
+  )
 }
 
 export function EventTimeline({ blocks, numPersons = 20, mode = 'full', onChange }: EventTimelineProps) {
   const [addingBlock, setAddingBlock] = useState(false)
   const [newBlock, setNewBlock] = useState<Partial<TimelineBlock>>({ type: 'reception', duration_minutes: 60, time: '' })
-  const [collapsed, setCollapsed] = useState(false)
+
+  const handleUpdate = (id: string, updates: Partial<TimelineBlock>) => {
+    onChange?.(blocks.map(b => b.id === id ? { ...b, ...updates } : b))
+  }
+
+  const handleRemove = (id: string) => {
+    onChange?.(blocks.filter(b => b.id !== id))
+  }
 
   const handleAdd = () => {
     if (!newBlock.label?.trim() || !newBlock.type) return
@@ -136,10 +281,7 @@ export function EventTimeline({ blocks, numPersons = 20, mode = 'full', onChange
     setAddingBlock(false)
   }
 
-  const handleRemove = (id: string) => {
-    onChange?.(blocks.filter(b => b.id !== id))
-  }
-
+  // COMPACT mode
   if (mode === 'compact') {
     if (blocks.length === 0) return null
     return (
@@ -155,10 +297,10 @@ export function EventTimeline({ blocks, numPersons = 20, mode = 'full', onChange
             return (
               <div key={block.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ padding: '3px 10px', borderRadius: 20, background: cfg.bg, border: `1px solid ${cfg.border}`, fontSize: 11 }}>
-                  {block.time && <span style={{ fontFamily: 'monospace', color: cfg.color, fontWeight: 600 }}>{block.time} </span>}
+                  {block.time && <span style={{ fontFamily: 'monospace', color: cfg.accentColor, fontWeight: 600 }}>{block.time} </span>}
                   <span style={{ color: '#2C1810', fontWeight: 500 }}>{block.label}</span>
                   {advice.maxItems !== null && advice.maxItems > 0 && (
-                    <span style={{ color: cfg.color, marginLeft: 4 }}>· max {advice.maxItems} {advice.itemLabel}</span>
+                    <span style={{ color: cfg.accentColor, marginLeft: 4 }}>· max {advice.maxItems} {advice.itemLabel}</span>
                   )}
                   {block.type === 'speech' && (
                     <span style={{ color: '#DC2626', marginLeft: 4, fontWeight: 600 }}>! pauze</span>
@@ -173,123 +315,144 @@ export function EventTimeline({ blocks, numPersons = 20, mode = 'full', onChange
     )
   }
 
-  // FULL mode
+  // FULL mode — visueel verticaal
   return (
-    <div style={{ background: 'white', border: '1px solid #E8D5B5', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#FAF6EF', border: 'none', cursor: 'pointer' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Clock style={{ width: 14, height: 14, color: '#E8A040' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#2C1810', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verloop van de avond</span>
-          {blocks.length > 0 && (
-            <span style={{ fontSize: 11, color: '#9E7E60' }}>{blocks.length} blok{blocks.length !== 1 ? 'ken' : ''}</span>
-          )}
+    <div>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <Clock style={{ width: 13, height: 13, color: '#E8A040', flexShrink: 0 }} />
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#9E7E60', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Tijdlijn
+        </span>
+        {blocks.length > 0 && (
+          <span style={{ fontSize: 10, color: '#B8997A' }}>· {blocks.length} blokken</span>
+        )}
+      </div>
+
+      {blocks.length === 0 && !addingBlock && (
+        <div style={{
+          textAlign: 'center', padding: '24px 12px',
+          border: '1px dashed #E8D5B5', borderRadius: 12,
+          color: '#B8997A', fontSize: 12,
+        }}>
+          Voeg tijdlijnblokken toe om capaciteitsadvies te zien
         </div>
-        {collapsed
-          ? <ChevronDown style={{ width: 14, height: 14, color: '#9E7E60' }} />
-          : <ChevronUp style={{ width: 14, height: 14, color: '#9E7E60' }} />}
-      </button>
+      )}
 
-      {!collapsed && (
-        <div style={{ padding: '12px 16px' }}>
-          {blocks.length === 0 && !addingBlock && (
-            <div style={{ textAlign: 'center', padding: '16px 0', color: '#B8997A', fontSize: 13 }}>
-              Nog geen tijdlijn — voeg blokken toe om capaciteitsadvies te zien
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {blocks.map((block) => {
-              const cfg = TYPE_CONFIG[block.type] || TYPE_CONFIG.custom
-              const advice = calculateCapacity(block, numPersons)
-              return (
-                <div key={block.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 10 }}>
-                  {block.time && (
-                    <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: cfg.color, minWidth: 44, flexShrink: 0, marginTop: 1 }}>
-                      {block.time}
+      {/* Drag-and-drop lijst */}
+      {onChange ? (
+        <Reorder.Group
+          axis="y"
+          values={blocks}
+          onReorder={onChange}
+          style={{ listStyle: 'none', padding: 0, margin: 0 }}
+        >
+          {blocks.map(block => (
+            <DraggableBlock
+              key={block.id}
+              block={block}
+              numPersons={numPersons}
+              onUpdate={handleUpdate}
+              onRemove={handleRemove}
+            />
+          ))}
+        </Reorder.Group>
+      ) : (
+        // Read-only versie (geen onChange)
+        <div>
+          {blocks.map(block => {
+            const cfg = TYPE_CONFIG[block.type] || TYPE_CONFIG.custom
+            const advice = calculateCapacity(block, numPersons)
+            const height = blockHeight(block.duration_minutes)
+            return (
+              <div key={block.id} style={{
+                display: 'flex', alignItems: 'stretch', minHeight: height,
+                marginBottom: 4, borderRadius: 10, overflow: 'hidden',
+                border: `1px solid ${cfg.border}`, background: cfg.bg,
+              }}>
+                <div style={{ width: 4, background: cfg.accentColor, flexShrink: 0 }} />
+                <div style={{ flex: 1, padding: '8px 10px 8px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 4 }}>
+                  {block.time && <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: cfg.accentColor }}>{block.time}</span>}
+                  <span style={{ fontSize: 12, fontWeight: 600, color: cfg.textColor }}>{block.label}</span>
+                  <span style={{ fontSize: 10, color: cfg.accentColor, fontWeight: 500 }}>{block.duration_minutes} min</span>
+                  {advice.maxItems !== null && advice.maxItems > 0 && (
+                    <span style={{ fontSize: 10, fontWeight: 600, color: advice.colorClass === 'red' ? '#DC2626' : advice.colorClass === 'green' ? '#3A5C3A' : '#C4703A' }}>
+                      max {advice.maxItems} {advice.itemLabel}
                     </span>
                   )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#2C1810' }}>{block.label}</span>
-                      <span style={{ fontSize: 11, color: cfg.color, background: 'white', border: `1px solid ${cfg.border}`, padding: '1px 8px', borderRadius: 20 }}>
-                        {block.duration_minutes} min
-                      </span>
-                      <CapacityBadge advice={advice} />
-                    </div>
-                    {block.notes && (
-                      <p style={{ fontSize: 11, color: '#9E7E60', margin: '3px 0 0', fontStyle: 'italic' }}>{block.notes}</p>
-                    )}
-                  </div>
-                  {onChange && (
-                    <button
-                      onClick={() => handleRemove(block.id)}
-                      style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#D4B896', flexShrink: 0 }}
-                    >
-                      <X style={{ width: 14, height: 14 }} />
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {addingBlock ? (
-            <div style={{ marginTop: 10, padding: '12px', background: '#F9F6F2', border: '1px dashed #E8D5B5', borderRadius: 10 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <select
-                    value={newBlock.type}
-                    onChange={e => setNewBlock(p => ({ ...p, type: e.target.value as TimelineBlock['type'] }))}
-                    style={{ flex: 1, padding: '7px 10px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
-                  >
-                    {TYPE_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    value={newBlock.time || ''}
-                    onChange={e => setNewBlock(p => ({ ...p, time: e.target.value }))}
-                    placeholder="18:00"
-                    style={{ width: 70, padding: '7px 10px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
-                  />
-                  <input
-                    type="number"
-                    value={newBlock.duration_minutes || ''}
-                    onChange={e => setNewBlock(p => ({ ...p, duration_minutes: parseInt(e.target.value) || 60 }))}
-                    placeholder="60 min"
-                    style={{ width: 80, padding: '7px 10px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
-                  />
-                </div>
-                <input
-                  value={newBlock.label || ''}
-                  onChange={e => setNewBlock(p => ({ ...p, label: e.target.value }))}
-                  placeholder="Label (bv. Ontvangst met drankje)"
-                  style={{ padding: '7px 10px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 13, color: '#2C1810', background: 'white', outline: 'none' }}
-                  autoFocus
-                />
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => setAddingBlock(false)} style={{ padding: '5px 12px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#9E7E60', background: 'white', cursor: 'pointer' }}>
-                    Annuleren
-                  </button>
-                  <button onClick={handleAdd} disabled={!newBlock.label?.trim()} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, color: '#2C1810', background: '#E8A040', border: 'none', cursor: 'pointer' }}>
-                    Toevoegen
-                  </button>
                 </div>
               </div>
-            </div>
-          ) : onChange && (
-            <button
-              onClick={() => setAddingBlock(true)}
-              style={{ marginTop: 10, width: '100%', padding: '8px', border: '1px dashed #E8D5B5', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 12, color: '#9E7E60', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            >
-              <Plus style={{ width: 14, height: 14 }} />
-              Tijdlijnblok toevoegen
-            </button>
-          )}
+            )
+          })}
         </div>
+      )}
+
+      {/* Blok toevoegen */}
+      {onChange && (
+        addingBlock ? (
+          <div style={{ marginTop: 8, padding: 10, background: '#F9F6F2', border: '1px dashed #E8D5B5', borderRadius: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <select
+                value={newBlock.type}
+                onChange={e => {
+                  const cfg = TYPE_OPTIONS.find(o => o.value === e.target.value)
+                  setNewBlock(p => ({ ...p, type: e.target.value as TimelineBlock['type'], label: cfg?.label || '' }))
+                }}
+                style={{ padding: '6px 8px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
+              >
+                {TYPE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  value={newBlock.time || ''}
+                  onChange={e => setNewBlock(p => ({ ...p, time: e.target.value }))}
+                  placeholder="18:00"
+                  style={{ width: 60, padding: '5px 8px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
+                />
+                <input
+                  type="number"
+                  value={newBlock.duration_minutes || ''}
+                  onChange={e => setNewBlock(p => ({ ...p, duration_minutes: parseInt(e.target.value) || 60 }))}
+                  placeholder="60"
+                  style={{ width: 60, padding: '5px 8px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
+                />
+                <span style={{ fontSize: 11, color: '#9E7E60', alignSelf: 'center' }}>min</span>
+              </div>
+              <input
+                value={newBlock.label || ''}
+                onChange={e => setNewBlock(p => ({ ...p, label: e.target.value }))}
+                placeholder="Label (bv. Ontvangst met drankje)"
+                autoFocus
+                style={{ padding: '6px 8px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 12, color: '#2C1810', background: 'white', outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setAddingBlock(false)}
+                  style={{ padding: '4px 10px', border: '1px solid #E8D5B5', borderRadius: 6, fontSize: 11, color: '#9E7E60', background: 'white', cursor: 'pointer' }}
+                >
+                  Annuleren
+                </button>
+                <button
+                  onClick={handleAdd}
+                  disabled={!newBlock.label?.trim()}
+                  style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, color: '#2C1810', background: '#E8A040', border: 'none', cursor: 'pointer' }}
+                >
+                  Toevoegen
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setAddingBlock(true)}
+            style={{ marginTop: 8, width: '100%', padding: '7px', border: '1px dashed #E8D5B5', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 11, color: '#9E7E60', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+          >
+            <Plus style={{ width: 12, height: 12 }} />
+            Blok toevoegen
+          </button>
+        )
       )}
     </div>
   )
