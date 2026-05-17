@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useKitchen } from '@/providers/kitchen-provider'
@@ -55,6 +55,13 @@ interface ApprovedDish {
   approved: boolean
 }
 
+interface Client {
+  id: string
+  name: string
+  company: string | null
+  email: string | null
+}
+
 export default function NewEventPage() {
   const router = useRouter()
   const { kitchenId } = useKitchen()
@@ -64,6 +71,7 @@ export default function NewEventPage() {
   const [error, setError] = useState('')
   const [parsedDishes, setParsedDishes] = useState<ApprovedDish[]>([])
   const [showParser, setShowParser] = useState(true)
+  const [clients, setClients] = useState<Client[]>([])
 
   const [form, setForm] = useState({
     name: '',
@@ -77,7 +85,18 @@ export default function NewEventPage() {
     arrival_time: '',
     notes: '',
     status: 'draft',
+    client_id: '',
   })
+
+  useEffect(() => {
+    if (!kitchenId) return
+    supabase
+      .from('clients')
+      .select('id, name, company, email')
+      .eq('kitchen_id', kitchenId)
+      .order('name')
+      .then(({ data }) => setClients(data || []))
+  }, [kitchenId])
 
   const updateField = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -136,6 +155,7 @@ export default function NewEventPage() {
         arrival_time: form.arrival_time || null,
         notes: form.notes || null,
         status: form.status,
+        client_id: form.client_id || null,
       })
       .select()
       .single()
@@ -243,6 +263,33 @@ export default function NewEventPage() {
               required
             />
           </div>
+
+          {/* Klant koppelen */}
+          {clients.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[#5C4730] flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-[#C4703A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Klant koppelen
+              </label>
+              <select
+                value={form.client_id}
+                onChange={(e) => updateField('client_id', e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-[#E8D5B5] rounded-xl text-[#2C1810] focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+              >
+                <option value="">— Geen klant gekoppeld —</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.company ? ` (${c.company})` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-[#B8997A]">
+                Koppel een klant voor klantgeheugen — herhaling van gerechten wordt automatisch gesignaleerd.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">

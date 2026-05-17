@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { SwapDishModal } from '@/components/proposals/swap-dish-modal'
 import { EventTimeline } from '@/components/events/EventTimeline'
+import { ClientMemoryPanel } from '@/components/events/ClientMemoryPanel'
 
 interface EventRequirements {
   exclusions: string[]
@@ -139,6 +140,8 @@ export default function ProposalEditorPage() {
   const [creatingNewVersion, setCreatingNewVersion] = useState(false)
   const [showOpenQuestions, setShowOpenQuestions] = useState(true)
   const [showCrewSection, setShowCrewSection] = useState(true)
+  const [clientId, setClientId] = useState<string | null>(null)
+  const [dishHistory, setDishHistory] = useState<{name: string; eventName: string; eventDate: string; course: string}[]>([])
 
   const [eventTimeline, setEventTimeline] = useState<Array<{
     id: string; time: string; type: string; label: string; duration_minutes: number; notes?: string
@@ -203,9 +206,17 @@ export default function ProposalEditorPage() {
     loadProposal()
     fetch(`/api/events/${eventId}`)
       .then(r => r.json())
-      .then(d => { if (d?.name) setEventName(d.name) })
+      .then(d => { if (d?.name) setEventName(d.name); if (d?.client_id) setClientId(d.client_id) })
       .catch(() => {})
   }, [proposalId, loadProposal, eventId])
+
+  useEffect(() => {
+    if (!clientId) return
+    fetch(`/api/clients/${clientId}/dish-history`)
+      .then(r => r.json())
+      .then(data => setDishHistory(data.allDishNames || []))
+      .catch(() => {})
+  }, [clientId])
 
   const save = async (opts?: { silent?: boolean }) => {
     if (!proposal) return
@@ -475,6 +486,18 @@ export default function ProposalEditorPage() {
 
   const removeCourse = (course: string) => {
     setItems(prev => prev.filter(i => i.course !== course))
+  }
+
+  const isRepeat = (dishName: string): string[] => {
+    if (!dishName || dishHistory.length === 0) return []
+    const normalized = dishName.toLowerCase()
+    return dishHistory
+      .filter(past =>
+        past.name.includes(normalized.slice(0, 8)) ||
+        normalized.includes(past.name.slice(0, 8))
+      )
+      .map(past => past.eventName)
+      .filter((v, i, a) => a.indexOf(v) === i)
   }
 
   if (loading) return (
@@ -794,6 +817,12 @@ export default function ProposalEditorPage() {
             </div>
           )}
 
+          {/* Klantgeheugen */}
+          <ClientMemoryPanel
+            clientId={clientId}
+            currentDishes={items.map(i => i.dish_name).filter(Boolean)}
+          />
+
           <div className="bg-white border border-[#E8D5B5] rounded-2xl p-4">
             <p className="text-xs font-semibold text-[#9E7E60] mb-3 uppercase tracking-wide">Event Parameters</p>
             <div className="space-y-2 text-sm">
@@ -954,6 +983,17 @@ export default function ProposalEditorPage() {
                             {item.source_type === 'swap' && (
                               <span className="text-[10px] text-purple-600 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-full shrink-0">Gekozen</span>
                             )}
+                            {(() => {
+                              const repeatEvents = isRepeat(item.dish_name)
+                              return repeatEvents.length > 0 ? (
+                                <span className="flex items-center gap-1 text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                                  al geserveerd bij {repeatEvents[0]}
+                                </span>
+                              ) : null
+                            })()}
                           </div>
                         )}
                         {editingDesc === item.id ? (

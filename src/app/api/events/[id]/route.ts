@@ -11,22 +11,22 @@ export async function GET(
  const { data, error } = await supabase
  .from('events')
  .select(`
- *,
- menu_items:event_menu_items(
- *,
- recipe:recipes(
- *,
- category:recipe_categories(id, name),
- components:recipe_components(
- *,
- ingredients:recipe_component_ingredients(
- *,
- ingredient:ingredients(*)
- )
- )
- )
- ),
- dietary_flags:event_dietary_flags(*)
+  *,
+  menu_items:event_menu_items(
+   *,
+   recipe:recipes(
+    *,
+    category:recipe_categories(id, name),
+    components:recipe_components(
+     *,
+     ingredients:recipe_component_ingredients(
+      *,
+      ingredient:ingredients(*)
+     )
+    )
+   )
+  ),
+  dietary_flags:event_dietary_flags(*)
  `)
  .eq('id', id)
  .single()
@@ -44,18 +44,18 @@ export async function PUT(
  const body = await request.json()
 
  const updatePayload: Record<string, unknown> = {
- updated_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
  }
 
  const fields = [
- 'name', 'event_date', 'event_type', 'num_persons', 'price_per_person',
- 'location', 'contact_person', 'departure_time', 'arrival_time', 'notes', 'status'
+  'name', 'event_date', 'event_type', 'num_persons', 'price_per_person',
+  'location', 'contact_person', 'departure_time', 'arrival_time', 'notes', 'status', 'client_id'
  ]
 
  for (const field of fields) {
- if (body[field] !== undefined) {
- updatePayload[field] = body[field] || null
- }
+  if (body[field] !== undefined) {
+   updatePayload[field] = body[field] || null
+  }
  }
  // Status & name should not be nulled
  if (body.status) updatePayload.status = body.status
