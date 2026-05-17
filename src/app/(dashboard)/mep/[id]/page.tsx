@@ -14,6 +14,7 @@ import {
   StickyNote, Edit2, Save, AlertCircle, Sparkles, Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { EventTimeline } from '@/components/events/EventTimeline'
 import { Reorder, useDragControls } from 'framer-motion'
 import type { DragControls } from 'framer-motion'
 
@@ -813,6 +814,7 @@ export default function MepDetailPage() {
   const [showAddDishForm, setShowAddDishForm] = useState<string | null>(null) // category string or 'new'
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [savingField, setSavingField] = useState(false)
+  const [eventTimeline, setEventTimeline] = useState<Array<{ id: string; time: string; type: string; label: string; duration_minutes: number }>>([])
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -820,6 +822,9 @@ export default function MepDetailPage() {
     const { data: eventData, error: eventError } = await supabase.from('events').select('*').eq('id', id).single()
     if (eventError || !eventData) { setLoading(false); return }
     setEvent(eventData)
+    if (eventData.timeline && Array.isArray(eventData.timeline)) {
+      setEventTimeline(eventData.timeline)
+    }
     setNotesValue(eventData.notes || '')
     setFieldValues({
       num_persons: String(eventData.num_persons ?? ''),
@@ -1180,6 +1185,15 @@ export default function MepDetailPage() {
           className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-dashed border-amber-300 rounded-xl text-xs text-amber-600 hover:bg-amber-50 hover:border-amber-400 transition-all">
           <StickyNote className="w-3.5 h-3.5" />Aandachtspunt toevoegen
         </button>
+      )}
+
+      {/* Tijdlijn (compact) */}
+      {eventTimeline.length > 0 && (
+        <EventTimeline
+          blocks={eventTimeline as any}
+          numPersons={event.num_persons || 20}
+          mode="compact"
+        />
       )}
 
       {/* Event info — bewerkbaar */}

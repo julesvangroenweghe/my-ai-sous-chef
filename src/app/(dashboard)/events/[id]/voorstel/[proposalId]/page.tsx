@@ -10,6 +10,7 @@ import {
   Info, ChefHat, Shuffle, Printer, Users
 } from 'lucide-react'
 import { SwapDishModal } from '@/components/proposals/swap-dish-modal'
+import { EventTimeline } from '@/components/events/EventTimeline'
 
 interface EventRequirements {
   exclusions: string[]
@@ -80,6 +81,30 @@ function totalFoodCost(items: MenuItem[]) {
   return items.reduce((s, i) => s + (Number(i.cost_per_person) || 0), 0)
 }
 
+function mapMomentType(type: string): string {
+  const t = type.toLowerCase()
+  if (t.includes('reception') || t.includes('ontvangst') || t.includes('receptie')) return 'reception'
+  if (t.includes('walking')) return 'walking_dinner'
+  if (t.includes('seated') || t.includes('sit_down') || t.includes('zittend')) return 'seated'
+  if (t.includes('appetizer')) return 'appetizers'
+  if (t.includes('fingerfood') || t.includes('fingerbite') || t.includes('hapje')) return 'fingerfood'
+  if (t.includes('speech') || t.includes('toast')) return 'speech'
+  if (t.includes('dessert')) return 'dessert'
+  return 'custom'
+}
+
+function formatMomentLabel(type: string): string {
+  const t = type.toLowerCase()
+  if (t.includes('reception') || t.includes('receptie')) return 'Receptie'
+  if (t.includes('walking')) return 'Walking Dinner'
+  if (t.includes('seated') || t.includes('sit_down')) return 'Zittend diner'
+  if (t.includes('appetizer')) return 'Appetizers'
+  if (t.includes('fingerfood')) return 'Fingerfood'
+  if (t.includes('speech')) return 'Speech'
+  if (t.includes('dessert')) return 'Dessert'
+  return type
+}
+
 export default function ProposalEditorPage() {
   const params = useParams()
   const router = useRouter()
@@ -115,6 +140,12 @@ export default function ProposalEditorPage() {
   const [showOpenQuestions, setShowOpenQuestions] = useState(true)
   const [showCrewSection, setShowCrewSection] = useState(true)
 
+  const [eventTimeline, setEventTimeline] = useState<Array<{
+    id: string; time: string; type: string; label: string; duration_minutes: number; notes?: string
+  }>>([])
+  const [timelineSaving, setTimelineSaving] = useState(false)
+
+
   const [swapModal, setSwapModal] = useState<{
     itemId: string | null
     course: string
@@ -136,9 +167,28 @@ export default function ProposalEditorPage() {
       setCrewItems(allItems.filter((i: MenuItem) => i.is_crew_food))
       setCrewPersons(data.crew_persons || 0)
       setProposalName(data.name)
+      // Haal timeline op van het event
+      fetch(`/api/events/${eventId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d?.timeline && Array.isArray(d.timeline) && d.timeline.length > 0) {
+            setEventTimeline(d.timeline)
+          } else if (reqs.moments && Array.isArray(reqs.moments)) {
+            // Fallback: converteer moments naar timeline blokken
+            const converted = reqs.moments.map((m: { time?: string; type?: string; format?: string; duration_minutes?: number }, i: number) => ({
+              id: `moment-${i}`,
+              time: m.time || '',
+              type: mapMomentType(m.type || m.format || ''),
+              label: formatMomentLabel(m.type || m.format || ''),
+              duration_minutes: m.duration_minutes || 60,
+            }))
+            setEventTimeline(converted)
+          }
+        })
+        .catch(() => {})
     }
     setLoading(false)
-  }, [proposalId])
+  }, [proposalId, eventId])
 
   useEffect(() => {
     loadProposal()
@@ -171,6 +221,19 @@ export default function ProposalEditorPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     }
+  }
+
+  const saveTimeline = async (newTimeline: typeof eventTimeline) => {
+    setEventTimeline(newTimeline)
+    setTimelineSaving(true)
+    try {
+      await fetch(`/api/events/${eventId}/timeline`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeline: newTimeline }),
+      })
+    } catch { /* silent */ }
+    setTimelineSaving(false)
   }
 
   const updateStatus = async (status: string) => {
@@ -584,6 +647,13 @@ export default function ProposalEditorPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Links: Intake Panel */}
         <div className="lg:col-span-1 space-y-4">
+          {/* Event Tijdlijn */}
+          <EventTimeline
+            blocks={eventTimeline as any}
+            numPersons={proposal?.num_persons || 20}
+            mode="full"
+            onChange={saveTimeline as any}
+          />
           <button
             onClick={() => setShowIntake(!showIntake)}
             className="w-full flex items-center justify-between px-4 py-3 bg-white border border-[#E8D5B5] rounded-xl text-sm font-semibold text-[#2C1810] hover:bg-[#FAF6EF] transition-all"
