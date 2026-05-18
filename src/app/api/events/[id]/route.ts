@@ -49,7 +49,8 @@ export async function PUT(
 
  const fields = [
   'name', 'event_date', 'event_type', 'num_persons', 'price_per_person',
-  'location', 'contact_person', 'departure_time', 'arrival_time', 'notes', 'status', 'client_id'
+  'location', 'contact_person', 'departure_time', 'arrival_time', 'notes', 'status', 'client_id',
+  'google_calendar_event_id', 'allergens', 'crew_persons'
  ]
 
  for (const field of fields) {
@@ -60,6 +61,10 @@ export async function PUT(
  // Status & name should not be nulled
  if (body.status) updatePayload.status = body.status
  if (body.name) updatePayload.name = body.name
+ // google_calendar_event_id can be set explicitly to a string (not nulled)
+ if (body.google_calendar_event_id !== undefined) {
+  updatePayload.google_calendar_event_id = body.google_calendar_event_id
+ }
 
  const { error } = await supabase
  .from('events')
